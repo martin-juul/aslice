@@ -1,7 +1,7 @@
 # aslice Repositories — Sources, Trust Levels, and Signing Keys
 
-- **Status:** Design draft, v0.3 — September 2026 (v0.2: cross-repository overlap resolution with remembered decisions — §10; the state database's role — §11. v0.3: `history` rows carry the operation ID that correlates with the operation log — DESIGN §12.5)
-- **Companion to:** [DESIGN.md](DESIGN.md) v1.1 (§8 store/state, §9.6 repository system, §10.2 signatures, §12.5 logging, §12.6 doctor), [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md) v0.3, [BUILD-INFRA.md](BUILD-INFRA.md) v0.1 (§9 result→repository)
+- **Status:** Design draft, v0.4 — September 2026 (v0.2: cross-repository overlap resolution with remembered decisions — §10; the state database's role — §11. v0.3: `history` rows carry the operation ID that correlates with the operation log — DESIGN §12.5. v0.4: the `system` capability — serving `[system]` packages (kexts, SIP-off development tools) is gated by trust level; third-party repositories never may — §3; mechanism in DESIGN v1.2 §12.7)
+- **Companion to:** [DESIGN.md](DESIGN.md) v1.2 (§8 store/state, §9.6 repository system, §10.2 signatures, §12.5 logging, §12.6 doctor, §12.7 system software), [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md) v0.3, [BUILD-INFRA.md](BUILD-INFRA.md) v0.1 (§9 result→repository), [ORCHARD-POLICY.md](ORCHARD-POLICY.md) v0.2
 - **Scope:** the shipped official source list, adding third-party repositories, the inherent trust-level model, and the dual signature scheme (Ed25519 canonical, OpenPGP supported).
 
 ---
@@ -9,7 +9,7 @@
 ## 1. Axioms
 
 1. **Trust is per-repository, never global** (DESIGN §9.6). Adding a repository grants it exactly the capabilities of its trust level and nothing more.
-2. **Trust levels are inherent, not labels.** A level is a set of *enforced capabilities* — what namespaces the repo may serve, whether its binaries may install, whether it may shadow core package names — checked by the solver and the verifier in code. A repo cannot talk its way into a higher level; only the user (or the project's countersignature, for verified repos) can raise one.
+2. **Trust levels are inherent, not labels.** A level is a set of *enforced capabilities* — what namespaces the repo may serve, whether its binaries may install, whether it may shadow core package names, whether it may serve `[system]` packages — checked by the solver and the verifier in code. A repo cannot talk its way into a higher level; only the user (or the project's countersignature, for verified repos) can raise one.
 3. **Every served artifact is signed.** There is no trust level at which unsigned binaries install. The levels differ in *whose* signature is required and *what the repo is allowed to offer* — never in whether verification happens.
 4. **No repository can execute code at install time** regardless of level (DESIGN §10.1). Trust levels govern distribution, not the structural guarantees.
 5. **The official list is data, signed and versioned** — not hardcoded logic. aslice ships with a source list file; the file can be inspected, diffed, and (for the paranoid) replaced wholesale with a pinned copy.
@@ -57,18 +57,19 @@ Properties:
 
 Four levels, ordered by what a repository is permitted to do:
 
-| Level | How a repo gets it | May serve binaries? | May shadow core names? | Signature requirement |
-|---|---|---|---|---|
-| `official` | Compiled-in fingerprint pin; only core/extended ship this way | Yes | n/a (it *is* the namespace) | Ed25519, threshold TUF root (DESIGN §10.2) |
-| `verified` | Listed in the official source list **with a project countersignature** over the repo's key; user enables explicitly | Yes | No — solver treats shadowing as a conflict with a loud message | Ed25519 **or** OpenPGP; key vouched by the core key |
-| `third-party` | `aslice repo add <url>` by the user, TOFU key pinning | Yes — installs show an unambiguous `third-party/<name>` provenance line | Never silently; `doctor` reports; solver prefers core/extended unconditionally | Ed25519 or OpenPGP; fingerprint displayed at add, out-of-band verification recommended |
-| `local` | `aslice repo add file:///path --trust local` (development trees) | **No.** Formulas resolve for source builds only; any binary target in the repo is refused | No | Unsigned trees permitted *for formulas only*; a signed local repo (minisign or GPG) may additionally serve binaries to this machine only |
+| Level | How a repo gets it | May serve binaries? | May shadow core names? | May serve `[system]`? | Signature requirement |
+|---|---|---|---|---|---|
+| `official` | Compiled-in fingerprint pin; only core/extended ship this way | Yes | n/a (it *is* the namespace) | Yes | Ed25519, threshold TUF root (DESIGN §10.2) |
+| `verified` | Listed in the official source list **with a project countersignature** over the repo's key; user enables explicitly | Yes | No — solver treats shadowing as a conflict with a loud message | Yes | Ed25519 **or** OpenPGP; key vouched by the core key |
+| `third-party` | `aslice repo add <url>` by the user, TOFU key pinning | Yes — installs show an unambiguous `third-party/<name>` provenance line | Never silently; `doctor` reports; solver prefers core/extended unconditionally | **Never** | Ed25519 or OpenPGP; fingerprint displayed at add, out-of-band verification recommended |
+| `local` | `aslice repo add file:///path --trust local` (development trees) | **No.** Formulas resolve for source builds only; any binary target in the repo is refused | No | Yes — own tree, own machine, same warnings | Unsigned trees permitted *for formulas only*; a signed local repo (minisign or GPG) may additionally serve binaries to this machine only |
 
 Rules that hold across all levels:
 
 - **Level can only be lowered by the user, raised only by the defined path.** There is no `--trust-just-this-once` flag that bypasses a level's capability set; bypass flags would make the levels decorative.
 - **Namespaces are mandatory** for non-official repos (DESIGN §9.6): explicit addressing `audiolab:convolver`, resolution order core > extended > verified > third-party in add order.
 - **Vendor-binary packages (`type = "binary"`) follow the same levels.** A `third-party` repo may serve payload-only vendor slices; the signer-pinning rules of DESIGN §12.4 apply unchanged, and the Apple code-signing identity pin is *additional* to the repo signature, never a substitute.
+- **System packages (`[system]`, DESIGN §12.7) are a per-level capability, not a package property.** `official` and `verified` repositories may serve them; `third-party` repositories never may — no warning flow makes a stranger's kernel extension acceptable; `local` repositories may, on the user's own machine, with the same warnings. The solver refuses a `[system]` package from a non-capable repository with a message naming the level and the remedy, not a generic error.
 - **Demotion events are loud.** If a `verified` repo's countersignature is revoked or its key rotates without a re-vouch, the client freezes that repo at its last good snapshot, refuses updates, and prints the reason on every operation that touches it until the user re-pins or removes it.
 
 ## 4. Adding a third-party repository
@@ -159,6 +160,7 @@ aslice repo list --sources-diff           # what the last source-list TUF update
 | Repo serves a key that doesn't match the pin | Hard refusal before any content is fetched; event logged |
 | `verified` repo's countersignature revoked | Repo frozen at last good snapshot, updates refused, loud banner until re-pin/remove |
 | `local` repo contains binary targets | Binaries refused (source-build formulas only) unless the local repo is signed and the machine's user pinned its key |
+| A `third-party` repo serves a `[system]` package | Solve-time refusal naming the trust level and the remedy; the `system` capability is never granted to third-party (§3) |
 | Two third-party repos claim the same namespace | Second `add` is refused; namespaces are unique per client |
 | GPG key uses SHA-1 self-signatures / legacy packets outside the supported subset | Clear rejection message naming the unsupported feature; the answer is a modern key, not a looser verifier |
 | User deletes `sources.toml` | Bootstrap-embedded defaults regenerate it at next run (user edits are in `sources.toml.d/`-style drop-ins, so deletion loses nothing) |
@@ -168,6 +170,7 @@ aslice repo list --sources-diff           # what the last source-list TUF update
 - **DESIGN §9.6:** the "Trust is per-repository" bullet is superseded by the level model of §3 here; the bullet now points at this document.
 - **DESIGN §10.2:** the signature section now reads as dual-scheme — Ed25519/minisign canonical for official infrastructure, OpenPGP as a built-in first-class scheme for third-party repositories and formula-declared upstream verification.
 - **README:** vocabulary gains nothing (a repository is still a repository); the security bullet now mentions trust levels and dual signature schemes.
+- **§3 trust levels (v0.4):** the capability sets gain `system` — serving declared system-software packages (kexts, SIP-off development tools; DESIGN §12.7). official and verified may; third-party never may; local may on the user's own machine.
 - **Open question #6 (new, for reviewers):** should `verified` repos be installable-binary-capable immediately at enable time, or should enabling one additionally require a per-repo `--accept-binaries` step? Current answer: enable implies binaries (the countersignature is the vetting); the extra click was judged ceremony without security content. Review wanted.
 
 ---

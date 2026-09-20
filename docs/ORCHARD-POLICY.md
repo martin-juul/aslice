@@ -1,7 +1,7 @@
 # aslice Orchard Policy — The Maintainer Rulebook
 
-- **Status:** Policy v0.1 — September 2026
-- **Companion to:** [DESIGN.md](DESIGN.md) v1.1, [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md) v0.3, [BUILD-INFRA.md](BUILD-INFRA.md) v0.1, [REPOSITORIES.md](REPOSITORIES.md) v0.3, [HOMEBREW-REVIEW.md](HOMEBREW-REVIEW.md) v0.3
+- **Status:** Policy v0.2 — September 2026 (v0.2: kernel extensions and SIP-disabled development software move from hard rejection to the restricted, warned, trust-gated system-software category — §2, new §13; mechanism in DESIGN v1.2 §12.7)
+- **Companion to:** [DESIGN.md](DESIGN.md) v1.2, [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md) v0.3, [BUILD-INFRA.md](BUILD-INFRA.md) v0.1, [REPOSITORIES.md](REPOSITORIES.md) v0.4, [HOMEBREW-REVIEW.md](HOMEBREW-REVIEW.md) v0.4
 - **Audience:** orchard maintainers, reviewers, and contributors
 - **Commissioned by:** HOMEBREW-REVIEW.md §8 — one file where Homebrew scattered dozens of docs pages and tribal knowledge
 
@@ -11,7 +11,7 @@
 
 This file is the single rulebook for what may live in aslice's orchards, how packages are born, maintained, deprecated, and buried, and what bars a pull request must clear to merge. Homebrew accumulated these rules across dozens of documentation pages, review folklore, and maintainer memory; aslice writes them down while the project is young enough to fit them in one file.
 
-**Precedence.** The specifications define *mechanism* — what fields exist, what the solver does, what CI can check. This file defines *policy* — what maintainers accept, require, and refuse. Where the two appear to conflict, the conflict is a bug: file an issue against whichever document is wrong. Schema fields referenced here that are not yet in PACKAGE-FORMAT.md v0.3 (`[deprecation]`, `[livecheck]`, `link`/`link_reason`, `notes`, `ctx.replace`) are the pending amendments listed in HOMEBREW-REVIEW.md §8; they are normative policy from this version onward and land in PACKAGE-FORMAT v0.4.
+**Precedence.** The specifications define *mechanism* — what fields exist, what the solver does, what CI can check. This file defines *policy* — what maintainers accept, require, and refuse. Where the two appear to conflict, the conflict is a bug: file an issue against whichever document is wrong. Schema fields referenced here that are not yet in PACKAGE-FORMAT.md v0.3 (`[deprecation]`, `[livecheck]`, `link`/`link_reason`, `notes`, `ctx.replace`, `[system]`) are the pending amendments listed in HOMEBREW-REVIEW.md §8 plus the DESIGN v1.2 system-software declaration; they are normative policy from this version onward and land in PACKAGE-FORMAT v0.4.
 
 **Charter — not amendable by this document.** Three founding decisions outrank any policy edit (DESIGN §2.2 N7, §9.4, §1):
 
@@ -19,7 +19,7 @@ This file is the single rulebook for what may live in aslice's orchards, how pac
 2. Download statistics are rejected as a value signal: obscure libraries downloaded once a month may have immense value precisely because we supply deprecated operating systems.
 3. Scope is macOS 10.11–12 on Intel. No Apple Silicon, no newer macOS, no Linux — no matter how convenient a given PR would find it.
 
-**The one-sentence test for every rule below:** does this make aslice more worthy of the trust of people running machines nobody else serves? If a rule stops answering yes, amend it (§18) rather than quietly ignoring it.
+**The one-sentence test for every rule below:** does this make aslice more worthy of the trust of people running machines nobody else serves? If a rule stops answering yes, amend it (§19) rather than quietly ignoring it.
 
 ---
 
@@ -33,13 +33,14 @@ Two project orchards, two bars. (Third-party orchards set their own policy under
 | Upstream status | Actively maintained, or maintained-by-aslice with a named maintainer who owns it | May be upstream-EOL — must carry `[deprecation] reason = "upstream-eol"` (§8) |
 | Tests | Working `tests.star` smoke test, passing in CI on at least one OS × flavor — **no test, no merge** | Strongly encouraged; required for libraries with dependents in core |
 | `[livecheck]` | **Required** (§9) | Encouraged |
-| Reproducibility | Working toward `reproducible: true` (§14); nondeterminism is a tracked defect | Best-effort |
+| Reproducibility | Working toward `reproducible: true` (§15); nondeterminism is a tracked defect | Best-effort |
 | Vendor binaries | Only if `redistribute = true` **and** payload-only by construction (§12) | Allowed with verifiable signature and honest OS/arch tags |
-| Security posture | CVE flags are blocking work items for the named maintainer (§15) | CVE flags surface in `audit`; fixed best-effort |
+| System software (`[system]`) | Only when the platform genuinely requires it — none at launch (§13) | Allowed with a `[system]` declaration, named maintainer, signed kexts where offered, trust-gated serving (§13) |
+| Security posture | CVE flags are blocking work items for the named maintainer (§16) | CVE flags surface in `audit`; fixed best-effort |
 
 **Hard rejections — both tiers, no exceptions, no override flags:**
 
-- **Anything requiring SIP to be disabled, kexts, or patches to system files** (DESIGN §13.1). This is a marketing feature, not a limitation: aslice never asks users to weaken their OS.
+- **Anything that patches or modifies macOS system files** (DESIGN §13.1). aslice installs alongside the OS; it never edits `/System`, `/usr`, or Apple's binaries. This remains a hard line and a marketing feature. (Kernel extensions and SIP-disabled development software are **not** rejections — they are the restricted system-software category of §13: declared, warned, consent-gated, trust-gated.)
 - **Anything whose installation requires executing vendor or maintainer scripts.** Binary installs execute zero package code, for every package, forever (DESIGN §10.1). A `.pkg`/`.dmg` whose function requires its `preinstall`/`postinstall` scripts is out of scope; an accepted package *discovered* to require them is removed, not accommodated (§12).
 - **Runtime dependencies on `/usr/lib` dylibs or `/usr/bin` tools** — the codified rejection of Homebrew's `uses_from_macos` (§6).
 - **HEAD / unpinned builds in core.** Reproducibility and the lock model both depend on pins. Extended strongly discourages them; third-party orchards answer to their own trust level.
@@ -173,7 +174,21 @@ The policy for software that only exists as an installer (DESIGN §12.4, §13.1)
 
 ---
 
-## 13. Package documentation standards
+## 13. System software packages (kexts and SIP-disabled tools)
+
+The mechanism is DESIGN §12.7; this section is what maintainers may accept.
+
+- **The category exists because reality does.** Audio-interface drivers, filesystem kexts, hypervisors, debuggers and DTrace tooling on 10.11–12 development machines: users install these today by hand, with no warnings, no provenance, and no rollback. The choice was to keep pretending they don't exist or to make installing them honest — declared requirements, verified payloads, per-operation elevation, loud warnings, and rollback that actually removes the kext. v0.2 chooses honest.
+- **Acceptance requirements:** a named maintainer; a `[system]` declaration with a mandatory human-readable `reason` (it *is* the warning text — write it like one); **signed kexts wherever the vendor or upstream offers them** (kext signing is enforced on SIP-enabled 10.11+); `sip_off_required = true` only when the software genuinely cannot function otherwise, with the formula documenting *why*; and a manual validation note in the PR — kernel software can't be smoke-tested in CI the normal way, so say what machine and OS release it was loaded on.
+- **Tier placement:** extended by default. Core accepts a system package only when the platform story genuinely requires it — the bar is "the orchard is worse without it" — and at launch no package meets it.
+- **Trust gating is policy.** Only official and verified repositories may serve system packages (the `system` capability, REPOSITORIES.md §3); **third-party repositories cannot** — talking a user into a kernel extension is precisely the social-engineering attack the trust levels exist to block. Local `file://` development trees may, on the maintainer's own machine, with the same warnings.
+- **The warnings are not decoration.** A PR that weakens, shortens, or routinizes the DESIGN §12.7 warning flow is rejected on sight; the day users click through kext warnings without reading them is the day this category becomes the project's worst decision. Review the warning text in every system-package PR as carefully as the payload.
+- **Vendor-binary kexts** combine §12 and this section: payload-only extraction (vendor scripts still never execute), signer pinning, and `[system]` installation of the extracted kext by `aslice-system`.
+- **Uninstall and rollback must be demonstrated in review:** the kext unloads and is removed, `kextcache` refreshes, and rolling back a generation restores the previous state. A system package that can't cleanly leave is not accepted.
+
+---
+
+## 14. Package documentation standards
 
 - **`description`:** one line, no leading article, no repeating the package name, no marketing ("blazing fast"), ends with a period. It is what `search` shows; write it for someone who has never heard of the software.
 - **`license`** is SPDX, `homepage` must be reachable at review time, `keywords` power search.
@@ -182,7 +197,7 @@ The policy for software that only exists as an installer (DESIGN §12.4, §13.1)
 
 ---
 
-## 14. Reproducibility and the build environment
+## 15. Reproducibility and the build environment
 
 - Builds run in the normalized environment (fixed `LC_ALL`, `TZ`, `SOURCE_DATE_EPOCH`, prefix-mapping; BUILD-INFRA.md) on farm and laptop alike.
 - **Core works toward `reproducible: true`** — bit-identical rebuilds on a second, independent builder (Phase 3 cross-checks). Nondeterminism discovered in a core package is a tracked defect with an owner, not a shrug.
@@ -190,7 +205,7 @@ The policy for software that only exists as an installer (DESIGN §12.4, §13.1)
 
 ---
 
-## 15. Security response
+## 16. Security response
 
 - **CVE flow:** the OSV/advisory feed flags an installed-version overlap → `audit` surfaces it to users immediately (the SBOM is already in the slice) → the named maintainer patches, backports (§7), or bumps. Security PRs jump the review queue but never skip the merge gates.
 - **Embargoed fixes** land via private orchard branch and publish with a coordinated snapshot at embargo lift; the freeze is a TUF-metadata event, not a secret.
@@ -199,16 +214,16 @@ The policy for software that only exists as an installer (DESIGN §12.4, §13.1)
 
 ---
 
-## 16. Governance and review process
+## 17. Governance and review process
 
 - **Decisions by lazy consensus** (DESIGN §13.4): silence after a reasonable window is assent; escalations go to maintainer vote.
-- **Review load is tiered:** patch bumps → any maintainer; major bumps, new extended packages → any maintainer with gates green; **new core packages, versioned lineages, `abi = true` variant additions, policy changes** → two maintainers, one of whom is not the author.
+- **Review load is tiered:** patch bumps → any maintainer; major bumps, new extended packages → any maintainer with gates green; **new core packages, versioned lineages, `abi = true` variant additions, system-software packages, policy changes** → two maintainers, one of whom is not the author.
 - **Every package in core has a named maintainer.** Orphaned core packages get 90 days flagged on the dashboard, then move to extended or deprecation — the tier promise (§2) is only real if someone keeps it.
 - **Maintainers are expected to** keep their livechecks green, answer CVE flags, and work the review queue. Stepping back is honorable; disappearing is a signal to reassign.
 
 ---
 
-## 17. Release cadence
+## 18. Release cadence
 
 - **The index publishes continuously:** every merge produces a new signed snapshot (TUF timestamp on the online key); there is no release day for packages.
 - **Channels** (when Phase 3 lands): `edge` tracks the latest snapshot; `stable` tracks a snapshot soaked N days with a published soak report. `aslice config set channel stable` is the entire user interface.
@@ -218,12 +233,12 @@ The policy for software that only exists as an installer (DESIGN §12.4, §13.1)
 
 ---
 
-## 18. Amending this policy
+## 19. Amending this policy
 
-- Amendments are PRs against this file, decided like any policy change (§16). Every amendment states its rationale in the PR and, when merged, in this section's running history — the file is the project's institutional memory.
+- Amendments are PRs against this file, decided like any policy change (§17). Every amendment states its rationale in the PR and, when merged, in this section's running history — the file is the project's institutional memory.
 - **Charter items (§1) are not amendable here.** No telemetry, no download-count metrics, the 10.11–12 Intel scope: those are founding commitments, and a package manager that revisits its founding commitments by committee stops being trusted by the people it was founded for.
 - **When a rule is consistently broken in practice,** amend the rule or enforce it — but never let the file and the orchard drift apart. A policy document nobody follows is worse than none: it teaches contributors that written words are decorative here.
 
 ---
 
-*History: v0.1 (September 2026) — initial rulebook, commissioned by HOMEBREW-REVIEW.md §8: consolidates the acceptance bar (DESIGN §13.1), variant discipline (§13.2), the deprecation lifecycle, patch documentation, merge gates, and release cadence proposed across the review into one maintainer-facing document.*
+*History: v0.1 (September 2026) — initial rulebook, commissioned by HOMEBREW-REVIEW.md §8: consolidates the acceptance bar (DESIGN §13.1), variant discipline (§13.2), the deprecation lifecycle, patch documentation, merge gates, and release cadence proposed across the review into one maintainer-facing document. v0.2 (September 2026) — the SIP/kext hard rejection becomes the restricted system-software category (§2, new §13), following DESIGN v1.2: declared requirements, per-operation elevation, mandatory warnings, trust-gated serving, demonstrated rollback; patching system files stays rejected forever.*

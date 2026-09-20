@@ -1,7 +1,7 @@
 # aslice vs Homebrew — Capability Review and Gap Analysis
 
-- **Status:** Review v0.3 — September 2026 (v0.2: vendor-binary packages supersede the cask deferral — §3.4, §5, §9 rows updated; v0.3: 32-bit/universal vendor payloads on 10.11–10.14)
-- **Companion to:** [DESIGN.md](DESIGN.md) v1.1, [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md) v0.3, [BUILD-INFRA.md](BUILD-INFRA.md) v0.1, [REPOSITORIES.md](REPOSITORIES.md) v0.3
+- **Status:** Review v0.4 — September 2026 (v0.2: vendor-binary packages supersede the cask deferral — §3.4, §5, §9 rows updated; v0.3: 32-bit/universal vendor payloads on 10.11–10.14; v0.4: companions — DESIGN v1.2 opens the declared `[system]` category for kexts and SIP-off dev tools, ORCHARD-POLICY.md delivered; the installer-script rejection stands unchanged)
+- **Companion to:** [DESIGN.md](DESIGN.md) v1.2, [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md) v0.3, [BUILD-INFRA.md](BUILD-INFRA.md) v0.1, [REPOSITORIES.md](REPOSITORIES.md) v0.4, [ORCHARD-POLICY.md](ORCHARD-POLICY.md) v0.2
 - **Method:** aslice's two specifications compared feature-by-feature against Homebrew's living feature set as of Homebrew 7.0.0 (September 2026). Apple-Silicon-specific work and Homebrew's Intel deprecation/removal machinery are excluded per review scope; everything else Homebrew does today is fair game.
 - **Sources:** Homebrew release notes 4.6.0 → 7.0.0, docs.brew.sh (Security and Supply Chain, Tap Trust), Homebrew/brew issue #17019 (attestation verification). Links in §10.
 
@@ -347,7 +347,7 @@ Concrete deltas this review proposes to the two specifications:
 - §15: new risks — §6.
 - Open questions: #4 (telemetry) is **resolved (v0.3, sharpened v0.4)** — no telemetry or analytics of any kind, ever, and no download-count-driven prioritization; §9.4's prebuild signal is dependency centrality, build pain, irreplaceability, and community requests.
 
-**New document to commission:** `docs/ORCHARD-POLICY.md` — the maintainer-facing rulebook (acceptance bar, variant discipline, deprecation lifecycle, patch documentation, merge gates, release cadence). Homebrew scattered this across dozens of docs pages and tribal knowledge; aslice can fit it in one file while the project is young.
+**New document — commissioned and delivered:** `docs/ORCHARD-POLICY.md` (v0.2) — the maintainer-facing rulebook (acceptance bar, variant discipline, deprecation lifecycle, patch documentation, merge gates, release cadence, system-software category). Homebrew scattered this across dozens of docs pages and tribal knowledge; aslice can fit it in one file while the project is young.
 
 ---
 
@@ -357,7 +357,7 @@ Worth stating explicitly, because a review that only adds things is suspicious:
 
 - **No architectural contradictions.** The variant/ABI model, the store/generation design, the flavor system, and the package format compose cleanly; nothing found in the Homebrew comparison invalidates a founding decision. (The closest call is the ABI scanner's `dlopen` blind spot — a limitation to engineer around, not a flaw in the model.)
 - **No security model regressions vs Homebrew 7.0.** Homebrew's recent additions (tap trust, attestations, install steps, vulns DB) each have an aslice equivalent that is same-or-stronger; the two genuine holes are about aslice itself (self-update, bootstrap trust), not about packages.
-- **No reason to expand scope.** Nothing in the comparison argues for Apple Silicon, macOS 13+, or Linux. Vendor `.pkg`/`.dmg` software entered scope by a separate decision (§3.4) — in the strict payload-only form — but cask-style GUI-app polish and installer-script execution stay out. Homebrew's breadth is precisely what aslice's scope discipline exists to avoid.
+- **No reason to expand scope.** Nothing in the comparison argues for Apple Silicon, macOS 13+, or Linux. Vendor `.pkg`/`.dmg` software entered scope by a separate decision (§3.4) — in the strict payload-only form — but cask-style GUI-app polish and installer-script execution stay out. Homebrew's breadth is precisely what aslice's scope discipline exists to avoid. *(Post-review: kernel extensions and SIP-disabled development tools entered scope in DESIGN v1.2 as the declared, warned, trust-gated `[system]` category — a project-owner decision, not a review finding. The installer-script execution rejection stands unchanged: `aslice-system` performs the privileged steps declaratively, and vendor code still never runs.)*
 
 ---
 
