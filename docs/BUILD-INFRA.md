@@ -1,7 +1,7 @@
 # aslice Build Infrastructure — One Harness, Two Scales
 
-- **Status:** Design draft, v0.2 — September 2026 (v0.2: companion references refreshed — DESIGN v1.7, PACKAGE-FORMAT v0.6, HOMEBREW-REVIEW v0.9; all internal cross-references re-verified against current section numbering, no content change)
-- **Companion to:** [DESIGN.md](DESIGN.md) v1.7 (§4.3 toolchain, §5.1 process layout, §9 distribution, §10 security), [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md) v0.6 (build phases §6), [HOMEBREW-REVIEW.md](HOMEBREW-REVIEW.md) v0.9 (§4.7 merge gates, §6 risks)
+- **Status:** Design draft, v0.3 — September 2026 (v0.2: companion references refreshed — DESIGN v1.7, PACKAGE-FORMAT v0.6, HOMEBREW-REVIEW v0.9; all internal cross-references re-verified against current section numbering, no content change. v0.3: companion references refreshed — DESIGN v1.8, PACKAGE-FORMAT v0.6, HOMEBREW-REVIEW v0.10; no content change)
+- **Companion to:** [DESIGN.md](DESIGN.md) v1.8 (§4.3 toolchain, §5.1 process layout, §9 distribution, §10 security), [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md) v0.6 (build phases §6), [HOMEBREW-REVIEW.md](HOMEBREW-REVIEW.md) v0.10 (§4.7 merge gates, §6 risks)
 - **Scope:** the build harness (`aslice build`), farm orchestration (`aslice farm`), scheduling, worker trust, the VM test matrix, and the pipeline from build result to published repository.
 
 ---
