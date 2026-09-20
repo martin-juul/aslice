@@ -589,8 +589,7 @@ aslice repo add https://repo.example.org   # add a signed repository (§9.6)
 aslice repo list / repo remove <name> / repo build / repo publish
 aslice repo enable / repo disable <name>   # verified repos ship listed-but-disabled
 aslice repo re-pin / keys / audit <name>   # trust-level machinery (REPOSITORIES.md §7)
-aslice repo prefer /
-resolutions / forget  # overlap decisions, remembered in the state DB (REPOSITORIES.md §10)
+aslice repo prefer / resolutions / forget  # overlap decisions, remembered in the state DB (REPOSITORIES.md §10)
 aslice adopt --from-homebrew           # migration assistant (§13.3)
 aslice config set flavor v2            # overrides
 aslice doctor                          # environment sanity, loudly honest (§12.6)
