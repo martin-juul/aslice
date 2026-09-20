@@ -2,8 +2,8 @@
 
 **Name.** *aslice* — an apple slice: a nod to the Macintosh apple and to the shape of the project itself. Binary packages are **slices**; formula repositories are **orchards**; the manager picks slices off the orchard, prebuilt or baked to order. The vocabulary is deliberately distinct from Homebrew's beer terminology to avoid community confusion and trademark friction. The project name is styled lowercase everywhere, including sentence starts — like the command.
 
-- **Status:** Design draft, v0.9 — September 2026
-- **Change log:** v0.2 extends the platform floor from 10.15 (Catalina) to 10.11 (El Capitan) — see §4 for the consequences (three flavors, self-hosted toolchain in Phase 0, HFS+ support). v0.3 resolves open question #4: **aslice collects no telemetry or analytics of any kind, ever** — the project is infrastructure, not a product (§2.2 N7, §9.4, §15). v0.4 sharpens it: **download counts are rejected as a value signal too** — on a deprecated-OS platform, obscure ≠ low-value (§9.4). v0.5 adds the **repository system** (§9.6) and **vendor binary packages**: software that only ships as a `.pkg`/`.dmg`, hosted or vendor-fetched, installed without ever running installer scripts (§12.4; schema in PACKAGE-FORMAT v0.2 §3.11). v0.6 opens **32-bit vendor binaries**: i386 and universal pkg/dmg payloads install on the releases that still execute 32-bit code (10.11–10.14) — distributed, never built (§2.2 N6, §12.4; PACKAGE-FORMAT v0.3). v0.7 adds the **build-infrastructure design**: one harness — `aslice build` on a user's machine, `aslice farm` on the farm — running the identical sandboxed pipeline at both scales (§5.1, §9.3; full spec in [BUILD-INFRA.md](BUILD-INFRA.md)). v0.8 completes the repository story: a **shipped official source list**, **inherent trust levels** (official / verified / third-party / local — enforced capabilities, not labels), and **dual signature schemes** — Ed25519/minisign canonical, OpenPGP (GPG) built-in first-class for third-party ecosystems (§9.6, §10.2; full spec in [REPOSITORIES.md](REPOSITORIES.md)). v0.9 adds **cross-repository overlap resolution**: ambiguous bare package names prompt the user, the decision is remembered in the SQLite state database, revalidated on repo changes, and scriptable via `aslice repo prefer` (§9.6, §12.1; REPOSITORIES.md §10–§11)
+- **Status:** Design draft, v1.1 — September 2026
+- **Change log:** v0.2 extends the platform floor from 10.15 (Catalina) to 10.11 (El Capitan) — see §4 for the consequences (three flavors, self-hosted toolchain in Phase 0, HFS+ support). v0.3 resolves open question #4: **aslice collects no telemetry or analytics of any kind, ever** — the project is infrastructure, not a product (§2.2 N7, §9.4, §15). v0.4 sharpens it: **download counts are rejected as a value signal too** — on a deprecated-OS platform, obscure ≠ low-value (§9.4). v0.5 adds the **repository system** (§9.6) and **vendor binary packages**: software that only ships as a `.pkg`/`.dmg`, hosted or vendor-fetched, installed without ever running installer scripts (§12.4; schema in PACKAGE-FORMAT v0.2 §3.11). v0.6 opens **32-bit vendor binaries**: i386 and universal pkg/dmg payloads install on the releases that still execute 32-bit code (10.11–10.14) — distributed, never built (§2.2 N6, §12.4; PACKAGE-FORMAT v0.3). v0.7 adds the **build-infrastructure design**: one harness — `aslice build` on a user's machine, `aslice farm` on the farm — running the identical sandboxed pipeline at both scales (§5.1, §9.3; full spec in [BUILD-INFRA.md](BUILD-INFRA.md)). v0.8 completes the repository story: a **shipped official source list**, **inherent trust levels** (official / verified / third-party / local — enforced capabilities, not labels), and **dual signature schemes** — Ed25519/minisign canonical, OpenPGP (GPG) built-in first-class for third-party ecosystems (§9.6, §10.2; full spec in [REPOSITORIES.md](REPOSITORIES.md)). v0.9 adds **cross-repository overlap resolution**: ambiguous bare package names prompt the user, the decision is remembered in the SQLite state database, revalidated on repo changes, and scriptable via `aslice repo prefer` (§9.6, §12.1; REPOSITORIES.md §10–§11). v1.0 adds the **logging design**: structured, local-only operation logs with a message-quality standard — every error is actionable, security events are unsuppressible, and nothing ever leaves the machine (§5.2, §8.1, §12.1, §12.5). v1.1 specifies **`aslice doctor`**: a read-only, scriptable sanity battery — machine, store, profiles, database, repositories, coexistence, environment — where every fail names its remedy and `--fix` is narrow and loud (§12.6)
 - **Scope:** macOS 10.11 (El Capitan) through 12 (Monterey), Intel x86_64 only
 - **Implementation:** C++20 core, single self-contained binary
 - **Audience:** Maintainers, founding contributors, and early reviewers
@@ -164,6 +164,7 @@ Privilege separation is structural: the helpers are separate executables (spawne
 | **Verifier** | Signature, hash, ABI, and policy checks before linking | Nothing reaches the profile without passing (§10.2) |
 | **Database** | Installed-set and metadata | Single SQLite file, WAL mode, prepared statements; the only mutable state besides the store. Holds the installed set, per-repo key pins and trust levels, remembered overlap resolutions, solve cache, and operation history ([REPOSITORIES.md](REPOSITORIES.md) §11) — records decisions and state, never grants authority; verification never consults it for trust |
 | **Reporter** | SBOM generation, `audit`, provenance display | SPDX SBOM per package; OSV feed integration (§10.6) |
+| **Logger** | Structured operation and security-event logging | JSONL on disk under `log/`, human rendering on the terminal; local-only, forever (§12.5) |
 
 ### 5.3 Why C++ — and what it costs
 
@@ -368,6 +369,7 @@ The variant domain per package is small by policy (§13.2 limits `abi = true` va
  │         ├── 41/  { bin/, lib/, share/, … }   # symlink forests into store
  │         └── 42/
  ├── cache/        # slices, sources, index snapshots
+ ├── log/          # structured operation logs (§12.5)
  ├── db/state.sqlite
  └── etc/aslice.toml
 ```
@@ -564,7 +566,10 @@ aslice repo re-pin / keys / audit <name>   # trust-level machinery (REPOSITORIES
 aslice repo prefer / resolutions / forget  # overlap decisions, remembered in the state DB (REPOSITORIES.md §10)
 aslice adopt --from-homebrew           # migration assistant (§13.3)
 aslice config set flavor v2            # overrides
-aslice doctor                          # environment sanity, loudly honest
+aslice doctor                          # environment sanity, loudly honest (§12.6)
+aslice log [--follow] [--level debug]  # query the local operation log (§12.5)
+# every command: -v / -vv raise verbosity, --quiet suppresses all but errors,
+# --log-format json|human selects rendering (§12.5)
 ```
 
 ### 12.2 Interaction principles
@@ -596,6 +601,55 @@ Some software for this platform will only ever ship as a `.pkg` installer or a `
 - **32-bit payloads install where — and only where — the OS can run them.** 10.11 through 10.14 are the last macOS releases that execute 32-bit code, and a large share of pkg/dmg-only software on this platform (audio plugins, lab instruments, frozen pro tools) is i386 or universal. Vendor artifacts may therefore carry `arch = ["i386"]` or `["x86_64", "i386"]`; the pack-time verifier inspects every Mach-O slice in the payload with `lipo`-style logic and derives the true ceiling — an i386-containing artifact must declare `max_os = "10.14"` (or lower), and on 10.15+ it is a clean solve-time refusal, not an install that can't launch. Universal payloads are installed **whole**: no `lipo -thin` stripping, ever — thinning a fat binary invalidates the vendor's code signature, and signature integrity outranks disk savings. This changes nothing about what aslice *builds* (N6: farm slices stay x86_64-only); it is distribution, not compilation.
 
 Vendor binaries participate in the store, generations, profiles, lock files, and `audit` exactly like source-built packages. Their `build_id` excludes flavor and toolchain (§7.2), and their payload dylibs get the same ABI scan at pack time — dependents link against vendor libraries through the same contract as farm-built ones. The scan is per-architecture: universal payloads record separate `x86_64` and `i386` ABI entries, and the x86_64 entry is what aslice-built dependents (always 64-bit) consume.
+
+### 12.5 Logging and diagnostics
+
+A package manager that fails opaquely trains users to fear it. aslice logs **everything it does, to the local machine, and nowhere else** — the charter (N7) applies to logs exactly as to metrics: nothing is ever transmitted, aggregated, or phoned home, not even opt-in.
+
+**Where logs live.** `/opt/aslice/log/` (or `~/.aslice/log/` for per-user prefixes), one JSONL file per day, rotated and size-capped (default: keep 14 days or 256 MB, whichever is less; both configurable). The build harness keeps its own per-build structured logs (`log.jsonl`, BUILD-INFRA §4) — this section governs the client.
+
+**What gets logged.** Every operation is a structured event stream with a generated operation ID that ties terminal output, log records, and the `history` table (REPOSITORIES.md §11) together:
+
+| Category | Examples | Level |
+|---|---|---|
+| Mutations | install/upgrade/uninstall plans, generation swaps, rollbacks, GC runs | info |
+| Security events | signature/hash/ABI verification results, key-pin changes, trust-level demotions, sandbox escapes, frozen repos | warn or error — **unsuppressible** (`--quiet` cannot hide them) |
+| Decisions | overlap resolutions and revalidations (§9.6), fallback-to-source events, flavor downgrades, EOL acceptances | info |
+| Diagnostics | network retries, mirror failovers, slow solves, disk-space pressure | debug at `-v`, trace at `-vv` |
+
+**The message-quality standard.** Log messages are UI, and they are held to the same bar as the CLI itself:
+
+- **Actionable errors, always.** Every error message names *what* failed, *why* as far as aslice can determine, and *what the user can do next*. `"verification failed"` is a bug; `"slice ffmpeg-7.1-0+core.v3: minisign signature invalid (key ed25519:RWQ0…, repo core) — refusing to install; run `aslice doctor` or re-fetch with --refresh-index"` is the standard.
+- **Structured fields, human rendering.** Events are JSONL on disk (`ts`, `level`, `op`, `pkg`, `msg`, plus context fields); the terminal renders them as concise human lines. `--log-format json` pipes the raw stream for scripting; `-v`/`-vv` raise verbosity without changing what is *recorded*.
+- **One message, one fact, one place.** Errors propagate with context attached at each layer (fetch → verify → link), so the final message reads as a causal chain, not a stack trace. No message is ever printed twice by two layers.
+- **Progress is a log level, not a spinner-only UX.** Long operations (downloads, builds) emit periodic structured progress events, so a CI log or a `aslice log --follow` tells the same story the terminal spinner does.
+- **Supportability.** `aslice log` filters by operation, package, level, or time range; `aslice doctor` ends with the paths of the relevant log files. When a user files an issue, `aslice log --last-op` produces exactly the excerpt a maintainer needs — locally generated, user-attached, never auto-submitted.
+
+**Silence discipline.** Steady-state success is quiet: a successful binary install prints its plan summary and result, and everything else lives in the log at info level. aslice never logs at warn for things that are fine (a lesson from tools whose warning noise trains users to ignore real ones).
+
+### 12.6 Doctor: sanity checking
+
+`aslice doctor` is the single entry point for "is my installation healthy?" — it runs a fixed battery of checks, reports each as pass/warn/fail with the actionable-message standard of §12.5, and never changes anything itself (repairs are explicit commands it *recommends*). It is read-only, offline-capable, and fast (< 1 s for the standard battery; deep checks are opt-in).
+
+**Check groups:**
+
+| Group | Checks | Verdicts |
+|---|---|---|
+| **Machine** | CPU flavor vs. configured flavor (a v3 config on v2 hardware is a fail, not a surprise SIGILL later); macOS release vs. supported window; APFS vs. HFS+ (capabilities that degrade, announced); free disk vs. GC watermark | pass / warn / fail |
+| **Prefix and store** | Prefix ownership and permissions (user-owned, not world-writable); store path integrity — manifests re-hashed against on-disk content (`--deep` re-hashes every file, default checks a sample plus anything the DB flags); dangling store paths referenced by no generation | pass / fail |
+| **Profiles and generations** | `default` symlink resolves; every profile symlink lands inside the store; the live generation matches the DB's installed set; collision priorities resolve to real paths | pass / fail |
+| **Database** | SQLite integrity check; schema version vs. binary (a newer DB than the binary is a loud fail with downgrade instructions, never silent corruption); WAL recovery state | pass / fail |
+| **Repositories** | Per repo: reachable (or cached-snapshot age if `--offline`), TUF metadata expiry countdown, pinned key still matches live root, trust-level consistency (a `verified` repo whose countersignature lapsed is a fail with the freeze explanation — REPOSITORIES §3), shadowed core names, current overlaps and their resolution state, index staleness beyond policy | pass / warn / fail |
+| **Coexistence** | Homebrew/MacPorts presence, PATH ordering advice, anything in `/usr/local` shadowing aslice binaries (or vice versa) — advisory only, aslice never touches either | pass / warn |
+| **Environment** | `ASLICE_*` variables that override config (listed, not hidden); shell init files referencing stale prefixes; Xcode CLT presence (informational — the self-hosted toolchain makes it optional for aslice itself) | info / warn |
+
+**Rules:**
+
+- **Every fail and warn names the remedy.** Not "store integrity error" but "store path `x264-0.164-0+core.v3.77aa10b2` fails manifest hash (1 file) — quarantine with `aslice store verify --quarantine x264` and reinstall." The check table is code, not prose: each check has an ID (`doctor.store.hash`), so messages, `--json` output, and docs all reference the same stable identifier.
+- **Exit codes are scriptable:** 0 all-pass, 1 warnings only, 2 any fail. `--json` emits the full battery result; CI and fleet tooling gate on it (`aslice doctor --json | jq '.checks[] | select(.verdict=="fail")'`).
+- **Warnings are honest, not noisy.** Each warn is a real action item with a command attached; anything informational goes to the `info` tier, which `--brief` suppresses. A doctor that cries wolf gets ignored — the battery is curated so that a clean machine prints one line: `aslice: your installation is healthy (N checks, M repos, G generations)`.
+- **It ends with pointers, not a wall.** The summary footer lists the log directory and the last operation ID (§12.5), so a failing machine goes from `doctor` to root cause in two commands.
+- **`--fix` exists but is narrow and loud.** The only automatic repairs offered are ones with no possible data loss: pruning dangling cache entries, re-linking a broken generation symlink to its recorded target, refreshing stale index snapshots. Everything else prints the exact command for the user to run. `--fix` announces each action before taking it and logs all of them.
 
 ---
 
