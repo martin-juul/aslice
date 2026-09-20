@@ -188,7 +188,7 @@ aslice uninstall x264         # remove one package
 aslice autoremove             # remove anything nothing needs anymore
 ```
 
-aslice records whether you asked for a package or it arrived as a dependency. `autoremove` collects the second kind once nothing reachable from your explicitly-requested set needs them — the same model as `apt autoremove`. If it ever disagrees with you about a package's status:
+aslice records whether you asked for a package by name or it arrived as a dependency. `autoremove` collects the second kind once nothing reachable from your explicitly-requested set needs them — the same model as `apt autoremove`. If it ever disagrees with you about a package's status:
 
 ```
 aslice mark ffmpeg --on-request       # "I want this; stop calling it a dependency"
