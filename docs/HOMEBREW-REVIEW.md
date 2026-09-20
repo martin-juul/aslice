@@ -70,7 +70,7 @@ Legend: ✅ spec covers it · ⚡ aslice is ahead · ⚠ partial / under-specifi
 | doctor | ⚡ | Fully specified (DESIGN §12.6): check battery with stable IDs, `--json`, scriptable exit codes, curated narrow `--fix`, Homebrew-coexistence checks — ahead of Homebrew's |
 | shellenv (emit PATH setup) | ❌ | Installer writes profiles, but a `aslice shellenv` equivalent is needed for shells the installer doesn't touch |
 | info/search with rich metadata | ⚠ | `--json` on everything is specified; `keywords` field powers search. Missing: a **public web index** — see §4.8 |
-| install specific version (`install foo@1.2`, version-install) ⚡ | `aslice install ffmpeg@v6` + index snapshots give *arbitrary historical* installs — better than Homebrew's versioned-formula hacks |
+| install specific version (`install foo@1.2`, version-install) | ⚡ | `aslice install ffmpeg@v6` + index snapshots give *arbitrary historical* installs — better than Homebrew's versioned-formula hacks |
 | link / unlink / switch between installed versions | ⚠ | Generations supersede `switch`; but a per-package `link`/`unlink` is still needed for shadowing packages — see §4.5 |
 
 ### 3.2 Security and trust
