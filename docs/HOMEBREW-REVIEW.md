@@ -106,7 +106,7 @@ Legend: ✅ spec covers it · ⚡ aslice is ahead · ⚠ partial / under-specifi
 |---|---|---|
 | brew services (start/stop/restart/list, env overrides) | ❌ | See §4.4 |
 | Versioned runtimes (php@x.y, python@x.y) + the nvm/pyenv/rbenv/Volta ecosystem around them | ⚡ delivered | One formula with release streams; shims resolve session → project → default; `aslice use/pin/default`; tools ride the selected runtime; extension slices bind to the runtime's ABI epoch; pip/gem/npm installs bind per-version through shim-injected userbases (§4.15 — DESIGN v1.5 §12.9, PACKAGE-FORMAT v0.5 §3.13) |
-| brew bundle (Brewfile wishlist, dump) | ⚠ | Locks are exact-state, not a human wishlist; adopt a minimal wishlist format — see §4.6 |
+| brew bundle (Brewfile wishlist, dump) | ⚠ | Locks are exact-state, not a wishlist; adopt a minimal wishlist format — see §4.6 |
 | brew exec (npx-like ephemeral environments, 6.0) | ❌ | Natural fit for profiles — see §4.6 |
 | Brewfile import for migration | ❌ | `adopt --from-homebrew` reads the Cellar; many users' source of truth is a Brewfile — see §4.6 |
 | brew shellenv / completions / man pages | ❌ | aslice's own shell integration unspecified — see §4.13 |
@@ -177,6 +177,8 @@ reason      = "upstream-eol"  # upstream-eol | security | renamed | unmaintainab
 replacement = "ffmpeg7"       # optional pointer
 disable_date = "2027-09-01"   # optional: after this, new installs refuse without --force-disabled
 ```
+
+Semantics: **active → deprecated** (installs warn, `audit`/`info` surface it) **→ disabled** (new installs refused, existing installs keep working and remain in locks) **→ tombstoned** (formula removed from orchard HEAD; the index keeps a permanent tombstone so old locks still resolve against historical snapshots — something Homebrew's git-tap model does *worse* than aslice's snapshot model can). Add `aslice pin <pkg>` / `unpin` (recorded in the DB, honored by `upgrade`, surfaced in `outdated`), and `aslice outdated [--json]`.
 
 ### 4.4 P1 — Services UX
 
