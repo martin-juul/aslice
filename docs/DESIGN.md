@@ -2,8 +2,8 @@
 
 **Name.** *aslice* — an apple slice: a nod to the Macintosh apple and to the shape of the project itself. Binary packages are **slices**; formula repositories are **orchards**; the manager picks slices off the orchard, prebuilt or baked to order. The vocabulary is deliberately distinct from Homebrew's beer terminology to avoid community confusion and trademark friction. The project name is styled lowercase everywhere, including sentence starts — like the command.
 
-- **Status:** Design draft, v1.1 — September 2026
-- **Change log:** v0.2 extends the platform floor from 10.15 (Catalina) to 10.11 (El Capitan) — see §4 for the consequences (three flavors, self-hosted toolchain in Phase 0, HFS+ support). v0.3 resolves open question #4: **aslice collects no telemetry or analytics of any kind, ever** — the project is infrastructure, not a product (§2.2 N7, §9.4, §15). v0.4 sharpens it: **download counts are rejected as a value signal too** — on a deprecated-OS platform, obscure ≠ low-value (§9.4). v0.5 adds the **repository system** (§9.6) and **vendor binary packages**: software that only ships as a `.pkg`/`.dmg`, hosted or vendor-fetched, installed without ever running installer scripts (§12.4; schema in PACKAGE-FORMAT v0.2 §3.11). v0.6 opens **32-bit vendor binaries**: i386 and universal pkg/dmg payloads install on the releases that still execute 32-bit code (10.11–10.14) — distributed, never built (§2.2 N6, §12.4; PACKAGE-FORMAT v0.3). v0.7 adds the **build-infrastructure design**: one harness — `aslice build` on a user's machine, `aslice farm` on the farm — running the identical sandboxed pipeline at both scales (§5.1, §9.3; full spec in [BUILD-INFRA.md](BUILD-INFRA.md)). v0.8 completes the repository story: a **shipped official source list**, **inherent trust levels** (official / verified / third-party / local — enforced capabilities, not labels), and **dual signature schemes** — Ed25519/minisign canonical, OpenPGP (GPG) built-in first-class for third-party ecosystems (§9.6, §10.2; full spec in [REPOSITORIES.md](REPOSITORIES.md)). v0.9 adds **cross-repository overlap resolution**: ambiguous bare package names prompt the user, the decision is remembered in the SQLite state database, revalidated on repo changes, and scriptable via `aslice repo prefer` (§9.6, §12.1; REPOSITORIES.md §10–§11). v1.0 adds the **logging design**: structured, local-only operation logs with a message-quality standard — every error is actionable, security events are unsuppressible, and nothing ever leaves the machine (§5.2, §8.1, §12.1, §12.5). v1.1 specifies **`aslice doctor`**: a read-only, scriptable sanity battery — machine, store, profiles, database, repositories, coexistence, environment — where every fail names its remedy and `--fix` is narrow and loud (§12.6)
+- **Status:** Design draft, v1.2 — September 2026
+- **Change log:** v0.2 extends the platform floor from 10.15 (Catalina) to 10.11 (El Capitan) — see §4 for the consequences (three flavors, self-hosted toolchain in Phase 0, HFS+ support). v0.3 resolves open question #4: **aslice collects no telemetry or analytics of any kind, ever** — the project is infrastructure, not a product (§2.2 N7, §9.4, §15). v0.4 sharpens it: **download counts are rejected as a value signal too** — on a deprecated-OS platform, obscure ≠ low-value (§9.4). v0.5 adds the **repository system** (§9.6) and **vendor binary packages**: software that only ships as a `.pkg`/`.dmg`, hosted or vendor-fetched, installed without ever running installer scripts (§12.4; schema in PACKAGE-FORMAT v0.2 §3.11). v0.6 opens **32-bit vendor binaries**: i386 and universal pkg/dmg payloads install on the releases that still execute 32-bit code (10.11–10.14) — distributed, never built (§2.2 N6, §12.4; PACKAGE-FORMAT v0.3). v0.7 adds the **build-infrastructure design**: one harness — `aslice build` on a user's machine, `aslice farm` on the farm — running the identical sandboxed pipeline at both scales (§5.1, §9.3; full spec in [BUILD-INFRA.md](BUILD-INFRA.md)). v0.8 completes the repository story: a **shipped official source list**, **inherent trust levels** (official / verified / third-party / local — enforced capabilities, not labels), and **dual signature schemes** — Ed25519/minisign canonical, OpenPGP (GPG) built-in first-class for third-party ecosystems (§9.6, §10.2; full spec in [REPOSITORIES.md](REPOSITORIES.md)). v0.9 adds **cross-repository overlap resolution**: ambiguous bare package names prompt the user, the decision is remembered in the SQLite state database, revalidated on repo changes, and scriptable via `aslice repo prefer` (§9.6, §12.1; REPOSITORIES.md §10–§11). v1.0 adds the **logging design**: structured, local-only operation logs with a message-quality standard — every error is actionable, security events are unsuppressible, and nothing ever leaves the machine (§5.2, §8.1, §12.1, §12.5). v1.1 specifies **`aslice doctor`**: a read-only, scriptable sanity battery — machine, store, profiles, database, repositories, coexistence, environment — where every fail names its remedy and `--fix` is narrow and loud (§12.6). v1.2 opens a narrowly-scoped **system-software category**: kernel extensions and SIP-disabled development software become installable as declared `[system]` packages — warned at every decision point, elevated per-operation by a dedicated helper, gated by repository trust level — replacing the blanket rejection with an honest, reversible install path (§10.4, §10.7, §12.1, §12.7, §13.1)
 - **Scope:** macOS 10.11 (El Capitan) through 12 (Monterey), Intel x86_64 only
 - **Implementation:** C++20 core, single self-contained binary
 - **Audience:** Maintainers, founding contributors, and early reviewers
@@ -492,6 +492,7 @@ The installer is a small, auditable shell script that fetches exactly two things
 - **No sudo in steady state.** Not for install, not for upgrade, not for uninstall. The prefix is user-owned from creation.
 - **Never touches `/usr/local`.** Coexistence with Homebrew/MacPorts is by construction, and the historic `/usr/local` ownership flaw is simply not inherited. Vendor-binary apps install under `/opt/aslice/apps/` — never `/Applications` — with a per-user `~/Applications` symlink as the opt-in convenience (§12.4).
 - **No setuid binaries, no helper daemon at launch.** A future multi-user mode (shared lab machines) will use a launchd daemon that accepts only TUF-verified operation plans over a local socket with peer-credential checks — designed, but gated behind demand.
+- **One scoped exception: `aslice-system`.** Declared system-software packages (kexts, SIP-disabled development tools — §12.7) require privileged steps no user-space manager can perform. Those steps are executed by a single tiny auditable helper that elevates **per operation, with explicit consent, for exactly the declared actions** — it is not a daemon, holds no ambient authority, and every invocation is an unsuppressible logged security event (§12.5). The steady-state rule stands: nothing else in aslice ever elevates.
 
 ### 10.5 Sandboxed builds
 
@@ -518,6 +519,7 @@ Seatbelt is deprecated by Apple on newer releases but frozen-in-place across our
 
 - A malicious *core maintainer* with signing access can still ship bad slices; threshold keys, reproducible-build cross-checks (§9.5), and a public transparency log of index snapshots are the mitigations, and they reduce but do not eliminate insider risk.
 - Sandboxing contains *builds*, not the runtime behavior of installed software. aslice is a package manager, not an endpoint product. This bears repeating for vendor binaries: payload-only installation removes *installer-script* risk, not the risk of the vendor binary itself — signer pinning and hash pinning ensure you get exactly the vendor's artifact, and that is all they ensure.
+- **System packages (§12.7) deliberately step outside the sandbox story.** A kext runs in kernel space — a bug panics the machine — and SIP-disabled development tools weaken the protections of §10 for *all* software, not just themselves. aslice's guarantee for this category is narrower and says so: the bits are exactly the declared, verified ones; the privileged steps are exactly the declared ones, performed by aslice's own helper with explicit consent; the user was warned at every decision point. Nothing more is claimed, and the category is never servable by third-party repositories.
 - C++ memory-safety risk in aslice itself is managed per §5.3; the parsers and extractors — the untrusted-input surfaces — get the fuzzing and the smallest footprints.
 
 ---
@@ -568,6 +570,7 @@ aslice adopt --from-homebrew           # migration assistant (§13.3)
 aslice config set flavor v2            # overrides
 aslice doctor                          # environment sanity, loudly honest (§12.6)
 aslice log [--follow] [--level debug]  # query the local operation log (§12.5)
+aslice install foo --accept-system-changes   # explicit consent for [system] packages, non-interactive (§12.7)
 # every command: -v / -vv raise verbosity, --quiet suppresses all but errors,
 # --log-format json|human selects rendering (§12.5)
 ```
@@ -592,7 +595,7 @@ Orchards are git repos of formula directories — the *authoring* format. Reposi
 
 Some software for this platform will only ever ship as a `.pkg` installer or a `.dmg` — commercial audio tools, vendor CLIs, frozen releases of abandoned apps. aslice installs it **without ever running installer code**:
 
-- **`.pkg`:** expanded with `xar`/`pkgutil --expand`; only the `Payload` is extracted, per the declarative path map in the formula. `preinstall`/`postinstall` scripts are never executed — full stop. Packages whose function genuinely *requires* script execution (drivers, kexts, anything wiring into the OS) are out of scope by policy (§13.1) — the same hard line as source packages, applied to binaries.
+- **`.pkg`:** expanded with `xar`/`pkgutil --expand`; only the `Payload` is extracted, per the declarative path map in the formula. `preinstall`/`postinstall` scripts are never executed — full stop. Packages whose function genuinely *requires* script execution remain out of scope — the payload-only line holds. Drivers and kexts are **not** rejected, though: they install through the declarative system-software category (§12.7), where the privileged steps are performed by aslice's own helper from manifest declarations, never by vendor scripts.
 - **`.dmg`:** attached read-only via `hdiutil -nobrowse -readonly`; declared items copied. No autolaunch, no quarantine propagation.
 - **Apps** install under `/opt/aslice/apps/` (owned by the prefix, not `/Applications`), with an optional per-user `~/Applications` symlink; Finder and Launch Services pick them up from either location.
 - **Provenance is pinned.** The formula records the expected signing identity (`Developer ID Application: Vendor (TEAMID)`) and notarization expectation; the verifier checks the signature *before* extraction and hard-fails on a silent signer change — a classic supply-chain attack against binary distribution.
@@ -653,6 +656,38 @@ A package manager that fails opaquely trains users to fear it. aslice logs **eve
 
 ---
 
+### 12.7 System software: kexts and SIP-disabled development tools
+
+Some software this platform needs cannot live entirely inside the store: kernel extensions (audio-interface drivers, filesystems, hypervisors) and development tools that require SIP disabled (low-level debuggers, DTrace-based profilers, kernel instrumentation — a real population on 10.11–12 development machines). Earlier drafts rejected this category outright; v1.2 replaces the rejection with an honest, declared path, because the software exists and users install it today by hand — with no provenance, no warnings, and no rollback. A package manager that refuses to see that protects no one.
+
+**Declaration.** A package opts in via `package.toml`:
+
+```toml
+[system]
+kexts            = ["Library/Extensions/FooAudio.kext"]  # payload-relative paths to install
+sip_off_required = false     # true: the software cannot function while SIP is enabled
+reason           = "Kernel driver for FooAudio USB interfaces"   # mandatory; this IS the warning text
+```
+
+Either `kexts` or `sip_off_required = true` (or both) marks a system package; `reason` is mandatory and shown verbatim in every warning. Development tools needing SIP off but installing no kext declare only `sip_off_required` and `reason`. The full schema lands in PACKAGE-FORMAT v0.4 alongside the REVIEW §8 amendments.
+
+**Mechanism — declarative, elevated, still code-free.** The category preserves the founding rules:
+
+- **Zero package code at install (§10.1) holds.** The privileged steps — placement into `/Library/Extensions`, ownership and permission repair, `kextcache` invalidation, load — are performed by **`aslice-system`** (§10.4) from the manifest's declarations. Vendor `postinstall` scripts still never execute; a vendor kext package whose scripts turn out to be required is still rejected (§12.4, ORCHARD-POLICY §13).
+- **Store and rollback hold.** The kext payload lives in the store like any other file; `/Library/Extensions` entries are managed copies recorded in the DB. Uninstall unloads and removes them and refreshes the kernel cache; rolling back to a prior generation restores the prior kext set.
+- **Kext reality is respected.** On SIP-enabled 10.11+, loaded kexts must be signed — the formula declares whether its kexts are signed (signer-pinned per §12.4 when vendor-supplied) or whether it requires SIP off. aslice checks `csrutil status` rather than assuming: a `sip_off_required` package on a SIP-enabled machine stops *before download* with exact instructions (boot to Recovery, `csrutil disable`, re-run the command); a signed-kext package on a SIP-enabled machine installs with no SIP conversation at all. OS updates can re-enable SIP or invalidate kexts — `doctor` (§12.6) reports SIP state, declared-vs-loaded kexts, and exactly that drift.
+
+**The warnings are the feature.** Declared system requirements surface at every decision point:
+
+- **Solve and plan:** installing a system package prints a prominent block *before any download*: the kexts it installs, the SIP requirement, the `reason` text, and the consequences — kexts run in kernel space (a bug panics the machine), and SIP-disabled operation weakens every protection in §10 for all software on the machine.
+- **Non-interactive refusal:** scripts, `--json` plans, and `aslice apply` **refuse** system packages unless `--accept-system-changes` is passed for that operation. There is deliberately no persistent "always accept system changes" setting — consent is per-decision, like the risk.
+- **Elevation:** the consent prompt for `aslice-system` repeats the declaration; every elevation is logged as an unsuppressible security event (§12.5).
+- **Doctor:** SIP state, kext drift after OS updates, and unsigned-kext installs are all `doctor` checks with remedy text and stable check IDs (`doctor.system.sip`, `doctor.system.kexts`).
+
+**Trust gating.** Serving system packages requires the **`system` capability**, granted by trust level (REPOSITORIES.md §3): **official and verified repositories have it; third-party repositories never do; `local` repositories have it** (a developer's own `file://` tree on their own machine — the same authority as installing the kext by hand, now with warnings and rollback). Talking a user into installing a kernel extension is precisely the social-engineering attack the trust levels exist to block, so no remote stranger's repository can offer one. Tier policy — extended by default, core only when the platform genuinely requires it — lives in ORCHARD-POLICY §13.
+
+---
+
 ## 13. Policies, Governance, and Migration
 
 ### 13.1 Package acceptance policy
@@ -660,7 +695,7 @@ A package manager that fails opaquely trains users to fear it. aslice logs **eve
 - Core orchard: maintained, security-patched, reproducible-build targets; no package enters without a working `tests.star` smoke test on at least one OS × one flavor.
 - Upstream-EOL software: allowed in extended with `eol = true` metadata; excluded from core.
 - Vendor binary packages: accepted into extended only with a verifiable signature and honest OS-support tags; into core only if additionally redistributable (so the farm hosts the slice) and payload-only by construction. A vendor package whose scripts turn out to be required is removed, not accommodated.
-- No packages that require disabling SIP, installing kexts, or patching system files. Ever. This is a hard line and a marketing feature.
+- **Patching system files is rejected forever** — aslice installs alongside macOS; it never modifies `/System`, `/usr`, or Apple's binaries. This remains a hard line and a marketing feature. Kernel extensions and SIP-disabled development software are **not** rejected: they are the declared, warned, trust-gated system-software category of §12.7.
 
 ### 13.2 Variant discipline
 
@@ -722,6 +757,7 @@ Two-builder reproducibility cross-checks; transparency log; community mirror pro
 4. ~~Telemetry~~ — **resolved (v0.3, sharpened v0.4): aslice collects no telemetry or analytics of any kind, ever.** No install IDs, no opt-in counters, no phone-home, no crash reporting — and no download-count-driven prioritization either, because volume mismeasures value on a platform where the rarest dependency may be the most irreplaceable (§9.4). The project is infrastructure, not a product, and its users — many on air-gapped audio rigs and lab machines — owe it no data. This is a charter-level commitment, not a tunable.
 5. Whether the project's canonical repository should host *any* `redistribute = false` formulae in core, or whether pointer-only packages should be extended-tier by definition (current: allowed in both, barred from core unless redistributable — but that makes core depend on license goodwill; review wanted).
 6. Whether `verified` repositories should install binaries immediately at enable time, or require an additional per-repo `--accept-binaries` step (current: enable implies binaries — the project countersignature is the vetting; the extra click was judged ceremony without security content; REPOSITORIES.md §9).
+7. Whether the `system` capability (§12.7) should ride on the `verified` trust level or be a separate per-repo grant (`aslice repo allow-system <name>`). Current: verified repos get it — the countersignature is the vetting, and one more click was judged ceremony. But kexts are exactly where ceremony might be security; review wanted.
 
 ---
 
@@ -736,6 +772,7 @@ Two-builder reproducibility cross-checks; transparency log; community mirror pro
 | Mix binary + custom builds | Breaks assumptions | Works, all-local | Full rebuild cascade | **Contract-checked substitution** |
 | Install-time package code | Ruby `post_install` | Tcl phases | No | **None (declarative)** |
 | pkg/dmg-only vendor software | Casks (installer scripts may run) | Rare | Not the model | **Payload-only, signer-pinned, OS-tagged artifacts — incl. 32-bit/universal on 10.11–10.14** |
+| Kernel extensions / SIP-off dev tools | Cask pkg scripts (arbitrary vendor code, often as root) | Manual installs | Not the model | **Declared `[system]` category: warned, consent-gated, trust-gated, rollback-able (§12.7)** |
 | Third-party binary distribution | Taps + bottles bolted on | No | Binary caches (trust via substituters) | **Repositories: signed, static, mirrorable, self-publishable** |
 | Rollback | No | No | Yes | **Yes (generations)** |
 | Repo integrity | git + partial attestations | rsync + signatures | Signed cache | **TUF + signed slices + transparency log** |
