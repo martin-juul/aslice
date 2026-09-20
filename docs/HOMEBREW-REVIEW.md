@@ -1,7 +1,7 @@
 # aslice vs Homebrew — Capability Review and Gap Analysis
 
-- **Status:** Review v0.5 — September 2026 (v0.2: vendor-binary packages supersede the cask deferral — §3.4, §5, §9 rows updated; v0.3: 32-bit/universal vendor payloads on 10.11–10.14; v0.4: companions — DESIGN v1.2 opens the declared `[system]` category for kexts and SIP-off dev tools, ORCHARD-POLICY.md delivered; the installer-script rejection stands unchanged; v0.5: §4.4 Services UX **closed** — DESIGN v1.3 §12.8 delivers the launchd-native `aslice service` CLI and adds stop–swap–restart upgrade orchestration beyond the proposal; PACKAGE-FORMAT v0.4 replaces `[[install.service]]` with the generated `[service]` table)
-- **Companion to:** [DESIGN.md](DESIGN.md) v1.3, [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md) v0.4, [BUILD-INFRA.md](BUILD-INFRA.md) v0.1, [REPOSITORIES.md](REPOSITORIES.md) v0.5, [ORCHARD-POLICY.md](ORCHARD-POLICY.md) v0.3
+- **Status:** Review v0.6 — September 2026 (v0.2: vendor-binary packages supersede the cask deferral — §3.4, §5, §9 rows updated; v0.3: 32-bit/universal vendor payloads on 10.11–10.14; v0.4: companions — DESIGN v1.2 opens the declared `[system]` category for kexts and SIP-off dev tools, ORCHARD-POLICY.md delivered; the installer-script rejection stands unchanged; v0.5: §4.4 Services UX **closed** — DESIGN v1.3 §12.8 delivers the launchd-native `aslice service` CLI and adds stop–swap–restart upgrade orchestration beyond the proposal; PACKAGE-FORMAT v0.4 replaces `[[install.service]]` with the generated `[service]` table; v0.6: multi-version runtime management **delivered** — DESIGN v1.5 §12.9 adds the shim layer with session/project/default selection (`use`/`pin`/`default`), riding tools, and ABI-epoch-bound extension slices; PACKAGE-FORMAT v0.5 §3.13 adds `[runtime]`/`[extension]`/`[ride]`)
+- **Companion to:** [DESIGN.md](DESIGN.md) v1.5, [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md) v0.5, [BUILD-INFRA.md](BUILD-INFRA.md) v0.1, [REPOSITORIES.md](REPOSITORIES.md) v0.5, [ORCHARD-POLICY.md](ORCHARD-POLICY.md) v0.3
 - **Method:** aslice's two specifications compared feature-by-feature against Homebrew's living feature set as of Homebrew 7.0.0 (September 2026). Apple-Silicon-specific work and Homebrew's Intel deprecation/removal machinery are excluded per review scope; everything else Homebrew does today is fair game.
 - **Sources:** Homebrew release notes 4.6.0 → 7.0.0, docs.brew.sh (Security and Supply Chain, Tap Trust), Homebrew/brew issue #17019 (attestation verification). Links in §10.
 
@@ -45,6 +45,7 @@ None of these require rearchitecting anything. All of them are cheaper to spec n
 | **Freshness pipeline** | **livecheck DSL, autobump, bump-formula-pr, cooldowns** | **Nothing** | **Behind — biggest gap** |
 | **Corpus** | ~15 years of formulae encoding macOS quirk knowledge | 0 today; 300 core planned | **Behind — the real moat** |
 | Services UX | `brew services` mature; per-service env overrides (7.0) | Declarative `[service]` + launchd-native CLI + stop–swap–restart upgrades (§4.4 — delivered, DESIGN v1.3) | **Ahead** on upgrade safety |
+| Multi-version runtimes | Separate `php@x.y`/`python@x.y` formulae, keg-only juggling; the real answer is external managers (nvm, pyenv, rbenv, Volta) shadowing brew with their own shims and state | Release streams in one formula; shim layer with session/project/default selection (`use`/`pin`/`default`); tools ride the selected runtime; extensions ABI-epoch-bound (§4.15 — delivered, DESIGN v1.5) | **Ahead** — version management as a package-manager feature, not a second tool |
 | Environments | `brew bundle` (Brewfile), `brew exec` (npx-like, 6.0) | Lock files (exact reproduction); no wishlist or ephemeral-exec | Partial |
 | GUI | BrewUI native app (7.0) | None (CLI-first audience) | Behind, acceptably |
 
@@ -104,6 +105,7 @@ Legend: ✅ spec covers it · ⚡ aslice is ahead · ⚠ partial / under-specifi
 | Homebrew capability | aslice status | Notes |
 |---|---|---|
 | brew services (start/stop/restart/list, env overrides) | ❌ | See §4.4 |
+| Versioned runtimes (php@x.y, python@x.y) + the nvm/pyenv/rbenv/Volta ecosystem around them | ⚡ delivered | One formula with release streams; shims resolve session → project → default; `aslice use/pin/default`; tools ride the selected runtime; extension slices bind to the runtime's ABI epoch; pip/gem/npm installs bind per-version through shim-injected userbases (§4.15 — DESIGN v1.5 §12.9, PACKAGE-FORMAT v0.5 §3.13) |
 | brew bundle (Brewfile wishlist, dump) | ⚠ | Locks are exact-state, not a human wishlist; adopt a minimal wishlist format — see §4.6 |
 | brew exec (npx-like ephemeral environments, 6.0) | ❌ | Natural fit for profiles — see §4.6 |
 | Brewfile import for migration | ❌ | `adopt --from-homebrew` reads the Cellar; many users' source of truth is a Brewfile — see §4.6 |
@@ -175,8 +177,6 @@ reason      = "upstream-eol"  # upstream-eol | security | renamed | unmaintainab
 replacement = "ffmpeg7"       # optional pointer
 disable_date = "2027-09-01"   # optional: after this, new installs refuse without --force-disabled
 ```
-
-Semantics: **active → deprecated** (installs warn, `audit`/`info` surface it) **→ disabled** (new installs refused, existing installs keep working and remain in locks) **→ tombstoned** (formula removed from orchard HEAD; the index keeps a permanent tombstone so old locks still resolve against historical snapshots — something Homebrew's git-tap model does *worse* than aslice's snapshot model can). Add `aslice pin <pkg>` / `unpin` (recorded in the DB, honored by `upgrade`, surfaced in `outdated`), and `aslice outdated [--json]`.
 
 ### 4.4 P1 — Services UX
 
@@ -277,6 +277,14 @@ Semantics: **active → deprecated** (installs warn, `audit`/`info` surface it) 
 - **Historical installs as a feature.** `aslice install ffmpeg --index-snapshot 2026-09-01` — the snapshot is content-addressed and retained, so "the exact package set from the day this paper's results were produced" is a one-liner. Homebrew can approximate this only by archaeology. Worth marketing to the lab/CI audience.
 - **`aslice why --explain` everywhere.** The derivation-tree rendering is already spec'd for solves; extend it to `outdated` and `audit` ("why is this flagged") — explainability as the house style.
 
+### 4.15 P1 — Multi-version runtime management (version managers)
+
+**Homebrew:** versioned runtimes are separate formulae (`php@8.1`, `python@3.12`), keg-only or fighting over the unversioned link; switching means `brew link --overwrite` incantations. The ecosystem's real answer is external version managers — nvm, pyenv, rbenv, Volta — each with its own shims, its own state, and no knowledge of the package manager underneath: two sources of truth for what `python3` resolves to, and PATH-ordering bugs as the support load. Worse, every one of them abandons the extension problem — pecl/pip/gem/npm installs land wherever the *first* resolved runtime put them, and silently cross version boundaries.
+
+**Why it matters for aslice:** this platform's audience keeps old runtimes *on purpose* — a php 7.4 site that may never be ported, a python pinned by a frozen lab pipeline, a ruby held by an ancient Rails app. Version management is not a power-user extra here; it is the daily workflow.
+
+**Status: delivered (DESIGN v1.5 §12.9, PACKAGE-FORMAT v0.5 §3.13).** The design takes the Volta model as the baseline and extends it in three directions Volta doesn't reach. Selection is three-layered — `aslice use` (session, via a shim-visible env var and optional shell integration), `aslice pin` (project `aslice.toml`: Volta's `package.json` pin made ecosystem-neutral), `aslice default` (profile-wide) — resolved by a multicall shim layer ahead of the profile on PATH, exec-only, sub-millisecond. Tools that are pure interpreter-target artifacts (composer, yarn, poetry) declare `[ride]` and launch under the *currently selected* runtime — Volta's best idea, generalized beyond node. And the extension problem is solved structurally: compiled extensions are slices keyed to the runtime's declared ABI epoch (`[extension] runtime = "php"` → `php-redis+php8.4` and `+php8.3` coexist as distinct store paths, generation-managed and rollback-complete), while pip/gem/npm/pecl installs bind per-version through shim-injected userbase environments. Upgrades never cross streams: `aslice upgrade php` patches within 8.4, and moving to 8.5 is an explicit `install` + `use`/`pin`/`default` decision.
+
 ---
 
 ## 5. What aslice should deliberately NOT copy
@@ -315,6 +323,7 @@ Semantics: **active → deprecated** (installs warn, `audit`/`info` surface it) 
 | livecheck schema + `aslice livecheck` + scheduled autobump + bump-pr | P0 | **Phase 1**, alongside the 300-package core seeding — the tooling *is* how the core gets maintained |
 | Lifecycle states (`[deprecation]`, pin, outdated, reinstall) | P1 | Phase 1 (cheap; the DB schema wants `on_request` and pins from birth) |
 | Services CLI + per-service env overrides | P1 | Phase 1 — design complete (DESIGN v1.3 §12.8, PACKAGE-FORMAT v0.4 `[service]`) |
+| Multi-version runtimes (shim layer, use/pin/default, riding tools, extension slices) | P1 | Phase 2 — design complete (DESIGN v1.5 §12.9, PACKAGE-FORMAT v0.5 §3.13) |
 | `link = false` policy + lint rules + system-framework allowlist | P1 | Phase 1 (policy must exist *before* the core orchard accumulates violations) |
 | Orchard CI merge gates incl. ABI gate + dependent-rebuild cascade | P1 | Phase 1→2 (gate first, ABI-diff automation as the scanner matures) |
 | autoremove correctness (`on_request`), `aslice clean` cache policy | P1 | Phase 1 |
