@@ -67,7 +67,7 @@ Legend: ✅ spec covers it · ⚡ aslice is ahead · ⚠ partial / under-specifi
 | autoremove (orphan deps) | ⚠ | Command listed, but correctness requires **installed-on-request tracking** in the DB (Homebrew 7.0 added `list --no-installed-on-request` to expose exactly this) — see §4.9 |
 | cleanup (cache scrubbing) | ⚠ | `gc` covers the *store*; the *cache* (slices, sources, index snapshots) has no eviction policy — see §4.10 |
 | fetch (standalone prefetch, retry/resume) | ⚠ | Resumable ranges specified in perf model; no user-facing `fetch` command |
-| doctor | ⚡ | Fully specified (DESIGN §12.6): check battery with stable IDs, `--json`, scriptable exit codes, Homebrew-coexistence checks — ahead of Homebrew's |
+| doctor | ⚡ | Fully specified (DESIGN §12.6): check battery with stable IDs, `--json`, scriptable exit codes, curated narrow `--fix`, Homebrew-coexistence checks — ahead of Homebrew's |
 | shellenv (emit PATH setup) | ❌ | Installer writes profiles, but a `aslice shellenv` equivalent is needed for shells the installer doesn't touch |
 | info/search with rich metadata | ⚠ | `--json` on everything is specified; `keywords` field powers search. Missing: a **public web index** — see §4.8 |
 | install specific version (`install foo@1.2`, version-install) | ⚡ | `aslice install ffmpeg@v6` + index snapshots give *arbitrary historical* installs — better than Homebrew's versioned-formula hacks |
