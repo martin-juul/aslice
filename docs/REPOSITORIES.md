@@ -1,7 +1,7 @@
 # aslice Repositories — Sources, Trust Levels, and Signing Keys
 
-- **Status:** Design draft, v0.2 — September 2026 (v0.2: cross-repository overlap resolution with remembered decisions — §10; the state database's role — §11)
-- **Companion to:** [DESIGN.md](DESIGN.md) v0.9 (§8 store/state, §9.6 repository system, §10.2 signatures), [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md) v0.3, [BUILD-INFRA.md](BUILD-INFRA.md) v0.1 (§9 result→repository)
+- **Status:** Design draft, v0.3 — September 2026 (v0.2: cross-repository overlap resolution with remembered decisions — §10; the state database's role — §11. v0.3: `history` rows carry the operation ID that correlates with the operation log — DESIGN §12.5)
+- **Companion to:** [DESIGN.md](DESIGN.md) v1.1 (§8 store/state, §9.6 repository system, §10.2 signatures, §12.5 logging, §12.6 doctor), [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md) v0.3, [BUILD-INFRA.md](BUILD-INFRA.md) v0.1 (§9 result→repository)
 - **Scope:** the shipped official source list, adding third-party repositories, the inherent trust-level model, and the dual signature scheme (Ed25519 canonical, OpenPGP supported).
 
 ---
@@ -256,7 +256,7 @@ DESIGN §8.1 lists `db/state.sqlite` as "the only mutable state besides the stor
 | `repo_pins` | per-repo pinned key fingerprints, scheme, trust level, TOFU timestamp | `repo add` / `re-pin` |
 | `repo_resolutions` | remembered overlap decisions (§10.3) | the prompt / `repo prefer` |
 | `solve_cache` | memoized resolutions keyed by index snapshot hash | the solver |
-| `history` | every mutating operation with timestamp and generation delta | every transaction |
+| `history` | every mutating operation with timestamp, operation ID, and generation delta | every transaction |
 
 Properties the design relies on:
 
