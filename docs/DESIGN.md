@@ -2,8 +2,8 @@
 
 **Name.** *aslice* — an apple slice: a nod to the Macintosh apple and to the shape of the project itself. Binary packages are **slices**; formula repositories are **orchards**; the manager picks slices off the orchard, prebuilt or baked to order. The vocabulary is deliberately distinct from Homebrew's beer terminology to avoid community confusion and trademark friction. The project name is styled lowercase everywhere, including sentence starts — like the command.
 
-- **Status:** Design draft, v1.2 — September 2026
-- **Change log:** v0.2 extends the platform floor from 10.15 (Catalina) to 10.11 (El Capitan) — see §4 for the consequences (three flavors, self-hosted toolchain in Phase 0, HFS+ support). v0.3 resolves open question #4: **aslice collects no telemetry or analytics of any kind, ever** — the project is infrastructure, not a product (§2.2 N7, §9.4, §15). v0.4 sharpens it: **download counts are rejected as a value signal too** — on a deprecated-OS platform, obscure ≠ low-value (§9.4). v0.5 adds the **repository system** (§9.6) and **vendor binary packages**: software that only ships as a `.pkg`/`.dmg`, hosted or vendor-fetched, installed without ever running installer scripts (§12.4; schema in PACKAGE-FORMAT v0.2 §3.11). v0.6 opens **32-bit vendor binaries**: i386 and universal pkg/dmg payloads install on the releases that still execute 32-bit code (10.11–10.14) — distributed, never built (§2.2 N6, §12.4; PACKAGE-FORMAT v0.3). v0.7 adds the **build-infrastructure design**: one harness — `aslice build` on a user's machine, `aslice farm` on the farm — running the identical sandboxed pipeline at both scales (§5.1, §9.3; full spec in [BUILD-INFRA.md](BUILD-INFRA.md)). v0.8 completes the repository story: a **shipped official source list**, **inherent trust levels** (official / verified / third-party / local — enforced capabilities, not labels), and **dual signature schemes** — Ed25519/minisign canonical, OpenPGP (GPG) built-in first-class for third-party ecosystems (§9.6, §10.2; full spec in [REPOSITORIES.md](REPOSITORIES.md)). v0.9 adds **cross-repository overlap resolution**: ambiguous bare package names prompt the user, the decision is remembered in the SQLite state database, revalidated on repo changes, and scriptable via `aslice repo prefer` (§9.6, §12.1; REPOSITORIES.md §10–§11). v1.0 adds the **logging design**: structured, local-only operation logs with a message-quality standard — every error is actionable, security events are unsuppressible, and nothing ever leaves the machine (§5.2, §8.1, §12.1, §12.5). v1.1 specifies **`aslice doctor`**: a read-only, scriptable sanity battery — machine, store, profiles, database, repositories, coexistence, environment — where every fail names its remedy and `--fix` is narrow and loud (§12.6). v1.2 opens a narrowly-scoped **system-software category**: kernel extensions and SIP-disabled development software become installable as declared `[system]` packages — warned at every decision point, elevated per-operation by a dedicated helper, gated by repository trust level — replacing the blanket rejection with an honest, reversible install path (§10.4, §10.7, §12.1, §12.7, §13.1)
+- **Status:** Design draft, v1.3 — September 2026
+- **Change log:** v0.2 extends the platform floor from 10.15 (Catalina) to 10.11 (El Capitan) — see §4 for the consequences (three flavors, self-hosted toolchain in Phase 0, HFS+ support). v0.3 resolves open question #4: **aslice collects no telemetry or analytics of any kind, ever** — the project is infrastructure, not a product (§2.2 N7, §9.4, §15). v0.4 sharpens it: **download counts are rejected as a value signal too** — on a deprecated-OS platform, obscure ≠ low-value (§9.4). v0.5 adds the **repository system** (§9.6) and **vendor binary packages**: software that only ships as a `.pkg`/`.dmg`, hosted or vendor-fetched, installed without ever running installer scripts (§12.4; schema in PACKAGE-FORMAT v0.2 §3.11). v0.6 opens **32-bit vendor binaries**: i386 and universal pkg/dmg payloads install on the releases that still execute 32-bit code (10.11–10.14) — distributed, never built (§2.2 N6, §12.4; PACKAGE-FORMAT v0.3). v0.7 adds the **build-infrastructure design**: one harness — `aslice build` on a user's machine, `aslice farm` on the farm — running the identical sandboxed pipeline at both scales (§5.1, §9.3; full spec in [BUILD-INFRA.md](BUILD-INFRA.md)). v0.8 completes the repository story: a **shipped official source list**, **inherent trust levels** (official / verified / third-party / local — enforced capabilities, not labels), and **dual signature schemes** — Ed25519/minisign canonical, OpenPGP (GPG) built-in first-class for third-party ecosystems (§9.6, §10.2; full spec in [REPOSITORIES.md](REPOSITORIES.md)). v0.9 adds **cross-repository overlap resolution**: ambiguous bare package names prompt the user, the decision is remembered in the SQLite state database, revalidated on repo changes, and scriptable via `aslice repo prefer` (§9.6, §12.1; REPOSITORIES.md §10–§11). v1.0 adds the **logging design**: structured, local-only operation logs with a message-quality standard — every error is actionable, security events are unsuppressible, and nothing ever leaves the machine (§5.2, §8.1, §12.1, §12.5). v1.1 specifies **`aslice doctor`**: a read-only, scriptable sanity battery — machine, store, profiles, database, repositories, coexistence, environment — where every fail names its remedy and `--fix` is narrow and loud (§12.6). v1.2 opens a narrowly-scoped **system-software category**: kernel extensions and SIP-disabled development software become installable as declared `[system]` packages — warned at every decision point, elevated per-operation by a dedicated helper, gated by repository trust level — replacing the blanket rejection with an honest, reversible install path (§10.4, §10.7, §12.1, §12.7, §13.1). v1.3 adds **launchd-native service management**: packages describe services declaratively in the manifest (`[service]`, PACKAGE-FORMAT v0.4 §3.8), `aslice service` provides status/start/stop/restart over real launchd jobs, and upgrades orchestrate stop → atomic swap → restart so a running service is never updated out from under itself (§8.3, §10.4, §12.1, §12.8). Root-domain daemons go through `aslice-system` and the repository `system` capability; user agents stay unprivileged and ungated
 - **Scope:** macOS 10.11 (El Capitan) through 12 (Monterey), Intel x86_64 only
 - **Implementation:** C++20 core, single self-contained binary
 - **Audience:** Maintainers, founding contributors, and early reviewers
@@ -389,6 +389,7 @@ Every mutating operation builds a **new generation directory** and then swaps on
 - `aslice rollback [generation]` — instant return to any previous state.
 - `aslice switch-generation 38` — bisect a broken upgrade in seconds.
 - **Interrupted installs cannot corrupt the live profile.** A crash mid-install leaves the old generation live; the partial new generation is garbage-collected.
+- **Services are quiesced around the swap.** An upgrade that touches a package with a running service stops the launchd job first, swaps, then starts it again — the binary is never replaced under a running process (§12.8).
 - `aslice gc` removes store paths unreachable from any retained generation (with `--older-than 30d` style policies).
 
 ### 8.4 Garbage collection discipline
@@ -492,7 +493,7 @@ The installer is a small, auditable shell script that fetches exactly two things
 - **No sudo in steady state.** Not for install, not for upgrade, not for uninstall. The prefix is user-owned from creation.
 - **Never touches `/usr/local`.** Coexistence with Homebrew/MacPorts is by construction, and the historic `/usr/local` ownership flaw is simply not inherited. Vendor-binary apps install under `/opt/aslice/apps/` — never `/Applications` — with a per-user `~/Applications` symlink as the opt-in convenience (§12.4).
 - **No setuid binaries, no helper daemon at launch.** A future multi-user mode (shared lab machines) will use a launchd daemon that accepts only TUF-verified operation plans over a local socket with peer-credential checks — designed, but gated behind demand.
-- **One scoped exception: `aslice-system`.** Declared system-software packages (kexts, SIP-disabled development tools — §12.7) require privileged steps no user-space manager can perform. Those steps are executed by a single tiny auditable helper that elevates **per operation, with explicit consent, for exactly the declared actions** — it is not a daemon, holds no ambient authority, and every invocation is an unsuppressible logged security event (§12.5). The steady-state rule stands: nothing else in aslice ever elevates.
+- **One scoped exception: `aslice-system`.** Declared system-software packages (kexts, SIP-disabled development tools — §12.7) require privileged steps no user-space manager can perform. Those steps are executed by a single tiny auditable helper that elevates **per operation, with explicit consent, for exactly the declared actions** — it is not a daemon, holds no ambient authority, and every invocation is an unsuppressible logged security event (§12.5). Its scope also covers **system-domain service operations** — bootstrapping and removing root LaunchDaemons for declared `domain = "system"` services (§12.8) — with the same per-operation consent and logging; user-domain agents never touch it. The steady-state rule stands: nothing else in aslice ever elevates.
 
 ### 10.5 Sandboxed builds
 
@@ -559,6 +560,8 @@ aslice flavors ffmpeg                  # show the prebuilt matrix for this machi
 aslice provenance ffmpeg               # builder, source hash, SLSA attestation
 aslice audit                           # CVE report for the installed set
 aslice rollback / switch-generation / history
+aslice service list / status <pkg>       # launchd truth: pid, state, last exit (§12.8)
+aslice service start / stop / restart <pkg> / service run <pkg>   # run = foreground, for debugging
 aslice gc [--dry-run] [--older-than 30d]
 aslice orchard add myorg/orchard / orchard pin myorg/orchard <commit>
 aslice repo add https://repo.example.org   # add a signed repository (§9.6)
@@ -688,6 +691,48 @@ Either `kexts` or `sip_off_required = true` (or both) marks a system package; `r
 
 ---
 
+### 12.8 Services: launchd-native lifecycle and safe upgrades
+
+Long-running services — nginx, PostgreSQL, Redis, dnsmasq, unbound — are where a package manager meets the running system, and they impose two requirements. The manifest must *describe* the service rather than ship scripts that manage it, and an upgrade must never replace the binary under a running process: stop the service, swap, start it again. Homebrew's answer is `brew services`, a wrapper that generates plists from a formula DSL and shells out to `launchctl` (via sudo for daemons). aslice's answer is declarative and launchd-native, and the stop–swap–restart sequence is part of the upgrade transaction itself, not a wiki page.
+
+**Declaration.** A package describes its service in `package.toml` (schema: PACKAGE-FORMAT §3.8):
+
+```toml
+[service]
+run         = ["bin/nginx", "-g", "daemon off;"]  # argv, profile-relative; never a shell string
+domain      = "user"        # "user" (default: gui/<uid> agent) | "system" (root LaunchDaemon — gated)
+keep_alive  = true          # launchd KeepAlive — bool or a table of conditions
+run_at_load = true
+working_dir = "var"                   # prefix-relative
+environment = { LANG = "en_US.UTF-8" }
+log_dir     = "var/log/nginx"         # StandardOutPath / StandardErrorPath
+```
+
+aslice *generates* the launchd plist from this declaration at enable time — the formula ships no plist file and, as ever, no code. Two consequences fall out of the store model. `ProgramArguments` resolves through the **profile** (`/opt/aslice/profiles/default/bin/nginx`), never a store path, so the job survives upgrades and rollbacks untouched: the same plist launches whichever version the live generation points at. And the label is namespaced (`org.aslice.nginx`), so `aslice service` maps one-to-one onto real launchd jobs — no pidfiles, no guessing, no wrapper daemons.
+
+**The command.** `aslice service` is a thin, honest layer over `launchctl`'s modern interface (`bootstrap` / `bootout` / `kickstart` / `print`, present since 10.10, so the whole 10.11–12 window is covered):
+
+- `aslice service list` / `status <pkg>` — reads `launchctl print gui/<uid>/org.aslice.<pkg>`: pid, state, last exit status, keepalive. Status is launchd's truth, not a pidfile.
+- `aslice service start` / `stop` / `restart <pkg>` — `bootstrap` / `bootout` / `kickstart -k` against the generated plist.
+- `aslice service run <pkg>` — foreground, unregistered, for debugging (the one `brew services` idea worth copying).
+- Per-service environment overrides live in `$XDG_CONFIG_HOME/aslice/services/<pkg>.env` and are applied when aslice generates the plist — never by editing it afterwards (the store is immutable, §8.1, so overrides *must* live outside it, which is where they belong). This closes HOMEBREW-REVIEW §4.4's P1.
+
+**Upgrades stop the service first.** The mutation pipeline of §8.3 becomes service-aware whenever a plan touches a package with a loaded job:
+
+1. Resolve, fetch, and build the **entire new generation** while the old one — and the service — keeps running. Any failure here never touched the service.
+2. `bootout` the affected jobs — and only the affected ones; an ffmpeg upgrade never bounces your postgres.
+3. Swap the generation symlink (atomic, §8.3).
+4. Reconcile plists — only if the declaration changed; the profile indirection means a plain version bump needs no plist edit.
+5. `bootstrap` / `kickstart -k` the jobs and verify they came up (pid present, no immediate crash-exit). A job that won't start is a loud error carrying launchd's last exit status and the log path — and `aslice rollback` restores the previous generation *and* the previous version of the service, because the plist still points through the profile. Whether a failed restart should roll back automatically is open question #8.
+
+GC is already safe: a running job pins its store path through the profile generation it was started from, and §8.4 never collects store paths referenced by running processes.
+
+**Root daemons are the privileged case.** `domain = "system"` jobs run as root (or a declared `user_name`) and are bootstrapped into the system domain by `aslice-system` (§10.4) — same per-operation consent, same unsuppressible logging as kexts. Because root execution is the privilege that matters, `domain = "system"` declarations are gated by the same **`system` capability** as `[system]` packages (REPOSITORIES.md §3): official and verified repositories may serve them, **third-party repositories never may**, local trees may on the user's own machine. User-domain agents are unprivileged and ungated — any repository may declare one, no sudo is ever involved, and the steady-state rule (§10.4) stands for nginx-on-8080 and every other development service.
+
+**Doctor.** `doctor.services` checks: every enabled service's plist parses and its `ProgramArguments` resolve into the *live* generation; jobs loaded for packages no longer installed (and packages with declared services that were never enabled); crash-looping jobs (launchd's throttling state); and, for `domain = "system"` jobs, that what is running matches what the DB records `aslice-system` installed. All read-only; `--fix` offers only the no-data-loss repairs (§12.6).
+
+---
+
 ## 13. Policies, Governance, and Migration
 
 ### 13.1 Package acceptance policy
@@ -758,6 +803,7 @@ Two-builder reproducibility cross-checks; transparency log; community mirror pro
 5. Whether the project's canonical repository should host *any* `redistribute = false` formulae in core, or whether pointer-only packages should be extended-tier by definition (current: allowed in both, barred from core unless redistributable — but that makes core depend on license goodwill; review wanted).
 6. Whether `verified` repositories should install binaries immediately at enable time, or require an additional per-repo `--accept-binaries` step (current: enable implies binaries — the project countersignature is the vetting; the extra click was judged ceremony without security content; REPOSITORIES.md §9).
 7. Whether the `system` capability (§12.7) should ride on the `verified` trust level or be a separate per-repo grant (`aslice repo allow-system <name>`). Current: verified repos get it — the countersignature is the vetting, and one more click was judged ceremony. But kexts are exactly where ceremony might be security; review wanted.
+8. Whether a service that fails its post-upgrade health check (§12.8, step 5) should automatically roll the generation back and restart the previous version, or report-and-stay as v1.3 specifies. Auto-rollback is safer for unattended machines but can mask a good new version behind a transient port conflict; review wanted.
 
 ---
 
@@ -775,6 +821,7 @@ Two-builder reproducibility cross-checks; transparency log; community mirror pro
 | Kernel extensions / SIP-off dev tools | Cask pkg scripts (arbitrary vendor code, often as root) | Manual installs | Not the model | **Declared `[system]` category: warned, consent-gated, trust-gated, rollback-able (§12.7)** |
 | Third-party binary distribution | Taps + bottles bolted on | No | Binary caches (trust via substituters) | **Repositories: signed, static, mirrorable, self-publishable** |
 | Rollback | No | No | Yes | **Yes (generations)** |
+| Service management | `brew services` (plist wrapper; daemons need sudo) | launchd by hand | NixOS modules (different OS) | **Declarative `[service]` + `aslice service`; stop–swap–restart upgrades (§12.8)** |
 | Repo integrity | git + partial attestations | rsync + signatures | Signed cache | **TUF + signed slices + transparency log** |
 | sudo in steady state | Some paths | `sudo port` | Daemon mode | **None** |
 | Startup / solve speed | Ruby, seconds-scale | Moderate | Slow eval | **<10 ms / <50 ms** |
