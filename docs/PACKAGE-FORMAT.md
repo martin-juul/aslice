@@ -252,7 +252,7 @@ type    = "binary"
 version = "3.2.1"
 license = "LicenseRef-Proprietary"
 description = "Vendor's signal-routing CLI"
-homepage    = "https://vendor.example/vendorcli"
+homepage = "https://vendor.example/vendorcli"
 maintainers = ["alice <alice@example.com>"]
 tier = "extended"
 
