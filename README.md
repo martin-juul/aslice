@@ -29,6 +29,7 @@ Design phase.
 - [Homebrew comparison & gap review](docs/HOMEBREW-REVIEW.md) — feature-by-feature review against Homebrew 7.0, what's missing, and proposed spec amendments
 - [Build infrastructure](docs/BUILD-INFRA.md) — the build farm and the `aslice build` / `aslice farm` harness: one pipeline that runs identically on the farm and on any user's Mac
 - [Repositories](docs/REPOSITORIES.md) — the shipped official source list, inherent repository trust levels, and the dual Ed25519/OpenPGP signing model
+- [Orchard policy](docs/ORCHARD-POLICY.md) — the maintainer rulebook: acceptance bars per tier, variant discipline, deprecation lifecycle, patch documentation, merge gates, release cadence
 
 ## Scope
 
