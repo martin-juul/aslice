@@ -1,7 +1,7 @@
 # aslice vs Homebrew — Capability Review and Gap Analysis
 
 - **Status:** Review v0.3 — September 2026 (v0.2: vendor-binary packages supersede the cask deferral — §3.4, §5, §9 rows updated; v0.3: 32-bit/universal vendor payloads on 10.11–10.14)
-- **Companion to:** [DESIGN.md](DESIGN.md) v0.9, [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md) v0.3, [BUILD-INFRA.md](BUILD-INFRA.md) v0.1, [REPOSITORIES.md](REPOSITORIES.md) v0.2
+- **Companion to:** [DESIGN.md](DESIGN.md) v1.1, [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md) v0.3, [BUILD-INFRA.md](BUILD-INFRA.md) v0.1, [REPOSITORIES.md](REPOSITORIES.md) v0.3
 - **Method:** aslice's two specifications compared feature-by-feature against Homebrew's living feature set as of Homebrew 7.0.0 (September 2026). Apple-Silicon-specific work and Homebrew's Intel deprecation/removal machinery are excluded per review scope; everything else Homebrew does today is fair game.
 - **Sources:** Homebrew release notes 4.6.0 → 7.0.0, docs.brew.sh (Security and Supply Chain, Tap Trust), Homebrew/brew issue #17019 (attestation verification). Links in §10.
 
@@ -66,7 +66,7 @@ Legend: ✅ spec covers it · ⚡ aslice is ahead · ⚠ partial / under-specifi
 | autoremove (orphan deps) | ⚠ | Command listed, but correctness requires **installed-on-request tracking** in the DB (Homebrew 7.0 added `list --no-installed-on-request` to expose exactly this) — see §4.9 |
 | cleanup (cache scrubbing) | ⚠ | `gc` covers the *store*; the *cache* (slices, sources, index snapshots) has no eviction policy — see §4.10 |
 | fetch (standalone prefetch, retry/resume) | ⚠ | Resumable ranges specified in perf model; no user-facing `fetch` command |
-| doctor | ⚡ | Specified; add `--json` (Homebrew 7.0 added it) and Homebrew-coexistence checks are already planned |
+| doctor | ⚡ | Fully specified (DESIGN §12.6): check battery with stable IDs, `--json`, scriptable exit codes, curated narrow `--fix`, Homebrew-coexistence checks — ahead of Homebrew's |
 | shellenv (emit PATH setup) | ❌ | Installer writes profiles, but a `aslice shellenv` equivalent is needed for shells the installer doesn't touch |
 | info/search with rich metadata | ⚠ | `--json` on everything is specified; `keywords` field powers search. Missing: a **public web index** — see §4.8 |
 | install specific version (`install foo@1.2`, version-install) | ⚡ | `aslice install ffmpeg@v6` + index snapshots give *arbitrary historical* installs — better than Homebrew's versioned-formula hacks |
