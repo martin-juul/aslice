@@ -67,7 +67,7 @@ Legend: ✅ spec covers it · ⚡ aslice is ahead · ⚠ partial / under-specifi
 | autoremove (orphan deps) | ⚠ | Command listed, but correctness requires **installed-on-request tracking** in the DB (Homebrew 7.0 added `list --no-installed-on-request` to expose exactly this) — see §4.9 |
 | cleanup (cache scrubbing) | ⚠ | `gc` covers the *store*; the *cache* (slices, sources, index snapshots) has no eviction policy — see §4.10 |
 | fetch (standalone prefetch, retry/resume) | ⚠ | Resumable ranges specified in perf model; no user-facing `fetch` command |
-| doctor | ⚡ | Fully specified (DESIGN §12.6): check battery with stable IDs, `--json`, scriptable exit codes, curated narrow `--fix`, Homebrew-coexistence checks — ahead of Homebrew's |
+| doctor | ⚡ | Fully specified (DESIGN §12.6): check battery with stable IDs, `--json`, scriptable exit codes, Homebrew-coexistence checks — ahead of Homebrew's |
 | shellenv (emit PATH setup) | ❌ | Installer writes profiles, but a `aslice shellenv` equivalent is needed for shells the installer doesn't touch |
 | info/search with rich metadata | ⚠ | `--json` on everything is specified; `keywords` field powers search. Missing: a **public web index** — see §4.8 |
 | install specific version (`install foo@1.2`, version-install) | ⚡ | `aslice install ffmpeg@v6` + index snapshots give *arbitrary historical* installs — better than Homebrew's versioned-formula hacks |
@@ -106,7 +106,7 @@ Legend: ✅ spec covers it · ⚡ aslice is ahead · ⚠ partial / under-specifi
 |---|---|---|
 | brew services (start/stop/restart/list, env overrides) | ❌ | See §4.4 |
 | Versioned runtimes (php@x.y, python@x.y) + the nvm/pyenv/rbenv/Volta ecosystem around them | ⚡ delivered | One formula with release streams; shims resolve session → project → default; `aslice use/pin/default`; tools ride the selected runtime; extension slices bind to the runtime's ABI epoch; pip/gem/npm installs bind per-version through shim-injected userbases (§4.15 — DESIGN v1.5 §12.9, PACKAGE-FORMAT v0.5 §3.13) |
-| brew bundle (Brewfile wishlist, dump) | ⚠ | Locks are exact-state, not a wishlist; adopt a minimal wishlist format — see §4.6 |
+| brew bundle (Brewfile wishlist, dump) | ⚠ | Locks are exact-state, not a human wishlist; adopt a minimal wishlist format — see §4.6 |
 | brew exec (npx-like ephemeral environments, 6.0) | ❌ | Natural fit for profiles — see §4.6 |
 | Brewfile import for migration | ❌ | `adopt --from-homebrew` reads the Cellar; many users' source of truth is a Brewfile — see §4.6 |
 | brew shellenv / completions / man pages | ❌ | aslice's own shell integration unspecified — see §4.13 |
