@@ -1,7 +1,7 @@
 # aslice Package Format
 
-**Status:** Format draft, v0.5 — September 2026
-**Change log:** v0.2 adds **vendor binary packages** — `type = "binary"`, `[[binary]]` artifacts with per-OS support tags, declarative payload maps, and mandatory signer pinning (§3.11); lock-file `origin` gains `"vendor-direct"` (§7.2). v0.3 opens **32-bit and universal vendor payloads**: `arch` may include `"i386"`, with the 10.14 execution ceiling derived from the artifact itself and enforced at lint and solve time (§3.11). v0.4 adds the **`[system]` declaration** for kernel extensions and SIP-disabled development tools (§3.12; mechanism and warnings in DESIGN §12.7) and replaces the checksummed-plist `[[install.service]]` with the **generated-plist `[service]` table** — the manifest describes the service, aslice writes the launchd plist (§3.8; lifecycle and stop–swap–restart upgrades in DESIGN §12.8). v0.5 adds the **multi-version runtime declarations**: `[runtime]` marks a runtime formula (shim set, ABI epoch, per-version userbase environment injection, extension scan dir), `[extension]` binds a compiled extension slice to a runtime's ABI epoch, and `[ride]` marks an interpreter-target tool that launches under the currently selected runtime (§3.13; mechanism in DESIGN §12.9)
+**Status:** Format draft, v0.6 — September 2026
+**Change log:** v0.2 adds **vendor binary packages** — `type = "binary"`, `[[binary]]` artifacts with per-OS support tags, declarative payload maps, and mandatory signer pinning (§3.11); lock-file `origin` gains `"vendor-direct"` (§7.2). v0.3 opens **32-bit and universal vendor payloads**: `arch` may include `"i386"`, with the 10.14 execution ceiling derived from the artifact itself and enforced at lint and solve time (§3.11). v0.4 adds the **`[system]` declaration** for kernel extensions and SIP-disabled development tools (§3.12; mechanism and warnings in DESIGN §12.7) and replaces the checksummed-plist `[[install.service]]` with the **generated-plist `[service]` table** — the manifest describes the service, aslice writes the launchd plist (§3.8; lifecycle and stop–swap–restart upgrades in DESIGN §12.8). v0.5 adds the **multi-version runtime declarations**: `[runtime]` marks a runtime formula (shim set, ABI epoch, per-version userbase environment injection, extension scan dir), `[extension]` binds a compiled extension slice to a runtime's ABI epoch, and `[ride]` marks an interpreter-target tool that launches under the currently selected runtime (§3.13; mechanism in DESIGN §12.9). v0.6 lands the lifecycle and freshness declarations proposed in HOMEBREW-REVIEW §8 and made normative policy by ORCHARD-POLICY v0.4 §1: **`[deprecation]`** replaces the retired `[package] deprecated` boolean (§3.14), **`[livecheck]`** declares upstream freshness tracking (§3.15), **`[install]`** gains `link`/`link_reason` (the principled keg-only) and the `notes` caveats field (§3.8), the `build.star` ctx API gains **`ctx.replace`** (§6.3), and **`[system-patch]`** declares flagged replacement of Apple-provided files (§3.16; mechanism in DESIGN §12.11)
 **Companion to:** [DESIGN.md](DESIGN.md) — this document is the authoritative specification for §6 (Package Format). Where they disagree, this document wins.
 **Scope:** the `package.toml` definition format, `build.star` build API, dependency and version semantics, transitive resolution, and lock files.
 
@@ -74,7 +74,8 @@ tier         = "core"           # core | extended
 | `type` | no | `"build"` (default) or `"binary"` — vendor pkg/dmg packages, §3.11 |
 | `min_os` / `max_os` | no | §3.2 |
 | `flavors` | no | §3.3 |
-| `eol` / `deprecated` | no | Booleans; surfaced loudly by `audit` and at install time |
+
+Lifecycle state is deliberately *not* a `[package]` field: EOL flags live in `[audit]` (§3.9), and the deprecation lifecycle — active → deprecated → disabled → tombstoned — is declared in `[deprecation]` (§3.14).
 
 ### 3.2 Platform bounds — minimum OS, maximum OS
 
@@ -190,6 +191,9 @@ Everything here is applied by aslice itself — not by package code:
 ```toml
 [install]
 links_priority = 50                     # collision priority in profiles; default 50
+link           = true                   # false: install into the store without linking into profiles
+link_reason    = "shadows-macos"        # required iff link = false; the explanation `info` shows
+notes          = ["config lives in etc/postgresql"]   # actionable post-install guidance (caveats)
 
 [[install.data_dir]]
 path = "var/lib/postgresql"             # created at install, survives uninstall unless --purge
@@ -211,6 +215,8 @@ zsh  = "share/zsh/site-functions/_ffmpeg"
 ```
 
 aslice **generates** the launchd plist from `[service]` at enable time — the formula ships no plist file and no code. `ProgramArguments[0]` resolves through the profile (`/opt/aslice/profiles/default/bin/…`), never a store path, so upgrades and rollbacks need no plist edit; the label is `org.aslice.<name>`. `domain = "system"` jobs run as root, are installed and removed by `aslice-system` with per-operation consent (DESIGN §10.4), and may only be served by repositories holding the `system` capability (REPOSITORIES §3) — user agents are unprivileged and ungated. A package declares at most one `[service]`; software with multiple daemons is split into multiple packages. The full lifecycle — `aslice service list/status/start/stop/restart/run`, and the stop–swap–restart upgrade transaction — is DESIGN §12.8.
+
+`link = false` is the principled keg-only (REVIEW §4.5): the package installs into the store but nothing links into profiles — versioned lineages (`openssl@3` style) and anything shipping `bin/` names colliding with `/usr/bin` or `/bin` default to it in core (policy: ORCHARD-POLICY §6). `aslice link <pkg>` opts in per profile, and dependents never need the link at all: dependency resolution is store-path-based (`ctx.deps`), so "unlinked but depended upon" is a normal state, not a hack. `link_reason` is lint-enforced when `link = false` and tells the user *why* — it is displayed by `info` and at install time. `notes` is the caveats field: an array of human-readable, genuinely actionable post-install lines ("config lives in …", "run `aslice service start postgresql` to …"), printed at install and shown by `info`. If it isn't actionable, it isn't a note (ORCHARD-POLICY §14).
 
 ### 3.9 `[audit]` — vulnerability matching and lifecycle
 
@@ -246,7 +252,7 @@ type    = "binary"
 version = "3.2.1"
 license = "LicenseRef-Proprietary"
 description = "Vendor's signal-routing CLI"
-homepage = "https://vendor.example/vendorcli"
+homepage    = "https://vendor.example/vendorcli"
 maintainers = ["alice <alice@example.com>"]
 tier = "extended"
 
@@ -363,6 +369,51 @@ entry   = "lib/composer/composer.phar"  # payload path handed to the runtime
 ```
 
 The tool's shim performs two-step resolution at exec time: the runtime stream via session → project → default, then `exec <runtime>/bin/php <tool-store>/<entry>`. Whether a tool may ride is a fact about its code, not a preference: lint rejects `[ride]` when the payload's ABI scan shows linkage against runtime libraries (such a tool is an `[extension]`-style binding or a self-contained package). Riders carry no runtime version constraint of their own — following the user's selection is the point.
+
+### 3.14 `[deprecation]` — the package lifecycle, declared (v0.6)
+
+Replaces the retired `[package] deprecated` boolean: deprecation is a lifecycle with dates and reasons, not a flag (policy: ORCHARD-POLICY §8; origin: REVIEW §4.3).
+
+```toml
+[deprecation]
+date         = "2027-03-01"    # when deprecation starts
+reason       = "upstream-eol"  # upstream-eol | security | renamed | unmaintainable | other
+replacement  = "ffmpeg7"       # optional pointer; mandatory when reason = "renamed"
+disable_date = "2027-09-01"    # optional: new installs refuse after this without --force-disabled
+```
+
+Semantics: **active → deprecated** — installs and `info`/`audit` warn with `reason` and `replacement`; existing installs are unaffected and the package still receives slices. **Deprecated → disabled** — at `disable_date`, new installs refuse without `--force-disabled`; existing installs keep working and remain in locks. **Disabled → tombstoned** — the formula leaves orchard HEAD, but the index keeps a permanent tombstone (name, final version, reason, replacement) so historical snapshots and old locks resolve forever. Upstream-EOL packages in extended carry `reason = "upstream-eol"` indefinitely as normal life, not failure (ORCHARD-POLICY §8). The security fast path — straight to disabled by maintainer vote — is policy, not schema.
+
+### 3.15 `[livecheck]` — upstream freshness, declared (v0.6)
+
+How the orchard's automation finds new upstream releases (origin: REVIEW §4.2; freshness policy: ORCHARD-POLICY §9):
+
+```toml
+[livecheck]
+strategy        = "git-tags"       # git-tags | homepage-regex | directory-index | crates | npm | pypi | sparkle
+url             = "https://github.com/FFmpeg/FFmpeg/tags"   # strategy-specific
+regex           = "^n([\\d.]+)$"   # optional pattern → version capture
+skip_prerelease = true             # default true
+throttle_days   = 3                # don't bump more often than this; default 3
+cooldown_days   = 2                # wait after upstream release — supply-chain poisoning window; default 2, minimum 2
+```
+
+Required for core packages, encouraged in extended; a core package whose livecheck strategy rots is a bug against its named maintainer (ORCHARD-POLICY §9). `aslice livecheck [pkg|--all]` queries, machine-readable. The scheduled orchard sweep opens autobump PRs — new `version`, bot-fetched `sha256`, `revision` reset to 0, changelog link — which merge only through the same gates as any PR; `aslice bump-pr <pkg> <version>` is the human path. The cooldown may be raised for historically risky ecosystems (npm, PyPI, RubyGems, crates), never lowered below 2.
+
+### 3.16 `[system-patch]` — flagged replacement of Apple-provided files (v0.6)
+
+The strictest declaration in the format. A system-patch package replaces an Apple-provided file — the original backed up, the replacement a profile symlink, restore byte-exact (mechanism and consent flow: DESIGN §12.11; acceptance policy: ORCHARD-POLICY §13).
+
+```toml
+[system-patch]
+targets          = ["/usr/bin/openssl"]   # absolute paths this package replaces
+sip_off_required = false     # true: the replacement cannot be performed while SIP is enabled
+reason           = "10.11's openssl is a 0.9.8-era tool that cannot speak modern TLS"  # mandatory; IS the warning text
+```
+
+- `targets` names tools, configs, and data by absolute path — never the shared library space. The refused-by-construction list — the kernel, `dyld`, `libSystem`, anything under `/System`, and any dylib or framework in a platform binary's load path — is lint-enforced and not negotiable in review (ORCHARD-POLICY §13).
+- `reason` is mandatory whenever `[system-patch]` is present and is shown verbatim at every decision point — write it like warning text, exactly as with `[system]` (§3.12).
+- Serving requires the repository **`system-patch` capability** (REPOSITORIES §3): official and local repositories only — verified and third-party never. Non-interactive installation requires `--accept-system-changes`; there is no "always allow" (DESIGN §12.11).
 
 ---
 
@@ -497,6 +548,7 @@ Starlark, deterministic, no network, filesystem confined to the build dir (DESIG
 | `ctx.make(*args)`, `ctx.cmake(*args)`, `ctx.meson(*args)` | fn | Tool helpers with correct defaults |
 | `ctx.user_cflags` / `ctx.user_ldflags` | string | User flags from install time (DESIGN §7.4); appended, recorded, never identity-affecting |
 | `ctx.patch(file)` | fn | Apply a checksummed patch from `patches/` |
+| `ctx.replace(file, pattern, replacement)` | fn | In-place text substitution for trivial fixups without a patch file (Homebrew's `inreplace`, its most-used helper); count-checked — zero replacements is a build error, never a silent no-op |
 
 Environment determinism is set by the builder, not the formula: `LC_ALL=C`, `TZ=UTC`, `SOURCE_DATE_EPOCH` pinned to the source timestamp, prefix-mapping flags for reproducibility (DESIGN §9.5). A formula that needs something outside this API is a bug report against aslice, not a sandbox escape.
 
@@ -639,13 +691,13 @@ The full form is in §3.11. The shape to remember: **two `[[binary]]` artifacts*
 | Section | Fields |
 |---|---|
 | top-level | `spec` |
-| `[package]` | `name` `version` `revision` `epoch` `license` `description` `homepage` `documentation` `maintainers` `keywords` `tier` `type` `min_os` `max_os` `flavors` `eol` `deprecated` |
+| `[package]` | `name` `version` `revision` `epoch` `license` `description` `homepage` `documentation` `maintainers` `keywords` `tier` `type` `min_os` `max_os` `flavors` |
 | `[[source]]` | `url` `git` `commit` `sha256` `mirrors` `into` `upstream_version` + `[source.pgp]` (`key_url`, `fingerprint`) |
 | `[[patch]]` | `file` `sha256` |
 | `[variants.*]` | `default` `abi` `description` `conflicts` `requires` `min_os` `flavors` |
 | `[depends]` | `runtime` `build` `test` — entries: `name [constraint] [+variant] [?condition]` |
 | interop | `provides` (map), `conflicts`, `replaces`, `aliases` |
-| `[install]` | `links_priority`, `[[install.data_dir]]`, `[install.completions]`, `notes` |
+| `[install]` | `links_priority`, `link`, `link_reason`, `notes`, `[[install.data_dir]]`, `[install.completions]` |
 | `[service]` | `run` `domain` `keep_alive` `run_at_load` `working_dir` `environment` `log_dir` `user_name` |
 | `[audit]` | `cpe`, `eol`, `eol_date` |
 | `[build]` | `system`, `args`, `skip_tests` |
@@ -654,4 +706,7 @@ The full form is in §3.11. The shape to remember: **two `[[binary]]` artifacts*
 | `[runtime]` | `abi_epoch` `shims` `extension_scan_dir` + `[[runtime.env]]` (`var`, `value`) |
 | `[extension]` | `runtime` `loader` `module` |
 | `[ride]` | `runtime` `entry` |
+| `[deprecation]` | `date` `reason` `replacement` `disable_date` |
+| `[livecheck]` | `strategy` `url` `regex` `skip_prerelease` `throttle_days` `cooldown_days` |
+| `[system-patch]` | `targets` `sip_off_required` `reason` |
 | lock file | `lock_version`, `generated_by`, `index_snapshot`, `[machine]`, `[[package]]` (incl. `origin` = `slice` \| `local-build` \| `vendor-direct`) |
