@@ -1,7 +1,7 @@
 # aslice vs Homebrew — Capability Review and Gap Analysis
 
-- **Status:** Review v0.8 — September 2026 (v0.2: vendor-binary packages supersede the cask deferral — §3.4, §5, §9 rows updated; v0.3: 32-bit/universal vendor payloads on 10.11–10.14; v0.4: companions — DESIGN v1.2 opens the declared `[system]` category for kexts and SIP-off dev tools, ORCHARD-POLICY.md delivered; the installer-script rejection stands unchanged; v0.5: §4.4 Services UX **closed** — DESIGN v1.3 §12.8 delivers the launchd-native `aslice service` CLI and adds stop–swap–restart upgrade orchestration beyond the proposal; PACKAGE-FORMAT v0.4 replaces `[[install.service]]` with the generated `[service]` table; v0.6: multi-version runtime management **delivered** — DESIGN v1.5 §12.9 adds the shim layer with session/project/default selection (`use`/`pin`/`default`), riding tools, and ABI-epoch-bound extension slices; PACKAGE-FORMAT v0.5 §3.13 adds `[runtime]`/`[extension]`/`[ride]`; v0.7: trust-store management **delivered** — DESIGN v1.6 §12.10 adds `aslice ca-update`: a signed, generation-managed `ca-certificates` slice (configurable source, Mozilla-via-curl default), profile env wiring for userland TLS, and an opt-in System-keychain import through `aslice-system`, recorded and reversible to the certificate); v0.8: `ca-update` extended — `--crypto` (crypto-provider stack upgrade, SecureTransport's frozen limits printed, never hidden) and `--apple-certs` (Apple's own roots via a pinned `apple-roots` slice into the System keychain); DESIGN v1.7 also amends the never-touch-system charter line into the declared, flagged `[system-patch]` category — original backed up, profile-symlink replacement, generation-integrated rollback, official/local trust gate, refused paths by construction (§12.11))
-- **Companion to:** [DESIGN.md](DESIGN.md) v1.7, [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md) v0.5, [BUILD-INFRA.md](BUILD-INFRA.md) v0.1, [REPOSITORIES.md](REPOSITORIES.md) v0.5, [ORCHARD-POLICY.md](ORCHARD-POLICY.md) v0.3
+- **Status:** Review v0.9 — September 2026 (v0.2: vendor-binary packages supersede the cask deferral — §3.4, §5, §9 rows updated; v0.3: 32-bit/universal vendor payloads on 10.11–10.14; v0.4: companions — DESIGN v1.2 opens the declared `[system]` category for kexts and SIP-off dev tools, ORCHARD-POLICY.md delivered; the installer-script rejection stands unchanged; v0.5: §4.4 Services UX **closed** — DESIGN v1.3 §12.8 delivers the launchd-native `aslice service` CLI and adds stop–swap–restart upgrade orchestration beyond the proposal; PACKAGE-FORMAT v0.4 replaces `[[install.service]]` with the generated `[service]` table; v0.6: multi-version runtime management **delivered** — DESIGN v1.5 §12.9 adds the shim layer with session/project/default selection (`use`/`pin`/`default`), riding tools, and ABI-epoch-bound extension slices; PACKAGE-FORMAT v0.5 §3.13 adds `[runtime]`/`[extension]`/`[ride]`; v0.7: trust-store management **delivered** — DESIGN v1.6 §12.10 adds `aslice ca-update`: a signed, generation-managed `ca-certificates` slice (configurable source, Mozilla-via-curl default), profile env wiring for userland TLS, and an opt-in System-keychain import through `aslice-system`, recorded and reversible to the certificate); v0.8: `ca-update` extended — `--crypto` (crypto-provider stack upgrade, SecureTransport's frozen limits printed, never hidden) and `--apple-certs` (Apple's own roots via a pinned `apple-roots` slice into the System keychain); DESIGN v1.7 also amends the never-touch-system charter line into the declared, flagged `[system-patch]` category — original backed up, profile-symlink replacement, generation-integrated rollback, official/local trust gate, refused paths by construction (§12.11). v0.9: the §8 checklist's remaining PACKAGE-FORMAT amendments land — `[deprecation]`, `[livecheck]`, `link`/`link_reason`, `notes`, `ctx.replace`, `[system-patch]` are PACKAGE-FORMAT v0.6; the `system-patch` repository capability is REPOSITORIES v0.6 §3; delivered-status markers added to §4.2, §4.3, §4.5)
+- **Companion to:** [DESIGN.md](DESIGN.md) v1.7, [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md) v0.6, [BUILD-INFRA.md](BUILD-INFRA.md) v0.2, [REPOSITORIES.md](REPOSITORIES.md) v0.6, [ORCHARD-POLICY.md](ORCHARD-POLICY.md) v0.5
 - **Method:** aslice's two specifications compared feature-by-feature against Homebrew's living feature set as of Homebrew 7.0.0 (September 2026). Apple-Silicon-specific work and Homebrew's Intel deprecation/removal machinery are excluded per review scope; everything else Homebrew does today is fair game.
 - **Sources:** Homebrew release notes 4.6.0 → 7.0.0, docs.brew.sh (Security and Supply Chain, Tap Trust), Homebrew/brew issue #17019 (attestation verification). Links in §10.
 
@@ -164,6 +164,8 @@ skip_prerelease = true             # default true
 - **Cooldowns and throttle from day one** — cheap insurance, and a differentiator to advertise.
 - `brew bump-formula-pr` equivalent: `aslice bump-pr <pkg> <version>` — does the local edit, lints, builds one flavor as a smoke test, opens the PR.
 
+**Status: delivered (PACKAGE-FORMAT v0.6 §3.15).** The `[livecheck]` block landed with exactly this schema — strategies, throttle, and the cooldown floor of 2 days, raisable for the historically risky ecosystems. Freshness policy (required in core, days-behind-upstream as the dashboard number) is ORCHARD-POLICY §9.
+
 ### 4.3 P1 — Package lifecycle states
 
 **Homebrew:** `deprecate! date:, because:` → `disable! date:, because:` → removal; `brew pin`/`unpin`; `brew outdated`; `info` marks disabled/deprecated packages (7.0 polishes exactly this display).
@@ -181,6 +183,8 @@ disable_date = "2027-09-01"   # optional: after this, new installs refuse withou
 ```
 
 Semantics: **active → deprecated** (installs warn, `audit`/`info` surface it) **→ disabled** (new installs refused, existing installs keep working and remain in locks) **→ tombstoned** (formula removed from orchard HEAD; the index keeps a permanent tombstone so old locks still resolve against historical snapshots — something Homebrew's git-tap model does *worse* than aslice's snapshot model can). Add `aslice pin <pkg>` / `unpin` (recorded in the DB, honored by `upgrade`, surfaced in `outdated`), and `aslice outdated [--json]`.
+
+**Status: delivered (PACKAGE-FORMAT v0.6 §3.14).** The `[deprecation]` table landed with exactly these fields and semantics, replacing the `[package] deprecated` boolean; the tombstone guarantee and the security fast path are policy in ORCHARD-POLICY §8.
 
 ### 4.4 P1 — Services UX
 
@@ -206,6 +210,8 @@ Semantics: **active → deprecated** (installs warn, `audit`/`info` surface it) 
 **Proposal — add to `[install]`:**
 - `link = false` (default true) with mandatory `link_reason = "shadows-macos"` — the honest-keg-only. Installed into the store, absent from the profile; `aslice link openssl@3` opts in per-profile; dependents use `ctx.deps` paths and never need the profile link at all (this is where aslice's model is *cleaner* than keg-only: dependency resolution is store-path-based, so "unlinked but depended upon" is natural, not a hack).
 - **Policy:** versioned packages (`openssl@3` style) and anything shipping `bin/` names that collide with `/usr/bin` or `/bin` default to `link = false` in core. Lint enforces the reason string.
+
+**Status: delivered (PACKAGE-FORMAT v0.6 §3.8).** `link`/`link_reason` landed with lint enforcement of the reason; the core-default policy is ORCHARD-POLICY §6, which adopted this proposal's wording.
 
 ### 4.6 P1 — Environment wishlists and ephemeral exec
 
@@ -341,6 +347,8 @@ Semantics: **active → deprecated** (installs warn, `audit`/`info` surface it) 
 ---
 
 ## 8. Spec amendment checklist
+
+**Landing status (v0.9):** every amendment below has landed. The PACKAGE-FORMAT items are **PACKAGE-FORMAT v0.6** (§3.8 `link`/`link_reason`/`notes`, §3.14 `[deprecation]`, §3.15 `[livecheck]`, §3.16 `[system-patch]`, §6.3 `ctx.replace`, appendix updated); the `system-patch` repository capability is **REPOSITORIES v0.6 §3**; the DESIGN items landed across DESIGN v1.3–v1.7; the commissioned rulebook is ORCHARD-POLICY, now v0.5. The checklist is kept verbatim as the record of what this review proposed.
 
 Concrete deltas this review proposes to the two specifications:
 
