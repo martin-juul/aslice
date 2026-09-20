@@ -1,6 +1,6 @@
 # aslice Build Infrastructure — One Harness, Two Scales
 
-- **Status:** Design draft, v0.3 — September 2026 (v0.2: companion references refreshed — DESIGN v1.7, PACKAGE-FORMAT v0.6, HOMEBREW-REVIEW v0.9; all internal cross-references re-verified against current section numbering, no content change. v0.3: companion references refreshed — DESIGN v1.8, PACKAGE-FORMAT v0.6, HOMEBREW-REVIEW v0.10; no content change)
+- **Status:** Design draft, v0.4 — September 2026 (v0.2: companion references refreshed — DESIGN v1.7, PACKAGE-FORMAT v0.6, HOMEBREW-REVIEW v0.9; all internal cross-references re-verified against current section numbering, no content change. v0.3: companion references refreshed — DESIGN v1.8, PACKAGE-FORMAT v0.6, HOMEBREW-REVIEW v0.10; no content change. v0.4: the malware-signature gate — every staged slice is scanned against current definitions before signing-host promotion (new §7.5, §7.1 gate 5, §11 failure row, §12 Phase 1); the scanner is the orchard's own `clamav` core package (ORCHARD-POLICY v0.7 §2); client-side scanning stays the user's decision)
 - **Companion to:** [DESIGN.md](DESIGN.md) v1.8 (§4.3 toolchain, §5.1 process layout, §9 distribution, §10 security), [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md) v0.6 (build phases §6), [HOMEBREW-REVIEW.md](HOMEBREW-REVIEW.md) v0.10 (§4.7 merge gates, §6 risks)
 - **Scope:** the build harness (`aslice build`), farm orchestration (`aslice farm`), scheduling, worker trust, the VM test matrix, and the pipeline from build result to published repository.
 
@@ -149,7 +149,8 @@ Agent results land in an **untrusted staging area**. Nothing from staging is eve
 1. lint/policy re-check of the formula at the job's orchard commit;
 2. the slice digest matches the job's expected identity where the reproducibility class demands it (§7.3);
 3. the smoke test passed on the claimed OS × flavor;
-4. the ABI report is sane (no unexplained fingerprint regressions).
+4. the ABI report is sane (no unexplained fingerprint regressions);
+5. the slice passes the malware-signature gate (§7.5) — scanned against current definitions, verdict recorded in its provenance.
 
 Only then: sign, and feed `aslice repo build` (DESIGN §9.6).
 
@@ -181,6 +182,15 @@ aslice farm agent --reproduce-only                     # verification jobs only,
 Community agents receive `repro_of` jobs: rebuild a published job manifest and compare digests. Their results are **pure evidence** — agreement raises a slice's reproducibility confidence (feeding the `reproducible: true` badge of DESIGN §9.5); disagreement files an automatic investigation event. Community agents are never asked for, and never given, the ability to produce a served artifact.
 
 The project gets a distributed rebuild network on exactly the machines the software targets; the volunteer gets dashboard credit and a warm Mac mini. This is "the farm must be runnable on a user's machine" answered at the trust level: **identical code, zero authority.**
+
+### 7.5 The malware-signature gate
+
+Every staged slice is scanned against current ClamAV definitions before the signing host may promote it. The gate exists for the two moments the trust model is thinnest: the autobump bot's **first fetch** of a brand-new upstream tarball (the hash is computed from that very fetch — nothing has pinned it yet), and the **vendor-payload lane**, where bundled adware and PUPs are the documented pathology of the `.pkg`/`.dmg` ecosystem (ORCHARD-POLICY §12). A scan verdict — scanner version, definitions date, result — is recorded in the slice's provenance, so every published artifact carries its receipt and scan coverage is a dashboard number.
+
+- **The scanner is the orchard's own `clamav` core package** — the farm dogfoods the orchard (ORCHARD-POLICY §2: farm tooling is core by definition), running the same slice any user can install. Definitions refresh daily via freshclam on the farm network; a scanner whose definitions are stale beyond 48 hours pauses promotion rather than scanning with dead signatures — freshness of the gate is itself gated.
+- **A detection quarantines the slice permanently**, files an investigation event, and pages the named maintainer. Nothing is auto-deleted and nothing is auto-"cleaned" — the verdict is a human decision, and for vendor payloads the only options are rejection or a maintainer-documented exclusion in the formula (a modified payload would break byte-integrity against the pinned signer).
+- **Honest scope.** Signature scanning catches *known* malware. It does nothing against a novel supply-chain backdoor — that threat belongs to provenance, reproducibility classes, and review, and this gate changes nothing there. What it replaces on this platform is XProtect, which Apple no longer updates for 10.11–12: the farm maintains the definitions the built-in layer stopped receiving.
+- **Client-side: nothing.** No scan-on-install machinery, no daemon, no definitions slice pushed at users. Anyone who wants on-demand scanning installs the same `clamav` package the farm runs and drives it themselves — the charter's no-telemetry, no-background-anything rules apply to security features exactly as to everything else.
 
 ## 8. The VM test matrix
 
@@ -214,6 +224,7 @@ No user telemetry exists anywhere in this system (DESIGN §2.2 N7). What the far
 | Coordinator dies | Queue is SQLite + git; restore on any machine, agents reconnect |
 | Signing host down | Repository freezes at the last good snapshot — clients unaffected, freshness pauses |
 | Poisoned/faulty result | Quarantined forever; digest mismatch or class violation files an investigation event |
+| Scanner detection (§7.5) | Slice quarantined permanently pending maintainer review; investigation event filed; promotion pauses if definitions are stale |
 | VM host down | Its guests' tests queue; builds continue (tests are the gate, not the build) |
 | Disk pressure | Watermarks pause agents; scheduled farm-side `clean` sweeps staging and caches |
 | GitHub Actions changes | The adapter is disposable; the standalone coordinator is the system of record |
@@ -221,6 +232,6 @@ No user telemetry exists anywhere in this system (DESIGN §2.2 N7). What the far
 ## 12. Roadmap mapping
 
 - **Phase 0:** harness skeleton — `aslice build` local mode with the full sandboxed pipeline; toolchain-as-slice; job/result schemas; `farm plan`.
-- **Phase 1:** coordinator + agents + leases; Actions adapter; VM matrix bring-up; PR gates for the core orchard; staging → quarantine → signing-host pipeline.
+- **Phase 1:** coordinator + agents + leases; Actions adapter; VM matrix bring-up; PR gates for the core orchard; staging → quarantine → signing-host pipeline including the §7.5 malware-signature gate, with the `clamav` core package the gate runs on.
 - **Phase 2:** ABI-gate dependent-rebuild cascades; vendor-repackaging lane; backfill lane with §9.4 priorities; public dashboard.
 - **Phase 3:** two-builder cross-checks for core; community evidence builders (`enroll`, `--reproduce-only`); transparency log; reproducibility class upgrades as a standing program.
