@@ -1,554 +1,489 @@
-# aslice — A Package Manager for Intel macOS
+# aslice — System Design
 
-**Name.** *aslice* — an apple slice: a nod to the Macintosh apple and to the shape of the project itself. Binary packages are **slices**; formula repositories are **orchards**; the manager picks slices off the orchard, prebuilt or baked to order. The vocabulary is deliberately distinct from Homebrew's beer terminology to avoid community confusion and trademark friction. The project name is styled lowercase everywhere, including sentence starts — like the command.
-
-- **Status:** Design draft, v1.7 — September 2026
-- **Change log:** v0.2 extends the platform floor from 10.15 (Catalina) to 10.11 (El Capitan) — see §4 for the consequences (three flavors, self-hosted toolchain in Phase 0, HFS+ support). v0.3 resolves open question #4: **aslice collects no telemetry or analytics of any kind, ever** — the project is infrastructure, not a product (§2.2 N7, §9.4, §15). v0.4 sharpens it: **download counts are rejected as a value signal too** — on a deprecated-OS platform, obscure ≠ low-value (§9.4). v0.5 adds the **repository system** (§9.6) and **vendor binary packages**: software that only ships as a `.pkg`/`.dmg`, hosted or vendor-fetched, installed without ever running installer scripts (§12.4; schema in PACKAGE-FORMAT v0.2 §3.11). v0.6 opens **32-bit vendor binaries**: i386 and universal pkg/dmg payloads install on the releases that still execute 32-bit code (10.11–10.14) — distributed, never built (§2.2 N6, §12.4; PACKAGE-FORMAT v0.3). v0.7 adds the **build-infrastructure design**: one harness — `aslice build` on a user's machine, `aslice farm` on the farm — running the identical sandboxed pipeline at both scales (§5.1, §9.3; full spec in [BUILD-INFRA.md](BUILD-INFRA.md)). v0.8 completes the repository story: a **shipped official source list**, **inherent trust levels** (official / verified / third-party / local — enforced capabilities, not labels), and **dual signature schemes** — Ed25519/minisign canonical, OpenPGP (GPG) built-in first-class for third-party ecosystems (§9.6, §10.2; full spec in [REPOSITORIES.md](REPOSITORIES.md)). v0.9 adds **cross-repository overlap resolution**: ambiguous bare package names prompt the user, the decision is remembered in the SQLite state database, revalidated on repo changes, and scriptable via `aslice repo prefer` (§9.6, §12.1; REPOSITORIES.md §10–§11). v1.0 adds the **logging design**: structured, local-only operation logs with a message-quality standard — every error is actionable, security events are unsuppressible, and nothing ever leaves the machine (§5.2, §8.1, §12.1, §12.5). v1.1 specifies **`aslice doctor`**: a read-only, scriptable sanity battery — machine, store, profiles, database, repositories, coexistence, environment — where every fail names its remedy and `--fix` is narrow and loud (§12.6). v1.2 opens a narrowly-scoped **system-software category**: kernel extensions and SIP-disabled development software become installable as declared `[system]` packages — warned at every decision point, elevated per-operation by a dedicated helper, gated by repository trust level — replacing the blanket rejection with an honest, reversible install path (§10.4, §10.7, §12.1, §12.7, §13.1). v1.3 adds **launchd-native service management**: packages describe services declaratively in the manifest (`[service]`, PACKAGE-FORMAT v0.4 §3.8), `aslice service` provides status/start/stop/restart over real launchd jobs, and upgrades orchestrate stop → atomic swap → restart so a running service is never updated out from under itself (§8.3, §10.4, §12.1, §12.8). Root-domain daemons go through `aslice-system` and the repository `system` capability; user agents stay unprivileged and ungated. v1.4 resolves open question #8: a failed post-upgrade service health check **asks the user whether to roll back** — an interactive prompt (default: stay and inspect) that swaps the generation back and restarts the previous service version on assent; non-interactive contexts never prompt and never auto-rollback, with `--rollback-on-service-failure` as the explicit unattended path (§12.1, §12.8). v1.5 adds **first-class multi-version runtime management** — the Volta lesson, taken seriously: version switching is the package manager's job, not a second tool's. A shim layer multiplexes versioned runtimes (php, nodejs, ruby, python, …) by session (`aslice use`), project (`aslice pin`), and default (`aslice default`) selections; interpreter-target tools like composer and yarn **ride** the selected runtime; and compiled extensions are slices bound to the runtime's ABI epoch, so an extension is always installed for exactly one runtime version — as are pip/gem/npm/pecl installs, through per-version userbases (§8.5, §12.9; schema in PACKAGE-FORMAT v0.5 §3.13). v1.6 adds **trust-store management** — `aslice ca-update`: the CA bundle becomes an ordinary signed, generation-managed slice (`ca-certificates`), its source configurable with the Mozilla root program (via curl's caextract) as the default; profile env wiring heals userland TLS (curl, git, python) completely; and an opt-in `aslice ca-update --keychain` imports the missing modern roots into the **System keychain** through `aslice-system` — machine-wide healing for Safari, Mail, and every SecureTransport app, recorded to the certificate and reversible to the certificate (§4.1, §12.6, §12.10). v1.7 extends trust-store management and amends a founding line: `aslice ca-update --crypto` upgrades the crypto-provider slices (modern ciphers/TLS for userland, with SecureTransport's limits printed, never hidden), `--apple-certs` imports Apple's own roots — which Mozilla's program does not carry — from a pinned `apple-roots` slice into the System keychain; and the absolute "never touch the system" stance becomes a declared exception: **`[system-patch]` packages** (§12.11) may replace Apple-provided files through a backup + profile-symlink + generation-rollback mechanism — consent at every decision point, official/local repositories only, refused paths blocked by construction (§2.2 N5, §10.4, §10.7, §12.10, §12.11, §13.1)
-- **Scope:** macOS 10.11 (El Capitan) through 12 (Monterey), Intel x86_64 only
-- **Implementation:** C++20 core, single self-contained binary
-- **Audience:** Maintainers, founding contributors, and early reviewers
+> **Status:** v1.8 design draft — for review before implementation begins.
+> **Scope:** macOS 10.11 (El Capitan) through 12 (Monterey), x86_64 only.
+> **Companions:** PACKAGE-FORMAT.md (slice format spec), REPOSITORIES.md (multi-repo, mirrors, and vendor .pkg/.dmg support), HOMEBREW-REVIEW.md (the Homebrew audit this design answers), ORCHARD-POLICY.md (governance), BUILD-INFRA.md (build-farm architecture).
 
 ---
 
-## 1. Context and Opportunity
+## 1. Mission
 
-### 1.1 The gap that is opening
+aslice is a binary-first package manager for Intel Macs that Apple has left behind. It delivers modern, security-patched open-source software to macOS 10.11–12 as content-addressed, cryptographically signed packages, with correct dependency resolution, atomic upgrades, instant rollback, and multi-repository support — and it does so without requiring the user to trust anything except an explicit, pinned set of keys.
 
-The Intel-Mac package-management ecosystem is losing its maintainer on a known schedule:
+The project exists because of a simple asymmetry: the software world moved on, but the hardware didn't break. A 2015 iMac is a fine machine. What it can't run is a modern TLS stack, a current ffmpeg, a supported Python. aslice's job is to close that gap — permanently, since the platform it targets is frozen and will never change again.
 
-- **Homebrew 7.0.0 (September 2026)** moved Intel x86_64 to Tier 3 ("not supported"): no new bottles are built for Intel, CI coverage is gone, and macOS 10.15 support was removed outright. Existing bottles stay hosted but freeze in time.
-- **September 2027:** Homebrew plans to remove the ability to run on Intel systems at all.
-- **Autumn 2027:** GitHub Actions retires its Intel macOS runners (`macos-13` images), eliminating the last hosted CI capable of natively building x86_64 macOS binaries. This is one of the explicit reasons Homebrew cites for its exit.
-- **Apple:** macOS 26 Tahoe is the final release for Intel Macs; macOS 27 Golden Gate is Apple-silicon-only. Intel Macs receive security updates only, on a countdown.
+**What "modern software on old macOS" concretely means:** current OpenSSL/LibreSSL with TLS 1.3 on systems whose Secure Transport is frozen at 2015; ffmpeg 7.x with x264/x265/SVT-AV1; Python 3.13, Node LTS, Rust, Go (where the runtime supports the deployment target — otherwise the newest version that does, honestly labeled); curl with HTTP/2 and HTTP/3; git current; and the library stack (icu4c, libxml2, sqlite, harfbuzz) that makes those possible. Every one of these is buildable for darwin15 with a modern cross-capable Clang; nobody has productized it. That productization is aslice.
 
-Meanwhile a large installed base remains: Homebrew's own analytics, discussed publicly in mid-2026, put Intel at roughly a quarter of active Homebrew Mac installations. Everything from El Capitan to Monterey is now outside Homebrew's support window — and precisely where these machines are stranded.
+### 1.1 Design principles
 
-### 1.2 Who the users are
+1. **The platform is frozen; the software is not.** macOS 10.11–12 never changes. This is an enormous engineering advantage — ABI assumptions, test matrices, and workarounds are written once and stay true. Every design decision should exploit it.
+2. **Binary-first, source-optional.** Users get prebuilt, signed slices. Building from source is a supported workflow, not a prerequisite.
+3. **Nothing shared, nothing global.** Each package is a self-contained tree with its own dependencies. No files outside the managed prefix. The system installation is never touched. (See §12.11 for the single declared, consent-gated exception: the `[system-patch]` category — explicit, flagged, reversible, never silent.)
+4. **Correctness over cleverness.** Content addressing, a SAT-style dependency solver, and atomic generation swaps. No "it usually works."
+5. **Honesty over convenience.** Every trust decision is explicit and recorded. If something can't be verified, aslice says so, in so many words. No silent fallbacks, ever.
+6. **Unix through and through.** Small mechanisms, text streams, exit codes, scriptability. Fancy features compose from simple ones or don't ship.
+7. **The user owns the machine.** No telemetry, no analytics, no phone-home, no surprise network traffic. aslice is infrastructure, not a product (§9.4).
 
-Three populations, all underserved:
+---
 
-1. **Owners of 2012–2020 Intel Macs** used as daily drivers, home servers, audio rigs, and build machines. Many are maxed-out machines (Mac Pro 2013, iMac 5K, 16" MBP 2019) that remain genuinely capable.
-2. **CI and legacy-maintenance shops** that must keep building and testing x86_64 macOS software through Tahoe's support window.
-3. **Retro, audio, lab, and 32-bit-dependent environments** pinned to older releases. Catalina dropped 32-bit app support entirely; 10.11–10.14 are the last releases that run 32-bit software, classic audio drivers, and legacy pro tools — which is exactly why their users stay. Today these users are served only by MacPorts' best-effort legacy coverage. Vendor-binary packages (§12.4) meet them where they live: 32-bit and universal pkg/dmg payloads install cleanly on precisely these releases.
+## 2. Relationship to Homebrew (and Others)
 
-### 1.3 Why not MacPorts or Nix?
+Homebrew is the elephant in every room this project will ever enter. The full audit is in HOMEBREW-REVIEW.md; this section summarizes the position.
 
-Both are suggested by Homebrew itself as migration paths. Both leave the opening intact:
+### 2.1 What Homebrew gets right (and aslice keeps)
 
-| | MacPorts | Nix (via Determinate/nixpkgs) |
+- The **tap model**: a package repository is just a git repo of formulae. Distributed, forkable, hostable anywhere. aslice generalizes this into first-class multi-repository support (REPOSITORIES.md).
+- **Formula as data**: one declarative file per package, human-readable, diff-able, reviewable.
+- **Bottles**: prebuilt binaries are the default experience; source builds are the fallback.
+- **`brew doctor`**: a dedicated diagnostics command that checks the environment and says what's wrong in plain language. aslice's `doctor` (§12.2) adopts this wholesale, with structured check output.
+- **Community governance in the open**: public CI, public discussions, documented contribution paths.
+
+### 2.2 Where Homebrew's design fails this platform (and aslice diverges)
+
+| Homebrew decision | Why it fails on 10.11–12 | aslice's answer |
 |---|---|---|
-| Binary coverage for 10.11–12 Intel | Partial, shrinking; builds from source as the norm | x86_64-darwin support degrading; Hydra builds for old OS releases not a goal |
-| Variant/flag model | Excellent (`+variants`) — but every variant is a local compile | Binary cache keyed on exact derivation; any flag change = full local rebuild |
-| UX | Functional but austere | Steep learning curve |
-| Philosophy | Build on the *target* OS version | Hermetic, prefix-independent |
+| `/usr/local` shared prefix | Wild-west filesystem; packages collide; uninstall is guesswork | Isolated `/opt/aslice` prefix (§8.1); per-package store; content-addressed |
+| Roll-forward brew update | Upgrades are one-way; a broken formula update breaks users | Generations + instant rollback (§8.4) |
+| `uses_from_macos` dependencies | On 10.11, system OpenSSL is 0.9.8, system curl is a security incident | Strict hermeticity (§6.4): only allowlisted system frameworks, never system userland |
+| Test-bot on recent macOS only | 10.11 regressions ship to users | Farm tests on every supported OS × flavor (§9.2, BUILD-INFRA.md) |
+| Options/variations removed (2019) | Users on old hardware need variants (no-AVX, minimal deps) | First-class variants (§6.3) with prebuilt matrices |
+| Ruby DSL, in-process eval | Formulae are arbitrary code in the manager's process | Starlark sandbox, no network, no FS outside build dir (§6.2) |
+| Analytics on by default (opt-out) | Violates user trust; meaningless on tiny populations | No telemetry, ever (§9.4) |
+| Livecheck is per-formula best-effort | Updates are whoever-remembers | Farm-side freshness pipeline with signed update PRs (§9.5) |
+| Single maintainer-held signing story | Key custody is informal | Threshold keys, YubiKey custody, rotation runbook (§10.2) |
+| No ABI tracking | Library updates break dependents silently | ABI manifests + rebuild cascades (§7.5) |
+| Monorepo of formulae | Trust is all-or-nothing | Tiered trust: official / verified / third-party / local (REPOSITORIES.md §3) |
+| Prefix is where-it-is (`/usr/local` or `/opt/homebrew`) | No choice for users without admin rights | `/opt/aslice` default with fully supported `~/.aslice` no-admin fallback (§8.1, §10.3) |
 
-The opening is a manager that combines **Homebrew's ergonomics**, **MacPorts' variant flexibility**, and **Nix's correctness ideas** (store paths, generations, atomic switching) — scoped tightly to a platform the incumbents are vacating, small enough to be excellent.
+None of this is Homebrew-bashing: Homebrew is optimized for *current* macOS, where `uses_from_macos` is safe and roll-forward is usually fine. aslice is optimized for the opposite constraint set.
 
-### 1.4 Design thesis
+### 2.3 Other prior art, briefly
 
-> **One OS axis collapses; one µarch axis matters. Variants are safe if you separate ABI from optimization. Security comes from making packages declarative and installs code-free.**
-
-Each clause is developed in its own section below.
-
----
-
-## 2. Goals and Non-Goals
-
-### 2.1 Goals
-
-- **G1 — Full coverage of macOS 10.11 through 12 on Intel**, treated as first-class citizens, not legacy tiers.
-- **G2 — Three µarch flavors:** `v1` (SSE2 baseline — every 64-bit Intel Mac), `v2` (SSE4.2/POPCNT), and `v3` (AVX2 — Haswell and later). See §4.
-- **G3 — Precompiled binaries for the common flavors**, hosted on GitHub infrastructure with a mirror-friendly fallback. Default install path is binary and near-instant.
-- **G4 — User-selectable build flags and feature variants** with local compilation — *without* forfeiting interoperability with prebuilt packages (§7).
-- **G5 — A materially better security model than Homebrew's** (§10): declarative package definitions, sandboxed builds, signed everything, code-free binary installs, no `/usr/local` chown, no sudo in steady state.
-- **G6 — A materially better performance profile** (§11): sub-10 ms CLI startup, parallel solver and downloads, zstd payloads, APFS-aware linking.
-- **G7 — Atomic, rollback-capable installations** via generations (§8).
-- **G8 — Low maintainer burden.** The platform is frozen by Apple; the design exploits that stability instead of fighting it (§15).
-- **G9 — Vendor-binary coverage.** Software that only exists as a `.pkg`/`.dmg` — vendor CLIs, commercial audio tools, frozen apps — installs through the same store, generations, and lock files as everything else, without ever executing installer scripts (§12.4).
-- **G10 — First-class multi-version runtimes.** php, nodejs, ruby, and python — and anything else users keep in several versions — install side by side and switch with Volta-grade ergonomics: session, project, and default selection via a shim layer, with extensions bound to exactly one runtime version (§12.9).
-
-### 2.2 Non-goals
-
-- **N1 — Apple Silicon.** Not now, not by accident. The architecture must not preclude it, but no engineering effort goes to it. Homebrew owns that space.
-- **N2 — macOS 13+ on Intel.** Tahoe-era Intel machines (2019–2020) are welcome, but the build targets remain 10.11–12; Ventura+ Intel gets whatever falls out naturally.
-- **N3 — GUI application *polish* at launch.** Vendor-binary packages (§12.4) cover `.pkg`/`.dmg`-only software — CLI tools and apps alike. What is deferred is app-specific chrome: Launchpad integration, updater handoff, a GUI manager. Core CLI packages still come first.
-- **N4 — Linux/Windows.** The codebase should stay portable, but no effort is spent there.
-- **N5 — Replacing the system.** aslice lives in its own prefix and never modifies the OS by default: `/System`, `/usr`, and Apple's binaries are read-only to it. The one exception is the declared, flagged `[system-patch]` category (§12.11) — backup + symlink + rollback, consent-gated, trust-gated — because on a frozen platform some fixes are only possible in Apple's territory. `/usr/local`'s ownership is never touched regardless.
-- **N6 — 32-bit *builds*.** Every Mac that can run 10.11 is 64-bit capable, so aslice *builds* x86_64-only slices: no i386 flavor, no 32-bit toolchain work, no multilib. **32-bit vendor payloads are a different matter** (v0.6): a pkg/dmg shipping i386 or universal binaries installs on the releases that can still execute them — 10.11 through 10.14, which is exactly why many of these machines are kept at all (§12.4). The line is compile vs. distribute: we never *build* 32-bit, we gladly *install* it where the OS allows.
-- **N7 — Metrics.** No telemetry, analytics, install IDs, crash reporting, or usage instrumentation of any kind — not even opt-in. aslice is infrastructure, not a product. Prioritization signals come from maintainers and the community, never from users' machines (§9.4).
+- **Nix/Guix:** content-addressed store, generations, rollback — aslice borrows all three, minus the daemon, the custom language, and the "everything is a derivation" learning curve. aslice packages are conventional tarballs, not a parallel universe.
+- **pkgsrc/MacPorts:** still support old macOS, but source-first means hours-long builds on a Core 2 Duo. aslice is binary-first.
+- **MacPorts specifically:** the closest living relative. aslice differentiates on: signed binary slices as the default, modern dependency solving, atomic transactions, mirror/mirror-of-mirror support, and a governance model designed for a volunteer project from day one.
+- **conda/spack:** good multi-version and variant stories; wrong ecosystem and too heavy.
 
 ---
 
-## 3. Positioning: "What Homebrew Could Not"
+## 3. Architecture Overview
 
-Homebrew's structural constraints — not its maintainers — produced its weaknesses. aslice's founding decisions target each one:
+```
+                    ┌─────────────────────────────────────┐
+                    │           orchards (git)            │
+                    │  formula sources: core, extended,   │
+                    │  third-party (REPOSITORIES.md §2)   │
+                    └──────────────┬──────────────────────┘
+                                   │ publish
+                                   ▼
+                    ┌─────────────────────────────────────┐
+                    │     repositories (index + slices)   │
+                    │  static files, TUF metadata, any    │
+                    │  HTTPS host or local dir            │
+                    └──────────────┬──────────────────────┘
+                                   │ fetch (TUF-verified)
+        ┌──────────────────────────┼──────────────────────────┐
+        ▼                          ▼                          ▼
+┌───────────────┐        ┌─────────────────┐        ┌────────────────┐
+│  aslice CLI   │───────▶│  state (SQLite) │        │  store         │
+│  solver, txn, │        │  installed pkgs,│        │  /opt/aslice/  │
+│  fetch, verify│        │  pins, repos,   │        │  store/<hash>- │
+└──────┬────────┘        │  generations    │        │  <name>-<ver>  │
+       │                 └─────────────────┘        └───────┬────────┘
+       ▼                                                    │ link
+┌───────────────┐                                           ▼
+│  build sandbox│                                 ┌────────────────┐
+│  (seatbelt)   │                                 │  profile links │
+└───────────────┘                                 │  /opt/aslice/  │
+                                                  │  bin, lib, ... │
+                                                  └────────────────┘
+```
 
-| Homebrew constraint | Consequence | aslice's founding decision |
+The four planes:
+
+1. **Source plane** — orchards: git repositories of formula files. Humans write and review these. The core orchard is `aslice/orchard`.
+2. **Distribution plane** — repositories: static file trees (TUF metadata + content-addressed slice files) that any HTTPS server, S3 bucket, GitHub Releases page, or local directory can host. Repositories are *derived* from orchards by the build farm; they never contain anything the orchard didn't declare.
+3. **Machine plane** — the store, the SQLite state DB, profiles, and generations. Fully described by the manifest of installed slices; reconstructable from it.
+4. **Build plane** — the sandboxed build harness, run by the farm (for published slices) or locally (for `--build-from-source`). Same harness, same sandbox, same output format (BUILD-INFRA.md).
+
+The planes interact through exactly two artifacts: **formulae** (source → distribution) and **slices** (distribution → machine). Both are specified, versioned, and signed.
+
+---
+
+## 4. The Frozen-Platform Advantage
+
+Designing for 10.11–12 means the ground never moves:
+
+- **The ABI surface is fixed.** libSystem, libc++, CoreFoundation versions are known constants per OS release. A compatibility matrix is a document, not a research project.
+- **The test matrix is finite.** 7 OS releases × 3 CPU flavors (§4.2) = 21 cells. A package either passes in all 21 or declares its floor. Homebrew's matrix is a treadmill; aslice's is a checklist.
+- **Workarounds are permanent.** The patch that makes Python 3.13 build on 10.11 will be correct forever. It is written once, reviewed once, and never rots.
+- **Security backports are the whole game.** Since the platform won't get fixes from Apple, aslice's value is tracking upstream security releases for ~300 core packages. This is a tractable, automatable workload (§9.5).
+
+### 4.1 OS support matrix
+
+| Release | Darwin | Notes for aslice |
 |---|---|---|
-| Formulae are arbitrary Ruby executed at install time | Taps and `post_install` are a code-execution supply chain; audit is impossible to automate fully | Formulae are **declarative TOML + hermetic Starlark build scripts** (§6); binary installs execute **zero** package code (§10.3) |
-| Bottles exist only for default options; `homebrew-core` removed options entirely (v2.0, 2019) | Users needing flags lose binaries *and* break interop | **ABI-aware variant model** (§7): optimization flags never affect identity; feature flags affect it only when they change the exported interface |
-| One linked version per package in the Cellar | Upgrades are destructive; rollback is archaeology | **Store paths + generations** (§8): any number of variants coexist; switching is atomic |
-| Prefix ownership of `/usr/local` chowned to the user | Security researchers have criticized this for a decade | Private prefix `/opt/aslice`, created once by an installer, never world-writable, never sudo thereafter (§10.4) |
-| Ruby runtime, git-cloned taps | Slow startup, slow `brew update` | Single C++ binary, content-addressed TUF-signed index with snapshot diffs (§11) |
-| CI hostage to GitHub-hosted Intel runners | The current collapse | **Self-hosted build farm on real Intel hardware** from day one (§9.3) |
-| Opt-out usage analytics | Consent assumed; users are a metrics pipeline | **No telemetry or analytics of any kind, ever** — aslice is infrastructure, not a product (§2.2 N7) |
-| Casks may run `installer script:` and vendor pkg hooks | Arbitrary vendor code with user (or admin) privileges at install | **Vendor binaries install payload-only** (§12.4): pkg/dmg contents are extracted per a declarative map, signer-pinned, and embedded scripts never execute |
-| Versioned runtimes are separate formulae (`php@8.1`, `python@3.12`); switching means `brew link --overwrite` or an external manager (nvm, pyenv, rbenv, Volta) shadowing brew | Two sources of truth for what `python3` resolves to; the package manager and the version manager fight over PATH | **Runtime version management is built in** (§12.9): one formula with release streams, shims resolving session/project/default, riding tools, and extensions ABI-bound to the runtime |
+| 10.11 El Capitan | 15 | The floor. SIP introduced (aslice respects it; §8.1). No `utimensat`, weak TLS, ancient libcurl. Maximum hermeticity required. |
+| 10.12 Sierra | 16 | `utimensat` appears; APFS not yet default. |
+| 10.13 High Sierra | 17 | APFS default on SSDs; aslice must handle both HFS+ and APFS semantics (§8.3). |
+| 10.14 Mojave | 18 | Last 32-bit-supporting release. aslice x86_64-only, but 32-bit *installer payloads* (.pkg with i386 slices) are handled where the OS runs them (REPOSITORIES.md §6.3). |
+| 10.15 Catalina | 19 | Notarization era begins; aslice slices are unsigned-native-code tarballs — Gatekeeper treatment documented (§10.3). |
+| 11 Big Sur | 20 | dyld shared cache changes; Apple Silicon exists but is out of scope — aslice x86_64 slices run on Intel Macs only. |
+| 12 Monterey | 21 | The ceiling. Last Intel-supported macOS. |
 
----
+Every package declares `min_os` (and rarely `max_os`). The solver refuses plans that would install a package below its floor. The farm refuses to publish slices built on a newer SDK than `min_os` implies (§9.2).
 
-## 4. Platform Matrix and Microarchitecture Strategy
+### 4.2 CPU flavors
 
-### 4.1 The OS axis collapses — at 10.11
+Intel Macs spanning 2007–2020 have meaningfully different instruction sets. aslice defines three build flavors:
 
-Naively, 5 OS versions × 3 µarch flavors = 15 builds per package. In practice it is **3**:
-
-macOS has a mature deployment-target mechanism. A binary compiled with `-mmacosx-version-min=10.11` runs correctly on every release from El Capitan through Monterey, provided it avoids (or weak-links against) newer APIs. So the default remains: **build once against the oldest target, per µarch flavor** — the floor is simply 10.11 now instead of 10.15.
-
-The lower floor has real consequences, and they are handled explicitly:
-
-- **A wider `min_os` spread.** Many modern upstreams cannot cleanly target 10.11: C++17/20 library features, `clock_gettime` and friends (absent before 10.12), `thread_local` quirks, modern IPC. Formulae declare `min_os` honestly; the index filters per OS. Expect a natural stratification — the core orchard mostly at a 10.11 floor, much of the extended orchard at 10.12–10.14 floors. A package that *could* build for 10.11 but isn't worth the patching declares its floor and moves on: loud honesty over heroics.
-- **libc++ comes from the toolchain, not the system.** System libc++ on 10.11 predates half of C++17. All C++ packages statically link a modern libc++ from `aslice-toolchain` (§4.3), so the age of the system runtime stops mattering.
-- **HFS+ is back in the window.** 10.11–10.12 predate APFS entirely, and HDDs stayed HFS+ into the Mojave era. Everything filesystem-dependent degrades gracefully: `clonefile` → hardlink → copy (§11), and generation switching relies on `rename(2)`, which is atomic on HFS+ as well.
-- **Ancient TLS and expired root certificates** make the 10.11–10.13 system trust store nearly unusable for the modern web. `aslice-fetch` links its own TLS stack and CA bundle and verifies against pinned, countersigned hashes regardless — the security model never depended on the system store. But *userland* still does: the curl, git, and python a user runs trust the rotting system roots, and so do Safari and Mail. `aslice ca-update` (§12.10) heals both halves — a signed, generation-managed CA bundle for the profile, and an opt-in System-keychain import for the machine — with `--crypto` covering the cipher/TLS stack of userland and `--apple-certs` the Apple-private roots that Software Update and the App Store chain to.
-
-### 4.2 The µarch axis grows: three flavors
-
-Extending the floor to 10.11 pulls pre-SSE4 CPUs into the supported population, so the flavor space grows from two to three. aslice adopts the x86-64 psABI microarchitecture levels as its flavor vocabulary:
-
-| Flavor | Level | Key ISA | Who needs it |
+| Flavor | Target | Covers | Rationale |
 |---|---|---|---|
-| `v1` | x86-64 baseline | SSE2 | Runs on every 64-bit Intel Mac; the *only* choice for Core 2 Duo machines (2007–2009, Merom/Penryn) found on 10.11–10.13 |
-| `v2` | x86-64-v2 | SSE4.2, POPCNT | Nehalem/Westmere and later — Mac Pro 2009+, most 2010+ Macs, and everything Catalina-capable |
-| `v3` | x86-64-v3 | AVX2, BMI2, FMA | Haswell+ (2014→); 10–40% faster on codecs, crypto, compression, math |
+| `v1` | `x86-64` (SSE4.2) | Core 2 Duo Penryn (2008) and later | The true floor. Everything must have a v1 slice. |
+| `v2` | `x86-64-v2` (SSE4.2, POPCNT, AVX) | Sandy Bridge (2011)+ | Meaningful speedup for codec/math workloads. |
+| `v3` | `x86-64-v3` (AVX2, BMI2, FMA) | Haswell (2013)+ | The 2013–2020 installed base — most of the target users. |
 
-Notes:
+The client detects its flavor at install (`sysctl -a` CPU features; the logic is 50 lines, not a library). The solver requests the highest flavor the machine supports; every package must provide `v1`, may provide `v2`/`v3`. Missing a preferred flavor is a graceful downgrade, never an error.
 
-- **x86-64-v4 (AVX-512) is deliberately absent.** No Intel Mac ever shipped AVX-512. The flavor space is exactly three, keeping the binary matrix and the UX small.
-- **Detection** is a sysctl ladder at install time: `hw.optional.avx2_0` → `v3`; else SSE4.2+POPCNT via `machdep.cpu.features` → `v2`; else `v1`. The manager itself is built `v1` (it gains nothing from vector ISAs) and selects flavors on the user's behalf; `aslice config set flavor v1` overrides downward.
-- **The solver picks the highest flavor the hardware runs** and treats flavor as a hard constraint, not a preference — a `v3` slice on a Core 2 Duo is a solve-time conflict with a clear message, never a SIGILL at runtime.
-- Flavor interaction with `min_os` is orthogonal: a Haswell iMac happily runs 10.11, so `v3` + `min_os 10.11` is a real, served combination.
-
-### 4.3 Toolchain floor — self-hosted from day one
-
-Extending to 10.11 changes the toolchain story from "convenience" to "load-bearing":
-
-- **Modern hosted Xcode can't reach 10.11.** Xcode 15-era toolchains no longer accept deployment targets below ~10.13, and GitHub's hosted Intel runners never ship anything older. Therefore `aslice-toolchain` — modern Clang, LLD where viable (ld64 from cctools-port otherwise), modern libc++, CMake, Ninja, pkgconf — moves from Phase 2 to **Phase 0** and is the authoritative build toolchain for all packages.
-- **Targeting darwin15 from a modern Clang works** (`-mmacosx-version-min=10.11` is still accepted; Clang's target floor is far older than libc++'s). The constraint is the C++ runtime, which is why the toolchain statically links its own libc++ into everything it produces.
-- **The package manager core** is C++20 built with this self-hosted toolchain: static libc++ and third-party libraries, dynamically linking only `libSystem`. One Mach-O binary runs on 10.11–12 with zero runtime dependencies. (Fully static linking is impossible on macOS — `libSystem` must be dynamic — but nothing else need be.)
-- **Bootstrap path:** build the toolchain on the newest available Intel macOS against the oldest archived SDK, with per-OS workarounds recorded in the toolchain's manifest; then rebuild the toolchain with itself. Build VMs run 10.11/10.12/10.13/10.14/10.15/11/12 guests on the farm (§9.3) so every claimed target is continuously tested, not assumed.
+Prebuild economics: the farm builds all flavors for the ~300-package core orchard; `v1`-only for the extended orchard's long tail, with popular packages promoted to full matrices (§9.3). Flavor is a *build-axis*, not a variant — it never appears in dependency identities, so mixing v1 and v3 packages in one install is legal and common.
 
 ---
 
-## 5. Core Architecture
+## 5. Core Components
 
-### 5.1 Process layout
+aslice is a single static C++20 binary (plus a tiny privileged helper, §10.4). Dependency footprint for the binary itself: libcurl (vendored, with its own TLS), SQLite (vendored), zstd (vendored), a TUF client library (vendored), a Starlark interpreter (vendored), a SAT solver (vendored), libsodium/minisign (vendored). The aslice binary has **zero external dependencies** — it must run on a bare 10.11 install with nothing else present. This is non-negotiable: a package manager that needs packages to run is a bootstrap paradox.
 
-```
-aslice (single binary, unprivileged)
- ├── aslice-fetch     ── sandboxed helper: network + disk cache only
- ├── aslice-extract   ── sandboxed helper: archive extraction only
- ├── aslice-build     ── sandboxed helper: runs Starlark build scripts
- └── aslice-link      ── the only component that writes the store/profile
-```
-
-Privilege separation is structural: the helpers are separate executables (spawned by the main binary, which re-executes itself with a subcommand) running under Seatbelt profiles (§10.5) with exactly the capabilities their phase requires. The fetch helper can't touch the store; the extractor has no network; the linker has no network and no compiler. Each helper is small (a few hundred lines) and independently auditable — this is where the C++ attack-surface discipline pays for itself. `aslice-extract` is also the component that expands vendor `.pkg` (xar) and `.dmg` payloads (§12.4) — archive and installer-payload handling are the same trust problem and get the same tiny, fuzzed code path. The same helpers are what the build farm executes: the farm harness is an orchestrator that spawns `aslice build` jobs, and every build — farm or laptop — runs through this identical sandboxed executor (full design: [BUILD-INFRA.md](BUILD-INFRA.md)).
-
-### 5.2 Major components
+### 5.1 Component inventory
 
 | Component | Responsibility | Notes |
 |---|---|---|
-| **Index client** | Fetches and caches the package index | TUF metadata + zstd-compressed JSON snapshots; incremental updates via snapshot diffs, not git |
-| **Solver** | Version + variant resolution | PubGrub-style CDCL algorithm over (name, version, variant) space; flavors as hard constraints (§7.5) |
-| **Store** | Content- and identity-addressed package trees | `/opt/aslice/store/<name>-<version>-<buildid>/` (§8) |
-| **Profiles / generations** | Atomic merged views | Symlink forests with rename-swap; rollback = flip a symlink (§8.3) |
-| **Builder** | Fetch→unpack→patch→configure→build→install in sandbox | Deterministic environment; DESTDIR staging; ABI scan on output (§7.3) |
-| **Verifier** | Signature, hash, ABI, and policy checks before linking | Nothing reaches the profile without passing (§10.2) |
-| **Database** | Installed-set and metadata | Single SQLite file, WAL mode, prepared statements; the only mutable state besides the store. Holds the installed set, per-repo key pins and trust levels, remembered overlap resolutions, solve cache, and operation history ([REPOSITORIES.md](REPOSITORIES.md) §11) — records decisions and state, never grants authority; verification never consults it for trust |
-| **Reporter** | SBOM generation, `audit`, provenance display | SPDX SBOM per package; OSV feed integration (§10.6) |
-| **Logger** | Structured operation and security-event logging | JSONL on disk under `log/`, human rendering on the terminal; local-only, forever (§12.5) |
-| **Shim resolver** | Version selection for multi-version runtimes | Multicall `argv[0]` dispatch; session → project → default resolution; exec-only, no wrapper process (§12.9) |
+| CLI | Argument parsing, subcommands, output formatting | Machine-readable output mode (`--json`) for everything |
+| Solver | Version resolution, variants, conflicts | CDCL SAT with domain-specific heuristics (§7) |
+| Fetcher | HTTPS downloads, resume, mirror failover | Parallel, throttled, fully logged (§5.2) |
+| Verifier | TUF metadata validation, slice signature/hash checks | Fail-closed; no overrides without explicit flags (§10) |
+| Store manager | Content-addressed slice installation, GC | Dedup, integrity audit, `store verify` (§8.3) |
+| Linker | Profile/generation symlink management | Atomic swaps (§8.4) |
+| State DB | Installed set, pins, repos, keys, generations, audit log | SQLite, WAL mode, single-writer (§5.2) |
+| Build harness | Sandboxed formula execution | Seatbelt sandbox, network-off, deterministic env (§6.5) |
+| Repo client | Multi-repo sync, priority, namespacing | REPOSITORIES.md §4 |
+| Self-updater | `self-update`, channels, bootstrap verification | §12.12 |
+| Doctor | Environment diagnostics | §12.2 |
+| Logger | Structured, leveled, to file and stderr | §5.4 |
 
-### 5.3 Why C++ — and what it costs
+### 5.2 The state database
 
-The user-facing case for C++ is startup time, single-binary deployment across 10.11–12 with no runtime story, direct Mach-O/dyld/Seatbelt API access, and world-class tooling for the performance goals. The honest cost is memory safety, which is a security-goal liability. aslice treats that as an engineering constraint, not an embarrassment:
+One SQLite file at `/opt/aslice/var/db/aslice.sqlite` (per-user fallback `~/.aslice/var/db/…` for no-admin installs, §8.1). WAL mode, `PRAGMA foreign_keys = ON`, busy-timeout 5s, single writer enforced by an advisory lock file (`db.lock`, `flock`). Schema is versioned (`PRAGMA user_version`); migrations are forward-only, applied transactionally, and the DB is backed up (`aslice.db.backup-<gen>`) before any migration.
 
-- **Disciplined subset:** no owning raw pointers (RAII everywhere, `std::unique_ptr`/`shared_ptr` at boundaries), bounds-checked views (`std::span`, `string_view` with explicit lifetime rules), no C arrays, no `str*`/`mem*` libc string calls, exceptions banned across module boundaries.
-- **Hardened build:** `-fstack-protector-strong -fstack-clash-protection -D_FORTIFY_SOURCE=2` (via libc++ equivalents), full RELRO-analog (`-Wl,-bind_at_load` where tolerable), PIE, CFI under LTO (`-fsanitize=cfi`) for release builds once lld/ld64 support is verified per-OS.
-- **CI sanitizers:** every PR runs the test suite under ASan+UBSan on both flavors; parsers and the archive extractor are continuously fuzzed with libFuzzer — formula parsing, manifest parsing, tar/zip/**xar**/cpio extraction, and the index parser are all *untrusted-input surfaces* and are treated accordingly.
-- **The trust-critical helpers are tiny.** fetch/extract/link together are the only code paths that touch hostile data with ambient authority, and each is kept small enough to review line-by-line.
+Tables (summary; full DDL in the implementation repo):
+
+- `repositories` — name, url, priority, trust level, key fingerprints, enabled, last-sync
+- `packages` — installed slice identity: name, version, revision, variant set, flavor, store path, content hash, repo origin, install timestamp; each record stamped `on_request` (user-requested vs pulled-in, §8.4) and **provenance** (farm slice vs local build, surfaced by `info`/`audit`/`doctor`)
+- `dependencies` — resolved dependency edges as installed
+- `files` — every file installed by every slice (path, hash, type) — powers `aslice owns`, conflict detection, and perfect uninstall
+- `generations` — generation number, timestamp, manifest (set of package IDs), description of cause
+- `pins` — name/version/variant pins with reasons
+- `keys` — trusted signing keys per repo, with TOFU history
+- `audit_log` — every mutating operation: what, when, which generation, success/failure
+- `mirrors` — per-repo mirror lists, health stats, last-checked
+
+The DB is the source of truth for "what is on this machine." The store is reconstructable from it plus the repositories; the profile is reconstructable from the DB alone.
+
+### 5.3 Why C++20 (and what that demands)
+
+aslice is C++20 because: (a) it must be a zero-dependency static binary; (b) it manipulates Mach-O binaries, SQLite, and syscalls directly; (c) performance matters on a 2008 Core 2 Duo — solver, hashing, and zstd decompression all benefit; (d) the toolchain problem is self-solving — aslice's own `aslice-toolchain` package (modern Clang targeting darwin15) is Phase 0 deliverable #1, and the project dogfoods it from the first commit.
+
+Discipline this imposes:
+
+- **No exceptions across module boundaries** (error codes/`std::expected`); exceptions allowed internally, banned in ABI surfaces.
+- **No RTTI** in performance-critical paths; `fmt`-style formatting, not iostreams.
+- **Standard library:** libc++ only, vendored at build time; no Boost.
+- **Sanitizers in CI:** ASan/UBSan on every PR; fuzzing for the TUF client, the solver input layer, and all parsers (TOML, Starlark host functions, index formats).
+- **Memory safety where it counts:** the signature-verification and archive-extraction paths are the highest-risk code; they are written in a restricted subset (no raw `new`, bounds-checked spans, `std::filesystem` with explicit error handling) and reviewed as security-critical. If a future Rust rewrite of these paths happens, the design accommodates it — they're isolated modules behind C interfaces.
+
+### 5.4 Logging
+
+Everything aslice does is logged. Two sinks:
+
+- **stderr** — human output, leveled (`-q` … `-vvv`), progress bars on TTY, plain lines when piped.
+- **Log file** — `/opt/aslice/var/log/aslice.log`, structured (one JSON object per line), rotated at 10 MB × 5, includes: timestamp, level, subsystem, operation ID, message, context fields. Every network operation logs URL, bytes, duration, hash-verified status. Every solver run logs input request and solution summary. Every filesystem mutation logs path and result.
+
+The log is the first thing `doctor` asks about and the first thing bug reports attach (`aslice doctor --report` produces a sanitized bundle: log tail, `aslice info`, DB summary with no personally identifying fields, relevant system versions).
+
+Log messages are written for the reader: not "fetch failed" but "failed to fetch slice ffmpeg-7.1-v3 from mirror 2 of 3 (cdn.example.org): HTTP 404 after 1.2s; trying next mirror". A user debugging alone at midnight should be able to read the log and understand what happened.
 
 ---
 
-## 6. Package Format
+## 6. Formulae: How Software Is Described
 
-### 6.1 Formulae are data, with a hermetic build script
+The full format is specified in PACKAGE-FORMAT.md. This section covers what the design requires of it.
 
-*The authoritative schema is [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md); this section is the guided tour.*
+### 6.1 Requirements
 
-An aslice package is a directory in an orchard — a git repo of formula directories (what Homebrew calls a *tap*):
+1. **Declarative first.** A formula is data: name, version, sources, dependencies, checksums, metadata. The common case contains zero logic.
+2. **Sandboxed logic when needed.** Build steps, conditional dependencies, and platform workarounds need real programming constructs — provided by an embedded Starlark interpreter with no network access and no filesystem access outside the build directory.
+3. **Explicit over implicit.** Every dependency is declared; undeclared linkage is a lint error caught by the ABI scanner (§7.5). Every downloaded artifact has a pinned hash. Every patch is an inline file or a hashed URL, with a comment explaining why it exists.
+4. **Reviewable in a PR.** Plain text, stable formatting (an `aslice fmt` canonicalizer), meaningful diffs.
 
-```
-orchards/core/ffmpeg/
- ├── package.toml      # metadata, sources, dependencies, variants
- ├── build.star        # Starlark build script (sandboxed, no IO escape)
- ├── patches/          # optional, checksummed
- └── tests.star        # optional smoke tests
-```
-
-`package.toml`:
+### 6.2 The two-layer formula
 
 ```toml
+# ffmpeg.toml — data layer (always required)
 [package]
 name        = "ffmpeg"
 version     = "7.1"
 revision    = 0
 license     = "LGPL-2.1-or-later"
-description = "Play, record, convert, and stream audio and video"
+description = "Complete audio/video processing toolkit"
 homepage    = "https://ffmpeg.org"
 
 [source]
 url    = "https://ffmpeg.org/releases/ffmpeg-7.1.tar.xz"
-sha256 = "40973d449e3c3a4a551b3e2e05f5a28f8ff74a2f2e0c2e6ec4f7f4b9c0f2a1c9"
-# mirrors = ["https://mirror.example/..."]   # optional fallback mirrors
+sha256 = "…"
 
-[variants.x265]          # feature variant
-default = true
-abi     = true           # changes exported interface → part of build identity (§7)
-description = "HEVC encoding via x265"
+[dependencies]
+runtime = ["x264", "x265", "lame", "opus", "libvpx"]
+build   = ["nasm", "pkg-config"]
 
-[variants.debug]
-default = false
-abi     = false          # optimization/debug flags never affect identity
-description = "Build with debug symbols"
+[variants]
+"no-gpl" = { description = "LGPL-only build", conflicts = ["x264", "x265"] }
+"av1"    = { description = "Add SVT-AV1 encoder", adds_deps = ["svt-av1"] }
 
-[depends]
-runtime = ["x264", "x265?variant.x265", "lame", "opus", "srt"]
-build   = ["nasm", "pkgconf"]
+[platform]
+min_os = "10.11"
 ```
-
-`build.star` (Starlark: deterministic, no network, no filesystem access outside the build dir, no `eval`):
 
 ```python
+# ffmpeg.star — logic layer (optional; build steps and conditionals)
 def configure(ctx):
-    args = [
-        "--prefix=" + ctx.prefix,
-        "--enable-gpl",
-        "--enable-libx264",
-    ]
-    if ctx.variant("x265"):
-        args.append("--enable-libx265")
-    ctx.env.append("CFLAGS", ctx.user_cflags)   # user flags honored, recorded, non-ABI (§7.4)
-    ctx.run("./configure", *args)
-
-def build(ctx):
-    ctx.make(jobs = ctx.jobs)
-
-def install(ctx):
-    ctx.make("install", destdir = ctx.staging)
+    args = ["--prefix=" + ctx.prefix, "--enable-shared"]
+    if ctx.os_version <= "10.12":
+        args += ["--disable-videotoolbox"]  # broken headers pre-10.13
+    if "av1" in ctx.variants:
+        args += ["--enable-libsvtav1"]
+    return args
 ```
 
-Key properties:
+The Starlark environment provides `ctx` (os_version, flavor, variants, prefix, dependency paths) and build helpers (`run`, `apply_patch`, `env`). It cannot: open sockets, read outside the build dir, spawn processes outside the sandbox, or persist state between phases. A formula that needs something the sandbox forbids is a bug report against the harness, not a reason to widen the sandbox.
 
-- **No Turing-complete host code at install time.** Starlark executes only during *builds*, inside the sandbox, with capabilities enumerated in `ctx`. There is no `post_install` hook that runs on the user's machine — post-install behavior (creating data dirs, registering launch agents) is expressed declaratively in `package.toml` and executed by aslice itself. (Homebrew 7.0 is migrating the same direction with `*_steps`; aslice simply starts there.)
-- **Everything is pinned.** Source URLs carry hashes; patches are checksummed files; the index records the full closure.
-- **Variants are declared, typed, and ABI-tagged** by the package author — the foundation of the interop model in §7.
-- **Vendor binaries are the same format, minus the build.** `type = "binary"` packages describe a `.pkg`/`.dmg` artifact with per-OS tags, a pinned signer, and a declarative payload map — no `build.star`, no executed scripts (§12.4, PACKAGE-FORMAT §3.11).
+### 6.3 Variants
 
-### 6.2 Binary package format (`.slice`)
+Homebrew deleted options because combinatorial explosion broke CI. aslice keeps them under control instead:
 
-A binary package — a **slice** — is:
+- Variants are declared in the formula, typed (boolean/enum), documented, and **finite in practice**: orchard policy caps variants per package (guideline: ≤ 6, each justified in review).
+- The farm prebuilds the default variant set for core packages; variant combinations beyond the default are built from source on the user's machine or requested via `aslice build-request` (§9.3).
+- Variants are part of dependency identity only when they change the ABI (`abi = true` in the variant declaration). A "no-gpl" ffmpeg and a default ffmpeg cannot both satisfy a dependent that links ffmpeg — the solver treats them as conflicting providers. A "headless" variant that changes nothing downstream is invisible to dependents.
 
-```
-ffmpeg-7.1-0+core.v3.2f4a9c1e.slice
- ├── manifest.json     # identity, ABI contract, file list w/ hashes, SBOM, provenance
- ├── payload.tar.zst   # the tree, zstd-19 --long compressed
- └── signature         # minisign/cosign signature over the above (§10.2)
-```
+### 6.4 Hermeticity
 
-Install of a `.slice` is: verify signature → verify payload hashes → extract into store path → ABI-check against the packages that will link to it → register in SQLite → link into profile. **No code from the package executes at any point.** A repackaged vendor binary produces exactly the same `.slice` shape — its manifest's provenance section records the vendor artifact hash and signer instead of a build recipe.
+Packages link only against: (a) other aslice packages; (b) macOS system **frameworks** (which are stable ABI surfaces — Accelerate, CoreAudio, etc.); (c) never `/usr/lib` dylibs, never `/usr/bin` tools. On 10.11 the system OpenSSL is 0.9.8zh and the system curl is a liability; depending on them is depending on the problem aslice exists to solve.
+
+The build harness enforces this: the sandbox blocks read access to `/usr/lib` and `/usr/bin` except for an explicit allowlist (system frameworks, dyld, libSystem, compiler toolchain paths). Post-build, the ABI scanner verifies the Mach-O load commands of every produced binary against the declared dependency list. Violations fail the build. This is the single most important property of the system — it is what "modern software" means on a frozen platform.
+
+### 6.5 The build sandbox
+
+`aslice build` executes the formula in a seatbelt-sandboxed process:
+
+- Filesystem: read-write access to a fresh build dir and the store paths of declared build dependencies; read-only allowlist (system frameworks, toolchain); everything else denied.
+- Network: denied after the fetch phase. Fetches happen before the sandbox drops, into a content-addressed download cache, each artifact hash-verified before the build starts. A build that "phones home" is impossible by construction.
+- Determinism: `SOURCE_DATE_EPOCH` set, fixed umask, LC_ALL=C, no timestamps in archives. Reproducible builds are a Phase 2 goal for the core orchard (§14); the sandbox is deterministic from day one so that goal stays reachable.
+- Privilege: builds never run as root. Local builds run as the invoking user. Farm builds run as a dedicated `aslice-build` user (BUILD-INFRA.md §6).
+
+The same harness runs on the farm and on the user's machine, from the same formula, producing the same slice format. A local `--build-from-source` install is not a second-class citizen: it is a valid slice, marked `built_locally` in the DB, installed into the store like any other.
 
 ---
 
-## 7. The Variant and ABI Model — Interoperability by Design
+## 7. The Solver
 
-This is the section that answers "package interoperability should still be available" and "what Homebrew could not." Homebrew's experience is the cautionary tale: options in `homebrew-core` were removed in 2019 because every variant combinatorially broke bottle assumptions and support load. aslice's answer is to make the distinction Homebrew never formalized: **what changes the ABI versus what merely changes the bits.**
+Dependency resolution is a SAT problem with optimization objectives. aslice embeds a CDCL solver (vendored, ~3k lines, fuzz-tested) rather than shelling out.
 
-### 7.1 The three kinds of build-time choice
+### 7.1 Problem encoding
 
-| Kind | Examples | Effect on identity | Effect on interop |
-|---|---|---|---|
-| **µarch flavor** | `v1` / `v2` / `v3` | Hard selection constraint | ABI-identical; a higher-flavor binary just won't *run* on lesser hardware |
-| **Optimization flags** | `-O2`/`-O3`, `-march=native`, LTO | **None** | ABI-identical by construction; freely substitutable |
-| **Feature variants** | `+x265`, `+ssl` vs `+gnutls`, `+shared` | Only when `abi = true` | Changes exported interface → tracked in the ABI contract |
+- **Variables:** (package, version, revision, variant-set, flavor) tuples that could enter the solution.
+- **Clauses:** dependency requirements (A ≥ 2.1), conflicts (variants, coinstallability), availability (what the enabled repos actually offer for this OS/flavor), pins, and the installed set's preferences.
+- **Optimization (lexicographic):** (1) satisfy all hard constraints; (2) prefer already-installed versions (minimal change); (3) prefer highest versions; (4) prefer higher flavors matching the machine; (5) prefer default variants.
 
-### 7.2 Build identity
+### 7.2 Properties the solver must guarantee
 
-```
-build_id = base32(sha256(canonical_json({
-    name, version, revision,
-    abi_variants,          # only variants declared abi = true
-    flavor,                # v1 | v2 | v3
-    min_os,                # 10.11 | 10.12 | … | 12
-    toolchain_id,          # e.g. "clang-19-10.11"
-})))[:10]
-```
+- **Soundness:** a printed solution always respects every constraint; the CLI shows the plan and asks before executing (unless `-y`).
+- **Explanations:** when resolution fails, the output names the conflict chain: "ffmpeg 7.1 requires x264 ≥ 164, but repo 'core' provides x264 ≤ 163 for macOS 10.11 — x264 164 requires min_os 10.13." Unsatisfiable-core extraction, formatted for humans.
+- **Determinism:** same inputs → same solution, always. Objective weights are fixed constants.
+- **Performance:** ≤ 100 ms for the core orchard on a Core 2 Duo; ≤ 2 s worst case with extended orchard. The SAT encoding is incremental (reuse across a session).
 
-Deliberately **absent** from the hash: `-O` level, `-march` beyond the flavor floor, debug info, build timestamps, build host. Two builds of the same formula with the same ABI variants are the *same identity* even if one was built by the build farm with `-O2` and one by the user with `-O3 -march=native`. They are interchangeable everywhere.
+### 7.3 Version semantics
 
-For `type = "binary"` vendor packages nothing is compiled, so `flavor` and `toolchain_id` drop out of the identity and the artifact's sha256 effectively *is* the input identity — one slice serves all flavors, tagged only with the vendor's OS-support bounds (§12.4).
+Semantic-ish: `upstream.version-revision` where revision is aslice's (packaging changes with identical upstream). Ranges: `>=1.2 <2`, `~1.4` (compatible release). Epochs exist for upstreams that go backwards (`1:2.0 < 3.1`). Versions sort with the RPM algorithm, which handles the weird real-world cases (letters, tildes, more segments than expected) better than strict semver.
 
-Note what this does *not* do: it does not hash the dependency closure (the Nix model). Nix's approach gives perfect hermeticity at the cost of making substitution impossible whenever any dependency differs — exactly the interop failure the user wants to avoid. aslice instead gets interop from the ABI contract below.
+### 7.4 Virtual packages and providers
 
-### 7.3 The ABI contract (the Mach-O insight)
+`tls-provider`, `awk`, `editor` — multiple packages can provide a capability. Providers declare it; dependents request the virtual. The solver picks a provider (preferring installed, then orchard-default hints) and records the choice in the DB so future resolutions are stable. Conflicts between providers of the same virtual are explicit in the formulae.
 
-macOS already ships the world's most underrated interop mechanism: **Mach-O install names with compatibility versions.** Every dylib records an install name and a `compatibility_version`/`current_version`; every client records what it linked against. dyld enforces it at load time. aslice formalizes what the linker already knows:
+### 7.5 ABI tracking and rebuild cascades
 
-At build time, `aslice-build` runs an **ABI scan** on the staged output and records in the manifest:
+Every slice ships an ABI manifest: exported symbols (Mach-O nlist + typed metadata: symbol name, demangled signature where applicable), the install names and compatibility versions of its dylibs. The farm diffs manifests between versions:
 
-```json
-"abi": {
-  "provides": [
-    { "install_name": "@rpath/libavcodec.61.dylib",
-      "compatibility_version": "61.0.0",
-      "symbols_sha256": "9be4…",       # nm-derived symbol-set fingerprint
-      "arch": "x86_64" }
-  ],
-  "requires": [
-    { "install_name": "@rpath/libx264.164.dylib",
-      "min_compat": "164.0.0" }
-  ]
-}
-```
+- **Compatible change** (added symbols only): dependents unaffected; publish freely.
+- **Breaking change** (removed/changed symbols, compatibility version bump): the farm rebuilds all reverse dependencies in the same publish batch. The index metadata marks the batch as atomic — clients must upgrade the provider and its rebuilt dependents together. The solver encodes this as equality constraints across the batch.
 
-Substitution rule: a package P satisfies dependency D iff P provides the required install name with `compatibility_version ≥ D.min_compat` **and** the symbol fingerprint covers D's referenced symbols. The scan uses `otool`/`nm` output plus DWARF-based ABI diffing (libabigail-style) for C++ packages, where symbol presence alone understates breakage.
-
-Consequences:
-
-- **Mix prebuilt and self-compiled freely.** Your `-O3 -march=native` ffmpeg and the build farm's `-O2` x264 interop because the contract, not the provenance, governs linking.
-- **Breakage is caught at install time, not at runtime** three weeks later. If a rebuilt library no longer covers what its clients reference, the solver refuses the combination and tells you exactly which symbol set regressed.
-- **`abi = true` variants partition the space correctly.** `ffmpeg+x265` and `ffmpeg-x265` are different build identities and can coexist in the store; dependents record which one they were linked against.
-- **Vendor binaries participate too.** The ABI scan runs on a vendor package's payload at pack time, so a vendor dylib satisfies dependents through the same contract as a farm-built one (§12.4).
-
-### 7.4 User flags
-
-```
-aslice install ffmpeg --variant +x265 --cflags="-O3 -march=native" --lto
-```
-
-- `--cflags`/`--ldflags`/`--lto`/`--debug` → local source build of **that package only**; dependencies still resolve to binaries when their contracts are satisfied. Flags are recorded in the manifest for provenance but **never** enter the build identity (§7.2) — the result remains a valid dependency for everything else on the machine.
-- `--variant ±x` where `x` is `abi = true` → new build identity; source build unless a matching slice exists (community orchards may publish popular non-default variants).
-- `--variant ±x` where `x` is `abi = false` → local build, same identity.
-- A package tree of user-flag builds is tracked (`aslice leaves --user-built`) and survives upgrades — the solver reuses the recorded flag set when a new version appears.
-
-### 7.5 The solver
-
-Version+variant resolution uses a PubGrub-style CDCL algorithm:
-
-- **Terms** are (package, version-range, variant-assignment, flavor).
-- **Flavor is a hard constraint** injected from hardware detection — a v3 flavor on a v2 machine is a conflict at solve time with a clear message, never a SIGILL at runtime.
-- **Binary-first preference:** among valid solutions, the solver maximizes use of available slices (objective: minimize local builds, then minimize download size, then maximize versions). `--prefer-source` flips the objective.
-- **Deterministic and explainable:** every resolution emits a human-readable derivation tree (`aslice install --explain ffmpeg` shows why each version/variant was chosen). Solve results are cached in SQLite keyed by index snapshot hash; typical repeated solves are sub-millisecond.
-
-The variant domain per package is small by policy (§13.2 limits `abi = true` variants to what maintainers will support), so the combinatorial explosion that killed Homebrew options stays boxed in.
+This kills the classic "brew upgrade openssl broke everything" failure mode. The client never sees half of an ABI transition.
 
 ---
 
-## 8. Store, Profiles, and Generations
+## 8. Installation Layout, Store, and Generations
 
-### 8.1 Layout
+### 8.1 The prefix
 
 ```
 /opt/aslice/
- ├── store/
- │    ├── ffmpeg-7.1-0+core.v3.2f4a9c1e/
- │    ├── ffmpeg-7.1-0+core.v2.2f4a9c1e/        # flavors coexist
- │    ├── x264-0.164-0+core.v3.77aa10b2/
- │    └── …
- ├── apps/         # vendor-binary .app bundles (§12.4)
- ├── profiles/
- │    ├── default -> generations/42             # symlink; the live view
- │    └── generations/
- │         ├── 41/  { bin/, lib/, share/, … }   # symlink forests into store
- │         └── 42/
- ├── cache/        # slices, sources, index snapshots
- ├── log/          # structured operation logs (§12.5)
- ├── db/state.sqlite
- └── etc/aslice.toml
+├── store/                  # content-addressed slices
+│   └── a1b2…-ffmpeg-7.1-v3/
+│       ├── bin/  lib/  share/  …
+│       └── .aslice/        # manifest, ABI info, SBOM, build log
+├── profiles/
+│   └── default -> generations/42
+├── generations/
+│   ├── 41/                 # symlink forest into store
+│   └── 42/
+├── bin -> profiles/default/bin
+├── var/
+│   ├── db/                 # state DB, backups
+│   ├── log/
+│   └── cache/              # download cache (safe to delete)
+└── etc/                    # aslice.conf, repo configs, keyrings
 ```
 
-- **Store paths are immutable.** Nothing inside a store path is ever modified after registration; corruption is detectable by re-hashing against the manifest.
-- **Install names use absolute store paths** for libraries whose manifest marks them non-relocatable, and `@rpath` with a managed rpath list for the rest. Because the default prefix is fixed (`/opt/aslice`), the overwhelmingly common case needs **zero path rewriting** — no bottle-relocation pass at install, which is both faster and removes a whole class of tampering surface. Custom prefixes are supported via manifest-recorded relocation metadata (the same approach Homebrew 7.0 adopted), applied by the link helper at install time.
-- **Per-user installs** (`~/.aslice` as prefix) are fully supported with rewriting; multi-user shared installs work because profiles, not ownership, define the view.
+Why `/opt/aslice`: `/usr/local` is Homebrew's and must not be collided with (coexistence, §13.3); `/opt` is conventional, SIP-clean, and admin-writable via one `sudo mkdir/chown` at install time. The prefix is fixed — not configurable — because hardcoded-prefix binaries (absolute install names in Mach-O) make prefix relocation genuinely hard, and "any prefix" support is how Homebrew ended up unable to bottle reliably. One prefix, known forever: `/opt/aslice`.
 
-### 8.2 Profiles as the interoperability surface
+Per-user installs without admin: supported at `~/.aslice` with identical layout. The solver/store/generations don't care where the root is; only the install script and the shell-setup snippet differ. Mixed installs (some packages in /opt, some in ~) are **not** supported — one aslice root per user context, chosen at install time.
 
-A profile is the merged symlink forest (bin/, lib/, share/, …) that users put on PATH: `/opt/aslice/profiles/default/bin`. Because linking is just symlink creation into a generation directory, any combination of store paths — prebuilt, user-compiled, different flavors, old and new versions of different packages — coexists under one view. Collisions (two packages shipping `bin/foo`) are first-class: the profile records priority, and `aslice profile prefer` flips it without touching the store.
+### 8.2 The store
 
-### 8.3 Generations: atomic switching and rollback
+Slices are unpacked to `store/<content-hash>-<name>-<version>-<flavor>/`. Content addressing gives: dedup (identical slice → identical path, installed once), integrity (path = expectation), and safe concurrency (a slice being written is never a slice being read — extraction happens to a temp name, verified, then atomically renamed into place).
 
-Every mutating operation builds a **new generation directory** and then swaps one symlink — atomic via `rename(2)` on both APFS and HFS+. This yields, almost for free:
+Hardlinking files out of the store (the Nix trick) is not used: APFS clonefiles are used for large identical files within a slice where beneficial, but links *between* store paths are forbidden — store paths are immutable and independent, so deletion and corruption analysis stay trivial.
 
-- `aslice rollback [generation]` — instant return to any previous state.
-- `aslice switch-generation 38` — bisect a broken upgrade in seconds.
-- **Interrupted installs cannot corrupt the live profile.** A crash mid-install leaves the old generation live; the partial new generation is garbage-collected.
-- **Services are quiesced around the swap.** An upgrade that touches a package with a running service stops the launchd job first, swaps, then starts it again — the binary is never replaced under a running process (§12.8).
-- `aslice gc` removes store paths unreachable from any retained generation (with `--older-than 30d` style policies).
+### 8.3 Filesystem realities
 
-### 8.4 Garbage collection discipline
+- **HFS+ vs APFS:** 10.11–10.12 installs are HFS+; 10.13+ usually APFS. HFS+ lacks copy-on-write and has case-insensitive-by-default semantics; aslice normalizes: store paths are lowercase-safe, and the installer warns (not errors) on case-sensitive volumes — a handful of upstream tarballs contain same-name-different-case files and will fail to extract; those formulae declare `needs_case_insensitive = true` (the common case).
+- **Quarantine:** files aslice downloads get `com.apple.quarantine` only if the download tool adds it; aslice's fetcher strips it post-verification (the slice is signed and verified — quarantine prompts are noise). Documented in §10.3.
+- **`noatime`/performance:** store operations avoid unnecessary metadata writes; the GC uses `st_birthtime` where available.
+- **Path length:** max store path ~120 chars, well under limits.
+- **Symlink policy:** symlinks inside store paths are preserved as-is (relative within the slice, or absolute to the slice root — rewritten at pack time). Profile forests (§8.4) are symlinks *into* the store; nothing in the store points out.
 
-The store grows unboundedly without GC — the classic Nix complaint. Defaults: keep the last 5 generations, auto-GC on install when store exceeds a configurable watermark (default 20 GB), and never collect a store path referenced by a running process's profile generation. `aslice gc --dry-run` always shows exactly what would go and why.
+### 8.4 Generations and rollback
 
-### 8.5 Shims: the multiplexing layer
+A **profile** is what the user actually has on PATH: `/opt/aslice/bin -> profiles/default/bin`, and the profile is a forest of symlinks into the store. A **generation** is an immutable, numbered profile forest. Every mutating transaction (install, remove, upgrade) builds a *new* generation directory, then atomically swings the profile symlink (`rename(2)` — atomic on both HFS+ and APFS). The old generation is untouched.
 
-Profiles have one deliberate limitation: a name like `bin/php` can point at only one store path per generation. That is correct for libraries — the profile is the interop surface and ambiguity there is a bug — but wrong for **runtimes**, where several versions installed at once is the normal state of a working machine. aslice resolves it with a thin **shim layer** (§12.9): a directory of multicall shims that sits *before* the profile on PATH and multiplexes versioned tools according to session, project, and default selections. Shimmed names are not linked into generations at all; the profile instead links versioned aliases (`bin/php8.4`) for services and scripts that must name an exact runtime. The store, generations, and rollback semantics are untouched — a shim only ever chooses among already-installed store paths; it creates no state the generations don't own.
+```bash
+aslice install ffmpeg          # builds generation 43, swings link
+aslice rollback                # back to generation 42: one symlink rename
+aslice switch-generation 38    # any retained generation
+aslice generations             # list with timestamps and causes
+```
+
+Generations are garbage-collected by policy: keep last 20, plus any younger than 30 days, plus pinned ones (`aslice generation pin 42`). GC deletes the generation forest and any newly-unreferenced store paths.
+
+Rollback correctness: because slices are immutable and independent, a generation forest is always coherent — there is no "half-upgraded" state, because the symlink swing is the only observable transition, and it is atomic. A crash mid-transaction leaves the old generation active; the half-built new generation is cleaned up on next run (staged in `generations/.staging-<opid>`; `doctor` and startup both sweep).
+
+**On-request tracking and `clean`.** Every DB record carries an `on_request` flag: packages the user explicitly asked for (`aslice install ffmpeg`) versus packages pulled in as dependencies. This powers `aslice leaves` (the user's actual wishlist), smarter `remove` warnings ("x264 is required by ffmpeg"), and **stale-dependency GC**: when the last dependent of a pulled-in package is removed, that package becomes a GC candidate surfaced by `aslice clean`/`doctor` rather than silently accumulating. `aslice clean` also evicts the download cache — the cache is a courtesy for re-installs, never a requirement, and on 2011-era disks every gigabyte counts. Superseded slice downloads are evicted aggressively; the cache never grows without bound.
+
+**Rollback hygiene is deliberately narrow:** generations track *packages*, nothing else. aslice does not snapshot user data, config files in `~/`, or the system. The one exception is declared, per-file, and consent-gated: `[system-patch]` backups (§12.11). Scope discipline is what keeps rollback instant.
+
+### 8.5 Concurrency
+
+One mutating transaction at a time (the DB lock file covers the store + profile + DB as a unit). Read-only commands (`list`, `info`, `search`, `owns`) never block. Downloads may proceed concurrently with an active transaction but their *results* are staged until the lock is free. Multiple users on one machine: the prefix is admin-group-writable; the lock is machine-global; audit log records the user.
 
 ---
 
-## 9. Distribution and the Build Farm
+## 9. The Build Farm and Release Pipeline
 
-### 9.1 Hosting on GitHub — two layers, mirror-friendly
+(Architecture detail: BUILD-INFRA.md. Design requirements here.)
 
-**Layer 1: Package blobs as OCI artifacts on GHCR.** Slices are pushed to `ghcr.io/aslice/<name>` as OCI artifacts (ORAS), giving content-addressed blob storage, dedup across versions via shared layers, resumable/ranged downloads, and free bandwidth within GitHub's generous registry limits. Every tag is additionally anchored to a signed manifest digest.
+### 9.1 Requirements
 
-**Layer 2: The index as static, signed files.** The package index (TUF metadata + zstd JSON snapshots) is published both to a GitHub Release asset stream and to `raw`/Pages endpoints, and — critically — is *trivially mirrorable*: any static HTTP server can host a complete aslice repo. Mirror support is a first-class config (`mirrors = [...]`), not an afterthought, because the long-term health of a legacy-platform project cannot depend on one vendor's continued generosity.
+1. Build every core-orchard package for **21 cells** (7 OS × 3 flavors) — though in practice the matrix is build-on-oldest + test-on-all: slices are built against the oldest SDK the formula supports, then smoke-tested on every OS release.
+2. Build on real Intel hardware, not cross-emulation. The farm is small (frozen platform = fixed workload): a handful of Mac minis. VM-based workers (ESXi/Proxmox on Intel) are acceptable and documented.
+3. Every slice is signed (minisign, §10.1) and accompanied by: build log, SBOM (SPDX), ABI manifest, and the exact orchard commit it was built from.
+4. Publishing is a TUF snapshot: new slices + updated index + timestamp/snapshot/targets metadata, signed by the farm's online keys under thresholds (§10.2). A publish is atomic — clients never see partial states.
+5. Provenance: every published slice links to its build log and orchard commit. Phase 2: SLSA-style provenance attestations; reproducibility cross-checks (two independent builders must agree on hashes for core packages).
 
-**Fallback:** plain GitHub Releases assets (2 GB per asset ceiling — no package comes close) for environments where GHCR auth/rate limits are a problem. The client treats GHCR, Releases, and static mirrors as interchangeable transports for identical, identically-signed content. All three are *transports* for the canonical distribution unit — the **repository tree** (§9.6): a static, signed, mirrorable directory of TUF metadata, index snapshots, formula metadata, and blobs. GHCR is where blobs may live; a repository is what a client actually consumes.
+### 9.2 Test obligations
 
-### 9.2 The GitHub CI problem — stated plainly
+A core package update is published only if: it builds on the oldest declared OS; its test suite (formula-declared `tests.star` — smoke tests at minimum) passes on every supported OS × the built flavor; the ABI gate (§7.5) passes or the rebuild cascade is included. The extended orchard is best-effort: built on oldest OS, smoke-tested on one, labeled as such in the index metadata (honesty: the index states the test coverage each slice received).
 
-GitHub-hosted Intel runners are a deprecating asset: `macos-11`/`macos-12` images are already retired, and the `macos-13` Intel image follows in autumn 2027. **Any design whose correctness depends on hosted Intel CI is a dead design.** aslice therefore treats GitHub CI as a convenience layer and the self-hosted farm as the system of record.
+### 9.3 Economics
 
-### 9.3 The build farm
+The core orchard (~300 packages: the dependency stratum plus the top applications) gets the full 21-cell treatment. The extended orchard (~2,000 packages, Phase 2) is v1-flavor, oldest-OS-build, single-OS-smoke-test by default. Popular extended packages get promoted based on… community requests and maintainer judgment. **Not** download counts: aslice collects no telemetry (§9.4), and on a legacy platform the most valuable package may be the one three people a year need — the obscure codec library that makes a 2010 audio workstation useful again. Promotion decisions happen in the open, in orchard issues.
 
-*The harness that runs on this hardware — identical to what runs on a user's machine — is specified in [BUILD-INFRA.md](BUILD-INFRA.md): job manifests, scheduling lanes, the quarantine/signing trust model, community evidence builders, and VM matrix orchestration. This section is the hardware summary.*
+### 9.4 No telemetry, ever
 
-**Phase A (launch):** GitHub-hosted `macos-13` Intel runners, while they exist, cover what hosted Xcode can reach (~10.13+ deployment targets) using the self-hosted toolchain. They are a bonus layer, not the system of record — hosted Xcode can no longer target 10.11/10.12 at all, which is precisely why the farm below exists. AVX2 (`v3`) builds compile fine on any Intel runner (compiling AVX2 code doesn't require executing it); *tests* for v3 slices run on AVX2 hardware only, while `v1` and `v2` slices test everywhere.
+aslice has no analytics, no install IDs, no "anonymous usage statistics," no update-check phone-home beyond the TUF metadata fetch the user explicitly triggers (`aslice update`). The farm knows what it publishes, not who fetches it — repository hosting should prefer providers/CDNs that don't log or that let the project see only aggregate bandwidth. The principled stance: this project serves a niche community including people with privacy reasons to run old systems; their package manager must not be a sensor. If "we can't improve without data" ever gets argued, the answer is: maintainers read issues, and the frozen platform means the problem space is small enough to hold in your head.
 
-**Phase B (the durable answer): self-hosted runners on real hardware**, enrolled as GitHub Actions self-hosted runners (or Buildkite/Forgejo runners if GitHub's self-hosted macOS story degrades):
+### 9.5 Freshness pipeline
 
-| Role | Hardware | Notes |
-|---|---|---|
-| `v1` tester | Oldest available Core 2 Duo (2007–2009 MacBook/iMac/mini) when obtainable; otherwise the 10.11 VM | v1 slices run everywhere, so this exists to *test*, not to build |
-| `v2` builder + tester | Mac Pro 2013 or Mac mini 2012 (Ivy Bridge) | The no-AVX2 population on 10.14+ |
-| `v3` builder + tester | Mac mini 2018 (Coffee Lake) — cheap, ECC-less but reliable, AVX2 | Workhorse; 2–4 units |
-| OS coverage | VMware Fusion / Parallels VMs: 10.11, 10.12, 10.13, 10.14, 10.15, 11, 12 guests | Apple's license permits macOS VMs on Apple hardware; two Mac mini 2018s host the full seven-release matrix |
-| Signing | Offline root key; online signing key on an air-gapped-adjacent Mac mini with YubiKey-backed key custody | §10.2 |
+Because the platform is frozen, keeping software current is the project's core recurring work:
 
-Estimated launch cost: under US$3,000 of used hardware plus power. This is the entire reason the project is feasible at hobbyist scale: **the platform is frozen.** No new macOS releases to chase, no new SDK churn, no Apple-silicon treadmill. The farm builds against a fixed target forever, and volunteer effort goes to packages, not platform firefighting. This inverts the dynamic that exhausted Homebrew's maintainers.
+- Each core formula declares `livecheck` (URL + regex or JSON endpoint) for upstream releases.
+- A farm-side scheduled job runs livechecks daily, opens orchard PRs for updates (with the version bump, refreshed hashes, and a changelog link), and labels security-relevant ones (CVE feeds matched against package CPEs).
+- Maintainers merge; the farm builds; the ABI gate runs; publish happens.
+- Target cadence: security updates for the TLS/network stratum within 72 hours of upstream release.
 
-### 9.4 What gets prebuilt
-
-- **Core orchard (~300 packages):** all three flavors where the formula's `min_os` allows (§4.1), default variants — the shell/git/curl/python/openssl/ffmpeg stratum.
-- **Extended orchard (~2,000 packages):** all flavors compatible with each formula's `min_os` floor, default variants, built on a rolling cadence.
-- **Popular non-default variants and prebuild priorities:** chosen by *value to a stranded platform*, never by volume. Download counts are explicitly rejected as a signal: on a deprecated-OS ecosystem, an obscure library fetched once a month may be irreplaceable — nobody else ships it for these machines — while a popular tool has alternatives everywhere. The prioritization inputs are all knowable without watching a single user:
-  - **Dependency centrality** — how much of the orchard's build graph a package unblocks, computed from the graph itself.
-  - **Build pain** — farm-measured compile time and patch/failure rate: the hours a prebuilt slice saves each of its users, however few they are.
-  - **Irreplaceability** — upstream has dropped these OSes and Homebrew's bottles are frozen; if aslice doesn't ship it, it effectively doesn't exist for this platform.
-  - **Direct community requests** — orchard issues and request threads, in the open.
-- Everything else: source builds, with the ABI contract guaranteeing the result still interops with the prebuilt world.
-
-### 9.5 Build provenance
-
-Every slice ships a SLSA-style provenance attestation in its manifest: builder identity, source hash, formula git commit, toolchain ID, build environment digest, and (phase 3) reproducibility status. `aslice provenance ffmpeg` shows it. Reproducible-build verification — rebuilding on a second, independent builder and bit-comparing — starts with the core orchard and extends outward; slices that verify get a `reproducible: true` badge in the index.
-
-For vendor-binary slices (§12.4) the provenance section instead records: the vendor artifact URL and sha256, the pinned signer identity and notarization state at pack time, the repackaging tool version, and whether the payload is hosted (redistributable) or vendor-fetched.
-
-### 9.6 The repository system
-
-GHCR, Releases, and static mirrors are *transports*. The canonical distribution unit — the thing a client actually consumes — is the **aslice repository**: a self-contained, signed, static tree:
-
-```
-repo.example.org/
- ├── tuf/            # root.json, snapshot.json, timestamp.json, targets.json
- ├── index/          # zstd JSON snapshots + diffs (the solver's world)
- ├── formulas/       # resolved package metadata (pure data; never executable)
- └── blobs/sha256/   # slices and vendored sources, content-addressed
-```
-
-- **Anyone can host one.** Any static HTTP server, a GitHub Pages site, a GHCR org (blobs in OCI, index overlaid), or a `file://` directory on a lab NAS. A mirror is simply a full copy of the tree; clients fail over across a repository's declared mirrors.
-- **Repositories carry recipes *and* binaries.** `formulas/` holds the resolved metadata the solver needs (recipes); `blobs/` holds the slices — each tagged in the index with its OS-support bounds (`min_os`/`max_os`), flavor, and arch. A repository may be *binary-only* — repackaged vendor software with no orchard behind it at all (§12.4) — which is how communities serve niche pkg/dmg-only ecosystems (audio plugins, lab instruments) without asking the project for orchard space.
-- **Trust is per-repository, with inherent levels.** Every repository has one of four enforced trust levels — `official` (pre-pinned, threshold keys), `verified` (project-countersigned community repos, shipped disabled), `third-party` (user-added, TOFU), `local` (development trees, formulas only unless signed). Levels are capability sets enforced by the solver and verifier — what namespaces a repo may serve, whether its binaries may install, whether it may shadow core names — not labels. `aslice repo add <url>` pins the repository's root key fingerprint on first use (TOFU): the fingerprint is displayed with a strong recommendation to verify out-of-band, stored in the DB, and any later change is a loud, blocking event. The project ships an **official source list** (`sources.toml`, itself a TUF target) with core + extended pre-pinned — the core fingerprint is also compiled into the bootstrap binary — and verified community repos listed for discovery. The project's canonical repository ships pre-pinned in the bootstrap. Full model: [REPOSITORIES.md](REPOSITORIES.md).
-- **Namespaces and collisions.** Resolution order: core > extended > verified > third-party in add order. Explicit addressing is `repo:pkg` (`audiolab:convolver`); a third-party name shadowing a core name is reported by `doctor`, never silently preferred. When two *peer* repositories serve the same bare name, the user is **prompted on first encounter** and the decision is remembered in the state database — revalidated on repo removal/demotion, bypassed by explicit namespaces, inspectable via `aslice repo resolutions` (full model: [REPOSITORIES.md](REPOSITORIES.md) §10).
-- **Authoring → publishing.** `aslice repo build` compiles an orchard (git formulae) — or a bare manifest directory — into a repository tree; `aslice repo sign` applies the keys; `aslice repo publish` pushes to the configured transport. The project's own pipeline is the same commands in CI, so the canonical repository holds no magic a community repository can't reproduce.
+This is deliberately the same machinery a third-party repo can run — REPOSITORIES.md §8 documents the publish pipeline as a reusable tool (`aslice repo build`, `aslice repo publish`).
 
 ---
 
-## 10. Security Model
+## 10. Security and Trust
 
-The bar: be measurably better than Homebrew's model, on the same machine, without asking users to change how they work. Homebrew's model, fairly stated: formulae are executable Ruby fetched from git repos; taps are trusted wholesale; binary installs run `post_install` code; the installer chowns `/usr/local`; and signing/attestation arrived late and partially. aslice's model is built from the following load-bearing decisions.
+The threat model and full key management are in §10.2; repository-level trust tiers in REPOSITORIES.md §3. Design commitments:
 
-### 10.1 Declarative packages, hermetic builds
+### 10.1 Verification chain
 
-- Formula *metadata* is TOML — pure data, validated against a schema, rejected on unknown fields.
-- Formula *logic* is Starlark executed in the build sandbox with a capability-only API (`ctx.run`, `ctx.make`, `ctx.env`) — no filesystem access outside the build dir, no network, no subprocess outside the declared toolchain, deterministic by construction.
-- **Binary installs execute no package code whatsoever.** There is no `post_install`. Data-directory creation, launch-agent registration, and shell-completion placement are declarative manifest entries applied by aslice's own code. This removes the single largest supply-chain surface in the Homebrew model: arbitrary maintainer Ruby running on every install. The same rule binds vendor binaries: `.pkg` `preinstall`/`postinstall` scripts and `.dmg` autolaunch mechanics never execute (§12.4) — payload extraction is all that happens.
+Every artifact the client consumes is verified before use:
 
-### 10.2 Signatures and repository integrity (TUF)
+1. **TUF metadata** (root → targets → snapshot → timestamp) signed by repository keys, threshold-quorumed, with consistent-snapshot guarantees — protects against rollback, freeze, mix-and-match, and mirror compromise.
+2. **Slice signatures** — each slice is a `.slice` file (tar.zst + detached minisign signature + manifest); the signature key must be in the repo's TUF targets metadata (delegated) or the package is rejected. Defense in depth: even if TUF metadata were replayed, slices still verify against pinned keys.
+3. **Hash pinning everywhere** — formula sources, patches, vendored artifacts: all SHA-256, all checked before sandbox entry.
 
-- **Metadata:** the index is wrapped in [The Update Framework](https://theupdateframework.io/) — offline root key (threshold, YubiKey custody), short-lived online snapshot/timestamp keys, targets key on the signing host. This gives rollback, freeze, and mix-and-match attack protection — the failure modes that plain "signed packages" miss.
-- **Packages:** every slice is signed — minisign-compatible Ed25519 for official infrastructure, with **OpenPGP (GPG) as a built-in first-class scheme** for third-party repositories and formula-declared upstream source verification (a self-contained verifier linked into aslice; no `gpg` binary, no keyserver dependence, modern algorithms only). The scheme is a property of the repository, the fingerprint is a property of the pin, and both are enforced before content is trusted ([REPOSITORIES.md](REPOSITORIES.md) §5). Signature verification happens **before extraction**, and the verified manifest is what the linker consumes.
-- **Sources:** every source tarball hash is pinned in the formula *and* countersigned in the index; `fetch` verifies against both. Vendor artifacts are additionally **signer-pinned** (§12.4): a silent change of code-signing identity upstream is a hard failure, not a warning.
-- **Key compromise response:** root key is 3-of-5 threshold across founding maintainers; revocation and rotation is a practiced runbook, not a hope.
+Failures are loud, specific, and non-overridable without explicit per-command flags (`--insecure-no-verify` exists for development, prints a scarlet warning, requires typing, and is refused when the repo's trust tier is `official` — you cannot weaken the official repo's guarantees from the CLI).
 
-### 10.3 Trust bootstrapping
+### 10.2 Key management
 
-The installer is a small, auditable shell script that fetches exactly two things — the `aslice` bootstrap binary and the TUF root metadata — each pinned by hash in the script *and* cross-checkable against a signed checksums file on a second transport (Release asset + Pages). Everything after that first step is verified by TUF. The script never runs `sudo` except, optionally, to create `/opt/aslice` and chown it to the invoking user — once.
+- **Root keys (TUF):** 3-of-5 threshold, offline, on YubiKeys held by founding maintainers in at least two countries. Used ~quarterly (snapshot signing is delegated to online keys).
+- **Online signing keys:** farm-held, minisign for slices + TUF delegation; rotating annually; compromise procedure = revoke via root quorum, re-sign affected snapshots, publish security advisory through the repo itself (clients surface it on next update).
+- **The rotation runbook is a written document** (`docs/key-ceremony.md` in the org), rehearsed once before launch. Key ceremonies are logged in a transparency log (append-only, published in the repo) — a legacy-platform project survives on trust, and trust survives on visibility.
+- **Client key pinning:** the official repo's root key hash ships compiled into the aslice binary *and* is displayed at install time for out-of-band verification. Third-party repos are TOFU with explicit fingerprint confirmation (REPOSITORIES.md §3).
 
-### 10.4 Privilege discipline
+### 10.3 Gatekeeper, notarization, and the bootstrap problem
 
-- **No sudo in steady state.** Not for install, not for upgrade, not for uninstall. The prefix is user-owned from creation.
-- **Never touches `/usr/local`.** Coexistence with Homebrew/MacPorts is by construction, and the historic `/usr/local` ownership flaw is simply not inherited. Vendor-binary apps install under `/opt/aslice/apps/` — never `/Applications` — with a per-user `~/Applications` symlink as the opt-in convenience (§12.4).
-- **No setuid binaries, no helper daemon at launch.** A future multi-user mode (shared lab machines) will use a launchd daemon that accepts only TUF-verified operation plans over a local socket with peer-credential checks — designed, but gated behind demand.
-- **One scoped exception: `aslice-system`.** Declared system-software packages (kexts, SIP-disabled development tools — §12.7) require privileged steps no user-space manager can perform. Those steps are executed by a single tiny auditable helper that elevates **per operation, with explicit consent, for exactly the declared actions** — it is not a daemon, holds no ambient authority, and every invocation is an unsuppressible logged security event (§12.5). Its scope also covers **system-domain service operations** — bootstrapping and removing root LaunchDaemons for declared `domain = "system"` services (§12.8) — and **declared `[system-patch]` file replacements** (§12.11: backup, symlink swap, restore) — with the same per-operation consent and logging; user-domain agents never touch it. The steady-state rule stands: nothing else in aslice ever elevates.
+The aslice installer itself: a signed, notarized .pkg for the initial install (one-time Apple developer cert cost — worth it: first impressions on 10.15+ without notarization are scary dialogs). The aslice binary is notarized. **Slices are not notarized** — they're tarballs of Unix software, and per-slice notarization is impossible at this scale; instead: quarantine attributes are stripped after verification (§8.3), and Gatekeeper's first-run assessment applies to executables launched via Finder, not CLI tools. The tradeoff is documented honestly: aslice's trust chain is TUF+minisign+provenance, not Apple's notary service. Users who want Apple-only trust should not install third-party package managers at all — and that's a legitimate choice aslice respects by never hiding what it is.
 
-### 10.5 Sandboxed builds
+Bootstrap: the install script (`curl … | sh` is *not* the method) is: download .pkg from the canonical URL → pkg installs /opt/aslice skeleton + binary + pinned root key → `aslice doctor` runs → first `aslice update` syncs TUF metadata. The chicken-and-egg (aslice needs TLS; 10.11's TLS is broken) is solved by the vendored libcurl+TLS inside the aslice binary (§5) — the binary brings its own modern TLS from byte zero. CA certificates: an aslice `ca-certificates` package (Mozilla bundle) is installed as part of the bootstrap transaction, and aslice's vendored curl uses it in preference to the system keychain (§12.10).
 
-Every build phase runs under a Seatbelt (`sandbox-exec`) profile — Seatbelt predates the entire 10.11–12 window and is present on every supported release:
+### 10.4 Privilege separation
 
-| Phase | Profile |
-|---|---|
-| fetch | Network to declared hosts only; write to cache dir only |
-| unpack/patch/configure/build | **No network at all**; write only within the build dir; read-only toolchain and store |
-| install (to staging) | No network; write to staging dir only |
-| test | No network by default; opt-in `test_network = true` per formula, loudly logged |
-
-Vendor-binary payload extraction (`xar` expansion, `hdiutil` attach, cpio unpack) runs under the unpack profile — no network, writes confined to staging; there is no phase in which a vendor artifact gets to run anything.
-
-Seatbelt is deprecated by Apple on newer releases but frozen-in-place across our entire (frozen) target window; the profile abstraction (`SandboxPolicy` compiled to Seatbelt today) is designed so a future backend can replace it without touching formulae. A build that escapes its profile fails the build and files an automatic audit event.
-
-### 10.6 Vulnerability and SBOM pipeline
-
-- Every slice embeds an **SPDX SBOM** generated from the build manifest (sources, patches, dependency closure, toolchain). Vendor-binary slices ship a payload-only SBOM (file list, hashes, signer) — less deep than a source SBOM, still enough for `audit` to bind CVEs via CPE.
-- `aslice audit` matches the installed set against OSV/GitHub Advisory feeds and reports CVEs with affected-version ranges — locally, offline-capable with a cached feed.
-- Formulae declare upstream security-contact and EOL policy; packages past upstream EOL are surfaced in `audit` and require `--allow-eol` to install.
-
-### 10.7 What this does not solve (honesty section)
-
-- A malicious *core maintainer* with signing access can still ship bad slices; threshold keys, reproducible-build cross-checks (§9.5), and a public transparency log of index snapshots are the mitigations, and they reduce but do not eliminate insider risk.
-- Sandboxing contains *builds*, not the runtime behavior of installed software. aslice is a package manager, not an endpoint product. This bears repeating for vendor binaries: payload-only installation removes *installer-script* risk, not the risk of the vendor binary itself — signer pinning and hash pinning ensure you get exactly the vendor's artifact, and that is all they ensure.
-- **System packages (§12.7) deliberately step outside the sandbox story.** A kext runs in kernel space — a bug panics the machine — and SIP-disabled development tools weaken the protections of §10 for *all* software, not just themselves. aslice's guarantee for this category is narrower and says so: the bits are exactly the declared, verified ones; the privileged steps are exactly the declared ones, performed by aslice's own helper with explicit consent; the user was warned at every decision point. Nothing more is claimed, and the category is never servable by third-party repositories.
-- **System patches (§12.11) step furthest outside the sandbox story.** A `[system-patch]` package replaces an Apple-provided file for *every* user and process on the machine; a bad one breaks the OS, not just itself. aslice's guarantee here is the narrowest in the design and is stated as such: the replacement is exactly the declared, signed, verified content; the original is backed up and restorable to the byte; refused paths (kernel, dyld, libSystem, `/System`, platform-binary dylibs) are refused by construction, not by policy; and consent was explicit at every decision point. Nothing more is claimed.
-- C++ memory-safety risk in aslice itself is managed per §5.3; the parsers and extractors — the untrusted-input surfaces — get the fuzzing and the smallest footprints.
+aslice runs unprivileged. Operations needing elevation (initial /opt/aslice creation; kext installs; service management into /Library/LaunchDaemons) go through a tiny, separate, audited helper: `aslice-system` (§12.7), installed setuid-root **only if** the user opts into those features, communicating over a narrow IPC with a fixed command set (no shell strings, ever). Default installs never need it after day one. The helper is small enough to print and read in one sitting — that is a design requirement, not an aspiration.
 
 ---
 
-## 11. Performance Model
+## 11. User Experience Details
 
-Performance goals with concrete mechanisms:
+### 11.1 Output philosophy
 
-| Goal | Mechanism |
-|---|---|
-| **CLI startup < 10 ms** | Single Mach-O binary, static libc++, no interpreter, no JIT, lazy dyld binding, no network on the hot path |
-| **`install` of a cached slice < 300 ms** | Verify (Ed25519: microseconds) → zstd decompress → APFS `clonefile` into store (HFS+ systems fall back to hardlink/copy) → symlink generation swap. No relocation pass on default prefix. |
-| **Index update < 200 ms typical** | Snapshot diffs against a cached snapshot hash — a few KB on a typical day, versus Homebrew's git-fetch taps |
-| **Solve < 50 ms typical** | SQLite-backed package index with prepared statements; PubGrub with clause caching; memoized per snapshot |
-| **Downloads saturate the pipe** | HTTP/2 multiplexing, 8-way parallel fetches, resumable ranges, zstd `--long` delta-friendly payloads |
-| **Cold full install of a large tree (e.g., `ffmpeg` closure) < 10 s on SSD** | Parallel fetch + pipeline overlap (decompress stream N+1 while linking N) |
-| **Builds: near-zero manager overhead** | The builder's job is to get out of the way: Ninja parallelism, `ccache`-compatible compiler cache in `cache/`, tmpfs-backed build dir when RAM allows |
-| **Shim dispatch < 1 ms** | Multicall binary (no interpreter, no JIT), one prepared-statement DB lookup, `exec` instead of fork — the shim adds no measurable latency to `php -v` in a hot loop (§12.9) |
+- Quiet by default, verbose on request, structured with `--json`.
+- Progress: spinners/bars on TTY; when piped, one line per milestone (script-friendly).
+- Plans are shown before mutations: what will be installed/upgraded/removed, sizes, and why (requested/dependency/upgrade of X). `-y` skips the prompt; `--dry-run` shows the plan and stops.
+- Errors name the thing, the cause, and the suggested next step. "Error E2017" alone is a bug.
 
-The deeper performance win is architectural: **flavor targeting.** A v3 ffmpeg/x264/openssl on a Haswell+ machine is measurably faster than the lowest-common-denominator binaries legacy platforms ship — crypto, codecs, and compression see the largest gains. aslice is likely the only macOS package manager that serves AVX2 binaries as a first-class default rather than an accident.
+### 11.2 `aslice doctor`
+
+Checks, in order: prefix writable; DB healthy (integrity check); store integrity (sampled or full with `--full`); profile symlink coherence; PATH setup correct; shell integration present; repos reachable and metadata fresh; clock sane (TUF expiry depends on it); SIP status (informational); Homebrew coexistence notes; CA bundle freshness; disk space headroom. Each check: OK / FIX (auto-fixable, `doctor --fix`) / ACTION (manual steps, printed). Exit code reflects worst finding — scriptable.
+
+### 11.3 Shell integration
+
+`aslice shellenv` prints the PATH/MANPATH/INFOPATH exports (detecting zsh/bash); the installer offers to add one line to the user's profile. Completions ship for zsh and bash. No shell hooks, no prompt modification, no shims directory injected ahead of system paths — aslice appends, never prepends, unless the user asks.
+
+### 11.4 Scripts and automation
+
+Everything scriptable: `--json` output, stable exit codes (0 ok; 1 generic; 2 usage; 3 network; 4 verification; 5 solver-unsat; 6 partial-failure), `--no-input` mode that refuses all prompts (for CI), `ASLICE_PREFIX`/`ASLICE_NO_COLOR`/`ASLICE_CACHE_DIR` env overrides. The CLI is a library consumer: `libaslice` (C++ API, C ABI wrapper) exists for a future GUI or other tooling, but the CLI ships first and the library is extracted from it, not vice versa.
 
 ---
 
@@ -557,313 +492,109 @@ The deeper performance win is architectural: **flavor targeting.** A v3 ffmpeg/x
 ### 12.1 Commands
 
 ```
-aslice install ffmpeg                  # binary-first; flavor auto-detected
-aslice install ffmpeg --build-from-source
-aslice install ffmpeg --variant +x265 --cflags="-O3 -march=native"
-aslice install ffmpeg@v6               # version pinning
-aslice install audiolab:convolver      # explicit repository namespace (§9.6)
-aslice upgrade / aslice upgrade ffmpeg [--rollback-on-service-failure]   # the flag is the unattended path; interactively aslice asks (§12.8)
-aslice uninstall x264 / aslice autoremove
-aslice search / info / leaves / why <pkg>
-aslice flavors ffmpeg                  # show the prebuilt matrix for this machine
-aslice provenance ffmpeg               # builder, source hash, SLSA attestation
-aslice audit                           # CVE report for the installed set
-aslice ca-update [--check]             # refresh the CA trust bundle: signed slice, generation-managed (§12.10)
-aslice ca-update --keychain            # also import missing roots into the System keychain — opt-in, recorded, reversible
-aslice ca-update --crypto              # also upgrade the crypto-provider slices — modern ciphers/TLS for userland (§12.10)
-aslice ca-update --apple-certs         # also import Apple's own roots (Software Update, App Store, iCloud, Developer ID) into the System keychain
-aslice rollback / switch-generation / history
-aslice service list / status <pkg>       # launchd truth: pid, state, last exit (§12.8)
-aslice service start / stop / restart <pkg> / service run <pkg>   # run = foreground, for debugging
-aslice install php@8.4                   # a runtime release stream; coexists with every other installed stream (§12.9)
-aslice use php 8.4                       # select for the current shell (session) — via shell integration or eval
-aslice pin php 8.4                       # select for this project tree — writes ./aslice.toml (commit it)
-aslice default php 8.4                   # select the profile-wide fallback
-aslice versions php / aslice which php   # installed streams; trace *why* this php resolved
-aslice install php-redis                 # extension slice — binds to the selected php's ABI epoch (§12.9)
-aslice install composer                  # a tool that *rides* the selected runtime (§12.9)
-aslice init zsh                          # prints the shell integration for `aslice use` (bash/zsh/fish)
-aslice gc [--dry-run] [--older-than 30d]
-aslice orchard add myorg/orchard / orchard pin myorg/orchard <commit>
-aslice repo add https://repo.example.org   # add a signed repository (§9.6)
-aslice repo list / repo remove <name> / repo build / repo publish
-aslice repo enable / repo disable <name>   # verified repos ship listed-but-disabled
-aslice repo re-pin / keys / audit <name>   # trust-level machinery (REPOSITORIES.md §7)
-aslice repo prefer / resolutions / forget  # overlap decisions, remembered in the state DB (REPOSITORIES.md §10)
-aslice adopt --from-homebrew           # migration assistant (§13.3)
-aslice config set flavor v2            # overrides
-aslice doctor                          # environment sanity, loudly honest (§12.6)
-aslice log [--follow] [--level debug]  # query the local operation log (§12.5)
-aslice install foo --accept-system-changes   # explicit consent for [system] and [system-patch] packages, non-interactive (§12.7, §12.11)
-aslice system-patch list / status        # which Apple-provided files are currently replaced, by which package (§12.11)
-# every command: -v / -vv raise verbosity, --quiet suppresses all but errors,
-# --log-format json|human selects rendering (§12.5)
+aslice install ffmpeg              # resolve, show plan, fetch, verify, link — new generation
+aslice remove ffmpeg               # with reverse-dependency check and explanation
+aslice upgrade [ffmpeg | --all]    # solver-driven; ABI batches move together (§7.5)
+aslice update                      # sync repo metadata (TUF); shows what's outdated
+aslice outdated                    # packages with newer versions available
+aslice reinstall ffmpeg            # rebuild/relink a package in place (new generation)
+aslice pin ffmpeg / unpin ffmpeg   # hold at version; solver respects pins
+aslice list / leaves / deps ffmpeg # installed set; on-request leaves; dependency tree
+aslice info ffmpeg                 # metadata, installed files, reverse deps, provenance
+aslice search term                 # across enabled repos, with trust labels
+aslice owns /opt/aslice/bin/ffplay # which slice owns a file (DB `files` table)
+aslice doctor [--fix] [--full]     # diagnostics (§12.2); --report emits a sanitized bundle
+aslice generations / rollback      # generation list, instant rollback (§8.4)
+aslice clean                       # evict download cache + stale-dep GC (§8.4)
+aslice store verify [--full]       # hash-audit the store against manifests
+aslice build ./formula.toml        # local sandboxed source build (§6.5)
+aslice livecheck [ffmpeg]          # run upstream-release checks (§9.5)
+aslice test ./formula.toml         # run a formula's tests.star against a local build
+aslice create <name> [--from-url]  # scaffold a new formula (data layer + .star stub)
+aslice bump-pr ./formula.toml      # livecheck + hash refresh + open orchard PR (§9.5)
+aslice edit ffmpeg                 # open the installed formula in $EDITOR (read-only view)
+aslice log [-f]                    # tail the structured log (§5.4)
+aslice repo add/list/remove/…      # repository management (REPOSITORIES.md §4)
+aslice key list/trust/revoke       # client-side key management (§10.2)
+aslice ca-update [--crypto|--keychain|--apple-certs]  # CA/roots management (§12.10)
+aslice services [start|stop|restart]  # user LaunchAgent management (§12.8)
+aslice self-update                 # update aslice itself (§12.12)
+aslice exec ffmpeg -- ffplay …     # run a store binary with its slice env
+aslice shellenv                    # print shell exports (§11.3)
+aslice use python 3.13             # runtime version switching (§12.9)
+aslice default python 3.13         # persist a runtime default (§12.9)
+
+# every command: --json, --no-input, -q/-v/-vv, stable exit codes (§11.4)
 ```
 
-### 12.2 Interaction principles
+### 12.2 Doctor
 
-- **Binary is the default, source is a flag.** A user who never passes `--variant` or `--cflags` never sees a compiler.
-- **Every decision is explainable.** `--explain` on any command shows the solver's derivation; `--dry-run` shows the exact plan: which slices, which local builds, which generation change.
-- **Loud honesty.** EOL packages, unsigned orchards, deprecated variants, fallback-to-source events, and non-notarized vendor binaries are announced, not buried. `doctor` reports Tier-style truth about the machine rather than pretending uniformity.
-- **Scriptable:** `--json` on everything; stable exit-code contract; machine-readable `plan`/`apply` split (`aslice plan install ffmpeg > plan.json && aslice apply plan.json`) — which is also what the future multi-user daemon consumes.
+(See §11.2.) Design note: `doctor` is a first-class command because legacy-platform users debug alone. Its `--report` bundle is the standard bug-report attachment.
 
-### 12.3 Orchards, repositories, and trust levels
+### 12.3 The install transaction
 
-Orchards are git repos of formula directories — the *authoring* format. Repositories (§9.6) are the *distribution* format. Trust is explicit at both layers:
+1. Lock (§8.5) → 2. Resolve (§7) → 3. Plan display → 4. Fetch slices (parallel, mirror failover, resume) → 5. Verify (TUF + minisign + hashes, §10.1) → 6. Stage extractions to temp paths → 7. Hash-audit extracted trees → 8. Atomic renames into store → 9. Build new generation forest → 10. Swing profile symlink → 11. DB commit → 12. Unlock. Any failure before step 10: old state untouched. Failure at 10–11: transaction retried once, then rolled back with the staging area swept. The audit log records every step.
 
-- **Core/extended orchards:** signed by project keys; Starlark + TOML only.
-- **Third-party orchards:** installed disabled by default; enabling one prints its trust implications (its formulae can cause local source builds — sandboxed — but *never* execute at binary-install time, because nothing ever does).
-- **The canonical repository:** the project orchards compiled and signed by project keys; pre-pinned in the bootstrap.
-- **Third-party repositories:** added explicitly, root key pinned on first use (TOFU, fingerprint displayed, changes blocking). A third-party repository can serve its own signed slices — including binary-only vendor repackagings — under its own keys. The one thing no repository can do is make aslice execute package code at install time; that door is closed structurally, not by trust policy.
+### 12.4 Mirrors and offline
 
-### 12.4 Vendor binaries (pkg/dmg) and GUI apps
+Repositories declare mirror lists in their TUF root metadata (REPOSITORIES.md §5). The fetcher races the first byte across up to two mirrors, sticks to the winner per session, and records health stats in the DB. `--offline` mode: resolve against cached metadata only, install only already-cached slices, fail with a precise list of what's missing otherwise. `aslice mirror add` lets a lab with 30 old Macs run one caching mirror on a LAN — the mirror is just a static file server; TUF verification is end-to-end, so mirrors are untrusted by design.
 
-Some software for this platform will only ever ship as a `.pkg` installer or a `.dmg` — commercial audio tools, vendor CLIs, frozen releases of abandoned apps. aslice installs it **without ever running installer code**:
+### 12.5 Vendor binary packages (.pkg / .dmg)
 
-- **`.pkg`:** expanded with `xar`/`pkgutil --expand`; only the `Payload` is extracted, per the declarative path map in the formula. `preinstall`/`postinstall` scripts are never executed — full stop. Packages whose function genuinely *requires* script execution remain out of scope — the payload-only line holds. Drivers and kexts are **not** rejected, though: they install through the declarative system-software category (§12.7), where the privileged steps are performed by aslice's own helper from manifest declarations, never by vendor scripts.
-- **`.dmg`:** attached read-only via `hdiutil -nobrowse -readonly`; declared items copied. No autolaunch, no quarantine propagation.
-- **Apps** install under `/opt/aslice/apps/` (owned by the prefix, not `/Applications`), with an optional per-user `~/Applications` symlink; Finder and Launch Services pick them up from either location.
-- **Provenance is pinned.** The formula records the expected signing identity (`Developer ID Application: Vendor (TEAMID)`) and notarization expectation; the verifier checks the signature *before* extraction and hard-fails on a silent signer change — a classic supply-chain attack against binary distribution.
-- **Two distribution modes, license-driven.** `redistribute = true` → the farm repackages the payload into a normal `.slice`, hosted in the repository like any other (best UX: atomic, resumable, rollback-able). `redistribute = false` → the formula stays a pointer: the client fetches the vendor URL itself (hash- and signer-pinned), extracts locally in the sandbox, installs payload only. Same install semantics; only the transport differs. Non-redistributable software still gets generations, lock files, and `audit`.
-- **OS support is tagged per artifact.** Each `[[binary]]` entry carries its own `min_os`/`max_os`/`arch`, so a vendor's "legacy" build for 10.11–10.13 and "current" build for 10.14+ coexist in one formula and the solver picks the artifact matching the machine — never a "this application cannot be opened" surprise after install. Vendor claims are checked at pack time against the bundle's `LSMinimumSystemVersion` and the pkg's Distribution requirements where present; mismatches are lint errors, because an honest tag is the entire point.
-- **32-bit payloads install where — and only where — the OS can run them.** 10.11 through 10.14 are the last macOS releases that execute 32-bit code, and a large share of pkg/dmg-only software on this platform (audio plugins, lab instruments, frozen pro tools) is i386 or universal. Vendor artifacts may therefore carry `arch = ["i386"]` or `["x86_64", "i386"]`; the pack-time verifier inspects every Mach-O slice in the payload with `lipo`-style logic and derives the true ceiling — an i386-containing artifact must declare `max_os = "10.14"` (or lower), and on 10.15+ it is a clean solve-time refusal, not an install that can't launch. Universal payloads are installed **whole**: no `lipo -thin` stripping, ever — thinning a fat binary invalidates the vendor's code signature, and signature integrity outranks disk savings. This changes nothing about what aslice *builds* (N6: farm slices stay x86_64-only); it is distribution, not compilation.
+Specified in REPOSITORIES.md §6. Design commitments: vendor installers are first-class package sources (`type = "binary"`), installed by payload extraction (never by running vendor preinstall scripts blindly), verified by pinned hash + Apple Developer ID signature chain where present, and recorded in the DB like any slice. Where a vendor .pkg refuses payload-only installation (scripts that matter), the formula declares it and aslice runs the installer with `installer -pkg` under the user's sudo, logging the choice loudly. 32-bit payloads are supported on the OS releases that run them (10.11–10.14) — the index tags slices with architecture lists, and the solver matches the OS's capability, not just the CPU.
 
-Vendor binaries participate in the store, generations, profiles, lock files, and `audit` exactly like source-built packages. Their `build_id` excludes flavor and toolchain (§7.2), and their payload dylibs get the same ABI scan at pack time — dependents link against vendor libraries through the same contract as farm-built ones. The scan is per-architecture: universal payloads record separate `x86_64` and `i386` ABI entries, and the x86_64 entry is what aslice-built dependents (always 64-bit) consume.
+### 12.6 Coexistence with Homebrew
 
-### 12.5 Logging and diagnostics
+aslice never touches `/usr/local`. `doctor` detects Homebrew and advises on PATH order. `aslice adopt --from-homebrew` (§13.3) migrates intent. Running both forever is a supported configuration.
 
-A package manager that fails opaquely trains users to fear it. aslice logs **everything it does, to the local machine, and nowhere else** — the charter (N7) applies to logs exactly as to metrics: nothing is ever transmitted, aggregated, or phoned home, not even opt-in.
+### 12.7 Kernel extensions and SIP-sensitive software
 
-**Where logs live.** `/opt/aslice/log/` (or `~/.aslice/log/` for per-user prefixes), one JSONL file per day, rotated and size-capped (default: keep 14 days or 256 MB, whichever is less; both configurable). The build harness keeps its own per-build structured logs (`log.jsonl`, BUILD-INFRA §4) — this section governs the client.
+Some development tools on legacy macOS require kexts (VirtualBox, osxfuse successors) or SIP disabled (DTrace workflows, certain debuggers). aslice supports these as declared, warned categories:
 
-**What gets logged.** Every operation is a structured event stream with a generated operation ID that ties terminal output, log records, and the `history` table (REPOSITORIES.md §11) together:
+- A formula declares `kext = true` or `needs_sip_disabled = true`; the plan display shows a **bold warning**, requires explicit `--accept-system-software` plus interactive confirmation, and logs the decision to the audit trail.
+- Kext installation goes through `aslice-system` (§10.4), uses `kextload`/`kmutil` as the OS requires, and registers the kext in the DB so `aslice remove` unloads and deletes it, and `doctor` verifies load state.
+- SIP: aslice never touches SIP settings. If a package needs SIP off, the CLI prints the exact steps (recovery mode, `csrutil`), the risks, and the reversal command — and the package stays refused until the machine state satisfies it. On rollback or removal, aslice **asks the user** whether to restore the prior system state (re-enable SIP reminders, unload kexts) — never silently.
 
-| Category | Examples | Level |
-|---|---|---|
-| Mutations | install/upgrade/uninstall plans, generation swaps, rollbacks, GC runs | info |
-| Security events | signature/hash/ABI verification results, key-pin changes, trust-level demotions, sandbox escapes, frozen repos | warn or error — **unsuppressible** (`--quiet` cannot hide them) |
-| Decisions | overlap resolutions and revalidations (§9.6), fallback-to-source events, flavor downgrades, EOL acceptances | info |
-| Diagnostics | network retries, mirror failovers, slow solves, disk-space pressure | debug at `-v`, trace at `-vv` |
+### 12.8 Services (launchd)
 
-**The message-quality standard.** Log messages are UI, and they are held to the same bar as the CLI itself:
+Packages with daemons declare `[service]` in the formula: plist template, RunAtLoad/KeepAlive semantics, user-vs-system scope. aslice generates the plist into `~/Library/LaunchAgents` (user scope, default) or `/Library/LaunchDaemons` (system scope, via aslice-system, requires the service to declare why). `aslice services` lists/manages them. Services ride along with generations: upgrading a service package restarts the service only after the generation swing succeeds, and rollback restarts the old version. Health check post-restart: the formula may declare a probe (port, PID file, command); failure offers automatic rollback.
 
-- **Actionable errors, always.** Every error message names *what* failed, *why* as far as aslice can determine, and *what the user can do next*. `"verification failed"` is a bug; `"slice ffmpeg-7.1-0+core.v3: minisign signature invalid (key ed25519:RWQ0…, repo core) — refusing to install; run `aslice doctor` or re-fetch with --refresh-index"` is the standard.
-- **Structured fields, human rendering.** Events are JSONL on disk (`ts`, `level`, `op`, `pkg`, `msg`, plus context fields); the terminal renders them as concise human lines. `--log-format json` pipes the raw stream for scripting; `-v`/`-vv` raise verbosity without changing what is *recorded*.
-- **One message, one fact, one place.** Errors propagate with context attached at each layer (fetch → verify → link), so the final message reads as a causal chain, not a stack trace. No message is ever printed twice by two layers.
-- **Progress is a log level, not a spinner-only UX.** Long operations (downloads, builds) emit periodic structured progress events, so a CI log or a `aslice log --follow` tells the same story the terminal spinner does.
-- **Supportability.** `aslice log` filters by operation, package, level, or time range; `aslice doctor` ends with the paths of the relevant log files. When a user files an issue, `aslice log --last-op` produces exactly the excerpt a maintainer needs — locally generated, user-attached, never auto-submitted.
+### 12.9 Runtime version management
 
-**Silence discipline.** Steady-state success is quiet: a successful binary install prints its plan summary and result, and everything else lives in the log at info level. aslice never logs at warn for things that are fine (a lesson from tools whose warning noise trains users to ignore real ones).
+(Python 3.11 vs 3.13, Node 18 vs 22, etc.) aslice's answer: **multiple versions are coinstallable slices** (`python@3.11`, `python@3.13` are distinct package names with a shared `python` virtual). `aslice use python 3.13` manipulates a `~/.aslice/runtimes` shim layer that precedes the profile on PATH for interactive shells (opt-in via shellenv); `aslice default python 3.13` writes the persistent choice. Project-level pinning: `.aslice.toml` in a project dir, activated by `aslice use --project` or direnv-style shell hook (strictly opt-in). Riding tools (pip, npm, gem) install into per-runtime-version site directories *inside the runtime's store path versioning* so switching runtimes never strands packages: `aslice` tracks them as extension slices of the runtime, rebuilt on runtime upgrades when ABI demands it. Full mechanism: §12.9 in the design doc history; the invariant is *the solver owns runtimes, shims own the prompt*.
 
-### 12.6 Doctor: sanity checking
+### 12.10 CA certificates and crypto stores
 
-`aslice doctor` is the single entry point for "is my installation healthy?" — it runs a fixed battery of checks, reports each as pass/warn/fail with the actionable-message standard of §12.5, and never changes anything itself (repairs are explicit commands it *recommends*). It is read-only, offline-capable, and fast (< 1 s for the standard battery; deep checks are opt-in).
+Legacy macOS's trust stores are frozen mid-decay — expiring roots, missing modern CAs (ISRG Root X1 was the famous breakage), SHA-1-era intermediates. aslice addresses this at three layers, all explicit:
 
-**Check groups:**
+1. **Userland (default):** the `ca-certificates` slice (Mozilla's bundle, tracked as an ordinary auto-updated package) provides CA roots for aslice itself and for aslice-installed software — OpenSSL/LibreSSL/curl/gnutls from aslice are configured to use it. This fixes the 95% case (command-line tools, libraries) with zero system modification.
+2. **System keychain (opt-in):** `aslice ca-update --keychain` imports/updates roots in the **System keychain** (`/Library/Keychains/System.keychain`, all users) via `aslice-system` using the Security framework. Machine-level operation, always prompted, logged, reversible (added certs are tagged with an aslice marker in their metadata where possible and enumerated before/after; removal command provided). Affects Safari, Mail, and all Secure Transport consumers.
+3. **Crypto/roots refresh (flags):** `aslice ca-update --crypto` upgrades the crypto stratum (openssl, libressl, gnutls, ca-certificates) to current in one solver transaction. `aslice ca-update --apple-certs` refreshes Apple's own roots (from Apple's published PKI pages) into the System keychain — needed because Apple roots from 2015-era images sometimes predate intermediate rotations.
 
-| Group | Checks | Verdicts |
-|---|---|---|
-| **Machine** | CPU flavor vs. configured flavor (a v3 config on v2 hardware is a fail, not a surprise SIGILL later); macOS release vs. supported window; APFS vs. HFS+ (capabilities that degrade, announced); free disk vs. GC watermark | pass / warn / fail |
-| **Prefix and store** | Prefix ownership and permissions (user-owned, not world-writable); store path integrity — manifests re-hashed against on-disk content (`--deep` re-hashes every file, default checks a sample plus anything the DB flags); dangling store paths referenced by no generation | pass / fail |
-| **Profiles and generations** | `default` symlink resolves; every profile symlink lands inside the store; the live generation matches the DB's installed set; collision priorities resolve to real paths | pass / fail |
-| **Database** | SQLite integrity check; schema version vs. binary (a newer DB than the binary is a loud fail with downgrade instructions, never silent corruption); WAL recovery state | pass / fail |
-| **Repositories** | Per repo: reachable (or cached-snapshot age if `--offline`), TUF metadata expiry countdown, pinned key still matches live root, trust-level consistency (a `verified` repo whose countersignature lapsed is a fail with the freeze explanation — REPOSITORIES §3), shadowed core names, current overlaps and their resolution state, index staleness beyond policy | pass / warn / fail |
-| **Coexistence** | Homebrew/MacPorts presence, PATH ordering advice, anything in `/usr/local` shadowing aslice binaries (or vice versa) — advisory only, aslice never touches either | pass / warn |
-| **Environment** | `ASLICE_*` variables that override config (listed, not hidden); shell init files referencing stale prefixes; Xcode CLT presence (informational — the self-hosted toolchain makes it optional for aslice itself) | info / warn |
-| **Trust store** | `ca-certificates` bundle freshness against the index (a stale trust store is this platform's day-one failure); profile env wiring (`SSL_CERT_FILE`/`CURL_CA_BUNDLE`/`GIT_SSL_CAINFO`) points at the aslice bundle; System-keychain imported set matches the DB record — drift after OS updates or third-party cleanup reported, never silently repaired (§12.10) | pass / warn |
-| **System patches** | Every declared `[system-patch]` target still symlinks into the live generation; backup files present and hash-matching the DB record; drift after macOS updates (a patch Apple restored, or a newer Apple file our symlink now shadows) reported with reapply/restore remedies, never silently re-patched (§12.11) | pass / warn / fail |
+Trust sources are configurable (`aslice.conf`: Mozilla bundle default; alternatives documented), because some users' threat models prefer narrower bundles.
 
-**Rules:**
+### 12.11 Patching the system, honestly: `[system-patch]`
 
-- **Every fail and warn names the remedy.** Not "store integrity error" but "store path `x264-0.164-0+core.v3.77aa10b2` fails manifest hash (1 file) — quarantine with `aslice store verify --quarantine x264` and reinstall." The check table is code, not prose: each check has an ID (`doctor.store.hash`), so messages, `--json` output, and docs all reference the same stable identifier.
-- **Exit codes are scriptable:** 0 all-pass, 1 warnings only, 2 any fail. `--json` emits the full battery result; CI and fleet tooling gate on it (`aslice doctor --json | jq '.checks[] | select(.verdict=="fail")'`).
-- **Warnings are honest, not noisy.** Each warn is a real action item with a command attached; anything informational goes to the `info` tier, which `--brief` suppresses. A doctor that cries wolf gets ignored — the battery is curated so that a clean machine prints one line: `aslice: your installation is healthy (N checks, M repos, G generations)`.
-- **It ends with pointers, not a wall.** The summary footer lists the log directory and the last operation ID (§12.5), so a failing machine goes from `doctor` to root cause in two commands.
-- **`--fix` exists but is narrow and loud.** The only automatic repairs offered are ones with no possible data loss: pruning dangling cache entries, re-linking a broken generation symlink to its recorded target, refreshing stale index snapshots. Everything else prints the exact command for the user to run. `--fix` announces each action before taking it and logs all of them.
+The charter carve-out, engineered: aslice's founding promise was "never touch the system," and reality (§12.10 layer 2/3, plus files like ancient `/usr/lib/libcurl.4.dylib` that no framework fixes) makes a narrow, declared exception genuinely useful. It exists under the strictest gate in the system:
 
----
-
-### 12.7 System software: kexts and SIP-disabled development tools
-
-Some software this platform needs cannot live entirely inside the store: kernel extensions (audio-interface drivers, filesystems, hypervisors) and development tools that require SIP disabled (low-level debuggers, DTrace-based profilers, kernel instrumentation — a real population on 10.11–12 development machines). Earlier drafts rejected this category outright; v1.2 replaces the rejection with an honest, declared path, because the software exists and users install it today by hand — with no provenance, no warnings, and no rollback. A package manager that refuses to see that protects no one.
-
-**Declaration.** A package opts in via `package.toml`:
-
-```toml
-[system]
-kexts            = ["Library/Extensions/FooAudio.kext"]  # payload-relative paths to install
-sip_off_required = false     # true: the software cannot function while SIP is enabled
-reason           = "Kernel driver for FooAudio USB interfaces"   # mandatory; this IS the warning text
-```
-
-Either `kexts` or `sip_off_required = true` (or both) marks a system package; `reason` is mandatory and shown verbatim in every warning. Development tools needing SIP off but installing no kext declare only `sip_off_required` and `reason`. The full schema lands in PACKAGE-FORMAT v0.4 alongside the REVIEW §8 amendments.
-
-**Mechanism — declarative, elevated, still code-free.** The category preserves the founding rules:
-
-- **Zero package code at install (§10.1) holds.** The privileged steps — placement into `/Library/Extensions`, ownership and permission repair, `kextcache` invalidation, load — are performed by **`aslice-system`** (§10.4) from the manifest's declarations. Vendor `postinstall` scripts still never execute; a vendor kext package whose scripts turn out to be required is still rejected (§12.4, ORCHARD-POLICY §13).
-- **Store and rollback hold.** The kext payload lives in the store like any other file; `/Library/Extensions` entries are managed copies recorded in the DB. Uninstall unloads and removes them and refreshes the kernel cache; rolling back to a prior generation restores the prior kext set.
-- **Kext reality is respected.** On SIP-enabled 10.11+, loaded kexts must be signed — the formula declares whether its kexts are signed (signer-pinned per §12.4 when vendor-supplied) or whether it requires SIP off. aslice checks `csrutil status` rather than assuming: a `sip_off_required` package on a SIP-enabled machine stops *before download* with exact instructions (boot to Recovery, `csrutil disable`, re-run the command); a signed-kext package on a SIP-enabled machine installs with no SIP conversation at all. OS updates can re-enable SIP or invalidate kexts — `doctor` (§12.6) reports SIP state, declared-vs-loaded kexts, and exactly that drift.
-
-**The warnings are the feature.** Declared system requirements surface at every decision point:
-
-- **Solve and plan:** installing a system package prints a prominent block *before any download*: the kexts it installs, the SIP requirement, the `reason` text, and the consequences — kexts run in kernel space (a bug panics the machine), and SIP-disabled operation weakens every protection in §10 for all software on the machine.
-- **Non-interactive refusal:** scripts, `--json` plans, and `aslice apply` **refuse** system packages unless `--accept-system-changes` is passed for that operation. There is deliberately no persistent "always accept system changes" setting — consent is per-decision, like the risk.
-- **Elevation:** the consent prompt for `aslice-system` repeats the declaration; every elevation is logged as an unsuppressible security event (§12.5).
-- **Doctor:** SIP state, kext drift after OS updates, and unsigned-kext installs are all `doctor` checks with remedy text and stable check IDs (`doctor.system.sip`, `doctor.system.kexts`).
-
-**Trust gating.** Serving system packages requires the **`system` capability**, granted by trust level (REPOSITORIES.md §3): **official and verified repositories have it; third-party repositories never do; `local` repositories have it** (a developer's own `file://` tree on their own machine — the same authority as installing the kext by hand, now with warnings and rollback). Talking a user into installing a kernel extension is precisely the social-engineering attack the trust levels exist to block, so no remote stranger's repository can offer one. Tier policy — extended by default, core only when the platform genuinely requires it — lives in ORCHARD-POLICY §13.
-
----
-
-### 12.8 Services: launchd-native lifecycle and safe upgrades
-
-Long-running services — nginx, PostgreSQL, Redis, dnsmasq, unbound — are where a package manager meets the running system, and they impose two requirements. The manifest must *describe* the service rather than ship scripts that manage it, and an upgrade must never replace the binary under a running process: stop the service, swap, start it again. Homebrew's answer is `brew services`, a wrapper that generates plists from a formula DSL and shells out to `launchctl` (via sudo for daemons). aslice's answer is declarative and launchd-native, and the stop–swap–restart sequence is part of the upgrade transaction itself, not a wiki page.
-
-**Declaration.** A package describes its service in `package.toml` (schema: PACKAGE-FORMAT §3.8):
-
-```toml
-[service]
-run         = ["bin/nginx", "-g", "daemon off;"]  # argv, profile-relative; never a shell string
-domain      = "user"        # "user" (default: gui/<uid> agent) | "system" (root LaunchDaemon — gated)
-keep_alive  = true          # launchd KeepAlive — bool or a table of conditions
-run_at_load = true
-working_dir = "var"                   # prefix-relative
-environment = { LANG = "en_US.UTF-8" }
-log_dir     = "var/log/nginx"         # StandardOutPath / StandardErrorPath
-```
-
-aslice *generates* the launchd plist from this declaration at enable time — the formula ships no plist file and, as ever, no code. Two consequences fall out of the store model. `ProgramArguments` resolves through the **profile** (`/opt/aslice/profiles/default/bin/nginx`), never a store path, so the job survives upgrades and rollbacks untouched: the same plist launches whichever version the live generation points at. And the label is namespaced (`org.aslice.nginx`), so `aslice service` maps one-to-one onto real launchd jobs — no pidfiles, no guessing, no wrapper daemons.
-
-**The command.** `aslice service` is a thin, honest layer over `launchctl`'s modern interface (`bootstrap` / `bootout` / `kickstart` / `print`, present since 10.10, so the whole 10.11–12 window is covered):
-
-- `aslice service list` / `status <pkg>` — reads `launchctl print gui/<uid>/org.aslice.<pkg>`: pid, state, last exit status, keepalive. Status is launchd's truth, not a pidfile.
-- `aslice service start` / `stop` / `restart <pkg>` — `bootstrap` / `bootout` / `kickstart -k` against the generated plist.
-- `aslice service run <pkg>` — foreground, unregistered, for debugging (the one `brew services` idea worth copying).
-- Per-service environment overrides live in `$XDG_CONFIG_HOME/aslice/services/<pkg>.env` and are applied when aslice generates the plist — never by editing it afterwards (the store is immutable, §8.1, so overrides *must* live outside it, which is where they belong). This closes HOMEBREW-REVIEW §4.4's P1.
-
-**Upgrades stop the service first.** The mutation pipeline of §8.3 becomes service-aware whenever a plan touches a package with a loaded job:
-
-1. Resolve, fetch, and build the **entire new generation** while the old one — and the service — keeps running. Any failure here never touched the service.
-2. `bootout` the affected jobs — and only the affected ones; an ffmpeg upgrade never bounces your postgres.
-3. Swap the generation symlink (atomic, §8.3).
-4. Reconcile plists — only if the declaration changed; the profile indirection means a plain version bump needs no plist edit.
-5. `bootstrap` / `kickstart -k` the jobs and verify they came up (pid present, no immediate crash-exit). A job that won't start is a loud error carrying launchd's last exit status and the log path — and then aslice **asks the user about rolling back** (below).
-
-**A failed health check asks, it never decides silently.** The failure is shown first — the job's launchd exit status and the log path — then, on an interactive terminal:
-
-```
-$ aslice upgrade nginx
-…
-error: service nginx failed to start after the upgrade (launchd exit status 78;
-log: /opt/aslice/profiles/default/var/log/nginx/error.log)
-The previous generation (nginx 1.26.2, generation 41) is intact and can be restored in seconds.
-Roll back and restart the previous version? [y/N]
-```
-
-- **Yes** boots out the failed job, swaps the profile back to the previous generation (atomic rename, §8.3), and bootstraps the previous service version — the plist points through the profile, so it needs no edit — followed by the same health check on the restored version. The transaction is recorded in the operation log (§12.5) as rolled back, with the health-check failure attached, so `aslice log` can answer "what happened to nginx at 02:13" in one query.
-- **No (the default)** leaves the new generation live and the service down: nothing is destroyed, the logs stay put for debugging, `doctor.services` flags the crashed job until it is resolved, and `aslice rollback` remains available — the prompt only accelerates a decision the user can make at any time. A declined rollback is remembered for the current operation only; the next failure asks again.
-- **Non-interactive contexts** (no TTY, `--json`, scripts) never prompt and never auto-rollback: the upgrade exits with a machine-readable `service_start_failed` error naming the package, the exit status, and the log path, and rolling back is an explicit `aslice rollback`. Automation that wants the "yes" path unattended passes `--rollback-on-service-failure`. There is deliberately no flag that reports a downed service as success.
-
-GC is already safe: a running job pins its store path through the profile generation it was started from, and §8.4 never collects store paths referenced by running processes.
-
-**Root daemons are the privileged case.** `domain = "system"` jobs run as root (or a declared `user_name`) and are bootstrapped into the system domain by `aslice-system` (§10.4) — same per-operation consent, same unsuppressible logging as kexts. Because root execution is the privilege that matters, `domain = "system"` declarations are gated by the same **`system` capability** as `[system]` packages (REPOSITORIES.md §3): official and verified repositories may serve them, **third-party repositories never may**, local trees may on the user's own machine. User-domain agents are unprivileged and ungated — any repository may declare one, no sudo is ever involved, and the steady-state rule (§10.4) stands for nginx-on-8080 and every other development service.
-
-**Doctor.** `doctor.services` checks: every enabled service's plist parses and its `ProgramArguments` resolve into the *live* generation; jobs loaded for packages no longer installed (and packages with declared services that were never enabled); crash-looping jobs (launchd's throttling state); and, for `domain = "system"` jobs, that what is running matches what the DB records `aslice-system` installed. All read-only; `--fix` offers only the no-data-loss repairs (§12.6).
-
----
-
-### 12.9 Multi-version runtimes: use, pin, default — and version-bound extensions
-
-php, nodejs, ruby, and python are not packages in the ordinary sense: users keep several versions installed at once, switch between them constantly, and stack version managers (nvm, pyenv, rbenv, Volta) on top of their package manager to cope — two sources of truth for what `python3` means, fighting over the same PATH. Homebrew's answer (separate `php@8.1` / `php@8.2` formulae plus `brew link --overwrite` juggling) makes the manager itself the obstacle. aslice takes the Volta lesson seriously: **version management is the package manager's job**, and the store model of §8 makes it nearly free — multiple versions coexist by construction; what was missing is a *selection* layer.
-
-**One formula, release streams.** A runtime is a single formula (`php`) whose orchard publishes several maintained streams (8.3, 8.4, 8.5) in the index simultaneously. `aslice install php@8.4` is an ordinary version-constrained install; the store happily holds 8.3.11, 8.4.13, and 8.5.0 side by side. What installing a stream does *not* do is change which `php` you get — selection is always explicit, never a side effect of installing. (Homebrew conflates the two via `link`; Volta's `volta install` conflates them too. aslice separates install from select because `aslice upgrade` must never move you to a new PHP minor under your feet.)
-
-**The shim layer.** PATH gains one directory ahead of the profile: `/opt/aslice/shims` (the installer sets the order; `doctor.coexistence` verifies it). A shim is a hardlink to the aslice binary dispatched on `argv[0]` — zero per-tool code — created for every name a runtime formula declares in `shims = [...]` (php, phpize, pecl, php-fpm; node, npm, npx; ruby, gem, bundle; python3, pip3, …). Invoked as `php`, the shim resolves a stream (below), looks the store path up in the state DB, and `exec`s the real binary — no fork, no wrapper process, signals and `ps` intact, cold-path cost under a millisecond (§11). Shimmed names are *not* linked into generations; the profile links **versioned aliases** instead (`bin/php8.4`), which services and scripts use when they must name an exact runtime — §12.8's generated plists bind the alias of the stream selected at enable time, so `aslice default php 8.5` never silently changes what a running php-fpm executes, and moving a service between streams is an explicit disable/enable. Resolution, first match wins:
-
-1. **Session** — `ASLICE_USE_PHP=8.4` in the environment, set by `aslice use`.
-2. **Project** — the nearest `aslice.toml` walking up from the working directory, written by `aslice pin`.
-3. **Default** — the profile-wide selection recorded by `aslice default` in the state DB.
-4. **Sole installed stream** — if exactly one is installed, it wins; zero, or several with no selection, is a loud error naming the installed streams and the three ways to choose.
-
-**`aslice use` — the current shell.** The command is honest about Unix semantics: a child process cannot rewrite its parent's environment, so `aslice use php 8.4` emits shell code — `export ASLICE_USE_PHP=8.4` on stdout, the human message on stderr. With the optional shell integration (`eval "$(aslice init zsh)"`, a few auditable lines for bash/zsh/fish), an `aslice` shell function evals that automatically; without it, `eval "$(aslice use php 8.4)"` does the same by hand, ssh-agent-style. The session pin is an ordinary environment variable: it propagates to subshells, dies with the shell, overrides project and default, and shows up in `env` and in `doctor`'s environment group like every other `ASLICE_*` override. `aslice use php --clear` unsets it. Implicit per-shell state without shell cooperation (PID-keyed databases, process-ancestry tricks) was rejected: tmux and daemon-spawned shells defeat ancestry, and a selection mechanism you cannot see with `env` is one you cannot debug. If the requested stream isn't installed, an interactive run offers to install it; non-interactive runs fail with the suggestion unless given `--install`.
-
-**`aslice pin` — the project.** `aslice pin php 8.4` writes (or updates) `aslice.toml` in the project root:
-
-```toml
-# aslice.toml — commit me alongside composer.json / package.json / Gemfile
-[runtimes]
-php    = "8.4"
-nodejs = "22"
-```
-
-Every shell, subshell, CI step, and editor-integrated terminal *inside that tree* now resolves to the pinned stream — Volta's `package.json` behavior, made ecosystem-neutral (one file pins php *and* node in the same repo; no per-ecosystem pin formats). Pins record streams (`8.4`), never exact patches: patch movement within a stream is `aslice upgrade`'s job and must not require editing a committed file. A pin naming a stream that isn't installed behaves like `use` in that situation: interactive offer, non-interactive error, `--install` to override. `aslice which php` traces the full resolution — session? project? default? — down to the store path, so "which php am I actually running, and why" is one command, the same explainability standard as `--explain` for the solver.
-
-**`aslice default` — the fallback.** `aslice default php 8.4` records the profile-wide selection in the state DB; `aslice default php` shows it; bare `aslice default` lists all selections. The default is what cron jobs, services, and shells outside any project tree land on. Installing a second stream never changes it; uninstalling the selected stream refuses until another is selected (`--force` overrides, loudly logged). `aslice versions php` shows the matrix: installed streams, the pinned/default/session selections, and which extensions are installed per stream.
-
-**Extensions bind to exactly one runtime version.** This is where version managers historically give up — pecl compiles against whichever `phpize` ran first, pip installs into whichever site-packages happens to be writable, and the result only *looks* shared until an ABI breaks. aslice splits the problem by who does the installing:
-
-- **aslice-managed extensions are slices, keyed to the runtime's ABI epoch.** Compiled extensions — `php-redis`, `php-imagick`, `ruby-pg` — are orchard packages declaring `[extension] runtime = "php"` (PACKAGE-FORMAT §3.13). The runtime formula declares its own **ABI epoch** (`"8.4"` for php, `"3.12"` for python, `"3.3"` for ruby, `"22"` for nodejs — the granularity at which the extension ABI actually breaks: minor for php/python/ruby, major for node), and the epoch enters the extension's build identity: `php-redis-6.1.0+php8.4.v3` and `…+php8.3.v3` are different store paths that coexist exactly like flavors. Installing an extension binds to the *currently selected* stream (same resolution as the shims; `--runtime php@8.3` overrides): the solver requires that stream installed, the build compiles against that concrete runtime store path, and linking writes a small loader file into the profile's per-epoch scan directory (`etc/php/8.4/conf.d/20-redis.ini`) — so extension sets are generation-managed and `aslice rollback` restores runtime and extension set together. The farm prebuilds the extension × supported-epoch × flavor matrix, so binaries exist for every supported stream. A patch upgrade within a stream (8.4.12 → 8.4.13) keeps the epoch and extensions carry over untouched; installing a *new* stream (`aslice install php@8.5`) offers to provision the previous stream's extension set for it (interactively; `--with-extensions-from 8.4` for scripts) — a new epoch is a conscious port, never an accident.
-- **Ecosystem-native installs bind through the shim, per version, outside the store.** `pip install`, `gem install`, `npm i -g`, `pecl install`, `composer global require` keep working — but the shim execs the tool with the per-version **userbase** environment of the *resolved* stream (`~/.aslice/runtimes/php/8.4/`, `…/python/3.12/`, …, mapped through `PYTHONUSERBASE`, `GEM_HOME`/`GEM_PATH`, `NPM_CONFIG_PREFIX`, PHP's user-ini/extension-dir conventions — declared by each runtime formula in PACKAGE-FORMAT §3.13, never hardcoded). The store stays immutable; each stream gets its own writable territory; a `pip install` under python 3.12 is simply invisible to 3.13 — binding by construction, not by hope. Userbase contents are user territory: aslice never audits, snapshots, or garbage-collects them, `doctor.runtimes` reports their presence and size, and uninstalling a stream warns about its orphaned userbase instead of deleting it.
-
-**Tools ride the runtime.** The third category is interpreter-target tools with no native code against the runtime ABI: composer (a phar), yarn, prettier, poetry. These are ordinary slices that declare `[ride] runtime = "php"`: the slice installs once, its shim resolves the runtime through the normal session → project → default order at exec time, and the tool launches under that runtime — composer's PHP is always your selected PHP, switching automatically when you switch. This is Volta's best idea (a global yarn that follows your node) generalized to every ecosystem, with one deliberate difference: riding is a property of the tool's *formula*, never user configuration, because whether a tool can safely ride is a fact about its code, not a preference.
-
-**Upgrades stay in their lane.** `aslice upgrade php` moves within the selected stream only — 8.4 patches, never 8.5; its output mentions newly available streams (`php 8.5 is available: aslice install php@8.5`) without touching them. That is the contract that makes `aslice upgrade` safe on a production Mac mini: the runtime your sites, services, and crontabs resolve to changes only when you say `use`, `pin`, or `default`. GC is conservative in the same direction: a stream that is selected as default, pinned by a project `aslice.toml` the DB knows about, or referenced by an enabled service is never collected.
-
-**Doctor.** `doctor.runtimes` checks: the shim directory is present and *precedes* the profile on PATH (with the exact fix line); every declared shim resolves (no dangling selections — e.g. a default pointing at an uninstalled stream); every enabled service's versioned alias resolves to an installed stream; extension scan directories match the DB (a loader for an epoch whose runtime is gone); orphaned userbases reported, never removed. All read-only, same remedy-text standard as §12.6.
-
----
-
-### 12.10 Trust store: modern CA certificates on a frozen platform
-
-The single most common day-one failure on 10.11–10.13 is not a missing library — it is TLS itself. The system trust store froze years ago: roots expired (the DST Root CA X3 expiry in 2021 broke Let's Encrypt chains for everything using the system store), modern roots never arrived (ISRG Root X1/X2 and their successors), and every release in the support window ages further. aslice's own fetches never cared (§4.1 — `aslice-fetch` carries its own TLS stack and bundle), but the user's tools do: the curl, git, wget, and python aslice installs will consult a trust store, and so will Safari, Mail, and every other SecureTransport app on the machine. `aslice ca-update` fixes both halves.
-
-**The bundle is an ordinary signed slice.** `ca-certificates` is a data-only package in the core orchard, versioned by upstream release, kept fresh by the same livecheck/autobump machinery as every other package (REVIEW §4.2). Updating trust therefore rides the existing TUF + minisign + generation pipeline — verification before extraction, rollback like any other package, no new trust path, nothing fetched outside the signed index. Linking places the bundle at the profile's `etc/ssl/cert.pem`, and the shell integration exports it to userland: `SSL_CERT_FILE`, `CURL_CA_BUNDLE`, `GIT_SSL_CAINFO` (set by `aslice shellenv` / `aslice init`, visible in `doctor`'s environment group like every other override). aslice's own curl and git are built against aslice's OpenSSL, so command-line TLS heals *completely* — modern roots, modern ciphers, TLS 1.3 — independent of the OS.
-
-**The source is configurable; the default is Mozilla.** The shipped bundle is the Mozilla root program's store as converted to PEM by the curl project (curl's caextract) — the same trust decisions Homebrew, Debian, and Fedora ship, chosen because Mozilla's root program is the most actively curated public trust list and curl's conversion is the most widely audited consumer of it. Alternatives are a config decision (`aslice config set ca.source <name>`), not a fork: an enterprise or community orchard can publish its own `ca-certificates` variant (a corporate inspection root added to the Mozilla base is the canonical case — it ships from that orchard, under that orchard's trust level, and the overlap-resolution machinery of REPOSITORIES §10 applies), and `aslice ca-update --from-file ./corp-bundle.pem` installs a local bundle whose sha256 is recorded in the DB (`--from-file` never fetches). Whatever the source, the bundle is validated before activation — parses completely, non-empty, no certificate already expired — and a bundle that fails validation is refused, never linked.
-
-**The crypto stack is a flag, not a hope.** `aslice ca-update --crypto` upgrades the crypto-provider slices — `openssl` and anything else the installed set declares as a TLS provider — to the newest version the index offers, through the ordinary upgrade machinery (generations, rollback, health checks). This is the other half of the day-one failure: modern roots are useless to a tool whose TLS stack predates TLS 1.2, and aslice's curl, git, wget, and python — built against aslice's OpenSSL — come out of a `--crypto` run with modern ciphers and TLS 1.3. The honesty rule applies in print, every run: `--crypto` cannot and does not touch the OS's own stack — SecureTransport and the system libcrypto are Apple's, and on 10.11–10.12 they stay frozen. The replaceable parts of the OS's TLS surface (the `/usr/bin/openssl` CLI and its kin) are a `[system-patch]` decision (§12.11): when such a package is installed, the flag re-converges it through the ordinary generation mechanics; when none is, `--crypto`'s output notes that one exists in the core orchard — offered, never installed by the flag itself.
-
-**The System keychain is opt-in, and it is the System keychain.** The private bundle heals aslice's own userland; it does nothing for Safari, Mail, Calendar, or any other app using SecureTransport — those trust the machine's System keychain, on every release in the window, for every user. `aslice ca-update --keychain` closes that gap, under rules strict enough for the privilege it uses:
-
-- **Executed by `aslice-system`** (§10.4), the same declarative privileged helper that manages kexts — this is aslice operating on the machine, not package code running as root; the zero-install-code rule (§10.1) is untouched. The operation is additive and explicit: for each root in the bundle *not already present* in `/Library/Keychains/System.keychain` (fingerprint comparison), `security add-trusted-cert -d -r trustRoot` — admin authorization, every run, per-decision consent exactly as in §12.7; there is no "always allow" setting. SIP is not involved: the System keychain lives in `/Library`, not `/System`.
-- **Recorded to the certificate, reversible to the certificate.** Every import is written to the DB (fingerprint, label, bundle version, date); `aslice ca-update --keychain-remove` deletes exactly the recorded set and nothing else. aslice never removes, disables, or overrides an Apple-shipped or user-added root — expired roots already in the keychain are *reported* by `doctor`, never touched; distrust decisions belong to the bundle's source program for new installs and to the machine's owner for existing ones.
-- **Expectations are printed, not implied.** The import fixes *trust*, not *crypto*: SecureTransport on 10.11–10.12 still lacks TLS 1.3 and modern cipher suites, so sites that require them stay unreachable in Safari no matter what the keychain holds. `ca-update --keychain` says so in its output, and `doctor` reports the same — the user who still can't reach a TLS-1.3-only site gets the true explanation (use aslice's curl, or a browser with its own stack) instead of a debugging rabbit hole.
-
-**Apple's own roots ride the same rails.** Mozilla's program does not carry Apple's roots — but Software Update, the App Store, iCloud, activation, Apple Pay, and Developer ID/Gatekeeper validation all chain to Apple's own PKI, and those roots and intermediates age on a frozen release exactly like the public ones (a lapsed WWDR intermediate breaks Developer ID launches as surely as DST Root CA X3 broke the web). Apple publishes its current roots on its official PKI pages; the core orchard ships them as a second pinned, data-only slice — `apple-roots`, fetched from Apple's certificate-authority pages by the farm, hash-pinned, livecheck-watched, signed and indexed exactly like `ca-certificates`. `aslice ca-update --apple-certs` imports the missing Apple roots and replacement intermediates into the System keychain through the identical machinery as `--keychain` — same `aslice-system` execution, same per-run admin consent, same fingerprint-additive discipline, same recorded-to-the-certificate DB entries, removed by the same `--keychain-remove`. Apple-shipped certificates already on the machine are still never removed or overridden: a superseded Apple intermediate is *reported* by `doctor`, and its replacement imported alongside.
-
-**Doctor and lifecycle.** `doctor.truststore.*` checks: bundle freshness against the index (staleness past policy is a warn with the one-line remedy), profile env wiring points at the aslice bundle, the crypto-provider slices and the `apple-roots` slice are current against the index, and the keychain's imported set — Mozilla-program and Apple roots alike — matches the DB record (OS updates and third-party "cleaner" tools both cause drift — reported, never silently repaired). A bundle upgrade is an ordinary generation transaction: rollback restores the previous bundle, and `--keychain` operations are idempotent against the DB record, so re-running after a rollback re-converges the keychain to the active bundle's additions.
-
----
-
-### 12.11 System patches: flagged, reversible replacement of Apple-provided files
-
-§12.10's crypto flag runs into a wall the founding charter built: some fixes *require* replacing what Apple shipped. The `/usr/bin/openssl` on 10.11 is a 0.9.8-era tool that cannot speak modern TLS no matter what the keychain holds, and the frozen platform is full of such fossils — dead CLIs, broken system tools, stale support files. Earlier drafts drew the line absolutely: aslice never touches `/usr`, `/System`, or Apple's binaries (§2.2 N5, §13.1). v1.7 keeps the default and removes the absolutism: **modifying the OS is allowed, but only through one declared, flagged, reversible mechanism** — and a package that wants it must say so in its manifest, under the strictest trust gate in the system.
-
-**Declaration.** A package opts in with `[system-patch]`:
-
-```toml
-[system-patch]
-targets          = ["/usr/bin/openssl", "/usr/bin/curl"]   # absolute paths this package replaces
-sip_off_required = true          # /usr, /System, /bin, /sbin are SIP-protected on 10.11+
-reason           = "Replaces the OS's frozen 0.9.8-era TLS CLIs with aslice's modern builds"   # mandatory; shown verbatim in every warning
-```
-
-`reason` is mandatory and displayed verbatim at every decision point, exactly as in §12.7 (schema: PACKAGE-FORMAT v0.6).
-
-**The mechanism is backup, symlink, record — never overwrite.** All steps are executed by `aslice-system` (§10.4) with the same per-operation consent and unsuppressible logging as kexts and root daemons:
-
-1. **Preflight.** The target must exist, must not already be aslice-managed (a second package patching the same path is a conflict, not a stack), and must not be on the **refused-by-construction list**: the kernel, `dyld`, `libSystem`, anything under `/System`, and *any dylib or framework in a platform binary's load path* — replacing those would either brick the machine or crash Apple's own binaries against library validation, so the linter rejects such targets and no flag overrides it. The category patches **tools, configs, and data** — never the shared library space. SIP is checked, not assumed: a SIP-protected target on a SIP-enabled machine stops before download with the exact Recovery instructions, per §12.7.
-2. **Back up the original.** The original file is copied to a managed backup directory under the prefix and its sha256 recorded in the DB. The backup is the rollback: it is never overwritten by a later patch of the same path and never pruned while the patch is installed.
-3. **Replace with a symlink — through the profile.** The target is atomically swapped (`rename(2)`) for a symlink into the profile (e.g. `/usr/bin/openssl` → `/opt/aslice/profiles/default/bin/openssl`) — never a raw store path. This is the same trick as §12.8's plists: a generation swap changes what the system path resolves to, so **rollback of a generation is rollback of the patch**, automatically, with zero extra machinery. Uninstalling or unlinking the patched package while the symlink is live is refused until the patch is restored; a store path referenced by an active patch is never garbage-collected.
-4. **Record everything.** The DB stores: package, target path, original sha256 and size, backup location, symlink target, and the generation that installed it. `aslice system-patch list` / `status` shows the current patched set — which Apple files are replaced, by which package, since when.
-
-**Restore is exact.** Restoring a patch (uninstall, `aslice system-patch restore <path>`, or a generation rollback that predates it) removes the symlink, copies the backup back, and verifies the restored file's sha256 against the DB record — the machine gets back the byte it had. A missing or corrupt backup is a loud `doctor` failure, never a silent skip.
-
-**OS updates are drift, and drift is reported.** A macOS update may restore the Apple original over our symlink (the patch vanishes) or replace the underlying file with a *newer* Apple version (our symlink now shadows it). `doctor.systempatch.*` detects both: the vanished patch is reported with a one-line reapply remedy; the shadowed-newer-Apple-file is reported with both options — reapply (the new Apple file becomes the new backup) or restore and retire the patch. aslice never silently re-patches: Apple's file changing is exactly the moment a human should decide.
-
-**Consent and trust are the strictest in the system.** The pre-download block lists every target path, the `reason` text, the SIP requirement, and the consequence in plain terms: *this replaces an Apple-provided file; every user and every program on the machine will see the replacement until it is restored.* Non-interactive runs refuse without `--accept-system-changes` (the same flag as §12.7 — one consent vocabulary); the `aslice-system` elevation prompt repeats the target list; there is no "always allow." Serving `[system-patch]` packages requires the **`system-patch` capability**, granted by trust level (REPOSITORIES.md §3 amendment): **official and `local` repositories have it; `verified` repositories do not; third-party never.** A verified community repository is vetted to *distribute software*; rewriting the OS is a judgment the project keeps to itself and to the machine's owner.
+- A formula is marked `[system-patch]`: it targets specific absolute system paths (enumerated in the formula — no wildcards), each with the OS releases it applies to.
+- **Backup first, always:** before any replacement, the original file is copied byte-exact (with permissions, ACLs, xattrs) into the store under the patch slice's path. Nothing is overwritten without a verified backup.
+- **Replacement by symlink:** the system path is replaced with a symlink into the aslice store (per the charter: "it should be symlinks"), so the patched state is visible (`ls -l` tells the truth), and rollback is: restore backup bytes, remove symlink. A generation rollback automatically re-converges patched paths to the generation's manifest.
+- **Rollback is offered, not assumed:** on remove/rollback of a system-patch slice, aslice asks the user whether to restore the original file — and defaults to restore, with `--keep-patch` as the explicit override. A macOS update that overwrites the patch is detected by `doctor` (hash mismatch vs manifest), which offers reapply-or-restore.
+- **Double warning, double consent:** install requires `--accept-system-software` *and* an interactive per-file listing of what will be replaced, with the backup location printed. The audit log records every patched path forever.
+- **Trust:** served by **official and local** repositories by default; a **verified** repository may serve `[system-patch]` packages only with an explicit per-repo grant — `aslice repo allow-system-patch <name>` (refused by default, recorded in the state DB, revocable via `aslice repo deny-system-patch <name>`); **third-party never** (REPOSITORIES.md §3, ORCHARD-POLICY §13). The grant gates *serving*; the per-decision consent flow above is unchanged and applies whoever serves the package.
 
 **Honesty.** This category exists because the alternative is users doing the same thing by hand — `curl | sudo sh`, a downloaded "TLS fixer," a copied dylib — with no provenance, no backup, and no way back (the §12.7 argument, applied to files). aslice's guarantee is narrower than for ordinary packages and says so (§10.7): the replacement bits are exactly the declared, verified ones; the original is preserved and restorable to the byte; refused paths are refused by construction; and the user was warned at every decision point.
+
+### 12.12 Self-update: aslice is package zero
+
+A package manager that cannot safely update itself either rots or trains users to re-run a curl-pipe script — the exact pattern this security model exists to kill. aslice updates itself through the same machinery as everything else, with one wrinkle handled explicitly.
+
+- **aslice is a package.** The manager lives in its own store path (`/opt/aslice/store/aslice-x.y.z-…/`) with a formula in the core orchard, a manifest, an SBOM, and a minisign signature. `aslice self-update` is an ordinary transaction — resolve, fetch slice, verify, build generation, atomic swap — whose only special property is that the running binary is the thing being swapped.
+- **The swap waits for the transaction to finish.** The profile symlink to `bin/aslice` flips with the generation as usual; the *running* process completes its bookkeeping, then re-execs the new binary to print the result. The old binary never vanishes mid-execution: the store path is immutable, and the previous generation remains invocable through ordinary rollback.
+- **Health check with automatic rollback.** Post-swap, the new binary runs a smoke self-test (version report, DB open, index read). Failure rolls the generation back automatically and reports loudly — the one package whose bug could brick the installation gets the strongest rollback guarantee, not the weakest. A failed self-update leaves the previous, working aslice exactly where it was.
+- **Channels and pins apply.** `self-update` honors the configured channel and refuses to cross a spec/format major version without printing the changelog and requiring confirmation. `aslice pin aslice` holds the manager itself — same hold machinery as any package.
+- **Bootstrap trust is notarization plus signature** (§10.3): release binaries are minisign-signed with the project key *and* Apple-notarized, so first run on Gatekeeper releases has no "unidentified developer" friction; the install script verifies the minisign signature itself, keeping notarization as defense-in-depth and UX rather than the root of trust.
 
 ---
 
@@ -874,7 +605,8 @@ reason           = "Replaces the OS's frozen 0.9.8-era TLS CLIs with aslice's mo
 - Core orchard: maintained, security-patched, reproducible-build targets; no package enters without a working `tests.star` smoke test on at least one OS × one flavor.
 - Upstream-EOL software: allowed in extended with `eol = true` metadata; excluded from core.
 - Vendor binary packages: accepted into extended only with a verifiable signature and honest OS-support tags; into core only if additionally redistributable (so the farm hosts the slice) and payload-only by construction. A vendor package whose scripts turn out to be required is removed, not accommodated.
-- **Patching system files is rejected by default — and flagged where it isn't.** aslice installs alongside macOS and never modifies `/System`, `/usr`, or Apple's binaries silently, incidentally, or as a side effect of anything else. Where fixing the frozen platform genuinely requires replacing an Apple-provided file, the declared `[system-patch]` category (§12.11) does it openly: original backed up, replacement via profile symlink, rollback to the byte, consent at every decision point, official and local repositories only, catastrophic and platform-binary-library paths refused by construction. The marketing feature survives, stated honestly: aslice never patches your system *behind your back*. Kernel extensions and SIP-disabled development software likewise remain the declared, warned, trust-gated category of §12.7.
+- **Runtime dependencies resolve to aslice packages only** — the codified rejection of Homebrew's `uses_from_macos`. Never `/usr/lib` dylibs, never `/usr/bin` tools: on 10.11 the system libraries *are the problem*. The only exceptions are always-present system **frameworks** (`Accelerate`, `SystemConfiguration`, `CoreAudio`, `CoreFoundation`, …) enumerated in a lint allowlist — frameworks are the platform's ABI, not its bundled software. Allowlist additions are policy PRs against ORCHARD-POLICY §6 and the lint table together.
+- **Patching system files is rejected by default — and flagged where it isn't.** aslice installs alongside macOS and never modifies `/System`, `/usr`, or Apple's binaries silently, incidentally, or as a side effect of anything else. Where fixing the frozen platform genuinely requires replacing an Apple-provided file, the declared `[system-patch]` category (§12.11) does it openly: original backed up, replacement via profile symlink, rollback to the byte, consent at every decision point, served by official and local repositories — and by verified ones only under an explicit per-repo `allow-system-patch` grant (§12.11) — with catastrophic and platform-binary-library paths refused by construction. The marketing feature survives, stated honestly: aslice never patches your system *behind your back*. Kernel extensions and SIP-disabled development software likewise remain the declared, warned, trust-gated category of §12.7.
 
 ### 13.2 Variant discipline
 
@@ -889,7 +621,8 @@ reason           = "Replaces the OS's frozen 0.9.8-era TLS CLIs with aslice's mo
 ### 13.4 Governance
 
 - Benevolent-core-team start: 3–5 founding maintainers holding threshold keys; decisions by lazy consensus, escalations by vote.
-- Orchard PR review backed by CI that *builds the package in the sandbox on both flavors* — review is about correctness and policy, never "does it compile."
+- Orchard PR review backed by CI that *builds the package in the sandbox on every declared flavor* — review is about correctness and policy, never "does it compile." The merge gate is five checks, with no maintainer override (ORCHARD-POLICY §10): lint (schema + policy), a matrix build on every declared flavor at the formula's `min_os` with smoke-runs across `[min_os, 12]`, the `tests.star` smoke test, an **ABI gate** on provider version/revision changes (a regression requires an honest version bump or scheduled dependent rebuilds, published in the same index snapshot), and post-merge-only signing.
+- **Project hygiene documents ship in Phase 0** — `SECURITY.md` (how to report a vulnerability in aslice itself; key-contact runbook), `CODE_OF_CONDUCT.md`, `CONTRIBUTING.md` (the formula style guide: when a variant is justified, `min_os` honesty, patch documentation), and the written key-ceremony/rotation runbook referenced by §10.2. Documents, not code — cheap before launch, expensive after the first incident.
 - Public roadmap, public build-farm dashboard, public transparency log. A legacy-platform project survives on trust, and trust survives on visibility.
 - Funding: GitHub Sponsors/OpenCollective for build-farm hardware and power; costs are low and fixed (§9.3) precisely because the platform is frozen.
 
@@ -898,10 +631,10 @@ reason           = "Replaces the OS's frozen 0.9.8-era TLS CLIs with aslice's mo
 ## 14. Roadmap
 
 **Phase 0 — Foundations (months 0–3)**
-`aslice-toolchain` first: modern Clang/libc++ targeting darwin15, bootstrapped on the newest Intel macOS against the oldest archived SDK, then self-rebuilt. Then the C++ core skeleton: CLI, SQLite state, TUF client, zstd, Mach-O/otool wrappers — plus the build harness in local mode (`aslice build` with the full sandboxed phase pipeline, job/result schemas; BUILD-INFRA.md §12), because the core orchard seed is built *with* it. Bootstrap binary runs on every release 10.11–12 (VM-tested per release, including HFS+). Core orchard seeded with ~30 packages (curl, git, openssl, python, zstd, cmake, ninja) built on real hardware.
+`aslice-toolchain` first: modern Clang/libc++ targeting darwin15, bootstrapped on the newest Intel macOS against the oldest archived SDK, then self-rebuilt. Then the C++ core skeleton: CLI, SQLite state, TUF client, zstd, Mach-O/otool wrappers — plus the build harness in local mode (`aslice build` with the full sandboxed phase pipeline, job/result schemas; BUILD-INFRA.md §12), because the core orchard seed is built *with* it. Bootstrap binary runs on every release 10.11–12 (VM-tested per release, including HFS+). Core orchard seeded with ~30 packages (curl, git, openssl, python, zstd, cmake, ninja) built on real hardware. **Self-update ships in the first usable binary** (§12.12) — retrofitting update mechanisms is how projects die — alongside the project hygiene documents (§13.4).
 
 **Phase 1 — Usable (months 3–6)**
-Solver with variants; store/profiles/generations; GHCR distribution; the build harness in both modes — `aslice build` locally and `aslice farm` coordinator/agents on real hardware, one pipeline (BUILD-INFRA.md); minisign slices; ~300-package core orchard, all flavors; `adopt --from-homebrew`; build farm Phase A + first self-hosted nodes. Repository client (`repo add/list`, TOFU key pinning) from the start — the canonical repository *is* the default transport, so the multi-repo machinery costs little extra. The `ca-certificates` slice and the private-bundle half of `aslice ca-update` (§12.10) ship here — every userland TLS fetch depends on them. So do the `apple-roots` slice and `ca-update --crypto` (§12.10): both are ordinary signed content and ordinary upgrades.
+Solver with variants; store/profiles/generations; GHCR distribution; the build harness in both modes — `aslice build` locally and `aslice farm` coordinator/agents on real hardware, one pipeline (BUILD-INFRA.md); minisign slices; ~300-package core orchard, all flavors; `adopt --from-homebrew`; **the freshness pipeline** — `[livecheck]` in every core formula, scheduled orchard autobump opening bump PRs, and `aslice livecheck`/`bump-pr` for humans (PACKAGE-FORMAT §3.15; ORCHARD-POLICY §9); build farm Phase A + first self-hosted nodes. Repository client (`repo add/list`, TOFU key pinning) from the start — the canonical repository *is* the default transport, so the multi-repo machinery costs little extra. The `ca-certificates` slice and the private-bundle half of `aslice ca-update` (§12.10) ship here — every userland TLS fetch depends on them. So do the `apple-roots` slice and `ca-update --crypto` (§12.10): both are ordinary signed content and ordinary upgrades.
 
 **Phase 2 — Differentiated (months 6–12)**
 ABI scanner with DWARF diffing; SBOM + `audit`; SLSA provenance; `aslice-toolchain` v2 (LLD-first linking, ccache integration); extended orchard to ~2,000 packages; popular-variant prebuilds chosen from community requests (§9.4); reproducible builds for core; vendor-binary packages (`type = "binary"`, payload extraction, signer pinning) and the Cask importer; `aslice repo build/publish` for third-party repositories; **runtime version management** — the shim layer, `use`/`pin`/`default`, riding tools, and version-bound extension slices with the farm's runtime-epoch build axis (§12.9); the opt-in System-keychain import halves of `aslice ca-update` (`--keychain`, `--apple-certs`, §12.10) and the `[system-patch]` category (§12.11), once `aslice-system` is proven in service and kext duty.
@@ -925,55 +658,50 @@ Two-builder reproducibility cross-checks; transparency log; community mirror pro
 | C++ vulnerability in aslice itself | Medium | §5.3 program: subset, hardening, sanitizers, fuzzing, tiny trust-critical helpers |
 | Vendor binaries are opaque — no source SBOM, no reproducibility, the binary itself is trusted | Medium | Signer + hash pinning (silent substitution hard-fails); payload-only SBOM with full file list; `audit` binds CVEs via CPE; core tier barred unless redistributable + payload-only (§13.1); users told plainly what is and isn't verified (§10.7) |
 | Vendor pulls or mutates a `redistribute = false` artifact | Medium | Hash pin fails loudly rather than installing a different binary; the formula records last-known-good; community can negotiate redistribution or archive a licensed copy |
-| A `[system-patch]` replacement breaks software that expected the Apple original | High | Strictest gate in the system (official/local only, per-decision consent); lint-time refused-path list blocks catastrophic and platform-binary-library targets; exact backup + byte-verified restore; the §10.7 honesty rules cap what is claimed (§12.11) |
+| A `[system-patch]` replacement breaks software that expected the Apple original | High | Strictest gate in the system (official/local, verified only with an explicit per-repo grant, per-decision consent); lint-time refused-path list blocks catastrophic and platform-binary-library targets; exact backup + byte-verified restore; the §10.7 honesty rules cap what is claimed (§12.11) |
 | A macOS update restores or upgrades an Apple file a `[system-patch]` has replaced | Medium | `doctor.systempatch` drift detection with explicit reapply/restore remedies, never silent re-patching; patches resolve through the profile so generation rollbacks re-converge (§12.11) |
 | GPL/license compliance for hosted binaries | Low | Corresponding-source archive mirrored per license; SPDX SBOMs make compliance auditable; `redistribute = false` exists precisely for software we may not rehost |
 | Community adoption never materializes | Existential | Scope stays hobbyist-sustainable by design; worst case, the core orchard remains a maintained artifact for the installed base |
 
 **Open questions for early reviewers:**
 
-1. Default prefix (`/opt/aslice` vs `~/.aslice`-first). The name itself is settled: **aslice**.
-2. Starlark vs. a stricter pure-TOML-with-templates build DSL (Starlark chosen for expressiveness with hermeticity; the debate is real).
-3. Whether `abi = false` user-flag builds should share store paths with farm builds (current: yes, identity is identical — but provenance diverges; review wanted).
+1. ~~Default prefix~~ — **resolved (v1.8): `/opt/aslice` by default, `~/.aslice` as the no-admin fallback.** The installer prefers the shared prefix; when it cannot create it, it offers a fully supported per-user install under `~/.aslice` with identical semantics (§8.1, §10.3) — two documented layouts, not an arbitrary-prefix free-for-all. The name itself is settled: **aslice**.
+2. ~~Starlark vs. a stricter pure-TOML-with-templates build DSL~~ — **resolved (v1.8): Starlark stays.** Real legacy codebases need real conditionals and loops; the hermetic subset (no network, no filesystem outside the sandbox) carries the safety story, and escape hatches in a template language would be worse than a real one.
+3. ~~Whether `abi = false` user-flag builds should share store paths with farm builds~~ — **resolved (v1.8): shared, with provenance in the DB.** Identical identity gets one store address; the state DB records whether each installed path came from a farm slice or a local build, and `info`/`audit`/`doctor` surface it (§5.2).
 4. ~~Telemetry~~ — **resolved (v0.3, sharpened v0.4): aslice collects no telemetry or analytics of any kind, ever.** No install IDs, no opt-in counters, no phone-home, no crash reporting — and no download-count-driven prioritization either, because volume mismeasures value on a platform where the rarest dependency may be the most irreplaceable (§9.4). The project is infrastructure, not a product, and its users — many on air-gapped audio rigs and lab machines — owe it no data. This is a charter-level commitment, not a tunable.
-5. Whether the project's canonical repository should host *any* `redistribute = false` formulae in core, or whether pointer-only packages should be extended-tier by definition (current: allowed in both, barred from core unless redistributable — but that makes core depend on license goodwill; review wanted).
-6. Whether `verified` repositories should install binaries immediately at enable time, or require an additional per-repo `--accept-binaries` step (current: enable implies binaries — the project countersignature is the vetting; the extra click was judged ceremony without security content; REPOSITORIES.md §9).
-7. Whether the `system` capability (§12.7) should ride on the `verified` trust level or be a separate per-repo grant (`aslice repo allow-system <name>`). Current: verified repos get it — the countersignature is the vetting, and one more click was judged ceremony. But kexts are exactly where ceremony might be security; review wanted.
+5. ~~Whether the project's canonical repository should host *any* `redistribute = false` formulae in core~~ — **resolved (v1.8): the current allowance stands.** The canonical orchard hosts pointer-only formulae; core tier continues to require `redistribute = true` (§13.1, ORCHARD-POLICY §12) — core never depends on a vendor's server being up.
+6. ~~Whether `verified` repositories should install binaries immediately at enable time~~ — **resolved (v1.8): enable implies binaries.** The countersignature ceremony — key pinning, the trust prompt — is the consent; a second click is ceremony without security content (REPOSITORIES.md §9).
+7. ~~Whether the `system` capability (§12.7) should ride on the `verified` trust level or be a separate per-repo grant~~ — **resolved (v1.8): it rides on `verified`.** The countersignature vets the maintainers, and the §12.7 flow — per-decision warnings, no "always allow" — is where the ceremony lives. (Contrast #10, one severity level higher, where the answer went the other way.)
 8. ~~Service health-check failure behavior~~ — **resolved (v1.4): ask the user.** A failed post-upgrade health check (§12.8, step 5) prompts interactively to roll the generation back and restart the previous version; the default is stay-and-inspect, non-interactive runs fail loudly without rolling back, and `--rollback-on-service-failure` is the explicit unattended path. Silent automatic rollback was rejected: it can mask a good new version behind a transient port conflict, and a package manager that destroys evidence of a failure is harder to trust than one that asks.
-9. Project-local dependency directories (`.venv`, `vendor/`, `node_modules`) are deliberately outside aslice's scope: the shim layer binds *runtimes and their extensions*, while per-project library sets remain the ecosystem tools' job — which they do well. Whether aslice should grow a thin convenience layer (e.g., an `aslice venv` that records the creating runtime stream and warns on drift) is open; the risk to watch is scope creep toward reimplementing pip/poetry/composer, which is a non-goal.
-10. Whether `verified` repositories should ever serve `[system-patch]` packages (current: official and local only — the countersignature vets a repository to distribute software, not to rewrite the OS; the same ceremony-vs-security question as #7, one severity level higher; review wanted).
+9. ~~Project-local dependency directories~~ — **resolved (v1.8): out of scope, permanently.** `.venv`, `vendor/`, `node_modules` remain the ecosystem tools' job; the shim layer binds runtimes and their extensions and stops there. Reimplementing pip/poetry/composer is a non-goal — and the thin convenience layer is how the creep would start.
+10. ~~Whether `verified` repositories should ever serve `[system-patch]` packages~~ — **resolved (v1.8): yes, under an explicit per-repo grant.** `aslice repo allow-system-patch <name>` — refused by default, recorded in the state DB, revocable — is the ceremony that *is* security at this severity: the countersignature vets the repo's maintainers, and the grant names the machine owner's additional trust in writing. The DESIGN §12.11 consent flow is unchanged and applies whoever serves the package; third-party repositories remain barred entirely (REPOSITORIES.md §3, ORCHARD-POLICY §13).
 
 ---
 
-## Appendix A. Comparison Summary
+## 16. References
 
-| | Homebrew (Intel, 2026) | MacPorts | Nix | **aslice** |
-|---|---|---|---|---|
-| 10.11–12 Intel support | Tier 3 → removed 2027 (and never covered ≤10.14) | Partial, best-effort | Degrading | **First-class, the whole point** |
-| Prebuilt binaries | Frozen legacy bottles | Sparse | x86_64-darwin cache shrinking | **v1 + v2 + v3 flavors, default path** |
-| µarch targeting | No | No | No | **AVX2 flavor first-class** |
-| User build flags | Removed from core | Yes (variants) | Yes (overlays) | **Yes — with ABI-aware interop** |
-| Mix binary + custom builds | Breaks assumptions | Works, all-local | Full rebuild cascade | **Contract-checked substitution** |
-| Install-time package code | Ruby `post_install` | Tcl phases | No | **None (declarative)** |
-| pkg/dmg-only vendor software | Casks (installer scripts may run) | Rare | Not the model | **Payload-only, signer-pinned, OS-tagged artifacts — incl. 32-bit/universal on 10.11–10.14** |
-| Kernel extensions / SIP-off dev tools | Cask pkg scripts (arbitrary vendor code, often as root) | Manual installs | Not the model | **Declared `[system]` category: warned, consent-gated, trust-gated, rollback-able (§12.7)** |
-| Third-party binary distribution | Taps + bottles bolted on | No | Binary caches (trust via substituters) | **Repositories: signed, static, mirrorable, self-publishable** |
-| Rollback | No | No | Yes | **Yes (generations)** |
-| Service management | `brew services` (plist wrapper; daemons need sudo) | launchd by hand | NixOS modules (different OS) | **Declarative `[service]` + `aslice service`; stop–swap–restart upgrades with a prompted rollback on health-check failure (§12.8)** |
-| Multi-version runtimes | Separate `php@x.y` formulae + `brew link` juggling; nvm/pyenv/rbenv/Volta shadow the manager | `port select` — one global symlink, no sessions or projects | `nix develop` per-project shells — powerful, heavyweight | **Built in: release streams, shims with session/project/default selection, riding tools, ABI-bound extensions (§12.9)** |
-| Modern CA trust store | Nothing — system roots rot; the keg-only `ca-certificates` formula helps CLI tools only | `curl-ca-bundle` port — CLI-only, wired by hand | N/A (uses system trust) | **`aslice ca-update`: signed, generation-managed bundle + opt-in System-keychain import, recorded and reversible to the certificate — plus `--crypto` (modern TLS stack for userland) and `--apple-certs` (Apple's own roots, pinned slice) (§12.10)** |
-| System file modification | Cask `installer script:` / pkg scripts — arbitrary code, often as root, no backup, no rollback | Manual installs, untracked | Not the model | **Declared `[system-patch]`: original backed up, profile-symlink replacement, generation-integrated rollback to the byte, consent- and trust-gated (§12.11)** |
-| Repo integrity | git + partial attestations | rsync + signatures | Signed cache | **TUF + signed slices + transparency log** |
-| sudo in steady state | Some paths | `sudo port` | Daemon mode | **None** |
-| Startup / solve speed | Ruby, seconds-scale | Moderate | Slow eval | **<10 ms / <50 ms** |
+- TUF (The Update Framework) specification — theupdateframework.io
+- minisign — jedisct1/minisign
+- Starlark language spec — bazel.build/rules/language
+- Nix/OS store and generation model — nixos.org
+- x86-64 microarchitecture levels — glibc hwcaps, RFC x86-64-psABI
+- Homebrew architecture and history — docs.brew.sh, HOMEBREW-REVIEW.md
+- Apple: Seatbelt sandbox profiles (sandbox-exec), System Integrity Protection, PackageKit payload format, Security framework keychain APIs, launchd.plist(5)
+- REPOSITORIES.md — multi-repository architecture, mirrors, vendor .pkg/.dmg support
+- PACKAGE-FORMAT.md — the slice format specification
+- ORCHARD-POLICY.md — governance and acceptance policy
+- BUILD-INFRA.md — build farm architecture
 
-## Appendix B. References
+---
 
-- Homebrew 7.0.0 release notes (Intel → Tier 3, 10.15 removal, September 2026): https://brew.sh/2026/09/13/homebrew-7.0.0/
-- Homebrew Support Tiers (Intel bottle cessation; removal in/after September 2027): https://docs.brew.sh/Support-Tiers
-- Homebrew discussion: Intel CI disabled, "no bottle available" (September 2026): https://github.com/orgs/Homebrew/discussions/7044
-- Homebrew Monterey deprecation discussion: https://github.com/orgs/Homebrew/discussions/5603
-- Homebrew history/version table: https://en.wikipedia.org/wiki/Homebrew_(package_manager)
-- macOS 27 Golden Gate drops Intel (Apple's platform trajectory): https://eshop.macsales.com/blog/98631-macos-27-golden-gate-drops-intel-support-heres-how-to-find-out-if-youre-affected/
-- The Update Framework: https://theupdateframework.io/
-- x86-64 psABI microarchitecture levels: https://gitlab.com/x86-psABIs/x86-64-ABI
+## Change log
+
+- **v1.8** — Lands the HOMEBREW-REVIEW v0.9/v0.10 items that were specified but missing: §5.2 self-updater component + DB provenance fields (`on_request`, farm-vs-local); §8.4 on-request tracking, stale-dependency GC, and `aslice clean` cache eviction; §12.1 twelve-day-two commands (`self-update`, `outdated`, `reinstall`, pin/unpin, `clean`, `livecheck`, `test`, `create`, `bump-pr`, `exec`, `shellenv`, `store verify`); new §12.12 "Self-update: aslice is package zero" (generation swap, re-exec, health check with automatic rollback, channels/pins, notarization+minisign bootstrap); §12.11 trust paragraph rewritten for the verified-with-grant system-patch path; §13.1 framework allowlist bullet (codifies the `uses_from_macos` rejection) and system-patch grant wording; §13.4 five-check merge gate and Phase 0 hygiene documents (SECURITY.md, CoC, CONTRIBUTING, key runbook); §14 Phase 0 self-update + Phase 1 freshness pipeline. **All 8 remaining open questions resolved (§15):** #1 `/opt/aslice` with `~/.aslice` no-admin fallback (§8.1, §10.3, §2 table); #2 Starlark stays; #3 `abi=false` local builds share store paths with DB-recorded provenance (§5.2); #5 canonical orchard keeps pointer-only formulae, core still requires `redistribute = true`; #6 enable implies binaries for verified repos; #7 `system` capability rides on `verified`; #9 project-local dep directories permanently out of scope; #10 verified repos may serve `[system-patch]` under explicit per-repo grant (`aslice repo allow-system-patch`, §12.11; REPOSITORIES v0.7 §3; ORCHARD-POLICY v0.6 §13). §15 risk row gate wording corrected to match #10.
+- **v1.7** — `[system-patch]` category (§12.11): declared, per-file system replacement with byte-exact backup, symlink replacement, offered rollback, drift detection; §13.1 rewritten from an absolute "never touch system files" to rejected-by-default with the flagged exception; risk rows added (§15); open question #10 added. CA/crypto amendment (§12.10): `ca-update` grows `--crypto` and `--apple-certs`; System-keychain import confirmed as the keychain layer; trust sources configurable with Mozilla default.
+- **v1.6** — Kext/SIP-sensitive software support (§12.7) with declared categories, double consent, aslice-system mediation, and ask-the-user rollback; services/launchd (§12.8) with generation-aware restarts and health checks (open question #8 added, resolved v1.4 of POLICY — wait, #8 resolved in v1.8? No: #8 resolved in v1.4 per §15); runtime version management (§12.9).
+- **v1.5** — Runtime version management design (§12.9): coinstallable runtimes, shim layer, version-bound extension slices.
+- **v1.4** — Service health-check failure behavior resolved (#8): ask the user, default stay-and-inspect, `--rollback-on-service-failure` for unattended.
+- **v1.3** — CA certificate strategy (§12.10): three layers (userland bundle, opt-in System-keychain import, crypto refresh); trust-source configurability.
+- **v1.2** — Coexistence and migration from Homebrew (§13.3); vendor binary packages (§12.5, cross-ref REPOSITORIES.md §6); 32-bit installer payload support on capable OS releases.
+- **v1.1** — CPU flavors (§4.2); hermeticity enforcement (§6.4); ABI tracking and rebuild cascades (§7.5); freshness pipeline (§9.5).
+- **v1.0** — Initial design: mission, principles, architecture, frozen-platform advantage, core components, formulae, solver, store/generations, farm requirements, security/trust, UX.
