@@ -1,7 +1,7 @@
 # aslice Package Format
 
-**Status:** Format draft, v0.4 — September 2026
-**Change log:** v0.2 adds **vendor binary packages** — `type = "binary"`, `[[binary]]` artifacts with per-OS support tags, declarative payload maps, and mandatory signer pinning (§3.11); lock-file `origin` gains `"vendor-direct"` (§7.2). v0.3 opens **32-bit and universal vendor payloads**: `arch` may include `"i386"`, with the 10.14 execution ceiling derived from the artifact itself and enforced at lint and solve time (§3.11). v0.4 adds the **`[system]` declaration** for kernel extensions and SIP-disabled development tools (§3.12; mechanism and warnings in DESIGN §12.7) and replaces the checksummed-plist `[[install.service]]` with the **generated-plist `[service]` table** — the manifest describes the service, aslice writes the launchd plist (§3.8; lifecycle and stop–swap–restart upgrades in DESIGN §12.8)
+**Status:** Format draft, v0.5 — September 2026
+**Change log:** v0.2 adds **vendor binary packages** — `type = "binary"`, `[[binary]]` artifacts with per-OS support tags, declarative payload maps, and mandatory signer pinning (§3.11); lock-file `origin` gains `"vendor-direct"` (§7.2). v0.3 opens **32-bit and universal vendor payloads**: `arch` may include `"i386"`, with the 10.14 execution ceiling derived from the artifact itself and enforced at lint and solve time (§3.11). v0.4 adds the **`[system]` declaration** for kernel extensions and SIP-disabled development tools (§3.12; mechanism and warnings in DESIGN §12.7) and replaces the checksummed-plist `[[install.service]]` with the **generated-plist `[service]` table** — the manifest describes the service, aslice writes the launchd plist (§3.8; lifecycle and stop–swap–restart upgrades in DESIGN §12.8). v0.5 adds the **multi-version runtime declarations**: `[runtime]` marks a runtime formula (shim set, ABI epoch, per-version userbase environment injection, extension scan dir), `[extension]` binds a compiled extension slice to a runtime's ABI epoch, and `[ride]` marks an interpreter-target tool that launches under the currently selected runtime (§3.13; mechanism in DESIGN §12.9)
 **Companion to:** [DESIGN.md](DESIGN.md) — this document is the authoritative specification for §6 (Package Format). Where they disagree, this document wins.
 **Scope:** the `package.toml` definition format, `build.star` build API, dependency and version semantics, transitive resolution, and lock files.
 
@@ -311,6 +311,59 @@ reason           = "Kernel driver for FooAudio USB interfaces"   # mandatory; th
 
 Either a non-empty `kexts` or `sip_off_required = true` (or both) marks a system package; `reason` is mandatory whenever `[system]` is present and is shown verbatim in the install warning — write it like warning text. Kext paths are payload-relative and must live under `Library/Extensions/`; the linter rejects anything else. The mechanism — `aslice-system` elevation, the warning flow, `csrutil` checks, trust gating, rollback — is DESIGN §12.7; acceptance policy is ORCHARD-POLICY §13. `[system]` composes with `type = "binary"` (vendor kexts, §3.11) and with `[service]` (a driver that also runs a daemon, §3.8).
 
+### 3.13 `[runtime]`, `[extension]`, `[ride]` — multi-version runtimes (v0.5)
+
+A **runtime formula** — php, nodejs, ruby, python, and anything else users keep several versions of — declares how aslice multiplexes it (mechanism: DESIGN §12.9):
+
+```toml
+[runtime]
+abi_epoch          = "8.4"      # the extension-ABI epoch of THIS version (see below)
+shims              = ["php", "php-cgi", "php-fpm", "phpize", "php-config", "pecl"]
+extension_scan_dir = "etc/php/{epoch}/conf.d"   # where aslice writes extension loaders
+
+[[runtime.env]]                 # injected by the shim when exec'ing this runtime's tools
+var   = "PHPRC"
+value = "{userbase}/etc"
+
+[[runtime.env]]
+var   = "PHP_INI_SCAN_DIR"
+value = "{userbase}/etc/conf.d:{profile}/{extension_scan_dir}"
+```
+
+- `shims` names the tools that multiplex through the shim layer: aslice installs a shim for each name, and the profile links only the **versioned aliases** (`bin/php8.4`, derived from the stream) — the bare name belongs to the shim layer, and lint rejects any other package attempting to link it.
+- `abi_epoch` is the granularity at which the runtime's *extension* ABI breaks: minor for php/python/ruby (`"8.4"`, `"3.12"`, `"3.3"`), major for nodejs (`"22"`). It is a fact about upstream's ABI policy, restated per version; the linter cross-checks it against `version`, and a patch release never changes it. Extension builds key on it (below), and the shim uses it to name the per-version userbase.
+- `extension_scan_dir` (optional) is the profile-relative directory where aslice writes loader files for `[extension]` packages bound to this runtime; `{epoch}` expands to `abi_epoch`. Required for runtimes whose extensions are activated by config file (php); omitted where the runtime has no such convention.
+- `[[runtime.env]]` declares environment injected by the shim at exec time — the mechanism that binds ecosystem-native installs (pip, gem, npm, pecl, composer global) to the resolved version's writable **userbase**. Template variables: `{userbase}` (`~/.aslice/runtimes/<name>/<epoch>`), `{profile}` (the live profile), `{store}` (the resolved runtime's store path), `{epoch}`, `{extension_scan_dir}`. Values are otherwise literal — no shell expansion, ever. Only `[runtime]` formulae may declare env injection: it exists to redirect ecosystem package managers into per-version territory, not as a general environment mechanism.
+
+An **extension formula** — a compiled module for a runtime — declares its binding:
+
+```toml
+[package]
+name    = "php-redis"
+version = "6.1.0"
+# …
+
+[extension]
+runtime = "php"                         # the runtime formula this builds against
+loader  = "20-redis.ini"                # written into the runtime's extension_scan_dir
+module  = "lib/php/extensions/redis.so" # payload path the generated loader references
+```
+
+- The solver reads `[extension]` as a dependency on the runtime **at a specific ABI epoch**: the stream selected at install time (DESIGN §12.9's session → project → default resolution, or `--runtime php@8.3`). The epoch enters the extension's build identity (DESIGN §7.2 gains a `runtime_epoch` term for these packages), so `php-redis` for php 8.3 and 8.4 are distinct store paths that coexist exactly like flavors — and the farm prebuilds the extension × supported-epoch × flavor matrix.
+- The build compiles against the concrete runtime store path (`ctx.deps["php"]` — headers, `phpize`, `php-config` all present), sandboxed as ever; nothing about §6 changes.
+- aslice generates `loader` into the epoch-keyed scan dir at link time, pointing at `module` inside the extension's own store path — so extension sets are generation-managed: rollback restores runtime and extension set together (DESIGN §12.9). `loader`/`module` are required iff the bound runtime declares `extension_scan_dir`.
+- `depends.runtime` must not repeat the bound runtime — `[extension]` already expresses it, and a duplicate carrying a conflicting constraint is a lint error.
+
+A **riding tool** — an interpreter-target tool with no native linkage against the runtime (composer, yarn, prettier, poetry) — declares:
+
+```toml
+[ride]
+runtime = "php"                         # launched under the currently selected runtime
+entry   = "lib/composer/composer.phar"  # payload path handed to the runtime
+```
+
+The tool's shim performs two-step resolution at exec time: the runtime stream via session → project → default, then `exec <runtime>/bin/php <tool-store>/<entry>`. Whether a tool may ride is a fact about its code, not a preference: lint rejects `[ride]` when the payload's ABI scan shows linkage against runtime libraries (such a tool is an `[extension]`-style binding or a self-contained package). Riders carry no runtime version constraint of their own — following the user's selection is the point.
+
 ---
 
 ## 4. Versioning
@@ -380,7 +433,7 @@ A library consumer records *which provider build it linked against* via the ABI 
 
 Resolution is PubGrub over the full graph (DESIGN §7.5), with these aslice-specific rules:
 
-1. **Single-version-per-profile by default.** A profile links one build of a given name (the store can hold many; the *profile* points at one). Libraries needing side-by-side majors are separate package names: `openssl@3` and (if ever needed) `openssl@4` — an orchard naming convention, not a solver exception.
+1. **Single-version-per-profile by default.** A profile links one build of a given name (the store can hold many; the *profile* points at one). Libraries needing side-by-side majors are separate package names: `openssl@3` and (if ever needed) `openssl@4` — an orchard naming convention, not a solver exception. Multi-version **runtimes** are the designed exception (`[runtime]`, §3.13): the store holds every installed stream, the profile links each stream's versioned aliases (`bin/php8.4`), and the bare name (`php`) multiplexes through the shim layer instead of a profile link (DESIGN §12.9).
 2. **Version unification.** If `a` needs `dep ^1.2` and `b` needs `dep ^1.4`, the profile gets one `dep` satisfying both (`^1.4`), or the solve fails with the conflict rendered as a derivation tree (`--explain`).
 3. **Build deps float.** Two packages may build against different `nasm` versions without conflict; only runtime identity is unified in a profile.
 4. **Cycles** are rejected at lint time for runtime edges; build-time cycles (rare, e.g., bootstrap compilers) require an explicit `bootstrap = true` edge annotation with a pinned seed slice.
@@ -598,4 +651,7 @@ The full form is in §3.11. The shape to remember: **two `[[binary]]` artifacts*
 | `[build]` | `system`, `args`, `skip_tests` |
 | `[[binary]]` (type=binary) | `url` `sha256` `format` `min_os` `max_os` `arch` (`x86_64` default; `i386` / universal allowed, i386 ⇒ `max_os ≤ 10.14`, derived) `signer` `notarized` `redistribute` + `[[binary.payload]]` (`from`, `to`) |
 | `[system]` | `kexts` `sip_off_required` `reason` |
+| `[runtime]` | `abi_epoch` `shims` `extension_scan_dir` + `[[runtime.env]]` (`var`, `value`) |
+| `[extension]` | `runtime` `loader` `module` |
+| `[ride]` | `runtime` `entry` |
 | lock file | `lock_version`, `generated_by`, `index_snapshot`, `[machine]`, `[[package]]` (incl. `origin` = `slice` \| `local-build` \| `vendor-direct`) |
