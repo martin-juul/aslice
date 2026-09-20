@@ -1,7 +1,7 @@
 # aslice Repositories — Sources, Trust Levels, and Signing Keys
 
-- **Status:** Design draft, v0.4 — September 2026 (v0.2: cross-repository overlap resolution with remembered decisions — §10; the state database's role — §11. v0.3: `history` rows carry the operation ID that correlates with the operation log — DESIGN §12.5. v0.4: the `system` capability — serving `[system]` packages (kexts, SIP-off development tools) is gated by trust level; third-party repositories never may — §3; mechanism in DESIGN v1.2 §12.7)
-- **Companion to:** [DESIGN.md](DESIGN.md) v1.2 (§8 store/state, §9.6 repository system, §10.2 signatures, §12.5 logging, §12.6 doctor, §12.7 system software), [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md) v0.3, [BUILD-INFRA.md](BUILD-INFRA.md) v0.1 (§9 result→repository), [ORCHARD-POLICY.md](ORCHARD-POLICY.md) v0.2
+- **Status:** Design draft, v0.5 — September 2026 (v0.2: cross-repository overlap resolution with remembered decisions — §10; the state database's role — §11. v0.3: `history` rows carry the operation ID that correlates with the operation log — DESIGN §12.5. v0.4: the `system` capability — serving `[system]` packages (kexts, SIP-off development tools) is gated by trust level; third-party repositories never may — §3; mechanism in DESIGN v1.2 §12.7. v0.5: the same capability gates **root-domain services** (`domain = "system"` in PACKAGE-FORMAT v0.4's `[service]` table); user-domain agents stay ungated — §3; mechanism in DESIGN v1.3 §12.8)
+- **Companion to:** [DESIGN.md](DESIGN.md) v1.3 (§8 store/state, §9.6 repository system, §10.2 signatures, §12.5 logging, §12.6 doctor, §12.7 system software, §12.8 services), [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md) v0.4, [BUILD-INFRA.md](BUILD-INFRA.md) v0.1 (§9 result→repository), [ORCHARD-POLICY.md](ORCHARD-POLICY.md) v0.3
 - **Scope:** the shipped official source list, adding third-party repositories, the inherent trust-level model, and the dual signature scheme (Ed25519 canonical, OpenPGP supported).
 
 ---
@@ -69,7 +69,7 @@ Rules that hold across all levels:
 - **Level can only be lowered by the user, raised only by the defined path.** There is no `--trust-just-this-once` flag that bypasses a level's capability set; bypass flags would make the levels decorative.
 - **Namespaces are mandatory** for non-official repos (DESIGN §9.6): explicit addressing `audiolab:convolver`, resolution order core > extended > verified > third-party in add order.
 - **Vendor-binary packages (`type = "binary"`) follow the same levels.** A `third-party` repo may serve payload-only vendor slices; the signer-pinning rules of DESIGN §12.4 apply unchanged, and the Apple code-signing identity pin is *additional* to the repo signature, never a substitute.
-- **System packages (`[system]`, DESIGN §12.7) are a per-level capability, not a package property.** `official` and `verified` repositories may serve them; `third-party` repositories never may — no warning flow makes a stranger's kernel extension acceptable; `local` repositories may, on the user's own machine, with the same warnings. The solver refuses a `[system]` package from a non-capable repository with a message naming the level and the remedy, not a generic error.
+- **System packages (`[system]`, DESIGN §12.7) are a per-level capability, not a package property.** `official` and `verified` repositories may serve them; `third-party` repositories never may — no warning flow makes a stranger's kernel extension acceptable; `local` repositories may, on the user's own machine, with the same warnings. The solver refuses a `[system]` package from a non-capable repository with a message naming the level and the remedy, not a generic error. The same capability gates **root-domain services** (`domain = "system"` in the `[service]` table, DESIGN §12.8): running code as root is the privilege that matters, so a third-party repository may declare user agents but never root daemons — refused at solve time with the same named-level message.
 - **Demotion events are loud.** If a `verified` repo's countersignature is revoked or its key rotates without a re-vouch, the client freezes that repo at its last good snapshot, refuses updates, and prints the reason on every operation that touches it until the user re-pins or removes it.
 
 ## 4. Adding a third-party repository
@@ -161,6 +161,7 @@ aslice repo list --sources-diff           # what the last source-list TUF update
 | `verified` repo's countersignature revoked | Repo frozen at last good snapshot, updates refused, loud banner until re-pin/remove |
 | `local` repo contains binary targets | Binaries refused (source-build formulas only) unless the local repo is signed and the machine's user pinned its key |
 | A `third-party` repo serves a `[system]` package | Solve-time refusal naming the trust level and the remedy; the `system` capability is never granted to third-party (§3) |
+| A `third-party` repo declares `domain = "system"` in `[service]` | Solve-time refusal naming the trust level and the remedy; user-domain agents from third-party repos remain allowed (§3) |
 | Two third-party repos claim the same namespace | Second `add` is refused; namespaces are unique per client |
 | GPG key uses SHA-1 self-signatures / legacy packets outside the supported subset | Clear rejection message naming the unsupported feature; the answer is a modern key, not a looser verifier |
 | User deletes `sources.toml` | Bootstrap-embedded defaults regenerate it at next run (user edits are in `sources.toml.d/`-style drop-ins, so deletion loses nothing) |
@@ -171,6 +172,7 @@ aslice repo list --sources-diff           # what the last source-list TUF update
 - **DESIGN §10.2:** the signature section now reads as dual-scheme — Ed25519/minisign canonical for official infrastructure, OpenPGP as a built-in first-class scheme for third-party repositories and formula-declared upstream verification.
 - **README:** vocabulary gains nothing (a repository is still a repository); the security bullet now mentions trust levels and dual signature schemes.
 - **§3 trust levels (v0.4):** the capability sets gain `system` — serving declared system-software packages (kexts, SIP-off development tools; DESIGN §12.7). official and verified may; third-party never may; local may on the user's own machine.
+- **§3 trust levels (v0.5):** the `system` capability now also covers root-domain services (DESIGN v1.3 §12.8, PACKAGE-FORMAT v0.4 `[service]` with `domain = "system"`): user agents are ungated; root daemons require official, verified, or local.
 - **Open question #6 (new, for reviewers):** should `verified` repos be installable-binary-capable immediately at enable time, or should enabling one additionally require a per-repo `--accept-binaries` step? Current answer: enable implies binaries (the countersignature is the vetting); the extra click was judged ceremony without security content. Review wanted.
 
 ---

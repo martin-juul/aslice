@@ -1,7 +1,7 @@
 # aslice Orchard Policy — The Maintainer Rulebook
 
-- **Status:** Policy v0.2 — September 2026 (v0.2: kernel extensions and SIP-disabled development software move from hard rejection to the restricted, warned, trust-gated system-software category — §2, new §13; mechanism in DESIGN v1.2 §12.7)
-- **Companion to:** [DESIGN.md](DESIGN.md) v1.2, [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md) v0.3, [BUILD-INFRA.md](BUILD-INFRA.md) v0.1, [REPOSITORIES.md](REPOSITORIES.md) v0.4, [HOMEBREW-REVIEW.md](HOMEBREW-REVIEW.md) v0.4
+- **Status:** Policy v0.3 — September 2026 (v0.2: kernel extensions and SIP-disabled development software move from hard rejection to the restricted, warned, trust-gated system-software category — §2, new §13; mechanism in DESIGN v1.2 §12.7. v0.3: service-package acceptance — root-domain daemons meet §13's bar, user agents meet the normal tier bar — §13; mechanism in DESIGN v1.3 §12.8)
+- **Companion to:** [DESIGN.md](DESIGN.md) v1.3, [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md) v0.4, [BUILD-INFRA.md](BUILD-INFRA.md) v0.1, [REPOSITORIES.md](REPOSITORIES.md) v0.5, [HOMEBREW-REVIEW.md](HOMEBREW-REVIEW.md) v0.5
 - **Audience:** orchard maintainers, reviewers, and contributors
 - **Commissioned by:** HOMEBREW-REVIEW.md §8 — one file where Homebrew scattered dozens of docs pages and tribal knowledge
 
@@ -11,7 +11,7 @@
 
 This file is the single rulebook for what may live in aslice's orchards, how packages are born, maintained, deprecated, and buried, and what bars a pull request must clear to merge. Homebrew accumulated these rules across dozens of documentation pages, review folklore, and maintainer memory; aslice writes them down while the project is young enough to fit them in one file.
 
-**Precedence.** The specifications define *mechanism* — what fields exist, what the solver does, what CI can check. This file defines *policy* — what maintainers accept, require, and refuse. Where the two appear to conflict, the conflict is a bug: file an issue against whichever document is wrong. Schema fields referenced here that are not yet in PACKAGE-FORMAT.md v0.3 (`[deprecation]`, `[livecheck]`, `link`/`link_reason`, `notes`, `ctx.replace`, `[system]`) are the pending amendments listed in HOMEBREW-REVIEW.md §8 plus the DESIGN v1.2 system-software declaration; they are normative policy from this version onward and land in PACKAGE-FORMAT v0.4.
+**Precedence.** The specifications define *mechanism* — what fields exist, what the solver does, what CI can check. This file defines *policy* — what maintainers accept, require, and refuse. Where the two appear to conflict, the conflict is a bug: file an issue against whichever document is wrong. Schema fields referenced here that are not yet in PACKAGE-FORMAT.md v0.4 (`[deprecation]`, `[livecheck]`, `link`/`link_reason`, `notes`, `ctx.replace`) are the pending amendments listed in HOMEBREW-REVIEW.md §8; they are normative policy from this version onward and land in PACKAGE-FORMAT v0.5. (`[system]` landed in PACKAGE-FORMAT v0.4 §3.12, alongside the `[service]` table of §3.8.)
 
 **Charter — not amendable by this document.** Three founding decisions outrank any policy edit (DESIGN §2.2 N7, §9.4, §1):
 
@@ -185,6 +185,7 @@ The mechanism is DESIGN §12.7; this section is what maintainers may accept.
 - **The warnings are not decoration.** A PR that weakens, shortens, or routinizes the DESIGN §12.7 warning flow is rejected on sight; the day users click through kext warnings without reading them is the day this category becomes the project's worst decision. Review the warning text in every system-package PR as carefully as the payload.
 - **Vendor-binary kexts** combine §12 and this section: payload-only extraction (vendor scripts still never execute), signer pinning, and `[system]` installation of the extracted kext by `aslice-system`.
 - **Uninstall and rollback must be demonstrated in review:** the kext unloads and is removed, `kextcache` refreshes, and rolling back a generation restores the previous state. A system package that can't cleanly leave is not accepted.
+- **Root-domain services meet the same bar.** A `[service]` with `domain = "system"` (DESIGN §12.8) runs code as root, so its acceptance follows this section: a named maintainer, justification for why a user agent is insufficient, manual validation on a real machine, and demonstrated start–stop–uninstall via `aslice service`. User-domain agents need no special review beyond the tier bar — they are unprivileged processes the user can stop, and the orchard prefers them: a PR that declares `domain = "system"` where a user agent would do is sent back with "run it as the user."
 
 ---
 
@@ -241,4 +242,4 @@ The mechanism is DESIGN §12.7; this section is what maintainers may accept.
 
 ---
 
-*History: v0.1 (September 2026) — initial rulebook, commissioned by HOMEBREW-REVIEW.md §8: consolidates the acceptance bar (DESIGN §13.1), variant discipline (§13.2), the deprecation lifecycle, patch documentation, merge gates, and release cadence proposed across the review into one maintainer-facing document. v0.2 (September 2026) — the SIP/kext hard rejection becomes the restricted system-software category (§2, new §13), following DESIGN v1.2: declared requirements, per-operation elevation, mandatory warnings, trust-gated serving, demonstrated rollback; patching system files stays rejected forever.*
+*History: v0.1 (September 2026) — initial rulebook, commissioned by HOMEBREW-REVIEW.md §8: consolidates the acceptance bar (DESIGN §13.1), variant discipline (§13.2), the deprecation lifecycle, patch documentation, merge gates, and release cadence proposed across the review into one maintainer-facing document. v0.2 (September 2026) — the SIP/kext hard rejection becomes the restricted system-software category (§2, new §13), following DESIGN v1.2: declared requirements, per-operation elevation, mandatory warnings, trust-gated serving, demonstrated rollback; patching system files stays rejected forever. v0.3 (September 2026) — service-package acceptance, following DESIGN v1.3 §12.8: root-domain daemons (`domain = "system"`) meet §13's bar; user agents meet the normal tier bar and are preferred.*

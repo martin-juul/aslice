@@ -1,7 +1,7 @@
 # aslice vs Homebrew — Capability Review and Gap Analysis
 
-- **Status:** Review v0.4 — September 2026 (v0.2: vendor-binary packages supersede the cask deferral — §3.4, §5, §9 rows updated; v0.3: 32-bit/universal vendor payloads on 10.11–10.14; v0.4: companions — DESIGN v1.2 opens the declared `[system]` category for kexts and SIP-off dev tools, ORCHARD-POLICY.md delivered; the installer-script rejection stands unchanged)
-- **Companion to:** [DESIGN.md](DESIGN.md) v1.2, [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md) v0.3, [BUILD-INFRA.md](BUILD-INFRA.md) v0.1, [REPOSITORIES.md](REPOSITORIES.md) v0.4, [ORCHARD-POLICY.md](ORCHARD-POLICY.md) v0.2
+- **Status:** Review v0.5 — September 2026 (v0.2: vendor-binary packages supersede the cask deferral — §3.4, §5, §9 rows updated; v0.3: 32-bit/universal vendor payloads on 10.11–10.14; v0.4: companions — DESIGN v1.2 opens the declared `[system]` category for kexts and SIP-off dev tools, ORCHARD-POLICY.md delivered; the installer-script rejection stands unchanged; v0.5: §4.4 Services UX **closed** — DESIGN v1.3 §12.8 delivers the launchd-native `aslice service` CLI and adds stop–swap–restart upgrade orchestration beyond the proposal; PACKAGE-FORMAT v0.4 replaces `[[install.service]]` with the generated `[service]` table)
+- **Companion to:** [DESIGN.md](DESIGN.md) v1.3, [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md) v0.4, [BUILD-INFRA.md](BUILD-INFRA.md) v0.1, [REPOSITORIES.md](REPOSITORIES.md) v0.5, [ORCHARD-POLICY.md](ORCHARD-POLICY.md) v0.3
 - **Method:** aslice's two specifications compared feature-by-feature against Homebrew's living feature set as of Homebrew 7.0.0 (September 2026). Apple-Silicon-specific work and Homebrew's Intel deprecation/removal machinery are excluded per review scope; everything else Homebrew does today is fair game.
 - **Sources:** Homebrew release notes 4.6.0 → 7.0.0, docs.brew.sh (Security and Supply Chain, Tap Trust), Homebrew/brew issue #17019 (attestation verification). Links in §10.
 
@@ -18,7 +18,7 @@ The gaps found are almost all **operational machinery, not core design**. Homebr
 1. **Upstream release tracking and bump automation** — a `livecheck`/autobump equivalent. The OS platform is frozen; upstreams are not. Package churn is the *entire* ongoing workload, and Homebrew runs it with heavy automation (livecheck DSL, scheduled autobump, `bump-formula-pr`, supply-side cooldowns). Without an equivalent planned from day one, the orchard rots on a schedule. **(P0)**
 2. **Self-distribution** — no specified mechanism for aslice to update *itself*, and no signing/notarization story for the bootstrap binary users are asked to `curl | sh` into existence. **(P0)**
 3. **Package lifecycle states** — Homebrew's `deprecate!`/`disable!` with dates and reasons, pinning, `outdated`. aslice has a boolean and a lock file where a lifecycle is needed. **(P1)**
-4. **Services UX** — `[install.service]` declares plists, but there is no `aslice services` command and no per-service environment override story (Homebrew 7.0 added persistent per-service env overrides). **(P1)**
+4. ~~**Services UX**~~ — **delivered (DESIGN v1.3 §12.8, PACKAGE-FORMAT v0.4):** `[service]` declares the service and aslice generates the plist, `aslice service` is the launchd-native CLI, env overrides live outside the immutable store, and upgrades stop–swap–restart running services as part of the transaction (§4.4).
 5. **The "keg-only" decision** — no policy for packages that shadow macOS-provided tools/libraries (curl, sqlite3, openssl). Homebrew's answer is ugly but load-bearing; aslice needs its principled equivalent. **(P1)**
 
 None of these require rearchitecting anything. All of them are cheaper to spec now than to retrofit.
@@ -44,7 +44,7 @@ None of these require rearchitecting anything. All of them are cheaper to spec n
 | Index updates | Internal JSON API (no git taps needed by default) — fast | TUF snapshot diffs — comparable, signed harder | Parity-to-ahead |
 | **Freshness pipeline** | **livecheck DSL, autobump, bump-formula-pr, cooldowns** | **Nothing** | **Behind — biggest gap** |
 | **Corpus** | ~15 years of formulae encoding macOS quirk knowledge | 0 today; 300 core planned | **Behind — the real moat** |
-| Services UX | `brew services` mature; per-service env overrides (7.0) | Declarative plist, no CLI | Behind |
+| Services UX | `brew services` mature; per-service env overrides (7.0) | Declarative `[service]` + launchd-native CLI + stop–swap–restart upgrades (§4.4 — delivered, DESIGN v1.3) | **Ahead** on upgrade safety |
 | Environments | `brew bundle` (Brewfile), `brew exec` (npx-like, 6.0) | Lock files (exact reproduction); no wishlist or ephemeral-exec | Partial |
 | GUI | BrewUI native app (7.0) | None (CLI-first audience) | Behind, acceptably |
 
@@ -182,12 +182,14 @@ Semantics: **active → deprecated** (installs warn, `audit`/`info` surface it) 
 
 **Homebrew:** `brew services start|stop|restart|run|list|info|cleanup`; 7.0 added persistent per-service env overrides from `$HOMEBREW_USER_CONFIG_HOME/services/<formula>.env`, surviving upgrades.
 
-**aslice today:** `[install.service]` declares the plist; aslice applies it at link time. No CLI, no override story.
+**aslice today (pre-v1.3):** `[install.service]` declared the plist; aslice applied it at link time. No CLI, no override story.
 
 **Proposal:**
 - `aslice services list|start|stop|restart|run|info <pkg>` — thin, correct layer over launchd, reading the declarative plist. `run` (foreground, no registration) is worth copying — it's how people debug.
 - **Override file:** `$XDG_CONFIG_HOME/aslice/services/<pkg>.env` (or `~/.aslice/etc/services/`), applied by the *launcher* at `start` time — never by editing the store's plist (store immutability §8.1 makes this forced, which is good: Homebrew mutates generated files, aslice can't, so the design lands in the right place automatically).
 - Services are per-profile: `aslice services list` shows which profile each service belongs to.
+
+**Status: delivered (DESIGN v1.3 §12.8, PACKAGE-FORMAT v0.4).** The design went further than this proposal: `[service]` is generated-plist — the formula ships no plist file at all — and the upgrade transaction itself quiesces affected services (stop, atomic swap, restart, health-checked), so a running nginx is never updated out from under itself. Root-domain daemons go through `aslice-system` and the repository `system` capability; user agents stay unprivileged.
 
 ### 4.5 P1 — The keg-only decision (shadowing system software)
 
@@ -312,7 +314,7 @@ Semantics: **active → deprecated** (installs warn, `audit`/`info` surface it) 
 | Self-update as package zero + bootstrap signing/notarization | P0 | **Phase 0** (it must ship in the first usable binary; retrofitting update mechanisms is how projects die) |
 | livecheck schema + `aslice livecheck` + scheduled autobump + bump-pr | P0 | **Phase 1**, alongside the 300-package core seeding — the tooling *is* how the core gets maintained |
 | Lifecycle states (`[deprecation]`, pin, outdated, reinstall) | P1 | Phase 1 (cheap; the DB schema wants `on_request` and pins from birth) |
-| Services CLI + per-service env overrides | P1 | Phase 1 (the declarative plist already exists; this is the thin CLI layer) |
+| Services CLI + per-service env overrides | P1 | Phase 1 — design complete (DESIGN v1.3 §12.8, PACKAGE-FORMAT v0.4 `[service]`) |
 | `link = false` policy + lint rules + system-framework allowlist | P1 | Phase 1 (policy must exist *before* the core orchard accumulates violations) |
 | Orchard CI merge gates incl. ABI gate + dependent-rebuild cascade | P1 | Phase 1→2 (gate first, ABI-diff automation as the scanner matures) |
 | autoremove correctness (`on_request`), `aslice clean` cache policy | P1 | Phase 1 |

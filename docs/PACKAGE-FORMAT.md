@@ -1,7 +1,7 @@
 # aslice Package Format
 
-**Status:** Format draft, v0.3 — September 2026
-**Change log:** v0.2 adds **vendor binary packages** — `type = "binary"`, `[[binary]]` artifacts with per-OS support tags, declarative payload maps, and mandatory signer pinning (§3.11); lock-file `origin` gains `"vendor-direct"` (§7.2). v0.3 opens **32-bit and universal vendor payloads**: `arch` may include `"i386"`, with the 10.14 execution ceiling derived from the artifact itself and enforced at lint and solve time (§3.11)
+**Status:** Format draft, v0.4 — September 2026
+**Change log:** v0.2 adds **vendor binary packages** — `type = "binary"`, `[[binary]]` artifacts with per-OS support tags, declarative payload maps, and mandatory signer pinning (§3.11); lock-file `origin` gains `"vendor-direct"` (§7.2). v0.3 opens **32-bit and universal vendor payloads**: `arch` may include `"i386"`, with the 10.14 execution ceiling derived from the artifact itself and enforced at lint and solve time (§3.11). v0.4 adds the **`[system]` declaration** for kernel extensions and SIP-disabled development tools (§3.12; mechanism and warnings in DESIGN §12.7) and replaces the checksummed-plist `[[install.service]]` with the **generated-plist `[service]` table** — the manifest describes the service, aslice writes the launchd plist (§3.8; lifecycle and stop–swap–restart upgrades in DESIGN §12.8)
 **Companion to:** [DESIGN.md](DESIGN.md) — this document is the authoritative specification for §6 (Package Format). Where they disagree, this document wins.
 **Scope:** the `package.toml` definition format, `build.star` build API, dependency and version semantics, transitive resolution, and lock files.
 
@@ -32,7 +32,7 @@ orchards/core/ffmpeg/
  ├── build.star        # build logic (required iff [build].system = "custom")
  ├── tests.star        # smoke tests (required for core orchard)
  ├── patches/          # patch files, each checksummed in package.toml
- └── files/            # auxiliary files: launchd plists, default configs
+ └── files/            # auxiliary files: default configs, data files
 ```
 
 Directory name **must** equal `package.name`. One directory = one package lineage (all versions of `ffmpeg` live in one formula; the orchard git history is the version history).
@@ -195,15 +195,22 @@ links_priority = 50                     # collision priority in profiles; defaul
 path = "var/lib/postgresql"             # created at install, survives uninstall unless --purge
 mode = "0750"
 
-[[install.service]]                     # launchd, declaratively
-label    = "org.aslice.postgresql"
-plist    = "files/org.aslice.postgresql.plist"   # checksummed file from files/
-scope    = "user"                       # user | system (system requires multi-user mode, DESIGN §10.4)
+[service]                               # launchd, described — aslice generates the plist (v0.4)
+run         = ["bin/postgres", "-D", "var/lib/postgresql"]  # argv, profile-relative; never a shell string
+domain      = "user"                    # user (default) | system — root daemon, trust-gated (DESIGN §12.8)
+keep_alive  = true                      # bool, or a table of launchd KeepAlive conditions
+run_at_load = true
+working_dir = "var"                     # prefix-relative
+environment = { LANG = "en_US.UTF-8" }  # static env; per-user overrides in $XDG_CONFIG_HOME/aslice/services/<pkg>.env
+log_dir     = "var/log/postgresql"      # StandardOutPath / StandardErrorPath
+user_name   = "_postgres"               # optional; system domain only
 
 [install.completions]
 bash = "share/bash-completion/ffmpeg"
 zsh  = "share/zsh/site-functions/_ffmpeg"
 ```
+
+aslice **generates** the launchd plist from `[service]` at enable time — the formula ships no plist file and no code. `ProgramArguments[0]` resolves through the profile (`/opt/aslice/profiles/default/bin/…`), never a store path, so upgrades and rollbacks need no plist edit; the label is `org.aslice.<name>`. `domain = "system"` jobs run as root, are installed and removed by `aslice-system` with per-operation consent (DESIGN §10.4), and may only be served by repositories holding the `system` capability (REPOSITORIES §3) — user agents are unprivileged and ungated. A package declares at most one `[service]`; software with multiple daemons is split into multiple packages. The full lifecycle — `aslice service list/status/start/stop/restart/run`, and the stop–swap–restart upgrade transaction — is DESIGN §12.8.
 
 ### 3.9 `[audit]` — vulnerability matching and lifecycle
 
@@ -292,6 +299,17 @@ Rules:
 - **Flavor doesn't apply.** `build_id` excludes `flavor` and `toolchain_id`; one slice serves every flavor. The ABI scan still runs on the payload at pack time — dependents link against vendor dylibs through the same ABI contract as farm-built libraries (DESIGN §7.3).
 - **OS tags are verified, not trusted.** At pack/repack time the declared `min_os`/`max_os` are checked against the bundle's `LSMinimumSystemVersion`, Mach-O minimum-version load commands, and the pkg Distribution's `allowed-os-versions` where present; disagreement is a lint error.
 - **Version normalization still applies** (§4) — vendor spellings like `3.2 Update 1` normalize per the rules, with the verbatim string preserved in `upstream_version`.
+
+### 3.12 `[system]` — kernel extensions and SIP-disabled tools (v0.4)
+
+```toml
+[system]
+kexts            = ["Library/Extensions/FooAudio.kext"]  # payload-relative paths to install
+sip_off_required = false     # true: the software cannot function while SIP is enabled
+reason           = "Kernel driver for FooAudio USB interfaces"   # mandatory; this IS the warning text
+```
+
+Either a non-empty `kexts` or `sip_off_required = true` (or both) marks a system package; `reason` is mandatory whenever `[system]` is present and is shown verbatim in the install warning — write it like warning text. Kext paths are payload-relative and must live under `Library/Extensions/`; the linter rejects anything else. The mechanism — `aslice-system` elevation, the warning flow, `csrutil` checks, trust gating, rollback — is DESIGN §12.7; acceptance policy is ORCHARD-POLICY §13. `[system]` composes with `type = "binary"` (vendor kexts, §3.11) and with `[service]` (a driver that also runs a daemon, §3.8).
 
 ---
 
@@ -574,8 +592,10 @@ The full form is in §3.11. The shape to remember: **two `[[binary]]` artifacts*
 | `[variants.*]` | `default` `abi` `description` `conflicts` `requires` `min_os` `flavors` |
 | `[depends]` | `runtime` `build` `test` — entries: `name [constraint] [+variant] [?condition]` |
 | interop | `provides` (map), `conflicts`, `replaces`, `aliases` |
-| `[install]` | `links_priority`, `[[install.data_dir]]`, `[[install.service]]`, `[install.completions]`, `notes` |
+| `[install]` | `links_priority`, `[[install.data_dir]]`, `[install.completions]`, `notes` |
+| `[service]` | `run` `domain` `keep_alive` `run_at_load` `working_dir` `environment` `log_dir` `user_name` |
 | `[audit]` | `cpe`, `eol`, `eol_date` |
 | `[build]` | `system`, `args`, `skip_tests` |
 | `[[binary]]` (type=binary) | `url` `sha256` `format` `min_os` `max_os` `arch` (`x86_64` default; `i386` / universal allowed, i386 ⇒ `max_os ≤ 10.14`, derived) `signer` `notarized` `redistribute` + `[[binary.payload]]` (`from`, `to`) |
+| `[system]` | `kexts` `sip_off_required` `reason` |
 | lock file | `lock_version`, `generated_by`, `index_snapshot`, `[machine]`, `[[package]]` (incl. `origin` = `slice` \| `local-build` \| `vendor-direct`) |
