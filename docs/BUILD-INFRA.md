@@ -1,7 +1,7 @@
 # aslice Build Infrastructure — One Harness, Two Scales
 
-- **Status:** Design draft, v0.5 — September 2026 (v0.2: companion references refreshed — DESIGN v1.7, PACKAGE-FORMAT v0.6, HOMEBREW-REVIEW v0.9; all internal cross-references re-verified against current section numbering, no content change. v0.3: companion references refreshed — DESIGN v1.8, PACKAGE-FORMAT v0.6, HOMEBREW-REVIEW v0.10; no content change. v0.4: the malware-signature gate — every staged slice is scanned against current definitions before signing-host promotion (new §7.5, §7.1 gate 5, §11 failure row, §12 Phase 1); the scanner is the orchard's own `clamav` core package (ORCHARD-POLICY v0.7 §2); client-side scanning stays the user's decision. v0.5: the gate's genesis protocol — the first `clamav` slice is scanned by a throwaway hand-built scanner with a `bootstrap` receipt, the other four quarantine gates carry full weight, go-live is a transparency-log event, and the packaged scanner sweeps the pre-gate backlog including its own origin slice (§7.5))
-- **Companion to:** [DESIGN.md](DESIGN.md) v1.8 (§4.3 toolchain, §5.1 process layout, §9 distribution, §10 security), [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md) v0.6 (build phases §6), [HOMEBREW-REVIEW.md](HOMEBREW-REVIEW.md) v0.10 (§4.7 merge gates, §6 risks)
+- **Status:** Design draft, v0.6 — September 2026 (v0.2: companion references refreshed — DESIGN v1.7, PACKAGE-FORMAT v0.6, HOMEBREW-REVIEW v0.9; all internal cross-references re-verified against current section numbering, no content change. v0.3: companion references refreshed — DESIGN v1.8, PACKAGE-FORMAT v0.6, HOMEBREW-REVIEW v0.10; no content change. v0.4: the malware-signature gate — every staged slice is scanned against current definitions before signing-host promotion (new §7.5, §7.1 gate 5, §11 failure row, §12 Phase 1); the scanner is the orchard's own `clamav` core package (ORCHARD-POLICY v0.7 §2); client-side scanning stays the user's decision. v0.5: the gate's genesis protocol — the first `clamav` slice is scanned by a throwaway hand-built scanner with a `bootstrap` receipt, the other four quarantine gates carry full weight, go-live is a transparency-log event, and the packaged scanner sweeps the pre-gate backlog including its own origin slice (§7.5). v0.6: the genesis audit — every fetched source is vendored into the repository tree (§3, §9), VM golden-image genesis and the installer-app archive are specified (§8), and the from-nothing sequence lands as GENESIS.md (§12); companions DESIGN v1.9 / REVIEW v0.11)
+- **Companion to:** [DESIGN.md](DESIGN.md) v1.9 (§4.3 toolchain, §5.1 process layout, §9 distribution, §10 security), [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md) v0.6 (build phases §6), [HOMEBREW-REVIEW.md](HOMEBREW-REVIEW.md) v0.11 (§4.7 merge gates, §6 risks)
 - **Scope:** the build harness (`aslice build`), farm orchestration (`aslice farm`), scheduling, worker trust, the VM test matrix, and the pipeline from build result to published repository.
 
 ---
@@ -71,7 +71,7 @@ PACKAGE-FORMAT §6.1 defines the phases; here is the infrastructure detail:
 
 | Phase | Environment | Notes |
 |---|---|---|
-| fetch | network: declared hosts only; writes: job cache | resumable, hash-verified, mirror-aware |
+| fetch | network: declared hosts only; writes: job cache | resumable, hash-verified, mirror-aware; **the farm vendors every artifact it fetches** into the tree's `blobs/sha256/` (§9) — the archive of last resort for dead upstreams |
 | verify | no network | source hashes + PGP where declared |
 | unpack / patch | no network; build dir only | the fuzzed extractor helper (xar/cpio/tar) |
 | configure / build | no network; toolchain + dep slices mounted **read-only into an isolated buildroot** | builds never see the user's live store or profile |
@@ -202,6 +202,7 @@ Every staged slice is scanned against current ClamAV definitions before the sign
 Builds happen on the newest build host against the oldest SDK (DESIGN §4.3); **tests run on the real OS.** The minis host the seven-guest matrix (10.11 → 12) under VMware Fusion or Parallels:
 
 - Golden image per release, snapshotted clean. A test run is: revert → boot → mount a read-only shared folder containing the staged slice → `aslice farm agent --vm-guest` executes `tests.star` → structured results out → revert. No guest has network beyond the coordinator wire; no state survives between runs.
+- **Image genesis is documented and archived.** Per release: the Apple installer app → `createinstallmedia` (or the virtualization app's new-VM flow) → minimal install → golden snapshot. The installer apps are archived with their sha256 in the farm's installer manifest — Apple can and does pull old installers, and the matrix must be re-creatable from nothing but the archive. Installers, images, and manifest are in the never-lose set (GENESIS.md §3).
 - The platform being frozen means images are built once and cached forever — the matrix's marginal cost is electricity, not maintenance. (This is precisely the property GitHub's runner retirement destroys for Homebrew and preserves for aslice.)
 - `v1` tests additionally run on real Core 2 Duo hardware when one is attached — VMs emulate the OS, not silicon errata.
 
@@ -216,6 +217,8 @@ agent → staging (untrusted)
 ```
 
 The index snapshot is published atomically with its dependent rebuilds (§6.1). Retention per REVIEW §6: snapshots ≤ 1 year kept whole, monthly forever — which is what makes historical installs (REVIEW §4.14) true.
+
+The same publish deposits **every source artifact the build fetched** into the tree's `blobs/sha256/` area — the vendored-source archive (DESIGN §9.6). Upstreams delete, reshuffle, and re-roll tarballs constantly; an orchard that vendors its sources never notices, and a from-nothing re-standup never starves (GENESIS.md §2).
 
 ## 10. Farm-side metrics (the only kind there are)
 
@@ -236,7 +239,7 @@ No user telemetry exists anywhere in this system (DESIGN §2.2 N7). What the far
 
 ## 12. Roadmap mapping
 
-- **Phase 0:** harness skeleton — `aslice build` local mode with the full sandboxed pipeline; toolchain-as-slice; job/result schemas; `farm plan`.
+- **Phase 0:** harness skeleton — `aslice build` local mode with the full sandboxed pipeline; toolchain-as-slice; job/result schemas; `farm plan`. The from-nothing sequence (GENESIS.md §1) is executed end-to-end and written down as it runs — the project must be able to stand up from nothing, repeatedly, before it has users.
 - **Phase 1:** coordinator + agents + leases; Actions adapter; VM matrix bring-up; PR gates for the core orchard; staging → quarantine → signing-host pipeline including the §7.5 malware-signature gate, bootstrapped per its genesis protocol, with the `clamav` core package the gate runs on.
 - **Phase 2:** ABI-gate dependent-rebuild cascades; vendor-repackaging lane; backfill lane with §9.4 priorities; public dashboard.
 - **Phase 3:** two-builder cross-checks for core; community evidence builders (`enroll`, `--reproduce-only`); transparency log; reproducibility class upgrades as a standing program.
