@@ -1,7 +1,7 @@
 # aslice Setup — Declarative Whole-Machine Setup with `setup.toml`
 
-- **Status:** Design draft, v0.1 — September 2026
-- **Companion to:** DESIGN.md v1.11 §12.13 (architecture and rationale), MANUAL.md §10 (user guide), aslice-apply(1) (command reference). This document is the schema and semantics specification.
+- **Status:** Design draft, v0.2 — September 2026 (v0.2: editorial pass — prose revised for directness; no schema or semantic changes)
+- **Companion to:** DESIGN.md v1.12 §12.13 (architecture and rationale), MANUAL.md §10 (user guide), aslice-apply(1) (command reference). This document is the schema and semantics specification.
 
 ## 1. The scenario
 
@@ -25,7 +25,7 @@ aslice export --defaults com.apple.dock,com.apple.finder > setup.toml
 
 ## 2. The file
 
-`setup.toml` is TOML — the same data language as `package.toml`, `aslice.toml`, `sources.toml`, and the lock file. It is **data, never code**: there are no hooks, no script blocks, no evaluated expressions. (Homebrew's Brewfile is a Ruby DSL executed by `brew bundle`; anything Ruby can do, a Brewfile can do. aslice's setup file deliberately cannot execute anything — §7.)
+`setup.toml` is TOML — the same data language as `package.toml`, `aslice.toml`, `sources.toml`, and the lock file. It is **data, never code**: there are no hooks, no script blocks, no evaluated expressions. (Homebrew's Brewfile is a Ruby DSL executed by `brew bundle`; anything Ruby can do, a Brewfile can do. aslice's setup file cannot execute anything — §7.)
 
 ### 2.1 Schema overview
 
@@ -68,17 +68,17 @@ FXPreferredViewStyle = "Nlsv"
 # …
 ```
 
-Unknown top-level keys are a hard error, not a warning — a file written for a newer aslice must fail loudly on an older one, never half-apply. The `schema` key versions the whole document; incompatible future changes bump it.
+Unknown top-level keys are a hard error: a file written for a newer aslice must fail on an older one, never half-apply. The `schema` key versions the whole document; incompatible future changes bump it.
 
 ### 2.2 `packages`
 
-The wishlist: name, optional `@version` constraint, optional `+variant`/`-variant` flags, optional `repo:` namespace — exactly the syntax `aslice install` accepts. This is the *constraint* layer, not the *state* layer: the file says "ensure ffmpeg 7", and the solver picks the exact build against the current index snapshot. For exact reproduction of a machine bit-for-bit, that is what the **lock file** is for (`aslice lock export`; PACKAGE-FORMAT §7) — the difference is `package.json` vs. `package-lock.json`, and both flow through the same verb (§3.1).
+The wishlist: name, optional `@version` constraint, optional `+variant`/`-variant` flags, optional `repo:` namespace — the same syntax `aslice install` accepts. This is the *constraint* layer, not the *state* layer: the file says "ensure ffmpeg 7", and the solver picks the exact build against the current index snapshot. For exact reproduction of a machine bit-for-bit, that is what the **lock file** is for (`aslice lock export`; PACKAGE-FORMAT §7) — the difference is `package.json` vs. `package-lock.json`, and both flow through the same verb (§3.1).
 
 Packages are resolved binary-first with flavor auto-detection, per the ordinary rules. A package that exists only as a local build is a plan error unless its repository is reachable — the file is a *reproducible* wishlist, so "rely on something only my old disk had" is refused by construction.
 
 ### 2.3 `runtimes`
 
-`[runtimes.default]` maps runtime names to streams and is applied exactly as `aslice default <runtime> <stream>` (DESIGN §12.9): recorded in the state DB, consumed by the shim layer. Project pins (`aslice.toml` in a project tree) and session selections (`aslice use`) are deliberately absent — project pins belong to projects (commit `aslice.toml` there), and session state is by definition not machine setup.
+`[runtimes.default]` maps runtime names to streams and is applied as `aslice default <runtime> <stream>` (DESIGN §12.9): recorded in the state DB, consumed by the shim layer. Project pins (`aslice.toml` in a project tree) and session selections (`aslice use`) are deliberately absent — project pins belong to projects (commit `aslice.toml` there), and session state is by definition not machine setup.
 
 ### 2.4 `services`
 
@@ -102,7 +102,7 @@ macOS preference keys, written with `defaults(1)` semantics:
 - **`[defaults.user."<domain>"]`** — the current user's domains (`~/Library/Preferences`). No privileges required, no consent gate beyond applying the file at all.
 - **`[defaults.system."<domain>"]`** — system-wide domains (`/Library/Preferences`). Written by `aslice-system` as root, consent-gated (§3.4), recorded, reversible (§3.5).
 
-Value types in schema 1: **string, integer, float, boolean, and arrays of those**. Deferred to a later schema version, deliberately: `dict` values, `data` (raw plist blobs), `date`, and by-host (`-currentHost`) domains. The deferred types are exactly the ones that share poorly — opaque blobs and machine-bound settings have no place in a file meant to travel between machines (§6).
+Value types in schema 1: **string, integer, float, boolean, and arrays of those**. Deferred to a later schema version, deliberately: `dict` values, `data` (raw plist blobs), `date`, and by-host (`-currentHost`) domains. The deferred types are the ones that share poorly — opaque blobs and machine-bound settings have no place in a file meant to travel between machines (§6).
 
 Preferences are read by applications at launch, not continuously. After applying, aslice prints the affected applications worth restarting for a small set of well-known system domains (`com.apple.dock` → Dock, `com.apple.finder` → Finder, `com.apple.controlcenter`/`com.apple.systemuiserver` → SystemUIServer, etc.) and a generic "log out or restart the affected apps" note otherwise. It never kills processes on its own.
 
@@ -112,7 +112,7 @@ Writing a default for an application that is not installed yet is fine and commo
 
 `[aslice]` carries ordinary configuration keys (MANUAL §13) — `flavor`, `mirrors`, `gc.*`, and friends — applied as `aslice config set` would. It exists so a machine prepared for an older Mac (`flavor = "v1"`) or an offline mirror fleet can say so in the same file.
 
-`[[repos]]` declares additional repositories. Applying one is exactly `aslice repo add <url>`: TOFU key pinning with its interactive confirmation (REPOSITORIES.md §7). A file **cannot elevate trust**: `verified` status comes only from the normal grant flow, never from a document. A declared repo whose URL is already configured under another name — or whose name is configured with another URL — is a conflict error, not a silent override.
+`[[repos]]` declares additional repositories. Applying one is `aslice repo add <url>`: TOFU key pinning with its interactive confirmation (REPOSITORIES.md §7). A file **cannot elevate trust**: `verified` status comes only from the normal grant flow, never from a document. A declared repo whose URL is already configured under another name — or whose name is configured with another URL — is a conflict error, not a silent override.
 
 ## 3. `aslice apply`
 
@@ -126,7 +126,7 @@ Writing a default for an application that is not installed yet is fine and commo
 | `aslice.lock` | exact state | replay the locked profile (PACKAGE-FORMAT §7) |
 | `setup.toml` | constraints + preferences | plan (resolve wishlist, diff preferences), show, confirm, execute |
 
-The file kind is detected, never guessed: JSON is a plan, `lock_version = N` is a lock, `schema = N` with setup tables is a setup file; anything else is a loud error naming what was found. With no argument, `aslice apply` reads `./setup.toml` if it exists. The argument may also be an `https://` URL — fetched through the ordinary TLS stack (DESIGN §12.10), hash-printed, and planned before any consent is asked, so the user always reviews the *resolved* plan rather than trusting the URL blindly.
+The file kind is detected, never guessed: JSON is a plan, `lock_version = N` is a lock, `schema = N` with setup tables is a setup file; anything else is an error naming what was found. With no argument, `aslice apply` reads `./setup.toml` if it exists. The argument may also be an `https://` URL — fetched through the ordinary TLS stack (DESIGN §12.10), hash-printed, and planned before any consent is asked, so the user always reviews the *resolved* plan rather than trusting the URL blindly.
 
 ### 3.2 The plan and the order of operations
 
@@ -160,19 +160,19 @@ Two parts of a setup file write to OS territory — otherwise forbidden by N5 (D
 - `[defaults.system.*]` — root writes to `/Library/Preferences`.
 - `[shell]` enrollment — appending to `/etc/shells`.
 
-Interactively, each gated step is prompted with exactly what will be written and why. Non-interactively — scripts, `--json`, pipes, the recovery-terminal scenario — gated steps are **refused** (exit 2) unless `--accept-system-changes` is passed, the same flag and the same contract as system packages and system patches (DESIGN §12.7, §12.11). `--dry-run` shows the complete plan including gated steps, changing nothing.
+Interactively, each gated step is prompted with what will be written and why. Non-interactively — scripts, `--json`, pipes, the recovery-terminal scenario — gated steps are **refused** (exit 2) unless `--accept-system-changes` is passed, the same flag and the same contract as system packages and system patches (DESIGN §12.7, §12.11). `--dry-run` shows the complete plan including gated steps, changing nothing.
 
 A file fetched from someone else is therefore safe to *plan* unconditionally: consent is per-gated-step, informed, and never bundled into "trust this file".
 
 ### 3.5 Recorded inverses: preferences ride generations
 
-Package changes are already generation-managed (DESIGN §8.3). Setup extends the same discipline to everything else it touches: before each preference write, shell change, or `/etc/shells` enrollment, the **pre-change value** (or the key's absence) is recorded in the state DB against the new generation. `aslice rollback` then restores not just the profile symlinks and the lock, but the preferences and login shell as they were — one operation, whole machine, exactly as §12.11's backup discipline makes patch rollback automatic.
+Package changes are already generation-managed (DESIGN §8.3). Setup extends the same discipline to everything else it touches: before each preference write, shell change, or `/etc/shells` enrollment, the **pre-change value** (or the key's absence) is recorded in the state DB against the new generation. `aslice rollback` then restores not just the profile symlinks and the lock, but the preferences and login shell as they were — one operation, whole machine — the same way §12.11's backup discipline makes patch rollback automatic.
 
 The record is also what powers `--prune` (§3.3) and `aslice history`: every setup-applied change is attributable — which file, which apply, which generation.
 
 ### 3.6 Failure handling
 
-A failed step aborts the plan at that point; completed earlier steps stand (they are each coherent: packages are one generation, preferences are individually atomic), and the report says precisely where the plan stopped. Re-running the same file resumes by convergence — already-done steps are no-ops. A failed *package* resolution aborts before anything is installed; a failed service start surfaces §12.8's rollback prompt; a refused consent gate skips the gated remainder with exit 2.
+A failed step aborts the plan at that point; completed earlier steps stand (they are each coherent: packages are one generation, preferences are individually atomic), and the report says where the plan stopped. Re-running the same file resumes by convergence — already-done steps are no-ops. A failed *package* resolution aborts before anything is installed; a failed service start surfaces §12.8's rollback prompt; a refused consent gate skips the gated remainder with exit 2.
 
 ## 4. `aslice export`
 
@@ -191,7 +191,7 @@ The output is deterministic (sorted, stable formatting) so two exports diff clea
 
 ### 4.2 `--defaults`: on demand, never automatic
 
-Packages, selections, services, and shell are *knowable*: aslice manages them, so it can enumerate them. Preferences are not. There is no baseline to diff a user's `~/Library/Preferences` against — tens of thousands of keys per machine, written by every app ever launched, most of them meaningless to reproduce. An export that "captures your current setup" by dumping domains would be noise dressed as fidelity, and worse: application preference domains can contain account tokens, server addresses, recent-file lists, and internal identifiers. Auto-capturing them would leak exactly the things a shared file must not contain.
+Packages, selections, services, and shell are *knowable*: aslice manages them, so it can enumerate them. Preferences are not. There is no baseline to diff a user's `~/Library/Preferences` against — tens of thousands of keys per machine, written by every app ever launched, most of them meaningless to reproduce. An export that "captures your current setup" by dumping domains would be mostly noise, and worse: application preference domains can contain account tokens, server addresses, recent-file lists, and internal identifiers. Auto-capturing them would leak what a shared file must not contain.
 
 So `export` captures preferences only for domains the user names:
 
@@ -204,7 +204,7 @@ Named domains are read with `defaults read` and emitted as `[defaults.user."…"
 
 ### 4.3 What it cannot capture
 
-Stated plainly, because this is where "export my setup" usually overpromises:
+This is where "export my setup" usually overpromises:
 
 - Application state outside `defaults` (`~/Library/Application Support`, containers, keychains) is invisible to this feature.
 - Dotfiles are out of scope entirely (§8).
@@ -232,7 +232,7 @@ The file is the artifact: small, diffable, reviewable, data-only. A team can kee
 Two rules keep shared files healthy:
 
 1. **No secrets, ever.** There is nothing in the schema that legitimately holds a credential; export's defaults capture warns at generation time (§4.2). Treat any token-shaped value in a shared file as a leak.
-2. **Machine-specific values stay out.** Hostnames, hardware serials, per-display layouts: if a value names *this* machine rather than *how I like machines*, it does not belong in the file. The deferred by-host domains (§2.6) exist as a category partly so this line stays bright.
+2. **Machine-specific values stay out.** Hostnames, hardware serials, per-display layouts: if a value names *this* machine rather than *how I like machines*, it does not belong in the file. The deferred by-host domains (§2.6) exist as a category partly so the boundary stays clear.
 
 ## 7. Security and trust
 
@@ -241,7 +241,7 @@ Two rules keep shared files healthy:
 - **Consent is per-gate, informed, and replayable.** The plan shows every write before any happens; `--dry-run` is always available; gated steps name their target files.
 - **Attribution.** Every applied change is recorded with the file's hash and the generation that carried it (§3.5), so "what did that file do to me" is always answerable with `aslice history`.
 
-## 8. What this deliberately is not
+## 8. What this is not
 
 - **Not a dotfiles manager.** `~/.zshrc`, `~/.gitconfig`, editor configs: chezmoi, GNU Stow, and plain git already solve this well. aslice manages the machine's software and its `defaults` surface; your home directory's files are yours. (The shell *integration* line — `eval "$(aslice init zsh)"` — still goes in your dotfiles by your hand.)
 - **Not a system imager.** FileVault, SIP state, firmware, disk layout, user accounts, and System Settings panes without `defaults` domains are untouched. Recovery-then-apply assumes a working macOS user account already exists.
