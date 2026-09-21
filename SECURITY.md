@@ -21,7 +21,7 @@ Do **not** file security reports as public GitHub issues.
 
 ## What to expect
 
-This is a spare-time project, not a corporation, so these are honest commitments rather than SLAs:
+This is a spare-time project, not a corporation, so these are commitments, not SLAs:
 
 - **Acknowledgement within a few days.** If a week passes with no reply, resend — the mail was lost, not ignored.
 - **A straight answer.** Either "confirmed, here is the fix plan and a rough timeline" or "we don't think this is exploitable, and here is why." You are welcome to argue; technical arguments win here, whoever makes them.
@@ -61,3 +61,7 @@ Pre-1.0: **the latest release only**. Self-update is a first-class, rollback-com
 ## If a key is compromised
 
 That is our incident, not your report — but it is handled in the open, per the practiced runbook: **[docs/KEY-RUNBOOK.md](docs/KEY-RUNBOOK.md)**. The short version: root is 3-of-5 threshold with YubiKey custody, online keys are short-lived, and rotation is drilled, not hoped for.
+
+---
+
+*History: September 2026 — editorial pass: prose revised for directness; no policy changes.*
