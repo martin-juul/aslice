@@ -1,7 +1,7 @@
 # aslice Setup — Declarative Whole-Machine Setup with `setup.toml`
 
-- **Status:** Design draft, v0.4 — September 2026 (v0.2: editorial pass — prose revised for directness; no schema or semantic changes. v0.3: second editorial pass — sentence-level revision for readability; no schema or semantic changes. v0.4: prose rewrite throughout — chapters reworded in the project's technical-writing voice; no schema or semantic changes)
-- **Companion to:** DESIGN.md v1.12 §12.13 (architecture and rationale), MANUAL.md §10 (user guide), aslice-apply(1) (command reference). This document is the schema and semantics specification.
+- **Status:** Design draft, v0.5 — September 2026 (v0.2: editorial pass — prose revised for directness; no schema or semantic changes. v0.3: second editorial pass — sentence-level revision for readability; no schema or semantic changes. v0.4: prose rewrite throughout — chapters reworded in the project's technical-writing voice; no schema or semantic changes. v0.5: review pass — the trust-stickiness reference retargeted to REPOSITORIES.md §4; companion refreshed to DESIGN v1.14; no schema or semantic changes)
+- **Companion to:** DESIGN.md v1.14 §12.13 (architecture and rationale), MANUAL.md §10 (user guide), aslice-apply(1) (command reference). This document is the schema and semantics specification.
 
 ## 1. The scenario
 
@@ -151,7 +151,7 @@ Apply is convergent. Run the same file twice and the second run is a no-op ("0 c
 `aslice apply --prune` opts into the other direction of convergence: anything **recorded as file-managed** (§3.5) but no longer declared gets retracted — packages uninstalled (only if they are still leaves that nothing else needs), preference keys restored to their recorded pre-apply values, services disabled. Two hard limits keep this safe:
 
 - Prune touches only file-managed records. Packages you installed by hand and keys you set by hand are invisible to it.
-- Repositories are never pruned. Trust decisions are sticky by policy (REPOSITORIES.md §10), and removing a repo remains `aslice repo remove` — a deliberate act, not a side effect of editing a file.
+- Repositories are never pruned. Trust decisions are sticky by policy (REPOSITORIES.md §4), and removing a repo remains `aslice repo remove` — a deliberate act, not a side effect of editing a file.
 
 ### 3.4 Consent gates
 
