@@ -19,7 +19,7 @@ Packages describe their services declaratively in the manifest; aslice generates
 
 **status** reports launchd's truth — pid, state, last exit status, keepalive — not a pidfile. **run** executes the service in the foreground, unregistered, for debugging.
 
-User-domain services run as the invoking user, need no sudo, and any repository may declare them. `domain = "system"` root daemons are bootstrapped by the privileged `aslice-system` helper with per-operation consent and unsuppressible logging, and only official or verified repositories may serve them.
+User-domain services run as the invoking user, need no sudo, and any repository may declare them. `domain = "system"` root daemons are bootstrapped by the privileged `aslice-system` helper with per-operation consent and unsuppressible logging, and only official, verified, or local repositories (REPOSITORIES.md §3) may serve them.
 
 # UPGRADES
 
