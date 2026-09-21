@@ -4,6 +4,8 @@ This document states how to report a vulnerability **in aslice itself** — the 
 
 aslice is security infrastructure for machines that no longer receive security updates from anyone else; reports are taken accordingly seriously.
 
+*Project terms, acronyms, and the Homebrew translation table: [docs/NOMENCLATURE.md](docs/NOMENCLATURE.md).*
+
 ## Reporting a vulnerability
 
 **Email: martin@juul.xyz** — subject line prefix `[aslice security]`.
@@ -64,4 +66,4 @@ That is our incident, not your report — but it is handled in the open, per the
 
 ---
 
-*History: September 2026 — editorial pass: prose revised for directness; no policy changes. September 2026 — prose rewrite throughout: the policy reworded in the project's technical-writing voice; no policy changes.*
+*History: September 2026 — editorial pass: prose revised for directness; no policy changes. September 2026 — prose rewrite throughout: the policy reworded in the project's technical-writing voice; no policy changes. September 2026 — NOMENCLATURE.md vocabulary pointer added; no policy changes.*
