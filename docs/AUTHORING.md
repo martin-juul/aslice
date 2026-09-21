@@ -2,7 +2,7 @@
 
 **How to write, test, and ship aslice packages.**
 
-- **Status:** v0.1 — September 2026
+- **Status:** v0.2 — September 2026 (v0.2: review corrections — §8's payload map uses the real `[[binary.payload]]` array-of-tables shape, the invented `ctx.dep_lib_dirs` helper becomes the documented `ctx.deps` path, the service/root-daemon gate includes local repositories (§9), and the unsigned-vendor extended-only exception is recorded (§8, appendix))
 - **Audience:** package authors — people writing formulae for the core or extended orchards, packaging vendor binaries, or running their own orchard. Read [MANUAL.md](MANUAL.md) chapters 1–4 first; this guide assumes the vocabulary (slice, orchard, flavor, generation) and the user's view of the system.
 - **Companions:** [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md) is the authoritative schema — when this guide and the schema disagree, the schema is right. [ORCHARD-POLICY.md](ORCHARD-POLICY.md) is the policy this guide summarizes. [BUILD-INFRA.md](BUILD-INFRA.md) is the farm your PR builds on. [MANUAL.md](MANUAL.md) is what your users read.
 
@@ -167,7 +167,7 @@ def configure(ctx):
 
 # A library that must not build its own copy of a dependency
 def configure(ctx):
-    ctx.env.set("PKG_CONFIG_PATH", ctx.dep_lib_dirs("openssl"))
+    ctx.env.set("PKG_CONFIG_PATH", ctx.deps["openssl"] + "/lib/pkgconfig")
 ```
 
 The pattern to internalize: **dependencies come from aslice, and you say so explicitly.** Vendored copies, downloads at build time, and "the system probably has it" are the three ways formulae rot; the sandbox rejects all three, so lean into it.
@@ -256,15 +256,21 @@ redistribute = true
 signer      = "Developer ID Application: Example Audio (TEAMID)"
 notarized   = true
 
-[binary.payload]
-"Payload/Convolver.app" = "apps/Convolver.app"
-"Payload/bin/cvcli"     = "bin/cvcli"
+[[binary.payload]]
+from = "Payload/Convolver.app"
+to   = "apps/Convolver.app"
+
+[[binary.payload]]
+from = "Payload/bin/cvcli"
+to   = "bin/cvcli"
 ```
+
+(Payload maps are an array of tables — `from`/`to` pairs — per PACKAGE-FORMAT §3.11. When this guide and the schema disagree, the schema is right.)
 
 The rules, and the reasons for them:
 
 - **Only the payload installs.** `preinstall`/`postinstall` scripts are never executed — full stop. If the software genuinely requires its scripts, it doesn't belong in aslice; package what can be installed payload-only. Kexts and drivers are *not* excluded by this rule — they go through the declared `[system]` category (§9), where aslice's own helper performs the privileged steps from your declarations.
-- **The signer is pinned.** If the vendor silently re-signs with a different identity, installs hard-fail. That's a classic supply-chain attack against binary distribution, and the pin is the whole defense — don't leave it out because "the vendor is trustworthy." The pin exists for the day they aren't, or their signing infrastructure is.
+- **The signer is pinned.** If the vendor silently re-signs with a different identity, installs hard-fail. That's a classic supply-chain attack against binary distribution, and the pin is the whole defense — don't leave it out because "the vendor is trustworthy." The pin exists for the day they aren't, or their signing infrastructure is. The single exception is genuinely unsigned vendor software: permitted in the extended orchard only, with `signer` omitted and a loud announcement at every install (PACKAGE-FORMAT §3.11, ORCHARD-POLICY §12).
 - **OS tags are honest or the formula doesn't merge.** Each `[[binary]]` entry declares its real `min_os`/`max_os`; the pack-time verifier checks your claims against the bundle's own metadata, and lint fails on mismatches. A vendor's "legacy 10.11 build" and "current 10.14+ build" coexist as two entries in one formula.
 - **32-bit and universal payloads are welcome where the OS runs them** — 10.11 through 10.14. The verifier inspects every Mach-O slice in the payload; an i386-containing artifact must declare `max_os = "10.14"`. Universal payloads install whole — never thin them with `lipo`, because thinning invalidates the vendor's code signature, and the signature outranks the disk savings.
 - **`redistribute` decides who fetches.** `true` — the farm repackages into a normal slice and hosts it (best user experience; requires the license to allow redistribution). `false` — the formula is a pointer, and each client fetches the vendor URL itself, hash- and signer-pinned. Core tier requires `true`: core never depends on a vendor's server being up.
@@ -275,7 +281,7 @@ The rules, and the reasons for them:
 
 Four declaration blocks for packages that don't fit the ordinary mold. Each exists because the alternative was users doing the same thing by hand with no provenance and no rollback; each is gated accordingly.
 
-**`[service]`** — the package runs a daemon. Declare argv, domain, keepalive, working directory, log paths; aslice generates and manages the launchd job. `domain = "user"` services are ungated; `domain = "system"` root daemons are gated to official and verified repositories, because root execution is the privilege that matters.
+**`[service]`** — the package runs a daemon. Declare argv, domain, keepalive, working directory, log paths; aslice generates and manages the launchd job. `domain = "user"` services are ungated; `domain = "system"` root daemons are gated to official, verified, and local repositories, because root execution is the privilege that matters.
 
 **`[system]`** — kernel extensions and SIP-disabled development tools. Declare the kexts, whether SIP must be off, and a mandatory `reason` string that is shown verbatim in every warning to every installer. Official, verified, and local repositories may serve these; third-party never. Write the `reason` like the user will read it aloud before deciding — they will.
 
@@ -331,5 +337,5 @@ Before opening the PR:
 - [ ] Every patch has a header: what, why, upstream status
 - [ ] `[livecheck]` present and tested (`aslice livecheck`)
 - [ ] Dependencies are aslice packages — no `/usr/lib`, no vendored copies, no build-time downloads
-- [ ] Vendor binaries: signer pinned, OS tags verified, `redistribute` set by license, not convenience
+- [ ] Vendor binaries: signer pinned (or `signer` omitted — extended only, per ORCHARD-POLICY §12), OS tags verified, `redistribute` set by license, not convenience
 - [ ] The description would make sense to someone who has never heard of the software
