@@ -1,12 +1,12 @@
 # aslice Build Infrastructure — One Harness, Two Scales
 
-- **Status:** Design draft, v0.6 — September 2026 (v0.2: companion references refreshed — DESIGN v1.7, PACKAGE-FORMAT v0.6, HOMEBREW-REVIEW v0.9; all internal cross-references re-verified against current section numbering, no content change. v0.3: companion references refreshed — DESIGN v1.8, PACKAGE-FORMAT v0.6, HOMEBREW-REVIEW v0.10; no content change. v0.4: the malware-signature gate — every staged slice is scanned against current definitions before signing-host promotion (new §7.5, §7.1 gate 5, §11 failure row, §12 Phase 1); the scanner is the orchard's own `clamav` core package (ORCHARD-POLICY v0.7 §2); client-side scanning stays the user's decision. v0.5: the gate's genesis protocol — the first `clamav` slice is scanned by a throwaway hand-built scanner with a `bootstrap` receipt, the other four quarantine gates carry full weight, go-live is a transparency-log event, and the packaged scanner sweeps the pre-gate backlog including its own origin slice (§7.5). v0.6: the genesis audit — every fetched source is vendored into the repository tree (§3, §9), VM golden-image genesis and the installer-app archive are specified (§8), and the from-nothing sequence lands as GENESIS.md (§12); companions DESIGN v1.9 / REVIEW v0.11)
-- **Companion to:** [DESIGN.md](DESIGN.md) v1.9 (§4.3 toolchain, §5.1 process layout, §9 distribution, §10 security), [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md) v0.6 (build phases §6), [HOMEBREW-REVIEW.md](HOMEBREW-REVIEW.md) v0.11 (§4.7 merge gates, §6 risks)
+- **Status:** Design draft, v0.7 — September 2026 (v0.2: companion references refreshed — DESIGN v1.7, PACKAGE-FORMAT v0.6, HOMEBREW-REVIEW v0.9; all internal cross-references re-verified against current section numbering, no content change. v0.3: companion references refreshed — DESIGN v1.8, PACKAGE-FORMAT v0.6, HOMEBREW-REVIEW v0.10; no content change. v0.4: the malware-signature gate — every staged slice is scanned against current definitions before signing-host promotion (new §7.5, §7.1 gate 5, §11 failure row, §12 Phase 1); the scanner is the orchard's own `clamav` core package (ORCHARD-POLICY v0.7 §2); client-side scanning stays the user's decision. v0.5: the gate's genesis protocol — the first `clamav` slice is scanned by a throwaway hand-built scanner with a `bootstrap` receipt, the other four quarantine gates carry full weight, go-live is a transparency-log event, and the packaged scanner sweeps the pre-gate backlog including its own origin slice (§7.5). v0.6: the genesis audit — every fetched source is vendored into the repository tree (§3, §9), VM golden-image genesis and the installer-app archive are specified (§8), and the from-nothing sequence lands as GENESIS.md (§12); companions DESIGN v1.9 / REVIEW v0.11. v0.7: editorial pass — prose revised for directness; no content change)
+- **Companion to:** [DESIGN.md](DESIGN.md) v1.12 (§4.3 toolchain, §5.1 process layout, §9 distribution, §10 security), [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md) v0.9 (build phases §6), [HOMEBREW-REVIEW.md](HOMEBREW-REVIEW.md) v0.13 (§4.7 merge gates, §6 risks)
 - **Scope:** the build harness (`aslice build`), farm orchestration (`aslice farm`), scheduling, worker trust, the VM test matrix, and the pipeline from build result to published repository.
 
 ---
 
-## 1. The kicker, stated as a design axiom
+## 1. The founding axiom
 
 **The farm is not a special system.** Every build the project ever runs executes through the exact same machinery a user gets when they type `aslice build`. There is no CI-only code path, no farm-secret tooling, no build that cannot be reproduced by a contributor on a 2012 Mac mini in a closet. This axiom buys:
 
@@ -47,7 +47,7 @@ A **job** is the complete, self-contained description of one build:
 }
 ```
 
-No job references ambient machine state: the toolchain is a pinned slice, dependencies are pinned slices, sources are pinned hashes, the formula is a pinned git commit. A job manifest's hash **is** the expected result identity — two honest builders executing the same job must produce the same slice digest (modulo the formula's recorded reproducibility class, §7.3). This property is what makes farm verification and `aslice build --reproduce` the same code.
+No job references ambient machine state: the toolchain is a pinned slice, dependencies are pinned slices, sources are pinned hashes, the formula is a pinned git commit. A job manifest's hash **is** the expected result identity — two builders executing the same job must produce the same slice digest (modulo the formula's recorded reproducibility class, §7.3). This property is what makes farm verification and `aslice build --reproduce` the same code.
 
 ### 2.2 Results are the job's mirror
 
@@ -83,7 +83,7 @@ PACKAGE-FORMAT §6.1 defines the phases; here is the infrastructure detail:
 
 Determinism is the harness's job, not the formula's: `LC_ALL=C`, `TZ=UTC`, pinned `SOURCE_DATE_EPOCH`, prefix-mapping, scrubbed environment (DESIGN §9.5). The toolchain slice mounts at its canonical store path so `-ffile-prefix-map` output matches farm and user builds byte-for-byte.
 
-For `type = "binary"` formulae the same command runs the compressed pipeline (fetch → verify hash+signer → extract payload → abi-scan → pack). This is how the farm produces `redistribute = true` slices — and how a user can dry-run a vendor repack locally to audit exactly what a vendor slice would contain before installing it.
+For `type = "binary"` formulae the same command runs the compressed pipeline (fetch → verify hash+signer → extract payload → abi-scan → pack). This is how the farm produces `redistribute = true` slices — and how a user can dry-run a vendor repack locally to audit what a vendor slice would contain before installing it.
 
 ## 4. User mode: `aslice build`
 
@@ -162,7 +162,7 @@ For builds of third-party-orchard PRs — hostile-adjacent input by definition �
 
 ### 7.3 Reproducibility classes
 
-Not every package is bit-reproducible yet, and honesty beats aspiration. Each formula's provenance carries a class:
+Not every package is bit-reproducible yet, and the record must say so. Each formula's provenance carries a class:
 
 | Class | Meaning | Signing-host enforcement |
 |---|---|---|
@@ -181,7 +181,7 @@ aslice farm agent --reproduce-only                     # verification jobs only,
 
 Community agents receive `repro_of` jobs: rebuild a published job manifest and compare digests. Their results are **pure evidence** — agreement raises a slice's reproducibility confidence (feeding the `reproducible: true` badge of DESIGN §9.5); disagreement files an automatic investigation event. Community agents are never asked for, and never given, the ability to produce a served artifact.
 
-The project gets a distributed rebuild network on exactly the machines the software targets; the volunteer gets dashboard credit and a warm Mac mini. This is "the farm must be runnable on a user's machine" answered at the trust level: **identical code, zero authority.**
+The project gets a distributed rebuild network on the very machines the software targets; the volunteer gets dashboard credit and a warm Mac mini. This is "the farm must be runnable on a user's machine" answered at the trust level: **identical code, zero authority.**
 
 ### 7.5 The malware-signature gate
 
@@ -193,9 +193,9 @@ Every staged slice is scanned against current ClamAV definitions before the sign
   1. The first `clamav` build is scanned by a **throwaway scanner**: a maintainer hand-builds ClamAV from the same hash-pinned, upstream-GPG-verified source inside a quarantined VM, scans the staged slice, and the verdict is recorded with `scanner = "bootstrap-handbuilt"` in its provenance. The orchard package never scans itself into existence.
   2. The other four §7.1 gates carry full weight for that first build — pinned and signature-verified sources, the sandboxed pipeline, two-maintainer infrastructure-package review (ORCHARD-POLICY §2), and a hard `bitwise` reproducibility requirement with an independent evidence rebuild (§7.4) before promotion. The scanner gate is one layer of five; genesis is when the other four stand up straight.
   3. The gate's go-live — the first snapshot in which the packaged scanner runs the quarantine worker — is recorded in the transparency log. Slices published before it are marked `pre-gate` on the dashboard: annotated, never rewritten.
-  4. **Backlog sweep.** The packaged scanner then re-scans every pre-gate slice with current definitions, *including its own origin slice*; scan coverage climbs publicly to 100%. The origin slice's `bootstrap` receipt stays as-is — history with a receipt beats history revised.
-- **Honest scope.** Signature scanning catches *known* malware. It does nothing against a novel supply-chain backdoor — that threat belongs to provenance, reproducibility classes, and review, and this gate changes nothing there. What it replaces on this platform is XProtect, which Apple no longer updates for 10.11–12: the farm maintains the definitions the built-in layer stopped receiving.
-- **Client-side: nothing.** No scan-on-install machinery, no daemon, no definitions slice pushed at users. Anyone who wants on-demand scanning installs the same `clamav` package the farm runs and drives it themselves — the charter's no-telemetry, no-background-anything rules apply to security features exactly as to everything else.
+  4. **Backlog sweep.** The packaged scanner then re-scans every pre-gate slice with current definitions, *including its own origin slice*; scan coverage climbs publicly to 100%. The origin slice's `bootstrap` receipt stays as-is.
+- **Scope.** Signature scanning catches *known* malware. It does nothing against a novel supply-chain backdoor — that threat belongs to provenance, reproducibility classes, and review, and this gate changes nothing there. What it replaces on this platform is XProtect, which Apple no longer updates for 10.11–12: the farm maintains the definitions the built-in layer stopped receiving.
+- **Client-side: nothing.** No scan-on-install machinery, no daemon, no definitions slice pushed at users. Anyone who wants on-demand scanning installs the same `clamav` package the farm runs and drives it themselves — the charter's no-telemetry, no-background-anything rules apply to security features as to everything else.
 
 ## 8. The VM test matrix
 
@@ -203,7 +203,7 @@ Builds happen on the newest build host against the oldest SDK (DESIGN §4.3); **
 
 - Golden image per release, snapshotted clean. A test run is: revert → boot → mount a read-only shared folder containing the staged slice → `aslice farm agent --vm-guest` executes `tests.star` → structured results out → revert. No guest has network beyond the coordinator wire; no state survives between runs.
 - **Image genesis is documented and archived.** Per release: the Apple installer app → `createinstallmedia` (or the virtualization app's new-VM flow) → minimal install → golden snapshot. The installer apps are archived with their sha256 in the farm's installer manifest — Apple can and does pull old installers, and the matrix must be re-creatable from nothing but the archive. Installers, images, and manifest are in the never-lose set (GENESIS.md §3).
-- The platform being frozen means images are built once and cached forever — the matrix's marginal cost is electricity, not maintenance. (This is precisely the property GitHub's runner retirement destroys for Homebrew and preserves for aslice.)
+- The platform being frozen means images are built once and cached forever — the matrix's marginal cost is electricity, not maintenance. (This is the property GitHub's runner retirement destroys for Homebrew and preserves for aslice.)
 - `v1` tests additionally run on real Core 2 Duo hardware when one is attached — VMs emulate the OS, not silicon errata.
 
 ## 9. From result to repository
