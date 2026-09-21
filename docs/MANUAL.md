@@ -2,7 +2,7 @@
 
 **The user guide for aslice — a package manager for Intel macOS.**
 
-- **Status:** v0.2 — September 2026 (v0.2: review corrections — §2.3 covers bash alongside zsh, §2.5 lists the three outside-prefix exceptions to a clean removal instead of claiming none exist, §3's man-page claim is softened to what actually ships, §3.1 documents `link`/`unlink` for `link = false` packages, and §7.1's root-daemon gate includes local repositories)
+- **Status:** v0.2 — September 2026 (v0.2: review corrections — §2.3 covers bash alongside zsh, §2.5 lists the three outside-prefix exceptions to a clean removal instead of claiming none exist, §3's man-page claim is softened to what actually ships, §3.1 documents `link`/`unlink` for `link = false` packages, and §7.1's root-daemon gate includes local repositories. v0.3: new chapter 10 — declarative whole-machine setup with `setup.toml`, `aslice apply`, `aslice export`, and `aslice import --from-brewfile` (SETUP.md); chapters 10–13 renumber to 11–14)
 - **Audience:** people who install and run software with aslice. That's most of what follows. If you *write* packages, read chapters 1–4 and then move to [AUTHORING.md](AUTHORING.md). If you want to know *why* things are the way they are, the rationale lives in [DESIGN.md](DESIGN.md).
 - **Companions:** the man pages in [man/](../man/) (also available as `aslice help <command>`), [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md), [ORCHARD-POLICY.md](ORCHARD-POLICY.md), [REPOSITORIES.md](REPOSITORIES.md), [GENESIS.md](GENESIS.md).
 
@@ -211,7 +211,7 @@ Two different things fill up, and two different commands empty them:
 - **The cache** — downloaded slices, source tarballs, index snapshots — is pure redundancy. `aslice clean` evicts it, least-recently-used first, when it grows past a watermark (10 GB by default), never touching anything younger than 30 days. `--dry-run` shows exactly what would go.
 - **The store** — your installed package versions, including the ones only old generations reference — is what makes rollback possible. `aslice gc` removes store paths no retained generation can reach (it keeps the last 5 generations by default). `--dry-run` here too, and `gc` will never collect a store path a running process is using.
 
-Both commands print what they're doing and why. If disk pressure is chronic, lower the watermarks in `etc/aslice.toml` (§12) rather than running the commands by hand.
+Both commands print what they're doing and why. If disk pressure is chronic, lower the watermarks in `etc/aslice.toml` (§13) rather than running the commands by hand.
 
 ---
 
@@ -460,7 +460,90 @@ aslice assumes connectivity will be intermittent — many of its users are audio
 
 ---
 
-## 10. aslice and Homebrew
+## 10. One file, one command: rebuilding a machine
+
+### 10.1 The idea
+
+A Mac that comes back from system recovery is blank. Getting from blank to *ready to work* is normally an afternoon of remembering: which packages mattered, how the Dock was set up, which shell, which services, which PHP the projects expect. aslice can hold all of that in one declarative file — `setup.toml` — and replay it with one command:
+
+```
+# on the blank Mac: install aslice itself first (§2), then:
+aslice apply setup.toml          # or: aslice apply https://example.org/my/setup.toml
+```
+
+Packages install, runtime streams are selected, services start, Dock and Finder preferences are written, the login shell is enrolled and set — each step planned and shown to you before anything changes. And because the file is plain text, it is also something to *share*: one file instead of forty screenshots of System Settings, diffable and version-controlled like any code.
+
+The other direction exists too: `aslice export` captures a machine you have already set up into a fresh `setup.toml` (§10.4).
+
+The full schema and the precise semantics live in [SETUP.md](SETUP.md); this chapter is the tour.
+
+### 10.2 The file
+
+```
+# setup.toml — declarative system setup. Apply: aslice apply setup.toml
+schema = 1
+
+packages = [
+  "ffmpeg@7",                # the same names and constraints as aslice install
+  "postgresql +ssl",         # variants included
+]
+
+[runtimes.default]           # like aslice default php 8.4 (§6.2)
+php = "8.4"
+
+[services]
+start = ["postgresql"]       # like aslice service start (§7)
+
+[shell]
+default = "zsh"              # login shell — installed, enrolled, and set
+
+[defaults.user."com.apple.dock"]     # your preferences — no privileges needed
+autohide = true
+tilesize = 48
+
+[defaults.system."com.apple.loginwindow"]   # system-wide — consent-gated (§10.3)
+# …
+```
+
+Two properties worth knowing before you trust it. First, the file is **data, never code** — unlike a Homebrew Brewfile (which is Ruby and can do anything Ruby can), there is nothing in a `setup.toml` that executes. Applying a stranger's file has a bounded blast radius, and you see the plan first. Second, the file is a *wishlist*, not an exact snapshot: "ffmpeg 7" resolves against today's index. For bit-exact reproduction of a machine there is the lock file (§4.1, §5) — and `aslice apply` replays those too; it is one verb for "make reality match this document", whether the document is a plan, a lock, or a setup file.
+
+### 10.3 Applying it
+
+`aslice apply` with no argument reads `./setup.toml`. Every apply is a plan first: the wishlist is resolved, preferences are diffed, and the complete plan is printed for confirmation before anything changes. `--dry-run` prints it without asking.
+
+Applying is **convergent**: run the same file twice and the second run reports "0 changes". It is also **additive** — apply never removes something just because the file doesn't mention it. If you *do* want the file to be the whole truth, `aslice apply --prune` retracts things the file previously applied that it no longer declares — and nothing else; your hand-installed packages and hand-set preferences are invisible to prune.
+
+Two kinds of step write to OS territory and are therefore **consent-gated**: system-wide preference domains (`/Library/Preferences`) and enrolling an aslice-provided login shell in `/etc/shells`. Interactively you are shown exactly what will be written and asked. In a script or a recovery terminal, pass `--accept-system-changes` — the same flag as for system packages (§8.4) — or those steps are refused while everything unprivileged still lands.
+
+And the safety net is the one you already know: before each preference write or shell change, aslice records the old value against the new **generation**. `aslice rollback` (§5) restores preferences and login shell along with the packages. `aslice history` shows which file applied what, and when.
+
+### 10.4 Capturing a machine: export
+
+```
+aslice export > setup.toml
+aslice export --defaults com.apple.dock,com.apple.finder > setup.toml
+```
+
+Export writes what aslice can *know*: your explicitly-installed packages (with variants and non-default streams), your runtime selections, enabled services, your login shell if it isn't the OS default, any repositories you added, and any configuration you changed from defaults. The output is sorted and stable, so exports diff cleanly in version control.
+
+Preferences are the honest exception. There is no baseline to diff your whole preferences folder against, and application preference domains can contain account tokens, server addresses, and recent-file lists — exactly what a shared file must not leak. So export captures preferences only for domains you name with `--defaults` (and `--system-defaults` for system-wide ones), and stamps the result with a review-before-sharing warning. Value types the schema doesn't support (dictionaries, raw data blobs, dates) are written as comments, never silently dropped.
+
+### 10.5 Sharing, and coming from Homebrew
+
+The file is meant to travel: a team can keep one next to its onboarding docs, and "how do you have your Mac set up?" becomes a link instead of a memoir. Two rules keep shared files healthy — no secrets, ever (nothing in the schema legitimately holds one), and no machine-specific values (hostnames and serials say *this machine*, not *how I like machines*).
+
+If your current source of truth is a Homebrew Brewfile, `aslice import --from-brewfile Brewfile > setup.toml` translates it mechanically: `brew` entries become packages, `tap` entries become comments (aslice repositories are a different, signed thing — §9), and `cask`/`mas`/`vscode` entries are listed as skipped, with a nudge to search the orchard for a vendor-binary package instead. Treat the result as a draft to hand-tune, not a finished file. (For the packages themselves, `aslice adopt --from-homebrew` reads what Homebrew actually installed — §11.)
+
+### 10.6 What it doesn't do
+
+- **Dotfiles.** `~/.zshrc` and friends stay yours — chezmoi, Stow, or plain git do that job well.
+- **Imaging.** FileVault, SIP, user accounts, and System Settings panes without preference domains are untouched; recovery-then-apply assumes a working macOS account already exists.
+- **Fleet management.** No agent, no daemon, no drift detection. If you want periodic enforcement, a `launchd` job that runs `aslice apply` is the whole story.
+- **Secrets.** Keychain items are never read or written, on apply or export.
+
+---
+
+## 11. aslice and Homebrew
 
 The two coexist by construction: aslice lives in `/opt/aslice` and never touches `/usr/local`, in either direction. Run both as long as you like. `aslice doctor` notices a Homebrew installation and advises on `PATH` ordering — that's the extent of the interaction.
 
@@ -474,9 +557,9 @@ It reads your Homebrew installation, maps the packages you explicitly installed 
 
 ---
 
-## 11. When something goes wrong
+## 12. When something goes wrong
 
-### 11.1 Start with doctor
+### 12.1 Start with doctor
 
 ```
 aslice doctor
@@ -484,7 +567,7 @@ aslice doctor
 
 Read-only, fast, offline-capable, and every finding names its remedy — not "store integrity error" but "store path `x264-0.164-0+core.v3` fails manifest hash (1 file) — quarantine with `aslice store verify --quarantine x264` and reinstall." Exit codes are scriptable: 0 healthy, 1 warnings, 2 failures. `doctor --fix` performs only the repairs that can't lose data (pruning dangling cache entries, re-linking a broken generation symlink to its recorded target, refreshing stale index snapshots), announcing each before it acts; anything else, it hands you the command.
 
-### 11.2 Read the log
+### 12.2 Read the log
 
 aslice logs everything it does to `log/` inside the prefix — structured, local, and never transmitted anywhere (the no-telemetry charter applies to logs exactly as to metrics).
 
@@ -496,7 +579,7 @@ aslice log --level debug      # more
 
 `doctor`'s footer points at the relevant log files and the last operation ID. When you file an issue, `aslice log --last-op` is the excerpt maintainers need — generated locally, attached by you, never auto-submitted.
 
-### 11.3 Common problems
+### 12.3 Common problems
 
 | Symptom | What's happening | The fix |
 |---|---|---|
@@ -508,13 +591,13 @@ aslice log --level debug      # more
 | A package wants SIP disabled | It's a declared `[system]` package (kexts, low-level dev tools) | Follow the printed Recovery instructions, or don't install it — the warning is the feature |
 | `php` resolves to the wrong version | Session, project, or default selection, in that order | `aslice which php` traces the resolution |
 | aslice and Homebrew binaries shadow each other | `PATH` ordering | `aslice doctor` (coexistence group) prints the exact edit |
-| Disk pressure | Cache or old generations | `aslice clean --dry-run`, `aslice gc --dry-run`, then lower the watermarks (§12) |
+| Disk pressure | Cache or old generations | `aslice clean --dry-run`, `aslice gc --dry-run`, then lower the watermarks (§13) |
 | Something in the store fails verification | Corruption or tampering; both are treated as security events | `aslice store verify --quarantine <pkg>`, reinstall, and keep the log |
 | After a macOS update, a `[system-patch]` behaves oddly | The update restored or replaced the Apple file under the symlink | `aslice doctor` reports the drift with reapply/restore options — never silently re-patches |
 
 ---
 
-## 12. Configuration reference
+## 13. Configuration reference
 
 aslice's configuration file is `etc/aslice.toml` inside the prefix (`~/.aslice/etc/aslice.toml` for per-user installs). Edit it directly or via `aslice config set <key> <value>`. The keys, as of this writing:
 
@@ -540,7 +623,7 @@ The prefix layout, for orientation: `store/` (immutable packages), `profiles/gen
 
 ---
 
-## 13. Getting help
+## 14. Getting help
 
 - **`aslice help <command>`** prints the same text as `man aslice-<command>` — the man pages and the CLI help are one source, so they can't drift apart. `man aslice` is the index of all of them.
 - **This manual** is the prose version; [DESIGN.md](DESIGN.md) is the why; [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md) is the schema.
@@ -567,6 +650,7 @@ The prefix layout, for orientation: `store/` (immutable packages), `profiles/gen
 | `audit` / `provenance` | CVE report; build provenance |
 | `doctor` / `log` | Health battery; the local operation log |
 | `adopt --from-homebrew` | Migrate an existing Homebrew leaf set |
+| `apply` / `export` / `import --from-brewfile` | Converge the machine to a `setup.toml` (or replay a lock/plan); capture this machine as one; translate a Brewfile (§10) |
 | `self-update` | Update aslice itself (health-checked, auto-rollback) |
 | `shellenv` / `init` | Print shell environment; print shell integration |
 | `exec` / `test` / `livecheck` | Run in a temporary view; run a package's smoke tests; check for newer upstream releases |
