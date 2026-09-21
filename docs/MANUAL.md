@@ -2,7 +2,7 @@
 
 **The user guide for aslice — a package manager for Intel macOS.**
 
-- **Status:** v0.4 — September 2026 (v0.2: review corrections — §2.3 covers bash alongside zsh, §2.5 lists the three outside-prefix exceptions to a clean removal instead of claiming none exist, §3's man-page claim is softened to what actually ships, §3.1 documents `link`/`unlink` for `link = false` packages, and §7.1's root-daemon gate includes local repositories. v0.3: new chapter 10 — declarative whole-machine setup with `setup.toml`, `aslice apply`, `aslice export`, and `aslice import --from-brewfile` (SETUP.md); chapters 10–13 renumber to 11–14. v0.4: editorial pass — prose revised for directness throughout; no factual or behavioral changes)
+- **Status:** v0.5 — September 2026 (v0.2: review corrections — §2.3 covers bash alongside zsh, §2.5 lists the three outside-prefix exceptions to a clean removal instead of claiming none exist, §3's man-page claim is softened to what actually ships, §3.1 documents `link`/`unlink` for `link = false` packages, and §7.1's root-daemon gate includes local repositories. v0.3: new chapter 10 — declarative whole-machine setup with `setup.toml`, `aslice apply`, `aslice export`, and `aslice import --from-brewfile` (SETUP.md); chapters 10–13 renumber to 11–14. v0.4: editorial pass — prose revised for directness throughout; no factual or behavioral changes. v0.5: second editorial pass — sentence-level revision for readability; no factual or behavioral changes)
 - **Audience:** people who install and run software with aslice; that is most of what follows. If you *write* packages, read chapters 1–4 and then move to [AUTHORING.md](AUTHORING.md). If you want to know *why* things are the way they are, the rationale lives in [DESIGN.md](DESIGN.md).
 - **Companions:** the man pages in [man/](../man/) (also available as `aslice help <command>`), [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md), [ORCHARD-POLICY.md](ORCHARD-POLICY.md), [REPOSITORIES.md](REPOSITORIES.md), [GENESIS.md](GENESIS.md).
 
@@ -18,7 +18,7 @@ Three facts about aslice explain almost everything else:
 
 **Old states of your system are kept, and you can go back to them.** Installed packages live in an immutable store. What you actually use is a *generation* — a view made of symlinks into that store. Every install, upgrade, or uninstall builds a new generation and flips one symlink. If an upgrade breaks something, `aslice rollback` puts the old state back in seconds. This is the idea Nix proved out, kept small enough to stay understandable.
 
-**It accounts for old machines.** aslice detects your CPU and serves the fastest build it can actually run (there are three *flavors*: baseline, SSE4.2, and AVX2). It ships a modern CA certificate bundle because the one in your OS expired years ago. When it can't do something — when a package needs SIP disabled, when a vendor binary can't be redistributed, when Safari's TLS stack is too old for a site no matter what it installs — it tells you, instead of failing mysteriously later.
+**It accounts for old machines.** aslice detects your CPU and serves the fastest build it can run (there are three *flavors*: baseline, SSE4.2, and AVX2). It ships a modern CA certificate bundle because the one in your OS expired years ago. When it can't do something — when a package needs SIP disabled, when a vendor binary can't be redistributed, when Safari's TLS stack is too old for a site no matter what it installs — it tells you, instead of failing mysteriously later.
 
 And one fact about the project: **aslice collects nothing.** No telemetry, no analytics, no install IDs, no crash reporting — not even opt-in. There is no switch to turn off because there is no wiring. It's infrastructure, not a product.
 
@@ -71,7 +71,7 @@ less install.sh          # it's about 200 lines; read it
 sh install.sh
 ```
 
-It fetches exactly two things: the aslice bootstrap binary and the root of aslice's update metadata. Both are pinned by hash inside the script and cross-checked against a signed checksums file on a second, independent transport. Everything after that first step is verified by aslice's own update framework. The script does not ask for your password, with one optional exception: it offers to run `sudo` once to create `/opt/aslice` and hand it to your user account. If you'd rather not — or you don't have admin rights — say no, and it installs to `~/.aslice` instead. Both layouts are fully supported and behave identically; the only difference is the path.
+It fetches two things: the aslice bootstrap binary and the root of aslice's update metadata. Both are pinned by hash inside the script and cross-checked against a signed checksums file on a second, independent transport. Everything after that first step is verified by aslice's own update framework. The script does not ask for your password, with one optional exception: it offers to run `sudo` once to create `/opt/aslice` and hand it to your user account. If you'd rather not — or you don't have admin rights — say no, and it installs to `~/.aslice` instead. Both layouts are fully supported and behave identically; the only difference is the path.
 
 **If your Mac's TLS is too old for the modern web**, the script may be unable to complete an HTTPS handshake at all — this is the day-one condition of a frozen OS, and it's expected. The installer detects the failure and retries over plain HTTP, fetching *the same hash-pinned files*, verifying them against the same pins and signatures, and printing a prominent banner telling you the transport was downgraded and why that's safe. The hashes and signatures are what you are trusting; HTTPS was only ever a privacy layer for the download.
 
@@ -246,7 +246,7 @@ The solver treats flavor as a hard constraint: a v3 slice is never offered to a 
 
 ### 4.3 Mixing binary and source builds
 
-The reason Homebrew removed build options was combinatorial explosion: every option combination would have needed its own binaries, and local builds broke against prebuilt ones. aslice's answer is to check compatibility where it actually lives — in the libraries' published interfaces. Every built package records which libraries it provides (with versions and symbol fingerprints) and which it requires. Substitution is allowed when a provider's interface covers a consumer's requirements, regardless of who compiled what with which optimization flags.
+The reason Homebrew removed build options was combinatorial explosion: every option combination would have needed its own binaries, and local builds broke against prebuilt ones. aslice's answer is to check compatibility where it lives — in the libraries' published interfaces. Every built package records which libraries it provides (with versions and symbol fingerprints) and which it requires. Substitution is allowed when a provider's interface covers a consumer's requirements, regardless of who compiled what with which optimization flags.
 
 The practical consequences:
 
@@ -329,7 +329,7 @@ How it works under the hood: a directory of small *shims* sits ahead of the prof
 
 ### 6.3 Extensions and ecosystem tools
 
-Compiled extensions — `php-redis`, `ruby-pg` — are ordinary aslice packages, but bound to exactly one runtime stream. Install one and it builds (or downloads) against your currently selected stream; a PHP patch upgrade within the stream leaves extensions alone; installing a new stream offers to provision your previous stream's extension set for it. Rollback restores runtime and extensions together, because they're all in the generation.
+Compiled extensions — `php-redis`, `ruby-pg` — are ordinary aslice packages, but bound to one runtime stream. Install one and it builds (or downloads) against your currently selected stream; a PHP patch upgrade within the stream leaves extensions alone; installing a new stream offers to provision your previous stream's extension set for it. Rollback restores runtime and extensions together, because they're all in the generation.
 
 The ecosystems' own installers keep working too. `pip install`, `gem install`, `npm i -g`, `pecl install`, `composer global require` — the shim routes each into a per-stream, per-user directory (`~/.aslice/runtimes/php/8.4/` and friends), so a `pip install` under Python 3.12 is invisible to 3.13. aslice never manages, audits, or deletes those directories; uninstalling a stream warns about the orphaned directory instead of removing it.
 
@@ -627,7 +627,7 @@ The prefix layout, for orientation: `store/` (immutable packages), `profiles/gen
 
 - **`aslice help <command>`** prints the same text as `man aslice-<command>` — the man pages and the CLI help are one source, so they can't drift apart. `man aslice` is the index of all of them.
 - **This manual** is the prose version; [DESIGN.md](DESIGN.md) is the why; [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md) is the schema.
-- **Bugs and package requests** go to the project tracker. Attach the output of `aslice log --last-op` and `aslice doctor --json`; both are generated locally and contain nothing you haven't seen. Expect the conduct norms in [CONTRIBUTING.md](../CONTRIBUTING.md): be decent, assume good faith, say plainly when something is wrong.
+- **Bugs and package requests** go to the project tracker. Attach the output of `aslice log --last-op` and `aslice doctor --json`; both are generated locally and contain nothing you haven't seen. Expect the conduct norms in [CONTRIBUTING.md](../CONTRIBUTING.md): be decent, assume good faith, and say so when something is wrong.
 
 ---
 
