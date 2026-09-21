@@ -36,7 +36,7 @@ Every "what makes the thing that makes the thing" pair in the system, its path, 
 | `aslice-toolchain` | Apple's host Clang (stage0), then itself (stage1) | newest Intel macOS + CLT + archived SDK; both stages archived; per-OS workarounds in the manifest | DESIGN §4.3, §14 |
 | Archived SDKs | Apple's Xcode releases | cached on the farm, in the never-lose set (§3) | DESIGN §15 |
 | TLS for aslice's own fetches | compiled-in TLS stack + CA bundle | `aslice-fetch` never touches the system store — the rotten-roots problem is designed out, not bootstrapped around | DESIGN §4.1 |
-| The installer's own fetch | system curl — **on a machine whose TLS may be dead** | HTTPS first; on failure, plain HTTP for the *same hash-pinned artifacts*, printed loudly — the pins, signature, and TUF root are the trust, the transport never was | DESIGN §10.3 |
+| The installer's own fetch | system curl — **on a machine whose TLS may be dead** | HTTPS first; on failure, plain HTTP for the *same hash-pinned artifacts*, with a prominent notice — the pins, signature, and TUF root are the trust, the transport never was | DESIGN §10.3 |
 | `sources.toml` (official source list) | the bootstrap package | shipped data, a TUF target, core key fingerprint also compiled into the binary; replaceable wholesale by the paranoid | REPOSITORIES §2 |
 | First index snapshot | signing host | `aslice repo build/sign/publish` after the orchard seed; coordinator state is reconstructible from git + result store | DESIGN §9.6, BUILD-INFRA §5 |
 | `ca-certificates` slice | the orchard itself | fetched by the farm with its own working TLS, packed data-only, published like any slice — no chicken, no egg | DESIGN §12.10, ORCHARD-POLICY §9 |
@@ -68,7 +68,7 @@ GitHub gone, farm flooded, domain lapsed — the scenario where §1 must run fro
 2. Re-run §1 steps 2–7 **skipping nothing**: stage0 toolchain from the archive (no Apple host rebuild needed — that is why stage0 is archived), aslice rebuilt from source with stage1 and digest-compared against the archived binary, orchard *re-linked* from the archived tree rather than rebuilt (the slices and sources are all in `blobs/sha256/`).
 3. Re-publish the tree on new infrastructure: any static host, a `file://` directory, a GHCR org — the tree does not care (DESIGN §9.6). Root metadata unchanged; clients chain-trust it. New mirrors are added to `sources.toml` as a TUF update.
 4. The only thing that cannot be restored from the archive is the *online* key material on the signing host — restored from the ceremony archive per KEY-RUNBOOK §7's drill, never improvised.
-5. If the root itself is gone (fewer than 3 shares): that is KEY-RUNBOOK §6, the re-bootstrap with a new root, executed loudly. The archive makes it a bad week, not a death.
+5. If the root itself is gone (fewer than 3 shares): that is KEY-RUNBOOK §6, the re-bootstrap with a new root, executed in the open. The archive makes it a bad week, not a death.
 
 ## 5. The drill
 
@@ -76,4 +76,4 @@ Annually, on a clean machine, using **only** the never-lose set: run §1 end-to-
 
 ---
 
-*History: v0.1 (September 2026) — initial runbook, from the genesis audit that followed the §7.5 scanner-genesis discussion: collected the documented genesis paths (toolchain, root ceremony, scanner, bootstrap TLS), filled the gaps it found (installer TLS-dead fallback in DESIGN v1.9 §10.3; vendored-source archive in DESIGN v1.9 §9.6 / BUILD-INFRA v0.6 §3 / REPOSITORIES v0.8 §2; VM-image genesis and the installer-app archive in BUILD-INFRA v0.6 §8), and wrote the never-lose set and the annual re-standup drill down as obligations rather than intentions.*
+*History: v0.1 (September 2026) — initial runbook, from the genesis audit that followed the §7.5 scanner-genesis discussion: collected the documented genesis paths (toolchain, root ceremony, scanner, bootstrap TLS), filled the gaps it found (installer TLS-dead fallback in DESIGN v1.9 §10.3; vendored-source archive in DESIGN v1.9 §9.6 / BUILD-INFRA v0.6 §3 / REPOSITORIES v0.8 §2; VM-image genesis and the installer-app archive in BUILD-INFRA v0.6 §8), and wrote the never-lose set and the annual re-standup drill down as obligations rather than intentions. v0.2 (September 2026) — editorial pass: prose revised for directness; no procedural changes.*
