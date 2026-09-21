@@ -6,6 +6,8 @@ aslice keeps deprecated Intel Macs (macOS 10.11–12, x86_64) useful. Contributi
 2. **The farm** — build time. Spare Intel Macs can enroll as community evidence builders (`aslice farm enroll` + `--reproduce-only`): your machine rebuilds published jobs and reports digest agreement. Identical code to the real farm, zero authority, genuinely useful (BUILD-INFRA §7.4).
 3. **aslice itself** — the manager is C++20. Talk in an issue before writing large features; the design docs (`docs/DESIGN.md` and companions) are the spec, and PRs that contradict them need to win the argument first.
 
+*Project terms, acronyms, and the Homebrew translation table: [docs/NOMENCLATURE.md](docs/NOMENCLATURE.md).*
+
 ## Ground rules (read these before your first PR)
 
 - **No telemetry, ever.** Do not submit code that phones home, counts users, measures engagement, or "anonymously" reports anything. This is a charter decision, not a preference; PRs adding metrics plumbing are closed on sight. (The farm measures *itself* — build times, queue depth, reproducibility coverage — and that is the only instrumentation that exists.)
@@ -84,4 +86,4 @@ Contributions are licensed under the project's license. By opening a PR you agre
 
 ---
 
-*History: September 2026 — editorial pass: prose revised for directness; `min_os` honesty renamed `min_os` accuracy for consistency with AUTHORING.md; documentation style section added. No rule changes. September 2026 — prose rewrite throughout: reworded in the project's technical-writing voice; no rule changes.*
+*History: September 2026 — editorial pass: prose revised for directness; `min_os` honesty renamed `min_os` accuracy for consistency with AUTHORING.md; documentation style section added. No rule changes. September 2026 — prose rewrite throughout: reworded in the project's technical-writing voice; no rule changes. September 2026 — NOMENCLATURE.md vocabulary pointer added; no rule changes.*
