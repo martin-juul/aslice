@@ -1,8 +1,8 @@
 # Security Policy
 
-This document covers reporting vulnerabilities **in aslice itself** — the package manager, its helpers, the installer, the repository/signing infrastructure, and the farm tooling. It is not for vulnerabilities in packaged software; see "Out of scope" below.
+This document states how to report a vulnerability **in aslice itself** — the package manager, its helpers, the installer, the repository and signing infrastructure, and the farm tooling. Vulnerabilities in packaged software go elsewhere; see "Out of scope" below.
 
-aslice is security infrastructure for machines that no longer receive security updates. We take reports accordingly seriously.
+aslice is security infrastructure for machines that no longer receive security updates from anyone else; reports are taken accordingly seriously.
 
 ## Reporting a vulnerability
 
@@ -15,7 +15,7 @@ Please include:
 - Which part of the trust model you believe is broken (signature verification, TUF metadata, the sandbox, the store, `aslice-system`, the installer, the farm/signing pipeline, …).
 - Whether you consider the issue embargoed, and any disclosure timeline you are bound by.
 
-A PGP key for encrypted reports will be published here and cross-signed into the repository once the project cuts its first release. Until then, if your report is too hot for plaintext email, say so in a short plaintext mail and we will agree a channel.
+Once the project cuts its first release, a PGP key for encrypted reports will be published here and cross-signed into the repository. Until then, if your report is too hot for plaintext email, say so in a short plaintext mail and we will agree a channel.
 
 Do **not** file security reports as public GitHub issues.
 
@@ -30,7 +30,7 @@ This is a spare-time project, not a corporation, so these are commitments, not S
 
 ## Scope
 
-In scope, roughly ordered by how much we care:
+In scope, roughly ordered by how much each class matters:
 
 1. **Signature and metadata verification bypasses** — getting aslice to install or trust content that did not come from a pinned, verified source (TUF rollback/freeze/mix-and-match, minisign or OpenPGP verification, source-hash pinning, vendor signer pinning).
 2. **Sandbox escapes** — package build code (Starlark phases) reaching the network, the live store, the user's profile, or anything outside its phase-scoped Seatbelt profile.
@@ -64,4 +64,4 @@ That is our incident, not your report — but it is handled in the open, per the
 
 ---
 
-*History: September 2026 — editorial pass: prose revised for directness; no policy changes.*
+*History: September 2026 — editorial pass: prose revised for directness; no policy changes. September 2026 — prose rewrite throughout: the policy reworded in the project's technical-writing voice; no policy changes.*
