@@ -23,6 +23,8 @@ Four words carry most of the design:
 - **repository** — a signed, static distribution tree of formulae and slices. Anyone can host one: on GitHub, on a mirror, on a thumb drive. Trust attaches to the repository rather than to individual packages, at four levels — official, verified, third-party, local — each with a defined set of capabilities. Signatures are Ed25519; OpenPGP is supported for publishers with an existing GPG workflow.
 - **flavor** — a microarchitecture target: `v1`, `v2`, or `v3`, as above.
 
+Every other term the documents use is defined in [NOMENCLATURE.md](docs/NOMENCLATURE.md).
+
 ## Status
 
 Design phase. The documents below are the specification as it stands; there is no release to install yet.
@@ -38,6 +40,7 @@ In the order a newcomer should read them:
 - [Repositories](docs/REPOSITORIES.md) — the shipped official source list, repository trust levels, and the dual Ed25519/OpenPGP signing model
 - [Orchard policy](docs/ORCHARD-POLICY.md) — the maintainer rulebook: acceptance bars per tier, variant discipline, the deprecation lifecycle, patch documentation, merge gates, release cadence
 - [Declarative system setup](docs/SETUP.md) — the `setup.toml` schema and `aslice apply` / `export` / `import --from-brewfile`: rebuild a Mac from one file, capture one back into it
+- [Nomenclature](docs/NOMENCLATURE.md) — every project term, acronym, and the Homebrew translation table: the dictionary for all of the above
 
 ## Scope
 
@@ -46,4 +49,4 @@ In the order a newcomer should read them:
 
 ---
 
-*History: September 2026 — rewritten for readability (second editorial pass); no content changes.*
+*History: September 2026 — rewritten for readability (second editorial pass); no content changes. September 2026 — NOMENCLATURE.md added to the document list; vocabulary pointer added.*
