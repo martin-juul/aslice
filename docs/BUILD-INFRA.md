@@ -1,7 +1,7 @@
 # aslice Build Infrastructure — One Harness, Two Scales
 
-- **Status:** Design draft, v0.8 — September 2026 (v0.2: companion references refreshed — DESIGN v1.7, PACKAGE-FORMAT v0.6, HOMEBREW-REVIEW v0.9; all internal cross-references re-verified against current section numbering, no content change. v0.3: companion references refreshed — DESIGN v1.8, PACKAGE-FORMAT v0.6, HOMEBREW-REVIEW v0.10; no content change. v0.4: the malware-signature gate — every staged slice is scanned against current definitions before signing-host promotion (new §7.5, §7.1 gate 5, §11 failure row, §12 Phase 1); the scanner is the orchard's own `clamav` core package (ORCHARD-POLICY v0.7 §2); client-side scanning stays the user's decision. v0.5: the gate's genesis protocol — the first `clamav` slice is scanned by a throwaway hand-built scanner with a `bootstrap` receipt, the other four quarantine gates carry full weight, go-live is a transparency-log event, and the packaged scanner sweeps the pre-gate backlog including its own origin slice (§7.5). v0.6: the genesis audit — every fetched source is vendored into the repository tree (§3, §9), VM golden-image genesis and the installer-app archive are specified (§8), and the from-nothing sequence lands as GENESIS.md (§12); companions DESIGN v1.9 / REVIEW v0.11. v0.7: editorial pass — prose revised for directness; no content change. v0.8: prose rewrite throughout — chapters reworded in the project's technical-writing voice; no content change)
-- **Companion to:** [DESIGN.md](DESIGN.md) v1.12 (§4.3 toolchain, §5.1 process layout, §9 distribution, §10 security), [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md) v0.9 (build phases §6), [HOMEBREW-REVIEW.md](HOMEBREW-REVIEW.md) v0.13 (§4.7 merge gates, §6 risks)
+- **Status:** Design draft, v0.9 — September 2026 (v0.2: companion references refreshed — DESIGN v1.7, PACKAGE-FORMAT v0.6, HOMEBREW-REVIEW v0.9; all internal cross-references re-verified against current section numbering, no content change. v0.3: companion references refreshed — DESIGN v1.8, PACKAGE-FORMAT v0.6, HOMEBREW-REVIEW v0.10; no content change. v0.4: the malware-signature gate — every staged slice is scanned against current definitions before signing-host promotion (new §7.5, §7.1 gate 5, §11 failure row, §12 Phase 1); the scanner is the orchard's own `clamav` core package (ORCHARD-POLICY v0.7 §2); client-side scanning stays the user's decision. v0.5: the gate's genesis protocol — the first `clamav` slice is scanned by a throwaway hand-built scanner with a `bootstrap` receipt, the other four quarantine gates carry full weight, go-live is a transparency-log event, and the packaged scanner sweeps the pre-gate backlog including its own origin slice (§7.5). v0.6: the genesis audit — every fetched source is vendored into the repository tree (§3, §9), VM golden-image genesis and the installer-app archive are specified (§8), and the from-nothing sequence lands as GENESIS.md (§12); companions DESIGN v1.9 / REVIEW v0.11. v0.7: editorial pass — prose revised for directness; no content change. v0.8: prose rewrite throughout — chapters reworded in the project's technical-writing voice; no content change. v0.9: review pass — the three bare §9.4 references now name DESIGN §9.4 explicitly; companion references refreshed; no content change)
+- **Companion to:** [DESIGN.md](DESIGN.md) v1.14 (§4.3 toolchain, §5.1 process layout, §9 distribution, §10 security), [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md) v0.11 (build phases §6), [HOMEBREW-REVIEW.md](HOMEBREW-REVIEW.md) v0.16 (§4.7 merge gates, §6 risks)
 - **Scope:** the build harness (`aslice build`), farm orchestration (`aslice farm`), scheduling, worker trust, the VM test matrix, and the pipeline from build result to published repository.
 
 ---
@@ -130,7 +130,7 @@ Three queues, drained in order but preemptible upward:
 
 1. **Freshness** — autobump PR gates (the livecheck machinery from REVIEW §4.2 builds here).
 2. **Trunk** — merged changes heading for the next published snapshot.
-3. **Backfill** — the long tail: extended-orchard packages, missing flavors, old versions that need slices. Prioritized by the §9.4 value signals (dependency centrality, farm-measured build pain, irreplaceability, community requests) — never by download counts.
+3. **Backfill** — the long tail: extended-orchard packages, missing flavors, old versions that need slices. Prioritized by the DESIGN §9.4 value signals (dependency centrality, farm-measured build pain, irreplaceability, community requests) — never by download counts.
 
 ### 6.3 Leases, not locks
 
@@ -222,7 +222,7 @@ The same publish deposits **every source artifact the build fetched** into the t
 
 ## 10. Farm-side metrics (the only kind there are)
 
-No user telemetry exists anywhere in this system (DESIGN §2.2 N7). What the farm publishes concerns the **farm**: median days behind upstream (freshness health), build pain per package (feeds §9.4), reproducibility coverage percentage, queue depth per lane, per-OS × flavor test pass rates, fleet status. All of it is computed from the farm's own operation and published on the static dashboard, the transparency surface of DESIGN §13.4.
+No user telemetry exists anywhere in this system (DESIGN §2.2 N7). What the farm publishes concerns the **farm**: median days behind upstream (freshness health), build pain per package (feeds DESIGN §9.4), reproducibility coverage percentage, queue depth per lane, per-OS × flavor test pass rates, fleet status. All of it is computed from the farm's own operation and published on the static dashboard, the transparency surface of DESIGN §13.4.
 
 ## 11. Failure modes, planned
 
@@ -241,5 +241,5 @@ No user telemetry exists anywhere in this system (DESIGN §2.2 N7). What the far
 
 - **Phase 0:** the harness skeleton — `aslice build` local mode with the full sandboxed pipeline; toolchain-as-slice; job/result schemas; `farm plan`. The from-nothing sequence (GENESIS.md §1) is executed end-to-end and written down as it runs: the project must be able to stand up from nothing, repeatedly, before it has users.
 - **Phase 1:** coordinator + agents + leases; Actions adapter; VM matrix bring-up; PR gates for the core orchard; staging → quarantine → signing-host pipeline including the §7.5 malware-signature gate, bootstrapped per its genesis protocol, with the `clamav` core package the gate runs on.
-- **Phase 2:** ABI-gate dependent-rebuild cascades; vendor-repackaging lane; backfill lane with §9.4 priorities; public dashboard.
+- **Phase 2:** ABI-gate dependent-rebuild cascades; vendor-repackaging lane; backfill lane with DESIGN §9.4 priorities; public dashboard.
 - **Phase 3:** two-builder cross-checks for core; community evidence builders (`enroll`, `--reproduce-only`); transparency log; reproducibility class upgrades as a standing program.
