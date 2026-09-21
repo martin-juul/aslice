@@ -2,6 +2,8 @@
 
 This runbook governs every cryptographic key aslice trusts; DESIGN §10.2 calls for it by name ("revocation and rotation are covered by a practiced runbook"). Its purpose can be stated in one sentence: the worst day of the project should be a procedure, not an improvisation.
 
+*Project terms, acronyms, and the Homebrew translation table: [NOMENCLATURE.md](NOMENCLATURE.md).*
+
 Four rules govern everything below, and no procedure in this document suspends them:
 
 - **Keys are generated on the hardware that holds them.** A private key that has ever touched a networked machine, a disk, or a backup medium is treated as compromised for root purposes.
@@ -109,4 +111,4 @@ This path will be embarrassing if it ever happens. It is written down so that it
 
 ---
 
-*History: September 2026 — editorial pass: prose revised for directness; no procedural changes. September 2026 — prose rewrite throughout: the runbook reworded in the project's technical-writing voice; no procedural changes. September 2026 — review pass: the DESIGN §10.2 quotation restored to its current wording; no procedural changes.*
+*History: September 2026 — editorial pass: prose revised for directness; no procedural changes. September 2026 — prose rewrite throughout: the runbook reworded in the project's technical-writing voice; no procedural changes. September 2026 — review pass: the DESIGN §10.2 quotation restored to its current wording; no procedural changes. September 2026 — NOMENCLATURE.md vocabulary pointer added; no procedural changes.*
