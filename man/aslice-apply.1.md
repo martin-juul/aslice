@@ -34,7 +34,7 @@ Before every preference write, shell change, or `/etc/shells` enrollment, the pr
 
 # CONSENT GATES
 
-System-domain preferences (`/Library/Preferences`) and `/etc/shells` enrollment write to OS territory. Interactively each gated step prompts, naming exactly what will be written. Non-interactively they are refused — exit status 2 — unless **--accept-system-changes** is passed (the same flag and contract as system packages and system patches). **--dry-run** prints the complete plan, including gated steps, and changes nothing.
+System-domain preferences (`/Library/Preferences`) and `/etc/shells` enrollment write to OS territory. Interactively each gated step prompts, naming what will be written. Non-interactively they are refused — exit status 2 — unless **--accept-system-changes** is passed (the same flag and contract as system packages and system patches). **--dry-run** prints the complete plan, including gated steps, and changes nothing.
 
 # EXIT STATUS
 
