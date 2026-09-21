@@ -26,7 +26,7 @@ Packages with running services are stopped, swapped, and restarted as part of th
 # OPTIONS
 
 **--rollback-on-service-failure**
-:   Unattended path: roll the generation back automatically if an upgraded service fails to start. Interactive runs never need this — they are asked. Non-interactive runs without it fail loudly and leave rollback to an explicit `aslice rollback`.
+:   Unattended path: roll the generation back automatically if an upgraded service fails to start. Interactive runs never need this — they are asked. Non-interactive runs without it are refused, leaving rollback to an explicit `aslice rollback`.
 
 **--dry-run**, **--json**
 :   Print the plan without changing anything; machine-readable output.
