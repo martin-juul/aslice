@@ -65,7 +65,7 @@ The moment any custodian has reason to believe a key may be compromised — lost
 
 1. **Freeze.** Revoke the current timestamp key first (one command on the signing host). Clients pin the last good snapshot and the repository stops moving — freshness pauses, users are unaffected and safe (BUILD-INFRA §11).
 2. **Assess, in the open.** A public security advisory goes up within 24 hours saying what is known, what is frozen, and what users should do (usually: nothing, don't panic-install from random sources). Silence during a key event is how trust dies.
-3. **Rotate** per the table: for snapshot/timestamp/targets/slice-signing this is a signing-host operation plus a threshold-signed root update if the delegation changed. For root itself, §5.
+3. **Rotate** per the table: for snapshot/timestamp/targets/slice-signing this is a signing-host operation plus a threshold-signed root update if the delegation changed. For root itself, §4.1.
 4. **Audit the window.** Every snapshot and slice published between last-known-good and the freeze is re-verified against the transparency log and, where the reproducibility class demands it, rebuilt for digest comparison by evidence builders. Findings are published either way.
 5. **Unfreeze and postmortem.** The advisory is updated with the full timeline. Postmortems are blameless, public, and result in at least one concrete runbook or tooling change.
 
@@ -73,8 +73,8 @@ The moment any custodian has reason to believe a key may be compromised — lost
 
 If a root share is compromised, or shares are lost such that fewer than 3 remain valid:
 
-1. Freeze (§4.1 — online keys die first; a root event freezes everything downstream).
-2. Convene every reachable custodian. With ≥3 valid shares: rotate as in §3.1, revoke the bad share in metadata N+1, and treat the window since the share was last verifiably safe as suspect — the audit in §4.4 extends to the root metadata itself.
+1. Freeze (§4 — online keys die first; a root event freezes everything downstream).
+2. Convene every reachable custodian. With ≥3 valid shares: rotate as in §3.1, revoke the bad share in metadata N+1, and treat the window since the share was last verifiably safe as suspect — the audit in §4 step 4 extends to the root metadata itself.
 3. With **fewer than 3 valid shares**, the root is unrecoverable. This is the disaster path (§6).
 
 ## 5. Custodian changes
