@@ -26,7 +26,7 @@ Resolution happens in a shim directory ahead of the profile on `PATH`: a shim re
 
 **which** traces the full resolution — which level matched, why, down to the store path. **versions** shows the matrix: installed streams, current selections, extensions per stream.
 
-If a selected stream is not installed, interactive runs offer to install it; non-interactive runs fail with the suggestion unless **--install** is given. Uninstalling a selected stream refuses until another is selected (`--force` overrides, loudly logged).
+If a selected stream is not installed, interactive runs offer to install it; non-interactive runs fail with the suggestion unless **--install** is given. Uninstalling a selected stream refuses until another is selected (`--force` overrides, logged at warn).
 
 Upgrades stay in their lane: `aslice upgrade php` moves within the selected stream only, and a stream that is selected, pinned by a known project, or referenced by an enabled service is never garbage-collected.
 
