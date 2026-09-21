@@ -17,7 +17,7 @@ Rules that apply to everything below:
 |---|---|---|---|---|
 | **TUF root** | Ed25519, 3-of-5 threshold | 5 YubiKeys, 5 founding maintainers, geographically distributed, offline | Years (rotate on custodian change, compromise, or drill failure) | Everything. This is the keys to the kingdom — hence offline, thresholded, and slow to use by design |
 | **TUF targets** | Ed25519 | Signing host, YubiKey | ~1 year, or on suspicion | Sign index metadata naming malicious slices — mitigated by minisign per-slice verification and the transparency log |
-| **TUF snapshot + timestamp** | Ed25519 | Signing host, online (the only online keys) | Hours–days, rotated automatically | Freeze or rollback attacks for the key's lifetime — short-lived precisely so the blast radius self-heals |
+| **TUF snapshot + timestamp** | Ed25519 | Signing host, online (the only online keys) | Hours–days, rotated automatically | Freeze or rollback attacks for the key's lifetime — short-lived so the blast radius self-heals |
 | **Slice-signing (minisign)** | Ed25519 (minisign-compatible) | Signing host, YubiKey | ~1 year, or on suspicion | Sign individual slices — caught by the transparency log on next publish; clients reject unknown signers |
 | **Coordinator job-signing** | Ed25519 | Coordinator host | ~6 months | Inject build jobs into the farm — results die in quarantine without signing-host promotion (BUILD-INFRA §7.1), so this buys noise, not compromise |
 | **Per-agent identities** | Ed25519 | Each agent, generated at `farm enroll` | Until revoked | Forge *evidence* (build results). Never authority: agents cannot ship slices by construction (BUILD-INFRA §7.2) |
@@ -85,11 +85,11 @@ If a root share is compromised, or shares are lost such that fewer than 3 remain
 
 ## 6. The disaster path: root unrecoverable
 
-Fewer than 3 valid root shares means TUF chaining is impossible — no metadata signed by the old root can be produced, so existing clients will (correctly) refuse to trust anything new. Recovery is a re-bootstrap, executed loudly:
+Fewer than 3 valid root shares means TUF chaining is impossible — no metadata signed by the old root can be produced, so existing clients will (correctly) refuse to trust anything new. Recovery is a re-bootstrap, executed in the open:
 
-1. Full freeze and advisory (§4). The advisory says plainly: the root is dead, here is exactly what happened.
+1. Full freeze and advisory (§4). The advisory says: the root is dead, here is what happened.
 2. A new initial ceremony (§2) with the surviving + replacement custodians: new root, new fingerprints, new installer pins, new second-transport placement.
-3. Existing users re-run the installer (or a dedicated `aslice doctor --fix` path that walks them through pinning the new root **with the fingerprints shown from two independent transports**). There is no silent path past this — a silent root swap is precisely the attack the design exists to prevent.
+3. Existing users re-run the installer (or a dedicated `aslice doctor --fix` path that walks them through pinning the new root **with the fingerprints shown from two independent transports**). There is no silent path past this — a silent root swap is the attack the design exists to prevent.
 4. Re-sign and re-publish the repository under the new root. Slice digests are content-addressed and unchanged; the transparency log shows continuity of content across the root change.
 5. Postmortem, and this runbook is amended with whatever the drill or disaster taught.
 
@@ -106,3 +106,7 @@ This path will be embarrassing if it ever happens. It is written down so that it
 - **Users' machines.** There are no user accounts, no per-user keys, and no telemetry to protect (DESIGN §2.2 N7) — the data we hold about users is none.
 - **Third-party orchards' keys.** Their trust level, their problem, their runbook; REPOSITORIES.md §5 governs how clients pin them.
 - **Upstream/vendor signing keys.** Detected by signer pinning (DESIGN §10.2) as a hard failure, handled as an orchard security event (ORCHARD-POLICY §16), not a key event of ours.
+
+---
+
+*History: September 2026 — editorial pass: prose revised for directness; no procedural changes.*
