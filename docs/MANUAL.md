@@ -2,8 +2,8 @@
 
 **The user guide for aslice — a package manager for Intel macOS.**
 
-- **Status:** v0.2 — September 2026 (v0.2: review corrections — §2.3 covers bash alongside zsh, §2.5 lists the three outside-prefix exceptions to a clean removal instead of claiming none exist, §3's man-page claim is softened to what actually ships, §3.1 documents `link`/`unlink` for `link = false` packages, and §7.1's root-daemon gate includes local repositories. v0.3: new chapter 10 — declarative whole-machine setup with `setup.toml`, `aslice apply`, `aslice export`, and `aslice import --from-brewfile` (SETUP.md); chapters 10–13 renumber to 11–14)
-- **Audience:** people who install and run software with aslice. That's most of what follows. If you *write* packages, read chapters 1–4 and then move to [AUTHORING.md](AUTHORING.md). If you want to know *why* things are the way they are, the rationale lives in [DESIGN.md](DESIGN.md).
+- **Status:** v0.4 — September 2026 (v0.2: review corrections — §2.3 covers bash alongside zsh, §2.5 lists the three outside-prefix exceptions to a clean removal instead of claiming none exist, §3's man-page claim is softened to what actually ships, §3.1 documents `link`/`unlink` for `link = false` packages, and §7.1's root-daemon gate includes local repositories. v0.3: new chapter 10 — declarative whole-machine setup with `setup.toml`, `aslice apply`, `aslice export`, and `aslice import --from-brewfile` (SETUP.md); chapters 10–13 renumber to 11–14. v0.4: editorial pass — prose revised for directness throughout; no factual or behavioral changes)
+- **Audience:** people who install and run software with aslice; that is most of what follows. If you *write* packages, read chapters 1–4 and then move to [AUTHORING.md](AUTHORING.md). If you want to know *why* things are the way they are, the rationale lives in [DESIGN.md](DESIGN.md).
 - **Companions:** the man pages in [man/](../man/) (also available as `aslice help <command>`), [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md), [ORCHARD-POLICY.md](ORCHARD-POLICY.md), [REPOSITORIES.md](REPOSITORIES.md), [GENESIS.md](GENESIS.md).
 
 ---
@@ -14,11 +14,11 @@ aslice is a package manager for Intel Macs running macOS 10.11 (El Capitan) thro
 
 Three facts about aslice explain almost everything else:
 
-**It installs binaries, and it never runs them at install time.** Packages arrive as *slices* — prebuilt, signed, compressed archives. Installing a slice means verifying its signature, checking its contents against a manifest, and linking it into place. No package ever gets to execute a script on your machine during install. There is no equivalent of Homebrew's `post_install`, and there never will be.
+**It installs binaries, and it never runs them at install time.** Packages arrive as *slices*: prebuilt, signed, compressed archives. Installing a slice means verifying its signature, checking its contents against a manifest, and linking it into place. No package ever gets to execute a script on your machine during install. There is no equivalent of Homebrew's `post_install`, and there never will be.
 
-**Nothing is overwritten — every state of your system is kept and you can go back.** Installed packages live in an immutable store. What you actually use is a *generation* — a view made of symlinks into that store. Every install, upgrade, or uninstall builds a new generation and flips one symlink. If an upgrade breaks something, `aslice rollback` puts the old state back in seconds. This is the idea Nix proved out, kept small enough to stay understandable.
+**Old states of your system are kept, and you can go back to them.** Installed packages live in an immutable store. What you actually use is a *generation* — a view made of symlinks into that store. Every install, upgrade, or uninstall builds a new generation and flips one symlink. If an upgrade breaks something, `aslice rollback` puts the old state back in seconds. This is the idea Nix proved out, kept small enough to stay understandable.
 
-**It's honest about old machines.** aslice detects your CPU and serves the fastest build it can actually run (there are three *flavors*: baseline, SSE4.2, and AVX2). It ships a modern CA certificate bundle because the one in your OS expired years ago. When it can't do something — when a package needs SIP disabled, when a vendor binary can't be redistributed, when Safari's TLS stack is too old for a site no matter what it installs — it says so plainly instead of failing mysteriously later.
+**It accounts for old machines.** aslice detects your CPU and serves the fastest build it can actually run (there are three *flavors*: baseline, SSE4.2, and AVX2). It ships a modern CA certificate bundle because the one in your OS expired years ago. When it can't do something — when a package needs SIP disabled, when a vendor binary can't be redistributed, when Safari's TLS stack is too old for a site no matter what it installs — it tells you, instead of failing mysteriously later.
 
 And one fact about the project: **aslice collects nothing.** No telemetry, no analytics, no install IDs, no crash reporting — not even opt-in. There is no switch to turn off because there is no wiring. It's infrastructure, not a product.
 
@@ -44,8 +44,8 @@ You'll see these in every message aslice prints, so they're worth learning once.
 1. The **store** holds every version of every package you've installed, each in its own directory. Nothing inside it ever changes after registration.
 2. Your **generation** is a directory of symlinks into the store — this is what's on your `PATH`.
 3. Installing or upgrading builds a *new* generation, then swaps one symlink. The old one is untouched, so rollback is instant and a crash mid-install breaks nothing.
-4. Packages are **binary by default**. Source builds happen when you ask for non-default variants or custom compiler flags — and the result still works with the prebuilt world, because compatibility is checked against the libraries' actual interfaces, not their provenance.
-5. Everything aslice fetches — slices, index metadata, the CA bundle, aslice itself — is signed and hash-pinned. Verification failures are loud and blocking, always.
+4. Packages are **binary by default**. Source builds happen when you ask for non-default variants or custom compiler flags — and the result still works with the prebuilt world, because compatibility is checked against the libraries' actual interfaces rather than their provenance.
+5. Everything aslice fetches — slices, index metadata, the CA bundle, aslice itself — is signed and hash-pinned. Verification failures block the operation and are always reported; they cannot be silenced.
 
 If you remember store + generations + signed everything, the rest of this manual is details.
 
@@ -73,7 +73,7 @@ sh install.sh
 
 It fetches exactly two things: the aslice bootstrap binary and the root of aslice's update metadata. Both are pinned by hash inside the script and cross-checked against a signed checksums file on a second, independent transport. Everything after that first step is verified by aslice's own update framework. The script does not ask for your password, with one optional exception: it offers to run `sudo` once to create `/opt/aslice` and hand it to your user account. If you'd rather not — or you don't have admin rights — say no, and it installs to `~/.aslice` instead. Both layouts are fully supported and behave identically; the only difference is the path.
 
-**If your Mac's TLS is too old for the modern web**, the script may be unable to complete an HTTPS handshake at all — this is the day-one condition of a frozen OS, and it's expected. The installer detects the failure and retries over plain HTTP, fetching *the same hash-pinned files*, verifying them against the same pins and signatures, and printing a prominent banner telling you the transport was downgraded and why that's safe. The hashes and signatures are the trust; HTTPS was only ever a privacy layer for the download.
+**If your Mac's TLS is too old for the modern web**, the script may be unable to complete an HTTPS handshake at all — this is the day-one condition of a frozen OS, and it's expected. The installer detects the failure and retries over plain HTTP, fetching *the same hash-pinned files*, verifying them against the same pins and signatures, and printing a prominent banner telling you the transport was downgraded and why that's safe. The hashes and signatures are what you are trusting; HTTPS was only ever a privacy layer for the download.
 
 ### 2.3 After the install
 
@@ -95,7 +95,7 @@ Add that line to your `~/.zshrc` or `~/.bash_profile` to make it permanent. Then
 aslice doctor
 ```
 
-`doctor` runs a battery of checks — CPU flavor, store integrity, repository freshness, trust-store state — and prints either a one-line "healthy" or a list of findings, each with the exact command that fixes it. On a fresh install of an old OS, it will usually have one suggestion: `aslice ca-update`. Run it. Chapter 8 explains what it does; the short version is that it replaces your OS's long-expired certificate trust store with a current one, so `curl`, `git`, and `python` can talk to the modern web.
+`doctor` runs a battery of checks — CPU flavor, store integrity, repository freshness, trust-store state — and prints either a one-line "healthy" or a list of findings, each with the command that fixes it. On a fresh install of an old OS, it will usually have one suggestion: `aslice ca-update`. Run it. Chapter 8 explains what it does; the short version is that it replaces your OS's long-expired certificate trust store with a current one, so `curl`, `git`, and `python` can talk to the modern web.
 
 ### 2.4 Updating aslice itself
 
@@ -114,7 +114,7 @@ aslice uninstall aslice        # removes the manager's registration
 sudo rm -rf /opt/aslice        # or rm -rf ~/.aslice — this is the whole footprint
 ```
 
-aslice keeps everything inside its prefix (the `/opt/aslice/apps/` directory included) with three declared exceptions, and each is closed out before removal. If you installed a `[system-patch]` package, restore the Apple originals first — `aslice system-patch list` shows what is patched and `aslice system-patch restore <path>` puts each byte-exact original back (§8.4). If you installed a `[system]` package — kernel extensions, SIP-disabled development tools — uninstall it first. If you used `ca-update --keychain`, run `aslice ca-update --keychain-remove` — it deletes exactly the certificates aslice imported into the System keychain, recorded one by one, and nothing else. With those closed out, removing the prefix removes everything else completely.
+aslice keeps everything inside its prefix (the `/opt/aslice/apps/` directory included) with three declared exceptions, and each is closed out before removal. If you installed a `[system-patch]` package, restore the Apple originals first — `aslice system-patch list` shows what is patched and `aslice system-patch restore <path>` puts each byte-exact original back (§8.4). If you installed a `[system]` package — kernel extensions, SIP-disabled development tools — uninstall it first. If you used `ca-update --keychain`, run `aslice ca-update --keychain-remove` — it deletes the certificates aslice imported into the System keychain, recorded one by one, and nothing else. With those closed out, removing the prefix removes everything else completely.
 
 ---
 
@@ -158,7 +158,7 @@ aslice install ffmpeg --variant +x265 --cflags="-O3"       # non-default options
 aslice install ffmpeg --cflags="-O3 -march=native" --lto   # tuned to your machine
 ```
 
-Custom-flag builds interoperate with prebuilt packages — your `-march=native` ffmpeg links fine against the farm's x264, because compatibility is verified against the libraries' published interfaces, not their origin (§4.3). Non-default *feature* variants (`--variant`) may or may not have prebuilt slices; when they don't, aslice says so and builds locally. Either way the plan tells you before anything is downloaded.
+Custom-flag builds interoperate with prebuilt packages — your `-march=native` ffmpeg links fine against the farm's x264, because compatibility is verified against the libraries' published interfaces rather than their origin (§4.3). Non-default *feature* variants (`--variant`) may or may not have prebuilt slices; when they don't, aslice says so and builds locally. Either way the plan tells you before anything is downloaded.
 
 **Shadowed packages and `link`.** Some packages install into the store without linking into your profile — the principled keg-only case, declared `link = false` with a mandatory `link_reason` in the formula, usually because the package shadows something macOS ships (OpenSSL, curl). `aslice info` shows the reason. Opt in per profile with `aslice link openssl@3`, back out with `aslice unlink openssl@3`; each flip is a new generation, so `rollback` undoes it like anything else. Dependents that declared the dependency build and run against the store copy either way (PACKAGE-FORMAT §3.8, DESIGN §12.1).
 
@@ -185,7 +185,7 @@ aslice pin openssl            # hold: upgrades skip it, outdated says so
 aslice unpin openssl
 ```
 
-A pin is a note in aslice's state database, not a freeze of the files — rollback and reinstall still work normally. Pins exist for the classic reason: "everything may move except this one thing production depends on."
+A pin is a note in aslice's state database; the files are not frozen, and rollback and reinstall still work normally. Pins exist for the classic reason: "everything may move except this one thing production depends on."
 
 One warning about overloaded words: `aslice pin php 8.4` (a runtime, two arguments) pins a *project directory* to a PHP stream — that's chapter 6. `aslice pin openssl` (a library, one argument) is the hold described here. The two never collide in practice, but the man page for each spells out which is which.
 
@@ -208,7 +208,7 @@ Uninstalling removes the package from future generations. Old generations still 
 
 Two different things fill up, and two different commands empty them:
 
-- **The cache** — downloaded slices, source tarballs, index snapshots — is pure redundancy. `aslice clean` evicts it, least-recently-used first, when it grows past a watermark (10 GB by default), never touching anything younger than 30 days. `--dry-run` shows exactly what would go.
+- **The cache** — downloaded slices, source tarballs, index snapshots — is pure redundancy. `aslice clean` evicts it, least-recently-used first, when it grows past a watermark (10 GB by default), never touching anything younger than 30 days. `--dry-run` shows what would go.
 - **The store** — your installed package versions, including the ones only old generations reference — is what makes rollback possible. `aslice gc` removes store paths no retained generation can reach (it keeps the last 5 generations by default). `--dry-run` here too, and `gc` will never collect a store path a running process is using.
 
 Both commands print what they're doing and why. If disk pressure is chronic, lower the watermarks in `etc/aslice.toml` (§13) rather than running the commands by hand.
@@ -232,17 +232,17 @@ Installing a slice is six steps, and none of them runs code from the package:
 5. Register it in the state database.
 6. Build the new generation and flip the profile symlink.
 
-If any step fails, nothing changes. That's not a promise, it's the structure: the live generation isn't touched until the new one is complete.
+If any step fails, nothing changes: the live generation is not touched until the new one is complete.
 
-### 4.2 Flavors: why aslice asks what CPU you have
+### 4.2 Flavors: matching builds to your CPU
 
-It doesn't ask — it detects, once, at install time. Three flavors exist:
+aslice detects the CPU once, at install time. Three flavors exist:
 
 - **v1** runs on every 64-bit Intel Mac, down to the 2007 Core 2 Duo.
 - **v2** uses SSE4.2 and POPCNT (Nehalem and later, ~2009+).
 - **v3** uses AVX2 (Haswell and later, ~2014+) and is measurably faster on crypto, codecs, and compression — the workloads that dominate real package use.
 
-The solver treats flavor as a hard constraint: a v3 slice is never offered to a machine that can't execute it, so there's no "illegal instruction" surprise. The farm builds all three flavors of everything in the core orchard, so the fast path is the default path, not an enthusiast option. `aslice flavors ffmpeg` shows the matrix for your machine; `aslice config set flavor v1` forces a lower one (the reason to do this is preparing an external drive for an older Mac).
+The solver treats flavor as a hard constraint: a v3 slice is never offered to a machine that can't execute it, so there's no "illegal instruction" surprise. The farm builds all three flavors of everything in the core orchard, so the fastest build your machine can run is the default. `aslice flavors ffmpeg` shows the matrix for your machine; `aslice config set flavor v1` forces a lower one (the reason to do this is preparing an external drive for an older Mac).
 
 ### 4.3 Mixing binary and source builds
 
@@ -252,11 +252,11 @@ The practical consequences:
 
 - `--cflags="-O3 -march=native"` affects only the package you name; its dependencies stay binary.
 - A locally-built library with the same interface *is* the same package as far as everything else is concerned. The database remembers it was locally built (`aslice info` shows this), but nothing treats it as second-class.
-- If a rebuilt library would break its dependents — a symbol set that regressed, a compatibility version that went backwards — the solver refuses the combination at install time and names the exact interface that changed, instead of letting you discover it three weeks later at runtime.
+- If a rebuilt library would break its dependents — a symbol set that regressed, a compatibility version that went backwards — the solver refuses the combination at install time and names the interface that changed, instead of letting you discover it three weeks later at runtime.
 
 ### 4.4 Variants, briefly
 
-Packages can declare *variants*: optional features like `+x265` or `+ssl`. Variants the author marked as interface-changing get their own builds and coexist in the store; build-flavor variants (debug symbols and the like) just trigger a local compile. The full model — including the rules package authors follow so variants don't sprawl — is in [AUTHORING.md](AUTHORING.md) §5. As a user you only need: `aslice info <pkg>` lists a package's variants, `--variant +name` enables one, and aslice tells you whether a prebuilt slice exists for the combination before it starts compiling anything.
+Packages can declare *variants*: optional features like `+x265` or `+ssl`. Variants the author marked as interface-changing get their own builds and coexist in the store; build-flavor variants (debug symbols and the like) trigger a local compile. The full model — including the rules package authors follow so variants don't sprawl — is in [AUTHORING.md](AUTHORING.md) §5. As a user you only need: `aslice info <pkg>` lists a package's variants, `--variant +name` enables one, and aslice tells you whether a prebuilt slice exists for the combination before it starts compiling anything.
 
 ---
 
@@ -275,7 +275,7 @@ aslice rollback 41            # back to a specific one
 aslice switch-generation 44   # and forward again — rollback is not destructive
 ```
 
-Rollback is the answer to "the upgrade broke it." Because old generations are intact, going back is exact — you get the precise files you had, not a re-download of what the index currently thinks the old version was.
+Rollback is the answer to "the upgrade broke it." Because old generations are intact, going back is exact — you get the precise files you had, rather than a re-download of what the index currently thinks the old version was.
 
 This also makes experiments cheap. `aslice exec ffmpeg -- ffprobe in.mov` runs a command inside a temporary view with extra packages present, discarded on exit — try something without committing to it.
 
@@ -283,7 +283,7 @@ This also makes experiments cheap. `aslice exec ffmpeg -- ffprobe in.mov` runs a
 
 Generations cost disk, so aslice keeps the last 5 by default and `aslice gc` reclaims what nothing references (§3.5). Two guarantees are worth repeating: `gc` never touches a store path a running process is using, and `--dry-run` always shows the full list before anything is deleted.
 
-The store is supposed to be immutable, and aslice treats drift as a security signal, not a housekeeping issue:
+The store is supposed to be immutable, and aslice treats drift as a security signal:
 
 ```
 aslice store verify                    # re-hash everything against the manifests
@@ -319,21 +319,21 @@ aslice pin php 8.4            # this project tree, recorded in ./aslice.toml —
 aslice default php 8.4        # everything else: cron, services, stray shells
 ```
 
-- **Session** selection is an environment variable (`ASLICE_USE_PHP`). `aslice use` prints it and, with the shell integration from `aslice init`, sets it for you. It dies with the shell and is visible in `env` — no hidden state.
+- **Session** selection is an environment variable (`ASLICE_USE_PHP`). `aslice use` prints it and, with the shell integration from `aslice init`, sets it for you. It dies with the shell and is visible in `env`.
 - **Project** selection is a file, `aslice.toml`, found by walking up from your working directory. One file pins every runtime in the repo — PHP and Node side by side — and it's meant to be committed, next to `composer.json` or `package.json`.
 - **Default** is the fallback, recorded in aslice's state database.
 
-`aslice which php` traces the whole resolution — which level matched, why, down to the exact store path — so "what am I actually running?" is always one command. `aslice versions php` shows the matrix: installed streams, current selections, and which extensions each stream has.
+`aslice which php` traces the whole resolution — which level matched, why, down to the store path — so "what am I actually running?" is always one command. `aslice versions php` shows the matrix: installed streams, current selections, and which extensions each stream has.
 
-How it works under the hood: a directory of tiny *shims* sits ahead of the profile on your `PATH`. A shim resolves the selection and `exec`s the real binary — no wrapper process, sub-millisecond. Services and scripts that must name an exact version use versioned aliases (`php8.4`) instead, which never move under you.
+How it works under the hood: a directory of small *shims* sits ahead of the profile on your `PATH`. A shim resolves the selection and `exec`s the real binary — no wrapper process, sub-millisecond. Services and scripts that must name an exact version use versioned aliases (`php8.4`) instead, which never move under you.
 
 ### 6.3 Extensions and ecosystem tools
 
 Compiled extensions — `php-redis`, `ruby-pg` — are ordinary aslice packages, but bound to exactly one runtime stream. Install one and it builds (or downloads) against your currently selected stream; a PHP patch upgrade within the stream leaves extensions alone; installing a new stream offers to provision your previous stream's extension set for it. Rollback restores runtime and extensions together, because they're all in the generation.
 
-The ecosystems' own installers keep working too. `pip install`, `gem install`, `npm i -g`, `pecl install`, `composer global require` — the shim routes each into a per-stream, per-user directory (`~/.aslice/runtimes/php/8.4/` and friends), so a `pip install` under Python 3.12 is simply invisible to 3.13. aslice never manages, audits, or deletes those directories; uninstalling a stream warns about the orphaned directory instead of removing it.
+The ecosystems' own installers keep working too. `pip install`, `gem install`, `npm i -g`, `pecl install`, `composer global require` — the shim routes each into a per-stream, per-user directory (`~/.aslice/runtimes/php/8.4/` and friends), so a `pip install` under Python 3.12 is invisible to 3.13. aslice never manages, audits, or deletes those directories; uninstalling a stream warns about the orphaned directory instead of removing it.
 
-Tools that run *on* a runtime without compiling against it — composer, yarn, prettier, poetry — install once and follow your selection: composer always runs under your selected PHP, switching when you switch. That's a property of the tool's formula, not something you configure.
+Tools that run *on* a runtime without compiling against it — composer, yarn, prettier, poetry — install once and follow your selection: composer always runs under your selected PHP, switching when you switch. That is a property of the tool's formula; there is nothing to configure.
 
 ---
 
@@ -369,13 +369,13 @@ The previous generation (nginx 1.26.2, generation 41) is intact and can be resto
 Roll back and restart the previous version? [y/N]
 ```
 
-Yes swaps back and restarts the old version; No (the default) leaves the new generation live, the service down, and the evidence in place — `aslice rollback` remains available whenever you're done reading logs. Scripts and other non-interactive runs never get the prompt: they fail loudly with a machine-readable error, and automation that wants automatic rollback passes `--rollback-on-service-failure`. There is deliberately no flag that reports a downed service as success.
+Yes swaps back and restarts the old version; No (the default) leaves the new generation live, the service down, and the evidence in place — `aslice rollback` remains available whenever you're done reading logs. Scripts and other non-interactive runs never get the prompt: they fail with a machine-readable error, and automation that wants automatic rollback passes `--rollback-on-service-failure`. There is no flag that reports a downed service as success.
 
 ---
 
 ## 8. Keeping TLS alive on an old OS
 
-The most common day-one failure on 10.11–10.13 isn't a missing library — it's TLS itself. The system's certificate trust store froze years ago: roots expired, modern ones never arrived, and everything that relies on it — the curl and git you just installed, but also Safari and Mail — inherits the rot. `aslice ca-update` is the fix, in layers. Each layer is optional after the first, and each says exactly what it can and cannot do.
+The most common day-one failure on 10.11–10.13 isn't a missing library — it's TLS itself. The system's certificate trust store froze years ago: roots expired, modern ones never arrived, and everything that relies on it — the curl and git you just installed, but also Safari and Mail — inherits the rot. `aslice ca-update` is the fix, in layers. Each layer is optional after the first, and each says what it can and cannot do.
 
 ### 8.1 The bundle (the layer everyone wants)
 
@@ -385,7 +385,7 @@ aslice ca-update
 
 The CA certificate bundle is an ordinary aslice package — `ca-certificates`, built from the Mozilla root program (the same trust decisions Debian, Fedora, and Homebrew ship), signed, indexed, and kept fresh by the same update machinery as every other package. Installing or refreshing it is an ordinary, rollback-able transaction; `aslice shellenv` and the shell integration point `curl`, `git`, and `python` at it, so command-line TLS heals completely — modern roots, modern ciphers, TLS 1.3 — regardless of what the OS believes. `aslice ca-update --check` reports staleness without changing anything, and `aslice doctor` warns when the bundle falls behind.
 
-If your organization intercepts TLS, `aslice config set ca.source <name>` selects a different source, and `aslice ca-update --from-file ./corp-bundle.pem` installs a local file directly. Every bundle is validated before activation — must parse completely, no already-expired certificates — and a bundle that fails validation is refused, never linked.
+If your organization intercepts TLS, `aslice config set ca.source <name>` selects a different source, and `aslice ca-update --from-file ./corp-bundle.pem` installs a local file directly. Every bundle is validated before activation — must parse completely, no already-expired certificates — and a bundle that fails validation is refused.
 
 ### 8.2 The System keychain (Safari, Mail, and friends)
 
@@ -395,20 +395,20 @@ The bundle heals command-line tools. Safari, Mail, Calendar, and everything else
 aslice ca-update --keychain
 ```
 
-It imports the bundle's missing roots into the System keychain — additively, fingerprint by fingerprint, each import recorded in aslice's database. It asks for admin authorization, every time; there is no "always allow." It never removes or distrusts anything already there — expired Apple-shipped roots are reported, not touched. `aslice ca-update --keychain-remove` deletes exactly the recorded set and nothing else.
+It imports the bundle's missing roots into the System keychain — additively, fingerprint by fingerprint, each import recorded in aslice's database. It asks for admin authorization, every time; there is no "always allow." It never removes or distrusts anything already there — expired Apple-shipped roots are reported but left alone. `aslice ca-update --keychain-remove` deletes the recorded set and nothing else.
 
-**Understand what this fixes.** The import repairs *trust*, not *crypto*. On 10.11–10.12 the OS's own TLS stack predates TLS 1.3, so a site that requires it stays unreachable in Safari no matter what the keychain holds — the command says so when you run it, and the remedy is aslice's curl or a browser with its own TLS stack. Honest limits, printed, not implied.
+**Understand what this fixes.** The import repairs *trust*, not *crypto*. On 10.11–10.12 the OS's own TLS stack predates TLS 1.3, so a site that requires it stays unreachable in Safari no matter what the keychain holds — the command says so when you run it, and the remedy is aslice's curl or a browser with its own TLS stack.
 
 ### 8.3 The crypto stack and Apple's own roots
 
 Two more flags, same machinery:
 
 - `aslice ca-update --crypto` upgrades the crypto-provider packages themselves (OpenSSL and kin) to the newest the index offers — modern roots are no use to a TLS stack from 2015. It cannot touch the OS's own stack, and says so.
-- `aslice ca-update --apple-certs` imports Apple's *own* certificate roots — which the Mozilla program doesn't carry, and which Software Update, the App Store, iCloud, and Developer ID validation all chain to — from a second pinned, signed package. Aging Apple intermediates break things on a frozen OS exactly like expired public roots do.
+- `aslice ca-update --apple-certs` imports Apple's *own* certificate roots — which the Mozilla program doesn't carry, and which Software Update, the App Store, iCloud, and Developer ID validation all chain to — from a second pinned, signed package. Aging Apple intermediates break things on a frozen OS the same way expired public roots do.
 
 ### 8.4 Replacing Apple's fossilized tools
 
-Some of the OS's TLS surface is beyond trust stores entirely: the `/usr/bin/openssl` on 10.11 is from the 0.9.8 era and cannot speak modern TLS, full stop. For that, the core orchard ships `[system-patch]` packages — a declared, consent-gated, fully reversible mechanism that backs up the Apple original to the byte and replaces it with a symlink into your aslice generation. You opt in per package, per operation; `aslice system-patch list` shows what's currently replaced; `aslice system-patch restore <path>` puts the original back and verifies its hash. It's the narrowest, loudest category in the system, and `man aslice-system-patch` — plus DESIGN §12.11 — is the honest accounting of what it does and doesn't guarantee.
+Some of the OS's TLS surface is beyond trust stores entirely: the `/usr/bin/openssl` on 10.11 is from the 0.9.8 era and cannot speak modern TLS at all. For that, the core orchard ships `[system-patch]` packages — a declared, consent-gated, fully reversible mechanism that backs up the Apple original to the byte and replaces it with a symlink into your aslice generation. You opt in per package, per operation; `aslice system-patch list` shows what's currently replaced; `aslice system-patch restore <path>` puts the original back and verifies its hash. The category is the most tightly gated in the system, and `man aslice-system-patch` — plus DESIGN §12.11 — gives the full accounting of what it does and doesn't guarantee.
 
 ---
 
@@ -418,7 +418,7 @@ Some of the OS's TLS surface is beyond trust stores entirely: the `/usr/bin/open
 
 Out of the box, aslice is configured with the project's own repository — the core and extended orchards, compiled, signed, and pre-pinned into the bootstrap. You don't have to configure anything, and you shouldn't have to think about this chapter at all until you add a second source.
 
-A **repository** is a static, signed tree: metadata, the package index, formulae, and the blobs (slices, plus a copy of every source archive the farm ever fetched — so an upstream vanishing breaks nothing already published). Anyone can host one, including you (AUTHORING §11), and mirrors are just full copies: if the project's host is unreachable, aslice fails over across the repository's declared mirrors automatically.
+A **repository** is a static, signed tree: metadata, the package index, formulae, and the blobs (slices, plus a copy of every source archive the farm ever fetched — so an upstream vanishing breaks nothing already published). Anyone can host one, including you (AUTHORING §11), and mirrors are full copies: if the project's host is unreachable, aslice fails over across the repository's declared mirrors automatically.
 
 ### 9.2 Adding repositories and trust levels
 
@@ -426,9 +426,9 @@ A **repository** is a static, signed tree: metadata, the package index, formulae
 aslice repo add https://repo.example.org
 ```
 
-Adding a repository pins its signing key's fingerprint on first use, displays it, and recommends you verify it out of band. Any later change to that key is a loud, blocking event — that is precisely the moment a hijack would announce itself, so aslice treats it as one until you re-pin deliberately (`aslice repo re-pin`).
+Adding a repository pins its signing key's fingerprint on first use, displays it, and recommends you verify it out of band. Any later change to that key blocks the repository and is reported: that is the moment a hijack would announce itself, so aslice treats it as one until you re-pin explicitly (`aslice repo re-pin`).
 
-Every repository has an enforced trust level, which is a set of capabilities, not a label:
+Every repository has an enforced trust level, which is a set of capabilities rather than a label:
 
 | Level | What it means | Binaries? | Root daemons, kexts? | `[system-patch]`? |
 |---|---|---|---|---|
@@ -443,7 +443,7 @@ When two repositories offer the same package name, aslice asks you once, remembe
 
 ### 9.3 What "verified" and "signed" do and don't mean
 
-Signatures and trust levels answer narrow questions precisely: *are these bits exactly what this repository published, and how much did I decide to trust this repository?* They do not make claims about the software's behavior — a signed, verified slice of malicious software is still malicious software, now with better paperwork. The design's honesty section (DESIGN §10.7) says this at length; the short version is that aslice's guarantees are about provenance and integrity, and it never pretends otherwise in its messages.
+Signatures and trust levels answer narrow questions precisely: *are these bits exactly what this repository published, and how much did I decide to trust this repository?* They do not make claims about the software's behavior — a signed, verified slice of malicious software is still malicious software, now with better paperwork. The design document's limitations section (DESIGN §10.7) says this at length; the short version is that aslice's guarantees are about provenance and integrity, and it never pretends otherwise in its messages.
 
 ### 9.4 Checking what you're running
 
@@ -456,7 +456,7 @@ aslice provenance ffmpeg      # who built this, from what source, with what tool
 
 ### 9.5 Working offline
 
-aslice assumes connectivity will be intermittent — many of its users are audio rigs and lab machines that are offline by policy. Everything already downloaded (slices in the cache, the index snapshot) works without a network. Installs of cached slices work. `aslice doctor --offline` checks health without trying the network, and reports the age of your cached index instead of failing on unreachable repositories. A stale index never blocks operations against the cache; it just means "newest" means "newest as of" the snapshot date, which aslice prints.
+aslice assumes connectivity will be intermittent — many of its users are audio rigs and lab machines that are offline by policy. Everything already downloaded (slices in the cache, the index snapshot) works without a network. Installs of cached slices work. `aslice doctor --offline` checks health without trying the network, and reports the age of your cached index instead of failing on unreachable repositories. A stale index never blocks operations against the cache; it means "newest" means "newest as of" the snapshot date, which aslice prints.
 
 ---
 
@@ -505,15 +505,15 @@ tilesize = 48
 # …
 ```
 
-Two properties worth knowing before you trust it. First, the file is **data, never code** — unlike a Homebrew Brewfile (which is Ruby and can do anything Ruby can), there is nothing in a `setup.toml` that executes. Applying a stranger's file has a bounded blast radius, and you see the plan first. Second, the file is a *wishlist*, not an exact snapshot: "ffmpeg 7" resolves against today's index. For bit-exact reproduction of a machine there is the lock file (§4.1, §5) — and `aslice apply` replays those too; it is one verb for "make reality match this document", whether the document is a plan, a lock, or a setup file.
+Two properties are worth knowing before you trust it. First, the file is **data, never code** — unlike a Homebrew Brewfile (which is Ruby and can do anything Ruby can), there is nothing in a `setup.toml` that executes. Applying a stranger's file has a bounded blast radius, and you see the plan first. Second, the file is a *wishlist* rather than an exact snapshot: "ffmpeg 7" resolves against today's index. For bit-exact reproduction of a machine there is the lock file (§4.1, §5) — and `aslice apply` replays those too; it is one verb for "make reality match this document", whether the document is a plan, a lock, or a setup file.
 
 ### 10.3 Applying it
 
 `aslice apply` with no argument reads `./setup.toml`. Every apply is a plan first: the wishlist is resolved, preferences are diffed, and the complete plan is printed for confirmation before anything changes. `--dry-run` prints it without asking.
 
-Applying is **convergent**: run the same file twice and the second run reports "0 changes". It is also **additive** — apply never removes something just because the file doesn't mention it. If you *do* want the file to be the whole truth, `aslice apply --prune` retracts things the file previously applied that it no longer declares — and nothing else; your hand-installed packages and hand-set preferences are invisible to prune.
+Applying is **convergent**: run the same file twice and the second run reports "0 changes". It is also **additive** — apply never removes something because the file doesn't mention it. If you *do* want the file to be the whole truth, `aslice apply --prune` retracts things the file previously applied that it no longer declares — and nothing else; your hand-installed packages and hand-set preferences are invisible to prune.
 
-Two kinds of step write to OS territory and are therefore **consent-gated**: system-wide preference domains (`/Library/Preferences`) and enrolling an aslice-provided login shell in `/etc/shells`. Interactively you are shown exactly what will be written and asked. In a script or a recovery terminal, pass `--accept-system-changes` — the same flag as for system packages (§8.4) — or those steps are refused while everything unprivileged still lands.
+Two kinds of step write to OS territory and are therefore **consent-gated**: system-wide preference domains (`/Library/Preferences`) and enrolling an aslice-provided login shell in `/etc/shells`. Interactively you are shown what will be written, and asked. In a script or a recovery terminal, pass `--accept-system-changes` — the same flag as for system packages (§8.4) — or those steps are refused while everything unprivileged still lands.
 
 And the safety net is the one you already know: before each preference write or shell change, aslice records the old value against the new **generation**. `aslice rollback` (§5) restores preferences and login shell along with the packages. `aslice history` shows which file applied what, and when.
 
@@ -526,26 +526,26 @@ aslice export --defaults com.apple.dock,com.apple.finder > setup.toml
 
 Export writes what aslice can *know*: your explicitly-installed packages (with variants and non-default streams), your runtime selections, enabled services, your login shell if it isn't the OS default, any repositories you added, and any configuration you changed from defaults. The output is sorted and stable, so exports diff cleanly in version control.
 
-Preferences are the honest exception. There is no baseline to diff your whole preferences folder against, and application preference domains can contain account tokens, server addresses, and recent-file lists — exactly what a shared file must not leak. So export captures preferences only for domains you name with `--defaults` (and `--system-defaults` for system-wide ones), and stamps the result with a review-before-sharing warning. Value types the schema doesn't support (dictionaries, raw data blobs, dates) are written as comments, never silently dropped.
+Preferences are the exception. There is no baseline to diff your whole preferences folder against, and application preference domains can contain account tokens, server addresses, and recent-file lists — what a shared file must not leak. So export captures preferences only for domains you name with `--defaults` (and `--system-defaults` for system-wide ones), and stamps the result with a review-before-sharing warning. Value types the schema doesn't support (dictionaries, raw data blobs, dates) are written as comments, never silently dropped.
 
 ### 10.5 Sharing, and coming from Homebrew
 
 The file is meant to travel: a team can keep one next to its onboarding docs, and "how do you have your Mac set up?" becomes a link instead of a memoir. Two rules keep shared files healthy — no secrets, ever (nothing in the schema legitimately holds one), and no machine-specific values (hostnames and serials say *this machine*, not *how I like machines*).
 
-If your current source of truth is a Homebrew Brewfile, `aslice import --from-brewfile Brewfile > setup.toml` translates it mechanically: `brew` entries become packages, `tap` entries become comments (aslice repositories are a different, signed thing — §9), and `cask`/`mas`/`vscode` entries are listed as skipped, with a nudge to search the orchard for a vendor-binary package instead. Treat the result as a draft to hand-tune, not a finished file. (For the packages themselves, `aslice adopt --from-homebrew` reads what Homebrew actually installed — §11.)
+If your current source of truth is a Homebrew Brewfile, `aslice import --from-brewfile Brewfile > setup.toml` translates it mechanically: `brew` entries become packages, `tap` entries become comments (aslice repositories are a different, signed thing — §9), and `cask`/`mas`/`vscode` entries are listed as skipped, with a nudge to search the orchard for a vendor-binary package instead. Treat the result as a draft to hand-tune rather than a finished file. (For the packages themselves, `aslice adopt --from-homebrew` reads what Homebrew actually installed — §11.)
 
 ### 10.6 What it doesn't do
 
 - **Dotfiles.** `~/.zshrc` and friends stay yours — chezmoi, Stow, or plain git do that job well.
 - **Imaging.** FileVault, SIP, user accounts, and System Settings panes without preference domains are untouched; recovery-then-apply assumes a working macOS account already exists.
-- **Fleet management.** No agent, no daemon, no drift detection. If you want periodic enforcement, a `launchd` job that runs `aslice apply` is the whole story.
+- **Fleet management.** No agent, no daemon, no drift detection. If you want periodic enforcement, a `launchd` job that runs `aslice apply` is enough.
 - **Secrets.** Keychain items are never read or written, on apply or export.
 
 ---
 
 ## 11. aslice and Homebrew
 
-The two coexist by construction: aslice lives in `/opt/aslice` and never touches `/usr/local`, in either direction. Run both as long as you like. `aslice doctor` notices a Homebrew installation and advises on `PATH` ordering — that's the extent of the interaction.
+The two coexist: aslice lives in `/opt/aslice` and never touches `/usr/local`, in either direction. Run both as long as you like. `aslice doctor` notices a Homebrew installation and advises on `PATH` ordering — that's the extent of the interaction.
 
 When you're ready to move:
 
@@ -553,7 +553,7 @@ When you're ready to move:
 aslice adopt --from-homebrew
 ```
 
-It reads your Homebrew installation, maps the packages you explicitly installed (not their dependencies) to aslice formulae — translating old `--with-*` options to aslice variants where an equivalent exists, and Casks to vendor-binary packages where one is packaged — and produces an install plan. It recreates *intent*, not bytes: Homebrew's files are never reused or modified, and removing Homebrew afterwards (or not) is your call.
+It reads your Homebrew installation, maps the packages you explicitly installed (not their dependencies) to aslice formulae — translating old `--with-*` options to aslice variants where an equivalent exists, and Casks to vendor-binary packages where one is packaged — and produces an install plan. It recreates *intent* rather than bytes: Homebrew's files are never reused or modified, and removing Homebrew afterwards (or not) is your call.
 
 ---
 
@@ -569,7 +569,7 @@ Read-only, fast, offline-capable, and every finding names its remedy — not "st
 
 ### 12.2 Read the log
 
-aslice logs everything it does to `log/` inside the prefix — structured, local, and never transmitted anywhere (the no-telemetry charter applies to logs exactly as to metrics).
+aslice logs everything it does to `log/` inside the prefix — structured, local, and never transmitted anywhere (the no-telemetry charter applies to logs as it does to metrics).
 
 ```
 aslice log --last-op          # exactly what the last operation did
@@ -585,15 +585,15 @@ aslice log --level debug      # more
 |---|---|---|
 | `curl`/`git` fail with certificate errors on a fresh install | The OS trust store expired years ago | `aslice ca-update`, then open a new shell (or `aslice shellenv`) |
 | Safari can't reach a site even after `ca-update --keychain` | The site's TLS requirements exceed the OS's crypto stack; keychain imports fix trust, not crypto | Use aslice's curl, or a browser with its own TLS stack |
-| The installer can't fetch anything at all | TLS-dead machine: expected on old releases | Nothing — it falls back to plain HTTP for the same hash-pinned files, loudly, and verifies them identically |
+| The installer can't fetch anything at all | TLS-dead machine: expected on old releases | Nothing — it falls back to plain HTTP for the same hash-pinned files, with a printed banner, and verifies them identically |
 | A service won't start after an upgrade | aslice health-checked it and is waiting for your decision | Read the shown log path; answer the rollback prompt, or `aslice rollback` later |
 | "repository key pin changed" | The repo's signing key differs from your pin — rotation or hijack, and aslice can't tell which | Verify the new fingerprint out of band; only then `aslice repo re-pin` |
-| A package wants SIP disabled | It's a declared `[system]` package (kexts, low-level dev tools) | Follow the printed Recovery instructions, or don't install it — the warning is the feature |
+| A package wants SIP disabled | It's a declared `[system]` package (kexts, low-level dev tools) | Follow the printed Recovery instructions, or don't install it — the warning is intentional |
 | `php` resolves to the wrong version | Session, project, or default selection, in that order | `aslice which php` traces the resolution |
 | aslice and Homebrew binaries shadow each other | `PATH` ordering | `aslice doctor` (coexistence group) prints the exact edit |
 | Disk pressure | Cache or old generations | `aslice clean --dry-run`, `aslice gc --dry-run`, then lower the watermarks (§13) |
 | Something in the store fails verification | Corruption or tampering; both are treated as security events | `aslice store verify --quarantine <pkg>`, reinstall, and keep the log |
-| After a macOS update, a `[system-patch]` behaves oddly | The update restored or replaced the Apple file under the symlink | `aslice doctor` reports the drift with reapply/restore options — never silently re-patches |
+| After a macOS update, a `[system-patch]` behaves oddly | The update restored or replaced the Apple file under the symlink | `aslice doctor` reports the drift with reapply/restore options — it never silently re-patches |
 
 ---
 
