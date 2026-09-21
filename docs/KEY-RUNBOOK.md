@@ -1,6 +1,6 @@
 # Key Ceremony and Rotation Runbook
 
-This runbook governs every cryptographic key aslice trusts; DESIGN §10.2 calls for it by name ("revocation and rotation is a practiced runbook, not a hope"). Its purpose can be stated in one sentence: the worst day of the project should be a procedure, not an improvisation.
+This runbook governs every cryptographic key aslice trusts; DESIGN §10.2 calls for it by name ("revocation and rotation are covered by a practiced runbook"). Its purpose can be stated in one sentence: the worst day of the project should be a procedure, not an improvisation.
 
 Four rules govern everything below, and no procedure in this document suspends them:
 
@@ -109,4 +109,4 @@ This path will be embarrassing if it ever happens. It is written down so that it
 
 ---
 
-*History: September 2026 — editorial pass: prose revised for directness; no procedural changes. September 2026 — prose rewrite throughout: the runbook reworded in the project's technical-writing voice; no procedural changes.*
+*History: September 2026 — editorial pass: prose revised for directness; no procedural changes. September 2026 — prose rewrite throughout: the runbook reworded in the project's technical-writing voice; no procedural changes. September 2026 — review pass: the DESIGN §10.2 quotation restored to its current wording; no procedural changes.*
