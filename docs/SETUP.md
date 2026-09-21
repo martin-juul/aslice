@@ -1,6 +1,6 @@
 # aslice Setup — Declarative Whole-Machine Setup with `setup.toml`
 
-- **Status:** Design draft, v0.2 — September 2026 (v0.2: editorial pass — prose revised for directness; no schema or semantic changes)
+- **Status:** Design draft, v0.3 — September 2026 (v0.2: editorial pass — prose revised for directness; no schema or semantic changes. v0.3: second editorial pass — sentence-level revision for readability; no schema or semantic changes)
 - **Companion to:** DESIGN.md v1.12 §12.13 (architecture and rationale), MANUAL.md §10 (user guide), aslice-apply(1) (command reference). This document is the schema and semantics specification.
 
 ## 1. The scenario
@@ -78,7 +78,7 @@ Packages are resolved binary-first with flavor auto-detection, per the ordinary 
 
 ### 2.3 `runtimes`
 
-`[runtimes.default]` maps runtime names to streams and is applied as `aslice default <runtime> <stream>` (DESIGN §12.9): recorded in the state DB, consumed by the shim layer. Project pins (`aslice.toml` in a project tree) and session selections (`aslice use`) are deliberately absent — project pins belong to projects (commit `aslice.toml` there), and session state is by definition not machine setup.
+`[runtimes.default]` maps runtime names to streams and is applied as `aslice default <runtime> <stream>` (DESIGN §12.9): recorded in the state DB, consumed by the shim layer. Project pins (`aslice.toml` in a project tree) and session selections (`aslice use`) are not part of this file: project pins belong to projects (commit `aslice.toml` there), and session state is by definition not machine setup.
 
 ### 2.4 `services`
 
@@ -102,7 +102,7 @@ macOS preference keys, written with `defaults(1)` semantics:
 - **`[defaults.user."<domain>"]`** — the current user's domains (`~/Library/Preferences`). No privileges required, no consent gate beyond applying the file at all.
 - **`[defaults.system."<domain>"]`** — system-wide domains (`/Library/Preferences`). Written by `aslice-system` as root, consent-gated (§3.4), recorded, reversible (§3.5).
 
-Value types in schema 1: **string, integer, float, boolean, and arrays of those**. Deferred to a later schema version, deliberately: `dict` values, `data` (raw plist blobs), `date`, and by-host (`-currentHost`) domains. The deferred types are the ones that share poorly — opaque blobs and machine-bound settings have no place in a file meant to travel between machines (§6).
+Value types in schema 1: **string, integer, float, boolean, and arrays of those**. Deferred to a later schema version: `dict` values, `data` (raw plist blobs), `date`, and by-host (`-currentHost`) domains. The deferred types are the ones that share poorly — opaque blobs and machine-bound settings have no place in a file meant to travel between machines (§6).
 
 Preferences are read by applications at launch, not continuously. After applying, aslice prints the affected applications worth restarting for a small set of well-known system domains (`com.apple.dock` → Dock, `com.apple.finder` → Finder, `com.apple.controlcenter`/`com.apple.systemuiserver` → SystemUIServer, etc.) and a generic "log out or restart the affected apps" note otherwise. It never kills processes on its own.
 
@@ -142,7 +142,7 @@ Every apply is a plan first. The plan is computed in full, rendered in the same 
 8. **System preferences and shell** — `[defaults.system]` writes, `/etc/shells` enrollment, `chsh` (§3.4 gate).
 9. **Report** — what changed, what was already so, what to restart.
 
-The order is deliberate: privileges are needed only at step 8, so a plan that cannot get consent still lands everything unprivileged and reports the remainder as skipped-refused, not failed.
+The order matters: privileges are needed only at step 8, so a plan that cannot get consent still lands everything unprivileged and reports the remainder as skipped-refused, not failed.
 
 ### 3.3 Idempotence, convergence, and `--prune`
 
