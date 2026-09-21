@@ -58,7 +58,7 @@ aslice collects no telemetry or analytics of any kind — there is no opt-out be
 :   Update aslice itself — signed, generation-managed, health-checked, with automatic rollback on failure. `--check` reports without installing.
 
 **system-patch**
-:   `list`, `status`, `restore` — inspect and reverse declared replacements of Apple-provided files.
+:   `list`, `status`, `restore` — inspect and reverse declared replacements of Apple-provided files. See aslice-system-patch(1).
 
 **adopt**
 :   `--from-homebrew` — produce an install plan recreating a Homebrew leaf set.
@@ -113,4 +113,4 @@ aslice collects no telemetry or analytics of any kind — there is no opt-out be
 
 The full user manual: `docs/MANUAL.md` in the aslice source tree. Package authoring: `docs/AUTHORING.md`. Design rationale: `docs/DESIGN.md`.
 
-aslice-install(1), aslice-upgrade(1), aslice-uninstall(1), aslice-gc(1), aslice-service(1), aslice-use(1), aslice-repo(1), aslice-ca-update(1), aslice-doctor(1)
+aslice-install(1), aslice-upgrade(1), aslice-uninstall(1), aslice-gc(1), aslice-service(1), aslice-use(1), aslice-repo(1), aslice-ca-update(1), aslice-doctor(1), aslice-system-patch(1)
