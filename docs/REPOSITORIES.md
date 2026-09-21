@@ -1,14 +1,14 @@
 # aslice Repositories — Sources, Trust Levels, and Signing Keys
 
-- **Status:** Design draft, v0.9 — September 2026 (v0.2: cross-repository overlap resolution with remembered decisions — §10; the state database's role — §11. v0.3: `history` rows carry the operation ID that correlates with the operation log — DESIGN §12.5. v0.4: the `system` capability — serving `[system]` packages (kexts, SIP-off development tools) is gated by trust level; third-party repositories never may — §3; mechanism in DESIGN v1.2 §12.7. v0.5: the same capability gates **root-domain services** (`domain = "system"` in PACKAGE-FORMAT v0.4's `[service]` table); user-domain agents stay ungated — §3; mechanism in DESIGN v1.3 §12.8. v0.6: the **`system-patch` capability** — serving `[system-patch]` packages (flagged replacement of Apple-provided files) is the strictest gate in the system: official and local repositories only, verified and third-party never — §3, §8; mechanism in DESIGN v1.7 §12.11, schema in PACKAGE-FORMAT v0.6 §3.16. v0.7: DESIGN open question #10 **resolved** — a `verified` repository may receive the `system-patch` capability through an explicit per-repo grant (`aslice repo allow-system-patch <name>`, refused by default, recorded in the state DB, revocable); third-party still never — §3, §8; mechanism in DESIGN v1.8 §12.11. v0.8: the tree's vendored-source role made explicit — every fetched source artifact lives in `blobs/sha256/`, mirrors replicate it, and the client fetch order is upstream → formula `mirrors` → the repository's own blob area (DESIGN v1.9 §9.6); companions refreshed. v0.9: review corrections — §5.2 names the declared PGP schema (`[source.pgp]` with `key_url` plus pinned `fingerprint`, PACKAGE-FORMAT §3.4) instead of a loose `pgp_fingerprint`; §7's command block gains the overlap-resolution and grant commands (`prefer`, `resolutions` / `forget`, `re-resolve`, `allow-system-patch` / `deny-system-patch`, `list --overlaps`))
-- **Companion to:** [DESIGN.md](DESIGN.md) v1.9 (§8 store/state, §9.6 repository system, §10.2 signatures, §12.5 logging, §12.6 doctor, §12.7 system software, §12.8 services, §12.10 trust store, §12.11 system patches, §12.12 self-update), [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md) v0.6, [BUILD-INFRA.md](BUILD-INFRA.md) v0.6 (§9 result→repository), [ORCHARD-POLICY.md](ORCHARD-POLICY.md) v0.8
+- **Status:** Design draft, v1.0 — September 2026 (v0.2: cross-repository overlap resolution with remembered decisions — §10; the state database's role — §11. v0.3: `history` rows carry the operation ID that correlates with the operation log — DESIGN §12.5. v0.4: the `system` capability — serving `[system]` packages (kexts, SIP-off development tools) is gated by trust level; third-party repositories never may — §3; mechanism in DESIGN v1.2 §12.7. v0.5: the same capability gates **root-domain services** (`domain = "system"` in PACKAGE-FORMAT v0.4's `[service]` table); user-domain agents stay ungated — §3; mechanism in DESIGN v1.3 §12.8. v0.6: the **`system-patch` capability** — serving `[system-patch]` packages (flagged replacement of Apple-provided files) is the strictest gate in the system: official and local repositories only, verified and third-party never — §3, §8; mechanism in DESIGN v1.7 §12.11, schema in PACKAGE-FORMAT v0.6 §3.16. v0.7: DESIGN open question #10 **resolved** — a `verified` repository may receive the `system-patch` capability through an explicit per-repo grant (`aslice repo allow-system-patch <name>`, refused by default, recorded in the state DB, revocable); third-party still never — §3, §8; mechanism in DESIGN v1.8 §12.11. v0.8: the tree's vendored-source role made explicit — every fetched source artifact lives in `blobs/sha256/`, mirrors replicate it, and the client fetch order is upstream → formula `mirrors` → the repository's own blob area (DESIGN v1.9 §9.6); companions refreshed. v0.9: review corrections — §5.2 names the declared PGP schema (`[source.pgp]` with `key_url` plus pinned `fingerprint`, PACKAGE-FORMAT §3.4) instead of a loose `pgp_fingerprint`; §7's command block gains the overlap-resolution and grant commands (`prefer`, `resolutions` / `forget`, `re-resolve`, `allow-system-patch` / `deny-system-patch`, `list --overlaps`). v1.0: editorial pass — prose revised for directness; no semantic or trust-model changes)
+- **Companion to:** [DESIGN.md](DESIGN.md) v1.12 (§8 store/state, §9.6 repository system, §10.2 signatures, §12.5 logging, §12.6 doctor, §12.7 system software, §12.8 services, §12.10 trust store, §12.11 system patches, §12.12 self-update), [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md) v0.9, [BUILD-INFRA.md](BUILD-INFRA.md) v0.6 (§9 result→repository), [ORCHARD-POLICY.md](ORCHARD-POLICY.md) v0.8
 - **Scope:** the shipped official source list, adding third-party repositories, the inherent trust-level model, and the dual signature scheme (Ed25519 canonical, OpenPGP supported).
 
 ---
 
 ## 1. Axioms
 
-1. **Trust is per-repository, never global** (DESIGN §9.6). Adding a repository grants it exactly the capabilities of its trust level and nothing more.
+1. **Trust is per-repository, never global** (DESIGN §9.6). Adding a repository grants it the capabilities of its trust level and nothing more.
 2. **Trust levels are inherent, not labels.** A level is a set of *enforced capabilities* — what namespaces the repo may serve, whether its binaries may install, whether it may shadow core package names, whether it may serve `[system]` packages — checked by the solver and the verifier in code. A repo cannot talk its way into a higher level; only the user (or the project's countersignature, for verified repos) can raise one.
 3. **Every served artifact is signed.** There is no trust level at which unsigned binaries install. The levels differ in *whose* signature is required and *what the repo is allowed to offer* — never in whether verification happens.
 4. **No repository can execute code at install time** regardless of level (DESIGN §10.1). Trust levels govern distribution, not the structural guarantees.
@@ -50,7 +50,7 @@ Properties:
 
 - **The core key fingerprint is compiled into the bootstrap binary** as well as listed here, so a tampered `sources.toml` alone cannot redirect the core namespace — the client refuses a core entry whose fingerprint differs from the compiled-in pin. The file is the *discovery* layer; the binary pin is the root of the root.
 - The list is where **verified community repositories** are advertised (§3): known, project-vouched, but disabled by default — discovery without implicit trust.
-- Users may edit the file directly or via `aslice repo add/remove/enable/disable`; both paths validate against the schema and re-pin fingerprints loudly on any change.
+- Users may edit the file directly or via `aslice repo add/remove/enable/disable`; both paths validate against the schema, and any fingerprint change triggers a visible re-pin notice.
 - A completely offline/air-gapped machine works with the shipped file plus `file://` mirrors — the list is plain data (§8).
 - **Mirrors replicate the whole tree, sources included.** The `blobs/sha256/` area vendors every source artifact the farm has ever fetched (DESIGN §9.6); a mirror is therefore a full survival copy of the orchard's inputs, not just its outputs.
 
@@ -61,7 +61,7 @@ Four levels, ordered by what a repository is permitted to do:
 | Level | How a repo gets it | May serve binaries? | May shadow core names? | May serve `[system]`? | May serve `[system-patch]`? | Signature requirement |
 |---|---|---|---|---|---|---|
 | `official` | Compiled-in fingerprint pin; only core/extended ship this way | Yes | n/a (it *is* the namespace) | Yes | Yes | Ed25519, threshold TUF root (DESIGN §10.2) |
-| `verified` | Listed in the official source list **with a project countersignature** over the repo's key; user enables explicitly | Yes | No — solver treats shadowing as a conflict with a loud message | Yes | **With an explicit per-repo grant** — `aslice repo allow-system-patch <name>` (refused by default, recorded in the state DB, revocable); never implicit (§3) | Ed25519 **or** OpenPGP; key vouched by the core key |
+| `verified` | Listed in the official source list **with a project countersignature** over the repo's key; user enables explicitly | Yes | No — solver treats shadowing as a conflict with an explicit message | Yes | **With an explicit per-repo grant** — `aslice repo allow-system-patch <name>` (refused by default, recorded in the state DB, revocable); never implicit (§3) | Ed25519 **or** OpenPGP; key vouched by the core key |
 | `third-party` | `aslice repo add <url>` by the user, TOFU key pinning | Yes — installs show an unambiguous `third-party/<name>` provenance line | Never silently; `doctor` reports; solver prefers core/extended unconditionally | **Never** | **Never** | Ed25519 or OpenPGP; fingerprint displayed at add, out-of-band verification recommended |
 | `local` | `aslice repo add file:///path --trust local` (development trees) | **No.** Formulas resolve for source builds only; any binary target in the repo is refused | No | Yes — own tree, own machine, same warnings | Yes — own tree, own machine, same consent flow | Unsigned trees permitted *for formulas only*; a signed local repo (minisign or GPG) may additionally serve binaries to this machine only |
 
@@ -71,8 +71,8 @@ Rules that hold across all levels:
 - **Namespaces are mandatory** for non-official repos (DESIGN §9.6): explicit addressing `audiolab:convolver`, resolution order core > extended > verified > third-party in add order.
 - **Vendor-binary packages (`type = "binary"`) follow the same levels.** A `third-party` repo may serve payload-only vendor slices; the signer-pinning rules of DESIGN §12.4 apply unchanged, and the Apple code-signing identity pin is *additional* to the repo signature, never a substitute.
 - **System packages (`[system]`, DESIGN §12.7) are a per-level capability, not a package property.** `official` and `verified` repositories may serve them; `third-party` repositories never may — no warning flow makes a stranger's kernel extension acceptable; `local` repositories may, on the user's own machine, with the same warnings. The solver refuses a `[system]` package from a non-capable repository with a message naming the level and the remedy, not a generic error. The same capability gates **root-domain services** (`domain = "system"` in the `[service]` table, DESIGN §12.8): running code as root is the privilege that matters, so a third-party repository may declare user agents but never root daemons — refused at solve time with the same named-level message.
-- **System patches (`[system-patch]`, DESIGN §12.11) carry their own, stricter capability — the strictest gate in the system.** A `[system-patch]` package replaces an Apple-provided file for every user and process on the machine, so serving one requires the `system-patch` capability: **official and local repositories have it; third-party never does.** A `verified` repository receives it only through an explicit per-repo grant from the machine's owner — `aslice repo allow-system-patch <name>`, refused by default, recorded in the state DB, revocable with `aslice repo deny-system-patch <name>` (DESIGN open question #10, resolved in DESIGN v1.8). The distinction from the `system` capability — which rides on `verified` with no grant — is deliberate: the countersignature vets a repository to *distribute software*, and rewriting the OS warrants one deliberate decision beyond that vetting. The grant gates *serving*; the DESIGN §12.11 consent flow is unchanged and applies whoever serves the package. The solver refuses a `[system-patch]` package from a non-capable or ungranted repository with a message naming the level and the remedy.
-- **Demotion events are loud.** If a `verified` repo's countersignature is revoked or its key rotates without a re-vouch, the client freezes that repo at its last good snapshot, refuses updates, and prints the reason on every operation that touches it until the user re-pins or removes it.
+- **System patches (`[system-patch]`, DESIGN §12.11) carry their own, stricter capability — the strictest gate in the system.** A `[system-patch]` package replaces an Apple-provided file for every user and process on the machine, so serving one requires the `system-patch` capability: **official and local repositories have it; third-party never does.** A `verified` repository receives it only through an explicit per-repo grant from the machine's owner — `aslice repo allow-system-patch <name>`, refused by default, recorded in the state DB, revocable with `aslice repo deny-system-patch <name>` (DESIGN open question #10, resolved in DESIGN v1.8). The `system` capability rides on `verified` with no grant; the stricter gate exists because the countersignature vets a repository to *distribute software*, and rewriting the OS warrants one more decision beyond that vetting. The grant gates *serving*; the DESIGN §12.11 consent flow is unchanged and applies whoever serves the package. The solver refuses a `[system-patch]` package from a non-capable or ungranted repository with a message naming the level and the remedy.
+- **Demotion of a verified repo is a blocking event.** If a `verified` repo's countersignature is revoked or its key rotates without a re-vouch, the client freezes that repo at its last good snapshot, refuses updates, and prints the reason on every operation that touches it until the user re-pins or removes it.
 
 ## 4. Adding a third-party repository
 
@@ -101,9 +101,9 @@ The project's canonical scheme is **Ed25519 in minisign-compatible format under 
 
 But repositories exist to let *other* ecosystems distribute through aslice, and those ecosystems already sign with **OpenPGP** — upstream release tarballs, vendor checksum files, existing project keyrings. Telling every third-party operator to re-key into minisign would be telling the platform's most valuable niche communities (audio, lab, retro) to change their release process for us. So OpenPGP verification is a first-class, built-in scheme:
 
-- **Implementation:** a self-contained OpenPGP verifier inside aslice (Sequoia-PGP-style, linked in — *no* dependency on a `gpg` binary, no keyserver lookups at verify time). Verification supports the modern subset: Ed25519 and ECDSA/RSA OpenPGP keys, detached and cleartext signatures, SHA-256+ digest algorithms only (SHA-1 signatures rejected, loudly).
+- **Implementation:** a self-contained OpenPGP verifier inside aslice (Sequoia-PGP-style, linked in — *no* dependency on a `gpg` binary, no keyserver lookups at verify time). Verification supports the modern subset: Ed25519 and ECDSA/RSA OpenPGP keys, detached and cleartext signatures, SHA-256+ digest algorithms only (SHA-1 signatures rejected).
 - **Key acquisition:** fingerprints are pinned in the source entry or at `repo add` (TOFU, §4). Full keys are fetched from the repository itself (`keys/` in the repo tree, §6) or via WKD as a convenience — but verification always happens against the *pinned fingerprint*, so a hostile keyserver or a swapped `keys/` file yields a hard failure, not a wrong key.
-- **No web of trust.** aslice evaluates exactly two things: does the key match the pinned fingerprint, and did it produce a valid signature over the artifact. WoT pathfinding is explicitly out of scope — TOFU + (for `verified`) the project's countersignature replaces it.
+- **No web of trust.** aslice evaluates two things: does the key match the pinned fingerprint, and did it produce a valid signature over the artifact. WoT pathfinding is explicitly out of scope — TOFU + (for `verified`) the project's countersignature replaces it.
 
 ### 5.2 Where each signature lives
 
@@ -119,7 +119,7 @@ The client's rule is uniform: **the scheme is a property of the repository, the 
 
 ### 5.3 Rotation and revocation
 
-- **Official keys:** threshold root (3-of-5, YubiKey custody) with the practiced rotation runbook of DESIGN §10.2; rotations arrive as ordinary TUF root updates, and the compiled-in bootstrap pin is *itself* updated through the self-update path (REVIEW §4.1) with a loud changelog line.
+- **Official keys:** threshold root (3-of-5, YubiKey custody) with the practiced rotation runbook of DESIGN §10.2; rotations arrive as ordinary TUF root updates, and the compiled-in bootstrap pin is *itself* updated through the self-update path (REVIEW §4.1), with the rotation announced in the changelog.
 - **Third-party keys:** rotation = fingerprint change = blocking event (§4). Repo operators are told in the authoring docs to publish transition signatures (old key signs the new fingerprint) so users can re-pin with evidence instead of blind trust: `aslice repo re-pin example` displays the transition proof when present.
 - **Revocation:** TUF timestamp/snapshot expiry already freezes stale repos. On top of that, official source-list updates can carry a `revoked_keys` list — a kill switch for a `verified` repo's countersignature that does not require a client release.
 
@@ -157,7 +157,7 @@ aslice repo build / sign / publish        # authoring side (DESIGN §9.6); --sig
 aslice repo list --sources-diff           # what the last source-list TUF update changed
 ```
 
-`aslice repo audit` deserves emphasis: it re-verifies the signature over *every* target in a repo's current snapshot and reports scheme, key, and coverage — the operator-facing proof that "everything is signed" is true today, not at some ceremony in the past.
+`aslice repo audit` re-verifies the signature over *every* target in a repo's current snapshot and reports scheme, key, and coverage — the operator-facing proof that "everything is signed" is true today, not at some ceremony in the past.
 
 ## 8. Failure and edge cases
 
@@ -165,7 +165,7 @@ aslice repo list --sources-diff           # what the last source-list TUF update
 |---|---|
 | Source-list update fails/tampered | Client keeps the last good list; core/extended keep working; warning surfaced by `doctor` |
 | Repo serves a key that doesn't match the pin | Hard refusal before any content is fetched; event logged |
-| `verified` repo's countersignature revoked | Repo frozen at last good snapshot, updates refused, loud banner until re-pin/remove |
+| `verified` repo's countersignature revoked | Repo frozen at last good snapshot, updates refused, persistent banner until re-pin/remove |
 | `local` repo contains binary targets | Binaries refused (source-build formulas only) unless the local repo is signed and the machine's user pinned its key |
 | A `third-party` repo serves a `[system]` package | Solve-time refusal naming the trust level and the remedy; the `system` capability is never granted to third-party (§3) |
 | A `third-party` repo declares `domain = "system"` in `[service]` | Solve-time refusal naming the trust level and the remedy; user-domain agents from third-party repos remain allowed (§3) |
@@ -223,7 +223,7 @@ Remember this decision? [Y/n/once]
 ```
 
 - The prompt shows trust level, version, and provenance for each candidate — the decision inputs, not just names.
-- `[n]` (namespace-only) is a real choice: the user can declare that this bare name should *never* auto-resolve, forcing explicit namespaces forever. Some names deserve that.
+- `[n]` (namespace-only) is a real choice: the user can declare that this bare name should *never* auto-resolve, forcing explicit namespaces forever.
 - Non-interactive contexts (scripts, `--json`, no TTY) never prompt: bare ambiguous names are a solve error with a machine-readable `ambiguous_name` code listing the candidates. Scripts must pin explicitly or pre-seed a decision (§10.4).
 
 ### 10.3 Decisions are remembered — in the state database
@@ -261,7 +261,7 @@ aslice repo prefer --import resolutions.json    # fleet/lab provisioning
 
 A lab that images fifty machines writes its resolution policy once and distributes it — the same SQLite file, the same semantics as if a human had answered fifty prompts.
 
-## 11. The state database's role, stated plainly
+## 11. The state database's role
 
 DESIGN §8.1 lists `db/state.sqlite` as "the only mutable state besides the store." This document makes the repository-facing half of that concrete. The database holds, and is the single source of truth for:
 
@@ -277,4 +277,4 @@ Properties the design relies on:
 
 - **WAL mode, prepared statements, single file** (DESIGN §5.2) — concurrent `aslice` processes serialize cleanly; a crash leaves the file consistent.
 - **Nothing in the DB is needed to *verify* anything.** Trust derives from signatures and pins re-checked against content; the DB records decisions and state. A deleted database loses the installed set record and remembered prompts (recoverable by rediscovery from the store and re-prompting) — it can never *weaken* verification, because verification never consults it for authority, only for pins that are themselves checked against live content.
-- **Inspectable.** `aslice db query` (read-only, schema-documented) exists precisely so power users and fleet tooling can see their own state. It's SQLite — the most inspectable database format in existence — on purpose.
+- **Inspectable.** `aslice db query` (read-only, schema-documented) exists so power users and fleet tooling can see their own state. It's SQLite, chosen because standard tools already read it.
