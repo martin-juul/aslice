@@ -1,6 +1,6 @@
 # aslice
 
-A package manager for Intel Macs — macOS 10.11 (El Capitan) through 12 (Monterey), from Core 2 Duo through Coffee Lake.
+A package manager for Intel Macs — macOS 10.11 (El Capitan) through 12 (Monterey) — every 64-bit Intel Mac, from the 2007 Core 2 Duo machines through the final Intel models of 2020.
 
 A successor-in-spirit to Homebrew for the platform Homebrew is leaving behind:
 
