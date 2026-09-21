@@ -9,6 +9,7 @@ A successor-in-spirit to Homebrew for the platform Homebrew is leaving behind:
 - **Vendor binary packages & repositories** — software that only ships as `.pkg`/`.dmg` installed without ever running installer scripts, **including 32-bit and universal binaries** on 10.11–10.14 (the last macOS releases that run them); anyone can publish a signed, static repository — ships with an official source list, inherent trust levels (official / verified / third-party / local), and both Ed25519 and OpenPGP (GPG) signature schemes
 - **A stronger security model** — declarative formulae, sandboxed builds, TUF-signed metadata, code-free binary installs, no sudo in steady state
 - **A stronger performance model** — single C++20 binary, sub-10ms startup, parallel solver and downloads, zstd payloads, atomic rollback-capable generations
+- **Declarative whole-machine setup** — one `setup.toml` holds packages, runtime streams, services, macOS `defaults` preferences, and the login shell; `aslice apply` takes a blank Mac (fresh from recovery) to ready-to-work in a single command, and `aslice export` captures an existing machine back into the file — a shareable common language for setups
 - **No telemetry, ever** — aslice collects no metrics or analytics of any kind; it is infrastructure, not a product
 
 ## Vocabulary
@@ -30,6 +31,7 @@ Design phase.
 - [Build infrastructure](docs/BUILD-INFRA.md) — the build farm and the `aslice build` / `aslice farm` harness: one pipeline that runs identically on the farm and on any user's Mac
 - [Repositories](docs/REPOSITORIES.md) — the shipped official source list, inherent repository trust levels, and the dual Ed25519/OpenPGP signing model
 - [Orchard policy](docs/ORCHARD-POLICY.md) — the maintainer rulebook: acceptance bars per tier, variant discipline, deprecation lifecycle, patch documentation, merge gates, release cadence
+- [Declarative system setup](docs/SETUP.md) — the `setup.toml` schema and `aslice apply` / `export` / `import --from-brewfile`: rebuild a Mac from one file, capture one back into it
 
 ## Scope
 
