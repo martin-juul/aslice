@@ -17,7 +17,7 @@ aslice keeps deprecated Intel Macs (macOS 10.11–12, x86_64) useful. Contributi
 
 The format is specced in `docs/PACKAGE-FORMAT.md` (read §3 and §6 first), the rules in `docs/ORCHARD-POLICY.md`. The short version of what reviewers enforce:
 
-- **`min_os` honesty.** Declare the oldest OS you are prepared to stand behind; CI builds at that floor and smoke-runs every release up to 12 on the VM matrix, so optimism is impossible to sneak through and patch heroics land as *patches*, with the floor lowered only when CI proves it (ORCHARD-POLICY §4).
+- **`min_os` accuracy.** Declare the oldest OS you are prepared to stand behind; CI builds at that floor and smoke-runs every release up to 12 on the VM matrix, so optimism is impossible to sneak through and patch heroics land as *patches*, with the floor lowered only when CI proves it (ORCHARD-POLICY §4).
 - **Variant discipline.** `abi = true` variants are capped at six per package and each must justify itself in review: what exported interface does it change, and who is unserved without it? `abi = false` variants are free. Defaults serve ~95% of installs, securely — TLS on, deprecated protocols off, even when upstream defaults differ (§5).
 - **Patches carry headers.** Every patch file documents its origin (upstream commit/PR/issue URL, or the distro it was borrowed from, credited), what it fixes, and its removal condition ("drop when upstream ≥ 7.2"). Undocumented patches are a lint error. Patches fix builds, portability, and security — never features; a feature patch is a fork wearing a trench coat (§7).
 - **Documentation standards.** One-line `description` (no leading article, no marketing, ends with a period), SPDX `license`, reachable `homepage`, `keywords` that help search, and `notes` only when a user genuinely needs post-install guidance. `tests.star` must prove the installed artifact works — link against the library, run the tool on real input; `--version` is a last resort and says so in a comment (§14).
@@ -29,7 +29,7 @@ The format is specced in `docs/PACKAGE-FORMAT.md` (read §3 and §6 first), the 
 ```sh
 aslice create <url>                     # scaffold a formula from a tarball
 aslice lint ./my-formula                # schema + policy + --new-package rules
-aslice build ./my-formula               # full sandboxed pipeline, exactly what CI runs
+aslice build ./my-formula               # full sandboxed pipeline, the same one CI runs
 aslice build ./my-formula --keep --shell  # drop into the sandbox at the failed phase
 aslice test my-formula                  # tests.star against the installed result
 ```
@@ -58,14 +58,30 @@ Merge gates are mechanical (ORCHARD-POLICY §10): lint → sandboxed build on ev
 
 Review load is tiered: patch bumps need any maintainer; major bumps and new extended packages need any maintainer with gates green; new core packages, versioned lineages, `abi = true` variant additions, system-software and system-patch packages, and policy changes need two maintainers, one not the author (§17). Decisions run on lazy consensus — silence in a reasonable window is assent, and process lawyering is not a sport we play.
 
+## Documentation style
+
+The docs are part of the product, and reviewers hold them to the same bar as formulae. Write the way the code is written: mechanics first, one fact per sentence, one idea per paragraph.
+
+- **Say what the thing does, then why.** The reader came for the mechanism; motivation follows it.
+- **Negation is for guarantees, not decoration.** "It doesn't X — it Ys" is a tic, not an explanation. Reserve "never"/"not" for places where the reader might genuinely expect the opposite (normative guarantees: "never executes", "not accepted").
+- **Cut intensifiers.** "simply", "exactly", "obviously", "just" do no work; delete them and the sentence keeps its meaning. If it doesn't, the sentence was wrong.
+- **Mechanisms, not adjectives.** Don't call a design clean or robust; state the invariant and let the reader form the adjective.
+- **Headers describe.** "The state database's role", not "The state database's role, stated plainly".
+- **Tables and code carry the precision; prose carries the reader.** A normative must/never/may in prose must also hold in the spec it summarizes.
+- **Changelog entries are historical record.** Never edit them retroactively, even to fix the prose.
+
 ## Conduct
 
 There is no code of conduct document, and there won't be one. People are expected to be decent to each other without a policy forcing it.
 
-Discussion here is direct. This is not a corporate project, and nobody is going to wrap technical feedback in three layers of diplomacy: if you are acting like an idiot, expect to be told that you are acting like an idiot. That is not a conduct violation — it is how honest technical projects talk. Dish it out in good faith, take it in good faith, and keep it about the work.
+Discussion here is direct. This is not a corporate project, and nobody is going to wrap technical feedback in three layers of diplomacy: if you are acting like an idiot, expect to be told that you are acting like an idiot. That is not a conduct violation — it is how direct technical projects talk. Dish it out in good faith, take it in good faith, and keep it about the work.
 
 Maintainer judgment on what's over the line is final. The line is short and obvious: keep it about the work.
 
 ## License
 
 Contributions are licensed under the project's license. By opening a PR you agree your contribution may be distributed, rebuilt, and served by the farm under those terms.
+
+---
+
+*History: September 2026 — editorial pass: prose revised for directness; `min_os` honesty renamed `min_os` accuracy for consistency with AUTHORING.md; documentation style section added. No rule changes.*
