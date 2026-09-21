@@ -9,10 +9,10 @@ aslice-repo — manage package repositories and their trust
 # SYNOPSIS
 
 `aslice repo add` *url*
-`aslice repo list`
+`aslice repo list` [`--overlaps`]
 `aslice repo enable`|`disable`|`remove` *name*
 `aslice repo re-pin`|`keys`|`audit` *name*
-`aslice repo prefer`|`resolutions`|`forget`
+`aslice repo prefer`|`resolutions`|`forget`|`re-resolve` [*pkg*]
 `aslice repo allow-system-patch`|`deny-system-patch` *name*
 `aslice repo build`|`sign`|`publish` *path*
 
@@ -27,12 +27,12 @@ aslice consumes packages from repositories — static, signed trees of metadata,
 :   Community repositories countersigned by the project. Ship listed-but-disabled; `enable` turns one on, and enabling is the consent — its binaries install immediately. May serve the privileged categories; `[system-patch]` only under an explicit per-repo grant (`allow-system-patch`, refused by default, revocable).
 
 **third-party**
-:   Added by you. Key fingerprint pinned on first use (TOFU) and displayed for out-of-band verification; any later change is a loud, blocking event until deliberately re-pinned. Binaries install after enabling; the privileged categories are closed to it by construction.
+:   Added by you. Key fingerprint pinned on first use (TOFU) and displayed for out-of-band verification; any later change is a loud, blocking event until deliberately re-pinned. Binaries install once added, always with an unambiguous `third-party/<name>` provenance line; the privileged categories are closed to it by construction.
 
 **local**
 :   Your own `file://` tree. Formulae by default; on your own machine it carries the same authority as acting by hand, including the privileged categories.
 
-**audit** shows a repository's trust state, countersignature validity, and staleness. **resolutions** shows remembered answers to same-name overlaps between peer repositories; **prefer** sets one explicitly; **forget** clears it. Explicit addressing (`repo:pkg`) bypasses overlap resolution entirely.
+**audit** shows a repository's trust state, countersignature validity, and staleness. **resolutions** shows remembered answers to same-name overlaps between peer repositories; **prefer** sets one explicitly; **forget** clears it; **re-resolve** re-opens the prompt on demand. `list --overlaps` shows every current overlap with its resolution state. Explicit addressing (`repo:pkg`) bypasses overlap resolution entirely.
 
 **build**, **sign**, **publish** compile an orchard into a repository tree, apply keys, and push to a transport — the same pipeline the project itself runs. See AUTHORING.md §11.
 
