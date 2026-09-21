@@ -4,6 +4,8 @@ This document is the from-zero runbook. It records how the entire project — ke
 
 One standing rule governs all of this, inherited from the toolchain genesis, the TUF ceremony, and the scanner genesis (BUILD-INFRA §7.5): **genesis events are documented exceptions with receipts, never silent gaps.**
 
+*Project terms, acronyms, and the Homebrew translation table: [NOMENCLATURE.md](NOMENCLATURE.md).*
+
 ---
 
 ## 1. The from-nothing sequence
@@ -76,4 +78,4 @@ Once a year, on a clean machine, using **only** the never-lose set, run §1 end-
 
 ---
 
-*History: v0.1 (September 2026) — initial runbook, from the genesis audit that followed the §7.5 scanner-genesis discussion: collected the documented genesis paths (toolchain, root ceremony, scanner, bootstrap TLS), filled the gaps it found (installer TLS-dead fallback in DESIGN v1.9 §10.3; vendored-source archive in DESIGN v1.9 §9.6 / BUILD-INFRA v0.6 §3 / REPOSITORIES v0.8 §2; VM-image genesis and the installer-app archive in BUILD-INFRA v0.6 §8), and wrote the never-lose set and the annual re-standup drill down as obligations rather than intentions. v0.2 (September 2026) — editorial pass: prose revised for directness; no procedural changes. v0.3 (September 2026) — prose rewrite throughout: the runbook reworded in the project's technical-writing voice; no procedural changes.*
+*History: v0.1 (September 2026) — initial runbook, from the genesis audit that followed the §7.5 scanner-genesis discussion: collected the documented genesis paths (toolchain, root ceremony, scanner, bootstrap TLS), filled the gaps it found (installer TLS-dead fallback in DESIGN v1.9 §10.3; vendored-source archive in DESIGN v1.9 §9.6 / BUILD-INFRA v0.6 §3 / REPOSITORIES v0.8 §2; VM-image genesis and the installer-app archive in BUILD-INFRA v0.6 §8), and wrote the never-lose set and the annual re-standup drill down as obligations rather than intentions. v0.2 (September 2026) — editorial pass: prose revised for directness; no procedural changes. v0.3 (September 2026) — prose rewrite throughout: the runbook reworded in the project's technical-writing voice; no procedural changes. v0.4 (September 2026) — NOMENCLATURE.md vocabulary pointer added; no procedural changes.*
