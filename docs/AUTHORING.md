@@ -2,7 +2,7 @@
 
 **How to write, test, and ship aslice packages.**
 
-- **Status:** v0.2 — September 2026 (v0.2: review corrections — §8's payload map uses the real `[[binary.payload]]` array-of-tables shape, the invented `ctx.dep_lib_dirs` helper becomes the documented `ctx.deps` path, the service/root-daemon gate includes local repositories (§9), and the unsigned-vendor extended-only exception is recorded (§8, appendix))
+- **Status:** v0.3 — September 2026 (v0.2: review corrections — §8's payload map uses the real `[[binary.payload]]` array-of-tables shape, the invented `ctx.dep_lib_dirs` helper becomes the documented `ctx.deps` path, the service/root-daemon gate includes local repositories (§9), and the unsigned-vendor extended-only exception is recorded (§8, appendix). v0.3: editorial pass — prose revised for directness; no guidance changes)
 - **Audience:** package authors — people writing formulae for the core or extended orchards, packaging vendor binaries, or running their own orchard. Read [MANUAL.md](MANUAL.md) chapters 1–4 first; this guide assumes the vocabulary (slice, orchard, flavor, generation) and the user's view of the system.
 - **Companions:** [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md) is the authoritative schema — when this guide and the schema disagree, the schema is right. [ORCHARD-POLICY.md](ORCHARD-POLICY.md) is the policy this guide summarizes. [BUILD-INFRA.md](BUILD-INFRA.md) is the farm your PR builds on. [MANUAL.md](MANUAL.md) is what your users read.
 
@@ -49,7 +49,7 @@ aslice test foo                   # runs tests.star against what you built
 aslice install ./foo              # install your local build into your profile
 ```
 
-`aslice build` on your machine is the *identical* pipeline the farm runs — same phases, same sandbox profiles, same environment scrubbing. If it builds for you, it builds on the farm; "works on my machine" is a property of the harness, not a hope. One honest caveat: the farm builds against the pinned `aslice-toolchain`, and a formula that quietly depends on your local Xcode CLT will fail there. The sandbox blocks undeclared toolchains, so you'll find out immediately, with an error naming what it tried to use.
+`aslice build` on your machine is the *identical* pipeline the farm runs — same phases, same sandbox profiles, same environment scrubbing. If it builds for you, it builds on the farm; "works on my machine" is a property of the harness, not a hope. One caveat worth naming: the farm builds against the pinned `aslice-toolchain`, and a formula that quietly depends on your local Xcode CLT will fail there. The sandbox blocks undeclared toolchains, so you'll find out immediately, with an error naming what it tried to use.
 
 ### 2.3 The iteration loop
 
@@ -78,7 +78,7 @@ homepage    = "https://ffmpeg.org"
 min_os      = "10.13"       # the oldest release this formula actually supports
 ```
 
-**`min_os` honesty is policy, not politeness.** Many modern codebases can't cleanly target 10.11 — C++17 library features, `clock_gettime`, `thread_local` quirks. Declare the floor you actually tested and move on; a package that claims 10.11 and fails there is far worse than one that honestly says 10.13. CI smoke-runs your package on every release from your declared `min_os` through 12, so an optimistic floor is a failing build, not a secret.
+**Declare the floor you tested.** Many modern codebases can't cleanly target 10.11 — C++17 library features, `clock_gettime`, `thread_local` quirks. A package that claims 10.11 and fails there is far worse than one that says 10.13. CI smoke-runs your package on every release from your declared `min_os` through 12, so an optimistic floor is a failing build, not a secret.
 
 ```toml
 [source]
@@ -87,7 +87,7 @@ sha256 = "40973d449e3c3a4a551b3e2e05f5a28f8ff74a2f2e0c2e6ec4f7f4b9c0f2a1c9"
 mirrors = ["https://mirror.example.org/ffmpeg-7.1.tar.xz"]   # optional
 ```
 
-The hash is the contract. A client fetches from the canonical URL, then your `mirrors`, then the repository's own blob archive — the farm deposits every source it ever fetched there — and all three are verified against the same pinned sha256. Two consequences. First, upstream reorganizing its download site doesn't break your package for anyone: the archive carries the past. Second, a hash mismatch is a hard failure everywhere, which is exactly what you want — it's the only thing standing between your users and a re-rolled tarball.
+The hash is the contract. A client fetches from the canonical URL, then your `mirrors`, then the repository's own blob archive — the farm deposits every source it ever fetched there — and all three are verified against the same pinned sha256. Two consequences. First, upstream reorganizing its download site doesn't break your package for anyone: the archive still serves the source. Second, a hash mismatch is a hard failure everywhere, which is what you want — it's the only thing standing between your users and a re-rolled tarball.
 
 ```toml
 [variants.x265]
@@ -188,10 +188,10 @@ Mark a variant `abi = true` and it becomes part of the package's build identity:
 
 ### 5.2 What the ABI scan does with this
 
-When your package builds, the harness scans the staged output and records the interface in the manifest: every dylib's install name and compatibility version, a symbol-set fingerprint, and what the package requires from others. The solver substitutes packages — farm-built, user-built, any variant — purely on whether a provider's recorded interface covers a consumer's recorded requirements. Your job is only to keep the *declaration* honest:
+When your package builds, the harness scans the staged output and records the interface in the manifest: every dylib's install name and compatibility version, a symbol-set fingerprint, and what the package requires from others. The solver substitutes packages — farm-built, user-built, any variant — purely on whether a provider's recorded interface covers a consumer's recorded requirements. Your job is only to keep the *declaration* accurate:
 
-- **If a version bump changes the exported interface** (soname bump, dropped symbols), the ABI gate in CI compares your build against the published one and fails the PR unless the version reflects it — an honest version bump, or scheduled rebuilds of the dependents in the same snapshot. "It'll probably be fine" is what the gate exists to prevent.
-- **If you're unsure whether a variant changes the interface,** build both ways and compare `aslice build --emit-abi` output. The scan sees the truth; the declaration is you telling the truth in advance.
+- **If a version bump changes the exported interface** (soname bump, dropped symbols), the ABI gate in CI compares your build against the published one and fails the PR unless the version reflects it — an explicit version bump, or scheduled rebuilds of the dependents in the same snapshot. "It'll probably be fine" is what the gate exists to prevent.
+- **If you're unsure whether a variant changes the interface,** build both ways and compare `aslice build --emit-abi` output. The scan is ground truth; declare what you measured.
 
 ### 5.3 Discipline
 
@@ -232,7 +232,7 @@ Upstreams on this platform die in a specific way: not the project, but its hospi
 2. **Note the death in the formula.** A comment naming the date and the mirror situation, so the next maintainer knows the context without archaeology.
 3. **Point the formula at a living mirror** if one exists, or let it ride the archive and adjust livecheck — or, if the upstream is truly gone, move the package toward the archive track per ORCHARD-POLICY §8.
 
-The archive carrying the past is policy, not luck: dead-upstream software is half the reason this orchard exists.
+This archiving is policy, not luck (ORCHARD-POLICY §9): dead-upstream software is half the reason this orchard exists.
 
 ---
 
@@ -269,9 +269,9 @@ to   = "bin/cvcli"
 
 The rules, and the reasons for them:
 
-- **Only the payload installs.** `preinstall`/`postinstall` scripts are never executed — full stop. If the software genuinely requires its scripts, it doesn't belong in aslice; package what can be installed payload-only. Kexts and drivers are *not* excluded by this rule — they go through the declared `[system]` category (§9), where aslice's own helper performs the privileged steps from your declarations.
-- **The signer is pinned.** If the vendor silently re-signs with a different identity, installs hard-fail. That's a classic supply-chain attack against binary distribution, and the pin is the whole defense — don't leave it out because "the vendor is trustworthy." The pin exists for the day they aren't, or their signing infrastructure is. The single exception is genuinely unsigned vendor software: permitted in the extended orchard only, with `signer` omitted and a loud announcement at every install (PACKAGE-FORMAT §3.11, ORCHARD-POLICY §12).
-- **OS tags are honest or the formula doesn't merge.** Each `[[binary]]` entry declares its real `min_os`/`max_os`; the pack-time verifier checks your claims against the bundle's own metadata, and lint fails on mismatches. A vendor's "legacy 10.11 build" and "current 10.14+ build" coexist as two entries in one formula.
+- **Only the payload installs.** `preinstall`/`postinstall` scripts are never executed. If the software genuinely requires its scripts, it doesn't belong in aslice; package what can be installed payload-only. Kexts and drivers are *not* excluded by this rule — they go through the declared `[system]` category (§9), where aslice's own helper performs the privileged steps from your declarations.
+- **The signer is pinned.** If the vendor silently re-signs with a different identity, installs hard-fail. That's a classic supply-chain attack against binary distribution, and the pin is the whole defense — don't leave it out because "the vendor is trustworthy." The pin exists for the day they aren't, or their signing infrastructure is. The single exception is genuinely unsigned vendor software: permitted in the extended orchard only, with `signer` omitted and an announcement at every install (PACKAGE-FORMAT §3.11, ORCHARD-POLICY §12).
+- **OS tags are verified or the formula doesn't merge.** Each `[[binary]]` entry declares its real `min_os`/`max_os`; the pack-time verifier checks your claims against the bundle's own metadata, and lint fails on mismatches. A vendor's "legacy 10.11 build" and "current 10.14+ build" coexist as two entries in one formula.
 - **32-bit and universal payloads are welcome where the OS runs them** — 10.11 through 10.14. The verifier inspects every Mach-O slice in the payload; an i386-containing artifact must declare `max_os = "10.14"`. Universal payloads install whole — never thin them with `lipo`, because thinning invalidates the vendor's code signature, and the signature outranks the disk savings.
 - **`redistribute` decides who fetches.** `true` — the farm repackages into a normal slice and hosts it (best user experience; requires the license to allow redistribution). `false` — the formula is a pointer, and each client fetches the vendor URL itself, hash- and signer-pinned. Core tier requires `true`: core never depends on a vendor's server being up.
 
@@ -295,15 +295,15 @@ Four declaration blocks for packages that don't fit the ordinary mold. Each exis
 
 Every orchard PR passes five checks, with no maintainer override:
 
-1. **Lint** — schema validity plus policy (SPDX license, `min_os` honesty, dependency rules, variant caps).
+1. **Lint** — schema validity plus policy (SPDX license, `min_os` accuracy, dependency rules, variant caps).
 2. **Matrix build** — your package built in the sandbox on every declared flavor, at your declared `min_os`.
 3. **Smoke runs** — your `tests.star` across every release from `min_os` through 12.
-4. **ABI gate** — on version/revision changes to anything others depend on: interface regressions require an honest version bump or scheduled dependent rebuilds in the same snapshot.
+4. **ABI gate** — on version/revision changes to anything others depend on: interface regressions require an explicit version bump or scheduled dependent rebuilds in the same snapshot.
 5. **Post-merge-only signing** — slices are signed after merge, never before, so a PR can never smuggle a signed artifact around review.
 
-What reviewers look for, beyond the gates: is the description accurate; are the variants justified; are patches documented — every file in `patches/` gets a header comment saying what it does, why it's needed, and whether it went upstream; is `min_os` honest; does the formula do anything *clever* — cleverness in a declarative system is usually a policy violation wearing a trench coat.
+What reviewers look for, beyond the gates: is the description accurate; are the variants justified; are patches documented — every file in `patches/` gets a header comment saying what it does, why it's needed, and whether it went upstream; is `min_os` what you tested; does the formula do anything *clever* — cleverness in a declarative system is usually a policy violation wearing a trench coat.
 
-On tone: the project has no code-of-conduct document, deliberately. The expectation is simpler and older — be decent to each other. Review is direct here: a formula with a problem will be told it has a problem, plainly, and you're expected to hear that as information about the formula, not about you. Dish it out the same way. [CONTRIBUTING.md](../CONTRIBUTING.md) carries the expectation in the open; it also covers commit style, sign-off, and the PR template.
+On tone: the project has no code-of-conduct document, deliberately. The expectation is simpler and older — be decent to each other. Review is direct here: a formula with a problem will be told it has a problem, and you're expected to hear that as information about the formula, not about you. Dish it out the same way. [CONTRIBUTING.md](../CONTRIBUTING.md) carries the expectation in the open; it also covers commit style, sign-off, and the PR template.
 
 ---
 
