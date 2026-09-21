@@ -2,7 +2,7 @@
 
 **The user guide for aslice — a package manager for Intel macOS.**
 
-- **Status:** v0.1 — September 2026
+- **Status:** v0.2 — September 2026 (v0.2: review corrections — §2.3 covers bash alongside zsh, §2.5 lists the three outside-prefix exceptions to a clean removal instead of claiming none exist, §3's man-page claim is softened to what actually ships, §3.1 documents `link`/`unlink` for `link = false` packages, and §7.1's root-daemon gate includes local repositories)
 - **Audience:** people who install and run software with aslice. That's most of what follows. If you *write* packages, read chapters 1–4 and then move to [AUTHORING.md](AUTHORING.md). If you want to know *why* things are the way they are, the rationale lives in [DESIGN.md](DESIGN.md).
 - **Companions:** the man pages in [man/](../man/) (also available as `aslice help <command>`), [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md), [ORCHARD-POLICY.md](ORCHARD-POLICY.md), [REPOSITORIES.md](REPOSITORIES.md), [GENESIS.md](GENESIS.md).
 
@@ -83,7 +83,13 @@ Add aslice to your shell. For zsh (the default since Catalina):
 eval "$(/opt/aslice/bin/aslice init zsh)"     # or ~/.aslice/bin/aslice for a per-user install
 ```
 
-Add that line to your `~/.zshrc` to make it permanent. Then verify the installation:
+For bash (the default on 10.11–10.14):
+
+```
+eval "$(/opt/aslice/bin/aslice init bash)"    # same per-user path applies
+```
+
+Add that line to your `~/.zshrc` or `~/.bash_profile` to make it permanent. Then verify the installation:
 
 ```
 aslice doctor
@@ -108,13 +114,13 @@ aslice uninstall aslice        # removes the manager's registration
 sudo rm -rf /opt/aslice        # or rm -rf ~/.aslice — this is the whole footprint
 ```
 
-aslice never installs anything outside its prefix (the `/opt/aslice/apps/` directory included), so removing the prefix removes it completely. If you used `ca-update --keychain`, run `aslice ca-update --keychain-remove` first — it deletes exactly the certificates aslice imported into the System keychain, recorded one by one, and nothing else.
+aslice keeps everything inside its prefix (the `/opt/aslice/apps/` directory included) with three declared exceptions, and each is closed out before removal. If you installed a `[system-patch]` package, restore the Apple originals first — `aslice system-patch list` shows what is patched and `aslice system-patch restore <path>` puts each byte-exact original back (§8.4). If you installed a `[system]` package — kernel extensions, SIP-disabled development tools — uninstall it first. If you used `ca-update --keychain`, run `aslice ca-update --keychain-remove` — it deletes exactly the certificates aslice imported into the System keychain, recorded one by one, and nothing else. With those closed out, removing the prefix removes everything else completely.
 
 ---
 
 ## 3. Everyday commands
 
-This chapter covers the dozen commands that make up daily use. Every one of them has a man page — `man aslice-install`, `man aslice-upgrade`, and so on — and `aslice help <command>` prints the same text in your terminal.
+This chapter covers the dozen commands that make up daily use. The command families have their own man pages — `man aslice-repo`, `man aslice-service`, `man aslice-system-patch`, and so on — with everything indexed on `man aslice`, and `aslice help <command>` prints the same text in your terminal.
 
 ### 3.1 Finding and installing software
 
@@ -153,6 +159,8 @@ aslice install ffmpeg --cflags="-O3 -march=native" --lto   # tuned to your machi
 ```
 
 Custom-flag builds interoperate with prebuilt packages — your `-march=native` ffmpeg links fine against the farm's x264, because compatibility is verified against the libraries' published interfaces, not their origin (§4.3). Non-default *feature* variants (`--variant`) may or may not have prebuilt slices; when they don't, aslice says so and builds locally. Either way the plan tells you before anything is downloaded.
+
+**Shadowed packages and `link`.** Some packages install into the store without linking into your profile — the principled keg-only case, declared `link = false` with a mandatory `link_reason` in the formula, usually because the package shadows something macOS ships (OpenSSL, curl). `aslice info` shows the reason. Opt in per profile with `aslice link openssl@3`, back out with `aslice unlink openssl@3`; each flip is a new generation, so `rollback` undoes it like anything else. Dependents that declared the dependency build and run against the store copy either way (PACKAGE-FORMAT §3.8, DESIGN §12.1).
 
 ### 3.2 Upgrading
 
@@ -344,7 +352,7 @@ aslice service restart redis
 aslice service run redis            # foreground, unregistered — for debugging
 ```
 
-User-level services run as you, need no sudo, and any repository may provide one. Root-level daemons are the privileged exception: they install and run through aslice's audited privileged helper with explicit, per-operation consent, and only official or verified repositories may offer them (§9.3).
+User-level services run as you, need no sudo, and any repository may provide one. Root-level daemons are the privileged exception: they install and run through aslice's audited privileged helper with explicit, per-operation consent, and only official, verified, or local repositories may offer them (§9.2).
 
 Per-service environment overrides live in `~/.config/aslice/services/<pkg>.env` and are applied when aslice generates the launchd job — you never edit the generated plist, and upgrades never clobber your overrides.
 
@@ -544,7 +552,7 @@ The prefix layout, for orientation: `store/` (immutable packages), `profiles/gen
 
 | Command | What it does |
 |---|---|
-| `install` / `reinstall` | Install packages (binary first); repair a damaged profile entry |
+| `install` / `reinstall` / `link` / `unlink` | Install packages (binary first); repair a damaged profile entry; flip a `link = false` package into/out of a profile (§3.1) |
 | `uninstall` / `autoremove` / `mark` | Remove packages; collect unneeded dependencies; fix request records |
 | `upgrade` / `outdated` | Move everything (or one package) forward; preview what would move |
 | `pin` / `unpin` | Hold a package against upgrades (one argument) — or pin a project to a runtime stream (two, §6) |
@@ -554,7 +562,8 @@ The prefix layout, for orientation: `store/` (immutable packages), `profiles/gen
 | `use` / `default` / `versions` / `which` | Runtime stream selection and introspection |
 | `service list/status/start/stop/restart/run` | launchd service lifecycle |
 | `ca-update` (+ `--keychain`, `--crypto`, `--apple-certs`) | Heal TLS: bundle, keychain, crypto stack, Apple's roots |
-| `repo add/list/enable/keys/audit/prefer` | Manage package sources and trust |
+| `repo add/list/enable/keys/audit` | Manage package sources and trust |
+| `repo prefer/resolutions/forget/re-resolve/allow-system-patch/deny-system-patch` | Overlap decisions and per-repo grants (§9.2) |
 | `audit` / `provenance` | CVE report; build provenance |
 | `doctor` / `log` | Health battery; the local operation log |
 | `adopt --from-homebrew` | Migrate an existing Homebrew leaf set |
