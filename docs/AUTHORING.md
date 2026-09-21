@@ -2,7 +2,7 @@
 
 **How to write, test, and ship aslice packages.**
 
-- **Status:** v0.4 — September 2026 (v0.2: review corrections — §8's payload map uses the real `[[binary.payload]]` array-of-tables shape, the invented `ctx.dep_lib_dirs` helper becomes the documented `ctx.deps` path, the service/root-daemon gate includes local repositories (§9), and the unsigned-vendor extended-only exception is recorded (§8, appendix). v0.3: editorial pass — prose revised for directness; no guidance changes. v0.4: prose rewrite throughout — chapters reworded in the project's technical-writing voice; no guidance changes)
+- **Status:** v0.5 — September 2026 (v0.2: review corrections — §8's payload map uses the real `[[binary.payload]]` array-of-tables shape, the invented `ctx.dep_lib_dirs` helper becomes the documented `ctx.deps` path, the service/root-daemon gate includes local repositories (§9), and the unsigned-vendor extended-only exception is recorded (§8, appendix). v0.3: editorial pass — prose revised for directness; no guidance changes. v0.4: prose rewrite throughout — chapters reworded in the project's technical-writing voice; no guidance changes. v0.5: review pass — the source-archive reference retargeted to DESIGN §9.6 and the countersigning reference to REPOSITORIES.md §5; no guidance changes)
 - **Audience:** package authors — people writing formulae for the core or extended orchards, packaging vendor binaries, or running their own orchard. Read [MANUAL.md](MANUAL.md) chapters 1–4 first; this guide assumes the vocabulary (slice, orchard, flavor, generation) and the user's view of the system.
 - **Companions:** [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md) is the authoritative schema — when this guide and the schema disagree, the schema is right. [ORCHARD-POLICY.md](ORCHARD-POLICY.md) is the policy this guide summarizes. [BUILD-INFRA.md](BUILD-INFRA.md) is the farm your PR builds on. [MANUAL.md](MANUAL.md) is what your users read.
 
@@ -232,7 +232,7 @@ Upstreams on this platform die in a specific way. Usually it is not the project 
 2. **Note the death in the formula.** A comment naming the date and the mirror situation, so the next maintainer knows the context without archaeology.
 3. **Point the formula at a living mirror** if one exists; otherwise let it ride the archive and adjust livecheck. If the upstream is truly gone, move the package toward the archive track per ORCHARD-POLICY §8.
 
-The archiving is policy, not luck (ORCHARD-POLICY §9). Dead-upstream software is half the reason this orchard exists.
+The archiving is policy, not luck (DESIGN §9.6). Dead-upstream software is half the reason this orchard exists.
 
 ---
 
@@ -319,7 +319,7 @@ aslice repo publish ./repo            # push to your transport — static hostin
 
 A repository is a static, signed tree. Any web server, GitHub Pages, or a `file://` directory on a lab NAS can host one. The same `repo build` pipeline the project runs in CI produces it, so your tree contains no magic the official one doesn't. Users add it with `aslice repo add <url>`, which pins your signing key's fingerprint on first use.
 
-It helps to understand what your repository *is* to its users. It arrives as **third-party**: your formulae can trigger sandboxed local builds, your signed binaries can install after the user enables them, and the privileged categories (root daemons, kexts, `[system-patch]`) are closed to you by construction. **Verified** status — the project's countersignature — lifts a repository to shipping listed-but-disabled with the privileged categories available. Note that it is granted to maintainers, not to repositories: sustained, reviewable track record first. The full capability matrix is REPOSITORIES.md §3; the countersigning process is §7.
+It helps to understand what your repository *is* to its users. It arrives as **third-party**: your formulae can trigger sandboxed local builds, your signed binaries can install after the user enables them, and the privileged categories (root daemons, kexts, `[system-patch]`) are closed to you by construction. **Verified** status — the project's countersignature — lifts a repository to shipping listed-but-disabled with the privileged categories available. Note that it is granted to maintainers, not to repositories: sustained, reviewable track record first. The full capability matrix is REPOSITORIES.md §3; the countersigning scheme is §5.
 
 If you mirror the official repository instead of authoring your own, mirror the whole tree, sources included. The blob archive is the difference between a mirror that is a copy of outputs and one that is a survival copy of the orchard's inputs.
 
