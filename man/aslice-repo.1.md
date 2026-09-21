@@ -27,7 +27,7 @@ aslice consumes packages from repositories — static, signed trees of metadata,
 :   Community repositories countersigned by the project. Ship listed-but-disabled; `enable` turns one on, and enabling is the consent — its binaries install immediately. May serve the privileged categories; `[system-patch]` only under an explicit per-repo grant (`allow-system-patch`, refused by default, revocable).
 
 **third-party**
-:   Added by you. Key fingerprint pinned on first use (TOFU) and displayed for out-of-band verification; any later change is a loud, blocking event until deliberately re-pinned. Binaries install once added, always with an unambiguous `third-party/<name>` provenance line; the privileged categories are closed to it by construction.
+:   Added by you. Key fingerprint pinned on first use (TOFU) and displayed for out-of-band verification; any later change is a blocking event until re-pinned. Binaries install once added, always with an unambiguous `third-party/<name>` provenance line; the privileged categories are closed to it by construction.
 
 **local**
 :   Your own `file://` tree. Formulae by default; on your own machine it carries the same authority as acting by hand, including the privileged categories.
