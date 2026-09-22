@@ -1,0 +1,63 @@
+# TOML Schema for /opt/aslice/etc/sources.toml — the shipped source list.
+# Prose specification: docs/REPOSITORIES.md §2 (v1.7). Where this file and the
+# prose disagree, the disagreement is a bug (schematics/README.md).
+#
+# The file is a TUF target: versioned, rollback-protected, diffable with
+# `aslice repo list --sources-diff`. The core key fingerprint is additionally
+# compiled into the bootstrap binary; a tampered file cannot redirect the core
+# namespace by itself (REPOSITORIES §2).
+
+[toml-schema]
+version = "1.0.0"
+
+[toml-schema.meta]
+target = "/opt/aslice/etc/sources.toml"
+prose = "docs/REPOSITORIES.md"
+prose_version = "1.7"
+schematics = "0.1"
+
+[types.sourceEntry]
+type = "table"
+description = "One repository the client knows about (REPOSITORIES §2)."
+
+    [types.sourceEntry.url]
+    type = "string"
+    format = "uri"
+
+    [types.sourceEntry.mirrors]
+    type = "array"
+    itemtype = "string"
+    format = "uri"
+    optional = true
+    description = "Full-tree mirrors; clients fail over across them (DESIGN §9.6)."
+
+    [types.sourceEntry.trust]
+    type = "string"
+    allowedvalues = [ "official", "verified", "third-party", "local" ]
+    description = "An enforced capability set, not a label (REPOSITORIES §1, §3)."
+
+    [types.sourceEntry.namespace]
+    type = "string"
+    pattern = "^[a-z0-9][a-z0-9-]*$"
+    description = "The repo: namespace its packages address through."
+
+    [types.sourceEntry.key_fingerprint]
+    type = "string"
+    pattern = "^(ed25519|openpgp):.+$"
+    description = "Signing-key fingerprint; the core one is also compiled into the bootstrap binary."
+
+    [types.sourceEntry.countersigned_by]
+    type = "string"
+    pattern = "^(ed25519|openpgp):.+$"
+    optional = true
+    description = "For verified community repositories: the project key that vouches for this repo's key (REPOSITORIES §3)."
+
+    [types.sourceEntry.enabled]
+    type = "boolean"
+    description = "Verified community repositories ship enabled = false — listed for discovery, off until the user opts in."
+
+[elements.sources]
+type = "collection"
+itemtype = "types.sourceEntry"
+keypattern = "^[a-z0-9][a-z0-9-]*$"
+minlength = 1
