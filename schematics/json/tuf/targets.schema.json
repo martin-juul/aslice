@@ -1,0 +1,219 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aslice.sh/schematics/json/tuf/targets.schema.json",
+  "title": "TUF targets metadata",
+  "description": "Targets role: the files the repository vouches for, with length and hashes; aslice's sources.toml and slices ride here. Local copy derived from the upstream TUF 1.0.0 specification; where this file and upstream disagree, upstream wins and the copy is a bug (schematics/README.md).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "signatures",
+    "signed"
+  ],
+  "properties": {
+    "signatures": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/signature"
+      }
+    },
+    "signed": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "_type",
+        "spec_version",
+        "version",
+        "expires",
+        "targets"
+      ],
+      "properties": {
+        "_type": {
+          "const": "targets"
+        },
+        "spec_version": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+          "description": "SemVer of the TUF specification this metadata follows."
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "expires": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "targets": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "length",
+              "hashes"
+            ],
+            "properties": {
+              "length": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "hashes": {
+                "$ref": "#/$defs/hashes"
+              },
+              "custom": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "delegations": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "keys",
+            "roles"
+          ],
+          "properties": {
+            "keys": {
+              "type": "object",
+              "additionalProperties": {
+                "$ref": "#/$defs/key"
+              },
+              "propertyNames": {
+                "pattern": "^[0-9a-f]{64}$"
+              }
+            },
+            "roles": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name",
+                  "keyids",
+                  "threshold"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "keyids": {
+                    "type": "array",
+                    "minItems": 1,
+                    "uniqueItems": true,
+                    "items": {
+                      "$ref": "#/$defs/keyid"
+                    }
+                  },
+                  "threshold": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "terminating": {
+                    "type": "boolean",
+                    "default": false
+                  },
+                  "paths": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "uniqueItems": true
+                  },
+                  "path_hash_prefixes": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{64}$"
+                    },
+                    "uniqueItems": true
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "signature": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "keyid",
+        "sig"
+      ],
+      "properties": {
+        "keyid": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "sig": {
+          "type": "string",
+          "pattern": "^[0-9a-f]+$"
+        }
+      }
+    },
+    "hashes": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^[0-9a-f]+$"
+      },
+      "description": "Digest algorithm → hex digest, e.g. sha256."
+    },
+    "key": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "keytype",
+        "scheme",
+        "keyval"
+      ],
+      "properties": {
+        "keytype": {
+          "type": "string",
+          "enum": [
+            "ed25519",
+            "rsa",
+            "ecdsa",
+            "ecdsa-sha2-nistp256"
+          ]
+        },
+        "scheme": {
+          "type": "string",
+          "minLength": 1
+        },
+        "keyval": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "public"
+          ],
+          "properties": {
+            "public": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "keyid_hash_algorithms": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "keyid": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  }
+}
