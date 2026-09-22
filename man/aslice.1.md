@@ -66,8 +66,11 @@ aslice collects no telemetry or analytics of any kind — there is no opt-out be
 **adopt**
 :   `--from-homebrew` — produce an install plan recreating a Homebrew leaf set.
 
-**apply**, **export**, **import**
-:   Converge the machine to a declarative document — a setup file (packages, runtime selections, services, preferences, login shell), a lock, or a saved plan; capture this machine as a setup file; translate a Brewfile. See aslice-apply(1).
+**apply**
+:   Execute a saved plan; replay a lock file. See aslice-apply(1).
+
+**machine**
+:   Declarative whole-machine setup: `machine apply` converges the machine to an `aslice-machine.toml` (packages, runtime selections, services, preferences, login shell), `machine export` captures this machine as the file, `machine import` translates a Brewfile. See aslice-machine(1).
 
 **shellenv**, **init**
 :   Print the environment exports for the current profile; print the shell integration (bash/zsh/fish) for `aslice use`.
@@ -119,4 +122,4 @@ aslice collects no telemetry or analytics of any kind — there is no opt-out be
 
 The full user manual: `docs/MANUAL.md` in the aslice source tree. Package authoring: `docs/AUTHORING.md`. Design rationale: `docs/DESIGN.md`.
 
-aslice-install(1), aslice-upgrade(1), aslice-uninstall(1), aslice-gc(1), aslice-service(1), aslice-use(1), aslice-repo(1), aslice-orchard(1), aslice-ca-update(1), aslice-doctor(1), aslice-system-patch(1), aslice-apply(1)
+aslice-install(1), aslice-upgrade(1), aslice-uninstall(1), aslice-gc(1), aslice-service(1), aslice-use(1), aslice-repo(1), aslice-orchard(1), aslice-ca-update(1), aslice-doctor(1), aslice-system-patch(1), aslice-apply(1), aslice-machine(1)
