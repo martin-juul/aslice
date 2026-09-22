@@ -2,7 +2,7 @@
 
 **How to write, test, and ship aslice packages.**
 
-- **Status:** v0.6 — September 2026 (v0.2: review corrections — §8's payload map uses the real `[[binary.payload]]` array-of-tables shape, the invented `ctx.dep_lib_dirs` helper becomes the documented `ctx.deps` path, the service/root-daemon gate includes local repositories (§9), and the unsigned-vendor extended-only exception is recorded (§8, appendix). v0.3: editorial pass — prose revised for directness; no guidance changes. v0.4: prose rewrite throughout — chapters reworded in the project's technical-writing voice; no guidance changes. v0.5: review pass — the source-archive reference retargeted to DESIGN §9.6 and the countersigning reference to REPOSITORIES.md §5; no guidance changes. v0.6: NOMENCLATURE.md vocabulary reference added to the header; no guidance changes)
+- **Status:** v0.7 — September 2026 (v0.2: review corrections — §8's payload map uses the real `[[binary.payload]]` array-of-tables shape, the invented `ctx.dep_lib_dirs` helper becomes the documented `ctx.deps` path, the service/root-daemon gate includes local repositories (§9), and the unsigned-vendor extended-only exception is recorded (§8, appendix). v0.3: editorial pass — prose revised for directness; no guidance changes. v0.4: prose rewrite throughout — chapters reworded in the project's technical-writing voice; no guidance changes. v0.5: review pass — the source-archive reference retargeted to DESIGN §9.6 and the countersigning reference to REPOSITORIES.md §5; no guidance changes. v0.6: NOMENCLATURE.md vocabulary reference added to the header; no guidance changes. v0.7 adds chapter 12, **Maintaining the orchard** — the `aslice orchard` command group (lifecycle verbs over `[deprecation]`, orchard `lint`/`doctor`/`freshness`, the local merge gate `orchard ci`, the reverse-dependency query `orchard dependents`, and the named Homebrew importer `orchard port --from-homebrew`); pointers added from §7.1, §10, and the appendix checklist; mechanism in DESIGN v1.16 §12.14; no guidance changes elsewhere)
 - **Audience:** package authors — people writing formulae for the core or extended orchards, packaging vendor binaries, or running their own orchard. Read [MANUAL.md](MANUAL.md) chapters 1–4 first; this guide assumes the vocabulary (slice, orchard, flavor, generation) and the user's view of the system.
 - **Companions:** [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md) is the authoritative schema — when this guide and the schema disagree, the schema is right. [ORCHARD-POLICY.md](ORCHARD-POLICY.md) is the policy this guide summarizes. [BUILD-INFRA.md](BUILD-INFRA.md) is the farm your PR builds on. [MANUAL.md](MANUAL.md) is what your users read.
 - **Vocabulary:** [NOMENCLATURE.md](NOMENCLATURE.md) — project terms, acronyms, and the Homebrew translation table.
@@ -221,7 +221,7 @@ Users can run your tests too, any time: `aslice test ffmpeg` executes them again
 
 ### 7.1 Livecheck and autobump
 
-The `[livecheck]` block tells the orchard's scheduled job where to look for newer releases. When one appears, the orchard opens a bump PR automatically — formula edited, hash recomputed, CI running — and a maintainer reviews it like any other change. A human does the same thing by hand with `aslice bump-pr foo 7.2`: edit, lint, smoke-build one flavor, open the PR. And users can check any package themselves with `aslice livecheck foo`.
+The `[livecheck]` block tells the orchard's scheduled job where to look for newer releases. When one appears, the orchard opens a bump PR automatically — formula edited, hash recomputed, CI running — and a maintainer reviews it like any other change. A human does the same thing by hand with `aslice bump-pr foo 7.2`: edit, lint, smoke-build one flavor, open the PR. And users can check any package themselves with `aslice livecheck foo`. Maintainers get the orchard-wide view with `aslice orchard freshness` — every package's days-behind-upstream, worst first (§12).
 
 Write livecheck blocks against pages the upstream actually maintains — the download listing, the release feed — and prefer a regex that cannot silently match a prerelease. A livecheck that takes "7.2rc1" for newer than "7.1" ships a release candidate to users who didn't ask for one.
 
@@ -302,6 +302,8 @@ Every orchard PR passes five checks, with no maintainer override:
 4. **ABI gate** — on version/revision changes to anything others depend on: interface regressions require an explicit version bump or scheduled dependent rebuilds in the same snapshot.
 5. **Post-merge-only signing** — slices are signed after merge, never before, so a PR can never smuggle a signed artifact around review.
 
+Run the gates before opening the PR: `aslice orchard ci <pkg>` executes the same harness the farm runs — lint, per-flavor sandboxed builds at `min_os`, the smoke test, the ABI diff — minus the cross-OS VM tier, which it marks deferred rather than fakes (§12).
+
 What reviewers look for, beyond the gates: whether the description is accurate; whether the variants are justified; whether the patches are documented — every file in `patches/` gets a header comment saying what it does, why it is needed, and whether it went upstream; whether `min_os` is what you actually tested; and whether the formula does anything *clever*. Cleverness in a declarative system is usually a policy violation wearing a trench coat.
 
 A word on tone. The project has no code-of-conduct document, deliberately; the expectation is simpler and older — be decent to each other. Review here is direct. A formula with a problem will be told it has a problem, and you are expected to hear that as information about the formula, not about you. Dish it out the same way. [CONTRIBUTING.md](../CONTRIBUTING.md) carries the expectation in the open, along with commit style, sign-off, and the PR template.
@@ -326,6 +328,39 @@ If you mirror the official repository instead of authoring your own, mirror the 
 
 ---
 
+## 12. Maintaining the orchard
+
+One formula at a time is chapters 2–11. The whole orchard — keeping every formula lint-clean, fresh, and coherently versioned — has its own command group: `aslice orchard`. The commands work on a local checkout: pass `[path]`, or run them from inside the tree and the orchard is discovered for you. Anything that changes a formula ends as a PR — edited, validated, and linted by the command, the same contract as `aslice bump-pr`.
+
+**Lifecycle.** Deprecations and removals are edits to the formula's `[deprecation]` table (§7.2 walks the policy), and the group edits them for you:
+
+```
+aslice orchard deprecate ffmpeg --reason upstream-eol --replacement ffmpeg7 \
+    --date 2027-03-01 --disable-date 2027-09-01
+aslice orchard disable ffmpeg        # installs refuse from today; existing installs untouched
+aslice orchard rename ffmpeg ffmpeg7 # deprecate-as-renamed, scaffold the successor
+aslice orchard tombstone ffmpeg      # the formula leaves HEAD; the index tombstone is forever
+aslice orchard undeprecate ffmpeg    # rescind
+```
+
+Dates are validated in order, a `renamed` deprecation refuses to ship without a resolving `replacement`, and a tombstone refuses a name that still has dependents. The security fast path — straight to disabled, by maintainer vote — is `deprecate --reason security --disable-date <today>`: the vote happens in the PR, and the command keeps the mechanics honest.
+
+**Health.** `aslice orchard doctor` is the orchard-side counterpart of the machine doctor: lint clean across the tree, every core formula carrying `tests.star` and a working `[livecheck]`, deprecation chains coherent, patches documented, maintainers named — each finding with a stable check ID and the remedy spelled out, `--json` for scripts. `aslice orchard lint` is the tree-wide version of the per-formula lint you already run. `aslice orchard freshness` runs every livecheck and ranks packages by days-behind-upstream, worst first — the number the farm dashboard publishes (ORCHARD-POLICY §9), so you see the dashboard's input, not its summary.
+
+**The gate, before the farm.** `aslice orchard ci ffmpeg` runs chapter 10's five gates locally: lint, a sandboxed build per declared flavor at `min_os`, the smoke test, and the ABI diff against the published index. It is the same harness the farm runs, so a green local run makes the farm run a formality — except the cross-OS smoke tier, which only the farm's VMs can do, and the output says so. Run it bare on a PR branch to scope to the changed formulae; `--all` is the whole orchard and warns you what that costs.
+
+**Blast radius.** Before bumping a library, ask what breaks:
+
+```
+aslice orchard dependents x264 --transitive
+```
+
+Reverse dependencies, marked by whether they link the package's ABI (rebuild candidates) or merely exec the tool. The farm's dependent-rebuild cascade runs this same query server-side; running it yourself turns gate 4's "scheduled dependent rebuilds" from a surprise into a plan.
+
+And when the package you want already exists in Homebrew: `aslice orchard port --from-homebrew <formula>` translates the simple Ruby formulae mechanically — named *port* because the rest genuinely are ports. You review the draft, fill in what only a human knows, and chapter 2 takes it from there.
+
+---
+
 ## Appendix. The author's checklist
 
 Before opening the PR:
@@ -340,3 +375,5 @@ Before opening the PR:
 - [ ] Dependencies are aslice packages — no `/usr/lib`, no vendored copies, no build-time downloads
 - [ ] Vendor binaries: signer pinned (or `signer` omitted — extended only, per ORCHARD-POLICY §12), OS tags verified, `redistribute` set by license, not convenience
 - [ ] The description would make sense to someone who has never heard of the software
+
+Or the first three and the ABI check at once: `aslice orchard ci <pkg>` — chapter 10's gates, run on your machine before the farm runs them (§12).
