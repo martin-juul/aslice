@@ -1,0 +1,150 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aslice.sh/schematics/json/tuf/snapshot.schema.json",
+  "title": "TUF snapshot metadata",
+  "description": "Snapshot role: one version (and optionally length/hashes) per metadata file, so partial downloads are detectable. Local copy derived from the upstream TUF 1.0.0 specification; where this file and upstream disagree, upstream wins and the copy is a bug (schematics/README.md).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "signatures",
+    "signed"
+  ],
+  "properties": {
+    "signatures": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/signature"
+      }
+    },
+    "signed": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "_type",
+        "spec_version",
+        "version",
+        "expires",
+        "meta"
+      ],
+      "properties": {
+        "_type": {
+          "const": "snapshot"
+        },
+        "spec_version": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+          "description": "SemVer of the TUF specification this metadata follows."
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "expires": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "meta": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "version"
+            ],
+            "properties": {
+              "version": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "length": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "hashes": {
+                "$ref": "#/$defs/hashes"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "signature": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "keyid",
+        "sig"
+      ],
+      "properties": {
+        "keyid": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "sig": {
+          "type": "string",
+          "pattern": "^[0-9a-f]+$"
+        }
+      }
+    },
+    "hashes": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^[0-9a-f]+$"
+      },
+      "description": "Digest algorithm → hex digest, e.g. sha256."
+    },
+    "key": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "keytype",
+        "scheme",
+        "keyval"
+      ],
+      "properties": {
+        "keytype": {
+          "type": "string",
+          "enum": [
+            "ed25519",
+            "rsa",
+            "ecdsa",
+            "ecdsa-sha2-nistp256"
+          ]
+        },
+        "scheme": {
+          "type": "string",
+          "minLength": 1
+        },
+        "keyval": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "public"
+          ],
+          "properties": {
+            "public": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "keyid_hash_algorithms": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "keyid": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  }
+}
