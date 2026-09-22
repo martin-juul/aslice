@@ -1,7 +1,7 @@
 # aslice Setup — Declarative Whole-Machine Setup with `setup.toml`
 
-- **Status:** Design draft, v0.6 — September 2026 (v0.2: editorial pass — prose revised for directness; no schema or semantic changes. v0.3: second editorial pass — sentence-level revision for readability; no schema or semantic changes. v0.4: prose rewrite throughout — chapters reworded in the project's technical-writing voice; no schema or semantic changes. v0.5: review pass — the trust-stickiness reference retargeted to REPOSITORIES.md §4; companion refreshed to DESIGN v1.14; no schema or semantic changes. v0.6: NOMENCLATURE.md vocabulary reference added to the header; companion refreshed to DESIGN v1.15; no schema or semantic changes)
-- **Companion to:** DESIGN.md v1.15 §12.13 (architecture and rationale), MANUAL.md §10 (user guide), aslice-apply(1) (command reference). This document is the schema and semantics specification.
+- **Status:** Design draft, v0.7 — September 2026 (v0.2: editorial pass — prose revised for directness; no schema or semantic changes. v0.3: second editorial pass — sentence-level revision for readability; no schema or semantic changes. v0.4: prose rewrite throughout — chapters reworded in the project's technical-writing voice; no schema or semantic changes. v0.5: review pass — the trust-stickiness reference retargeted to REPOSITORIES.md §4; companion refreshed to DESIGN v1.14; no schema or semantic changes. v0.6: NOMENCLATURE.md vocabulary reference added to the header; companion refreshed to DESIGN v1.15; no schema or semantic changes. v0.7: companion refreshed to DESIGN v1.16; no schema or semantic changes)
+- **Companion to:** DESIGN.md v1.16 §12.13 (architecture and rationale), MANUAL.md §10 (user guide), aslice-apply(1) (command reference). This document is the schema and semantics specification.
 - **Vocabulary:** [NOMENCLATURE.md](NOMENCLATURE.md) — project terms, acronyms, and the Homebrew translation table.
 
 ## 1. The scenario
