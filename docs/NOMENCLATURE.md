@@ -1,7 +1,7 @@
 # aslice Nomenclature — The Words of the Project
 
-- **Status:** Reference v0.3 — September 2026 (v0.2: the **tombstone** entry gains its second sense — the permanent index record of a removed formula (PACKAGE-FORMAT §3.14, ORCHARD-POLICY §8), alongside the setup.toml negated declaration — prompted by the `aslice orchard tombstone` verb (DESIGN v1.16 §12.14); companion versions refreshed — DESIGN v1.16, AUTHORING v0.7, BUILD-INFRA v0.11, ORCHARD-POLICY v1.4, REPOSITORIES v1.4, SETUP v0.7, HOMEBREW-REVIEW v0.18. v0.3: the **vendor binary / redistribute** entry now describes the two modes (hosted vs vendor-fetched) and points at ORCHARD-POLICY §12 where the vendor-binary policy lives; the **dashboard** entry gains its second sense — the farm's public web dashboard at aslice.sh/dashboard, part of the owner's domain layout (September 2026); companion versions refreshed — DESIGN v1.17, AUTHORING v0.8, BUILD-INFRA v0.12, ORCHARD-POLICY v1.6, REPOSITORIES v1.5, MANUAL v0.9, SETUP v0.8, HOMEBREW-REVIEW v0.19)
-- **Companions:** [DESIGN.md](DESIGN.md) v1.17, [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md) v0.13, [AUTHORING.md](AUTHORING.md) v0.8, [BUILD-INFRA.md](BUILD-INFRA.md) v0.12, [ORCHARD-POLICY.md](ORCHARD-POLICY.md) v1.6, [REPOSITORIES.md](REPOSITORIES.md) v1.5, [MANUAL.md](MANUAL.md) v0.9, [SETUP.md](SETUP.md) v0.8, [HOMEBREW-REVIEW.md](HOMEBREW-REVIEW.md) v0.19
+- **Status:** Reference v0.4 — September 2026 (v0.2: the **tombstone** entry gains its second sense — the permanent index record of a removed formula (PACKAGE-FORMAT §3.14, ORCHARD-POLICY §8), alongside the setup.toml negated declaration — prompted by the `aslice orchard tombstone` verb (DESIGN v1.16 §12.14); companion versions refreshed — DESIGN v1.16, AUTHORING v0.7, BUILD-INFRA v0.11, ORCHARD-POLICY v1.4, REPOSITORIES v1.4, SETUP v0.7, HOMEBREW-REVIEW v0.18. v0.3: the **vendor binary / redistribute** entry now describes the two modes (hosted vs vendor-fetched) and points at ORCHARD-POLICY §12 where the vendor-binary policy lives; the **dashboard** entry gains its second sense — the farm's public web dashboard at aslice.sh/dashboard, part of the owner's domain layout (September 2026); companion versions refreshed — DESIGN v1.17, AUTHORING v0.8, BUILD-INFRA v0.12, ORCHARD-POLICY v1.6, REPOSITORIES v1.5, MANUAL v0.9, SETUP v0.8, HOMEBREW-REVIEW v0.19. v0.4: the declarative-setup entries follow the rename — the machine file is `aslice-machine.toml` and its verbs are the `aslice machine` group (owner decision, September 2026); the tombstone entry's negated-declaration sense is corrected — the machine file has no such declaration, apply asserts and retraction is the bounded `--prune` mode; the lock and pin entries name the real lock file (`aslice.lock`, PACKAGE-FORMAT §7); companion versions refreshed — DESIGN v1.18, PACKAGE-FORMAT v0.14, MANUAL v0.10, SETUP v0.9, HOMEBREW-REVIEW v0.20)
+- **Companions:** [DESIGN.md](DESIGN.md) v1.18, [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md) v0.14, [AUTHORING.md](AUTHORING.md) v0.8, [BUILD-INFRA.md](BUILD-INFRA.md) v0.12, [ORCHARD-POLICY.md](ORCHARD-POLICY.md) v1.6, [REPOSITORIES.md](REPOSITORIES.md) v1.5, [MANUAL.md](MANUAL.md) v0.10, [SETUP.md](SETUP.md) v0.9, [HOMEBREW-REVIEW.md](HOMEBREW-REVIEW.md) v0.20
 - **Audience:** every reader. When a document uses a word you do not know, it is defined here — or should be.
 
 A project that names everything owes its readers a place where the names are explained. This is that place. Terms are defined once, in one line where possible, with a pointer to the document that owns the term. Section numbers refer to the September 2026 corpus listed above.
@@ -41,11 +41,11 @@ The words we made up, or made ours.
 
 **leaf** — an installed package that nothing installed depends on; a removal candidate. *(DESIGN §10.4.)* *cf.* wishlist.
 
-**tombstone** — two permanent records share the word. In a repository index: what a removed formula leaves behind — name, final version, reason, replacement — so historical snapshots and old locks resolve forever; the `aslice orchard tombstone` verb writes one. *(PACKAGE-FORMAT §3.14; ORCHARD-POLICY §8; DESIGN §12.14.)* In setup.toml: a negated declaration, "this shall not be present," enforced by apply. *(SETUP §2; DESIGN §12.6.)*
+**tombstone** — the permanent record a removed formula leaves in a repository index: name, final version, reason, replacement — so historical snapshots and old locks resolve forever; the `aslice orchard tombstone` verb writes one. *(PACKAGE-FORMAT §3.14; ORCHARD-POLICY §8; DESIGN §12.14.)* (An earlier edition of this entry used the word for a negated declaration in the setup file — "this shall not be present." That feature does not exist: `aslice machine apply` asserts what the file declares and never removes what it does not mention, except under the bounded `--prune` mode. SETUP §3; DESIGN §12.13.)*
 
 **wishlist** — the set of implicit roots: installed leaves the user has not declared but has not removed either. The resolver keeps them honest. *(DESIGN §10.5, §12.4.)*
 
-**lock** — `setup.lock.pins`, the recorded resolution of a setup.toml: exact versions and hashes, replayable. *(SETUP §5; DESIGN §12.5.)*
+**lock** — `aslice.lock`, the recorded resolution of a profile: exact versions and hashes, replayable with `aslice apply`. *(PACKAGE-FORMAT §7.)*
 
 **index snapshot** — `index.snapshot.json`, a repository's frozen view of its formulas at a commit. Apply resolves against snapshots, not against moving Git heads. *(REPOSITORIES §7; DESIGN §12.3.)*
 
@@ -83,7 +83,7 @@ The words we made up, or made ours.
 
 **state DB** — the SQLite database (WAL mode) recording what is installed, why, and from where. *(DESIGN §10.1.)*
 
-**pin** — two meanings, both deliberate: a *version pin* in setup.lock.pins holds a package at an exact release (SETUP §5); a *project pin* in AUTHORING holds a formula to an upstream version policy (AUTHORING §12). Context distinguishes them.
+**pin** — two meanings, both deliberate: a *version pin* in `aslice.lock` holds a package at an exact release (PACKAGE-FORMAT §7); a *project pin* in AUTHORING holds a formula to an upstream version policy (AUTHORING §12). Context distinguishes them.
 
 **ride** — a ride-along utility: a small package that installs alongside another and is governed by the parent's lifecycle. *(DESIGN §12.9.)*
 
@@ -93,7 +93,7 @@ The words we made up, or made ours.
 
 **system package / system patch** — the capability to write outside the prefix, up to and including `/System`, granted per-repository and never by default. *(DESIGN §11.4.)*
 
-**setup.toml / apply / export / adopt** — the declarative core: the file that says what you want, the command that makes it so, the command that writes the file from reality, the command that claims an existing install into the file. *(SETUP §2; DESIGN §12; MANUAL §7.)*
+**aslice-machine.toml / machine apply / machine export / machine import / adopt** — the declarative core: the file that says what you want, the command that makes it so, the command that writes the file from reality, the command that translates a Brewfile into the file, the command that claims an existing Homebrew install as a plan. *(SETUP §2–§5; DESIGN §12.13; MANUAL §10–§11.)*
 
 ## 3. Trust and security
 
@@ -224,8 +224,8 @@ For readers arriving from the other orchard. The left word is theirs; the right 
 | `deprecate!` / `disable!` | the `[deprecation]` table, edited by `aslice orchard deprecate` / `disable` |
 | `uses_from_macos` | nothing — rejected; we never borrow from the OS |
 | `brew services` | `aslice service` |
-| Brewfile | setup.toml |
-| `brew bundle` | `aslice apply` |
+| Brewfile | `aslice-machine.toml` |
+| `brew bundle` | `aslice machine apply` |
 | `brew cleanup` | `aslice clean` / `aslice gc` |
 | `HOMEBREW_*` env vars | `ASLICE_*` |
 | formulae.brew.sh | the static web index |
@@ -242,4 +242,4 @@ Documents cite each other by section, and the citations follow fixed rules so th
 
 ---
 
-*History: v0.1 (September 2026) — initial nomenclature, covering the corpus as of DESIGN v1.15, PACKAGE-FORMAT v0.12, BUILD-INFRA v0.10, ORCHARD-POLICY v1.3, REPOSITORIES v1.3, HOMEBREW-REVIEW v0.17, SETUP v0.6, AUTHORING v0.6, MANUAL v0.8. v0.2 (September 2026) — the tombstone entry gains its index sense; the translation table gains the `deprecate!`/`disable!` row; companions refreshed to DESIGN v1.16, PACKAGE-FORMAT v0.12, AUTHORING v0.7, BUILD-INFRA v0.11, ORCHARD-POLICY v1.4, REPOSITORIES v1.4, MANUAL v0.8, SETUP v0.7, HOMEBREW-REVIEW v0.18. v0.3 (September 2026) — the vendor-binary entry describes both modes and cites ORCHARD-POLICY §12; the dashboard entry gains its web sense (aslice.sh/dashboard); companions refreshed to DESIGN v1.17, PACKAGE-FORMAT v0.13, AUTHORING v0.8, BUILD-INFRA v0.12, ORCHARD-POLICY v1.6, REPOSITORIES v1.5, MANUAL v0.9, SETUP v0.8, HOMEBREW-REVIEW v0.19.*
+*History: v0.1 (September 2026) — initial nomenclature, covering the corpus as of DESIGN v1.15, PACKAGE-FORMAT v0.12, BUILD-INFRA v0.10, ORCHARD-POLICY v1.3, REPOSITORIES v1.3, HOMEBREW-REVIEW v0.17, SETUP v0.6, AUTHORING v0.6, MANUAL v0.8. v0.2 (September 2026) — the tombstone entry gains its index sense; the translation table gains the `deprecate!`/`disable!` row; companions refreshed to DESIGN v1.16, PACKAGE-FORMAT v0.12, AUTHORING v0.7, BUILD-INFRA v0.11, ORCHARD-POLICY v1.4, REPOSITORIES v1.4, MANUAL v0.8, SETUP v0.7, HOMEBREW-REVIEW v0.18. v0.3 (September 2026) — the vendor-binary entry describes both modes and cites ORCHARD-POLICY §12; the dashboard entry gains its web sense (aslice.sh/dashboard); companions refreshed to DESIGN v1.17, PACKAGE-FORMAT v0.13, AUTHORING v0.8, BUILD-INFRA v0.12, ORCHARD-POLICY v1.6, REPOSITORIES v1.5, MANUAL v0.9, SETUP v0.8, HOMEBREW-REVIEW v0.19. v0.4 (September 2026) — the declarative-setup entries follow the rename: `aslice-machine.toml` and the `aslice machine` group; the tombstone entry's negated-declaration sense is corrected to the actual `--prune` semantics (SETUP §3, DESIGN §12.13); the lock and pin entries name the real lock file, `aslice.lock` (PACKAGE-FORMAT §7); companions refreshed to DESIGN v1.18, PACKAGE-FORMAT v0.14, AUTHORING v0.8, BUILD-INFRA v0.12, ORCHARD-POLICY v1.6, REPOSITORIES v1.5, MANUAL v0.10, SETUP v0.9, HOMEBREW-REVIEW v0.20.*
