@@ -1,6 +1,6 @@
 # tests.schema.star — starlarkschema v1.0.0 for tests.star
 #
-# Target:  tests.star in a package directory (package.toml build.test = true)
+# Target:  tests.star in a package directory (optional; required for core)
 # Corpus:  AUTHORING §6 ("Testing"), PACKAGE-FORMAT §6.4
 #
 # tests.star defines exactly one entry point, test(ctx), which aslice
