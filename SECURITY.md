@@ -8,7 +8,7 @@ aslice is security infrastructure for machines that no longer receive security u
 
 ## Reporting a vulnerability
 
-**Email: martin@juul.xyz** — subject line prefix `[aslice security]`.
+**Email: security@aslice.sh** — subject line prefix `[aslice security]`.
 
 Please include:
 
@@ -66,4 +66,4 @@ That is our incident, not your report — but it is handled in the open, per the
 
 ---
 
-*History: September 2026 — editorial pass: prose revised for directness; no policy changes. September 2026 — prose rewrite throughout: the policy reworded in the project's technical-writing voice; no policy changes. September 2026 — NOMENCLATURE.md vocabulary pointer added; no policy changes.*
+*History: September 2026 — editorial pass: prose revised for directness; no policy changes. September 2026 — prose rewrite throughout: the policy reworded in the project's technical-writing voice; no policy changes. September 2026 — NOMENCLATURE.md vocabulary pointer added; no policy changes. September 2026 — contact moves to security@aslice.sh with the project domain (owner decision); no policy changes.*
