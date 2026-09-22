@@ -1,7 +1,7 @@
 # aslice Package Format
 
-**Status:** Format draft, v0.12 — September 2026
-**Change log:** v0.2 adds **vendor binary packages** — `type = "binary"`, `[[binary]]` artifacts with per-OS support tags, declarative payload maps, and mandatory signer pinning (§3.11); lock-file `origin` gains `"vendor-direct"` (§7.2). v0.3 opens **32-bit and universal vendor payloads**: `arch` may include `"i386"`, with the 10.14 execution ceiling derived from the artifact itself and enforced at lint and solve time (§3.11). v0.4 adds the **`[system]` declaration** for kernel extensions and SIP-disabled development tools (§3.12; mechanism and warnings in DESIGN §12.7) and replaces the checksummed-plist `[[install.service]]` with the **generated-plist `[service]` table** — the manifest describes the service, aslice writes the launchd plist (§3.8; lifecycle and stop–swap–restart upgrades in DESIGN §12.8). v0.5 adds the **multi-version runtime declarations**: `[runtime]` marks a runtime formula (shim set, ABI epoch, per-version userbase environment injection, extension scan dir), `[extension]` binds a compiled extension slice to a runtime's ABI epoch, and `[ride]` marks an interpreter-target tool that launches under the currently selected runtime (§3.13; mechanism in DESIGN §12.9). v0.6 lands the lifecycle and freshness declarations proposed in HOMEBREW-REVIEW §8 and made normative policy by ORCHARD-POLICY v0.4 §1: **`[deprecation]`** replaces the retired `[package] deprecated` boolean (§3.14), **`[livecheck]`** declares upstream freshness tracking (§3.15), **`[install]`** gains `link`/`link_reason` (the principled keg-only) and the `notes` caveats field (§3.8), the `build.star` ctx API gains **`ctx.replace`** (§6.3), and **`[system-patch]`** declares flagged replacement of Apple-provided files (§3.16; mechanism in DESIGN §12.11). v0.7: review corrections — §3.16's serving rule now matches REPOSITORIES §3 as amended (official/local by default; verified only via the explicit per-repo `allow-system-patch` grant; third-party never), and §3.8 documents `aslice link`/`aslice unlink` for `link = false` packages (DESIGN v1.10 §12.1). v0.8: §7.1 notes that `aslice apply` is now the unified convergence verb — saved plans, lock files, and declarative `setup.toml` documents (SETUP.md; DESIGN v1.11 §12.13). v0.9 is an editorial pass — prose revised for directness; no schema or semantic changes. v0.10 rewrites the prose throughout — every explanatory passage reworded for clarity, pace, and voice; no schema, semantic, or factual changes. v0.11: review pass — stray trailing whitespace removed from the §4.1 grammar block; no schema or semantic changes. v0.12 adds a NOMENCLATURE.md vocabulary reference to the header; no schema or semantic changes
+**Status:** Format draft, v0.13 — September 2026
+**Change log:** v0.2 adds **vendor binary packages** — `type = "binary"`, `[[binary]]` artifacts with per-OS support tags, declarative payload maps, and mandatory signer pinning (§3.11); lock-file `origin` gains `"vendor-direct"` (§7.2). v0.3 opens **32-bit and universal vendor payloads**: `arch` may include `"i386"`, with the 10.14 execution ceiling derived from the artifact itself and enforced at lint and solve time (§3.11). v0.4 adds the **`[system]` declaration** for kernel extensions and SIP-disabled development tools (§3.12; mechanism and warnings in DESIGN §12.7) and replaces the checksummed-plist `[[install.service]]` with the **generated-plist `[service]` table** — the manifest describes the service, aslice writes the launchd plist (§3.8; lifecycle and stop–swap–restart upgrades in DESIGN §12.8). v0.5 adds the **multi-version runtime declarations**: `[runtime]` marks a runtime formula (shim set, ABI epoch, per-version userbase environment injection, extension scan dir), `[extension]` binds a compiled extension slice to a runtime's ABI epoch, and `[ride]` marks an interpreter-target tool that launches under the currently selected runtime (§3.13; mechanism in DESIGN §12.9). v0.6 lands the lifecycle and freshness declarations proposed in HOMEBREW-REVIEW §8 and made normative policy by ORCHARD-POLICY v0.4 §1: **`[deprecation]`** replaces the retired `[package] deprecated` boolean (§3.14), **`[livecheck]`** declares upstream freshness tracking (§3.15), **`[install]`** gains `link`/`link_reason` (the principled keg-only) and the `notes` caveats field (§3.8), the `build.star` ctx API gains **`ctx.replace`** (§6.3), and **`[system-patch]`** declares flagged replacement of Apple-provided files (§3.16; mechanism in DESIGN §12.11). v0.7: review corrections — §3.16's serving rule now matches REPOSITORIES §3 as amended (official/local by default; verified only via the explicit per-repo `allow-system-patch` grant; third-party never), and §3.8 documents `aslice link`/`aslice unlink` for `link = false` packages (DESIGN v1.10 §12.1). v0.8: §7.1 notes that `aslice apply` is now the unified convergence verb — saved plans, lock files, and declarative `setup.toml` documents (SETUP.md; DESIGN v1.11 §12.13). v0.9 is an editorial pass — prose revised for directness; no schema or semantic changes. v0.10 rewrites the prose throughout — every explanatory passage reworded for clarity, pace, and voice; no schema, semantic, or factual changes. v0.11: review pass — stray trailing whitespace removed from the §4.1 grammar block; no schema or semantic changes. v0.12 adds a NOMENCLATURE.md vocabulary reference to the header; no schema or semantic changes. v0.13 drops the variant cap from §3.5 and the lint list (policy moved to need-plus-honest-tags, DESIGN §13.2), softens the §3.11 example's redistribution comment to mechanics only, and adds `takedown` to the §3.14 lifecycle reasons
 **Companion to:** [DESIGN.md](DESIGN.md) — this document is the authoritative specification for §6 (Package Format). Where they disagree, this document wins.
 **Scope:** the `package.toml` definition format, `build.star` build API, dependency and version semantics, transitive resolution, and lock files.
 - **Vocabulary:** [NOMENCLATURE.md](NOMENCLATURE.md) — project terms, acronyms, and the Homebrew translation table.
@@ -150,7 +150,7 @@ conflicts   = ["debug"]               # optional: mutually exclusive variants
 requires    = []                      # optional: variant prerequisites
 ```
 
-- Policy caps `abi = true` variants at 6 per package (DESIGN §13.2), and each one's `description` must name the interface it changes.
+- Each `abi = true` variant's `description` must name the interface it changes (policy: DESIGN §13.2). There is no cap — a package declares as many variants as its users need.
 - A variant may carry platform bounds of its own: `min_os = "10.13"` or `flavors = ["v2", "v3"]` inside a `[variants.*]` table narrows where that variant is available.
 - `[variants.*]` is rejected on `type = "binary"` packages; a vendor artifact has no build-time switches to describe.
 
@@ -268,7 +268,7 @@ max_os    = "10.13"                     # vendor's legacy build genuinely stops 
 arch      = ["x86_64", "i386"]          # universal; i386 present ⇒ max_os ≤ "10.14" (derived)
 signer    = "Developer ID Application: Vendor Inc. (ABCD1234)"   # pinned; change = hard fail
 notarized = false                       # pre-notarization-era artifact; expected and announced
-redistribute = false                    # license forbids rehosting: clients fetch vendor URL
+redistribute = false                    # clients fetch the vendor URL themselves
 
 [[binary]]                              # the vendor's current build, for newer machines
 url       = "https://vendor.example/vendorcli-3.2.1.pkg"
@@ -353,7 +353,7 @@ version = "6.1.0"
 # …
 
 [extension]
-runtime = "php"                         # the runtime formula this builds against
+runtime = "php"                        # the runtime formula this builds against
 loader  = "20-redis.ini"                # written into the runtime's extension_scan_dir
 module  = "lib/php/extensions/redis.so" # payload path the generated loader references
 ```
@@ -380,12 +380,12 @@ At exec time the tool's shim resolves in two steps: first the runtime stream (se
 ```toml
 [deprecation]
 date         = "2027-03-01"    # when deprecation starts
-reason       = "upstream-eol"  # upstream-eol | security | renamed | unmaintainable | other
+reason       = "upstream-eol"  # upstream-eol | security | renamed | unmaintainable | takedown | other
 replacement  = "ffmpeg7"       # optional pointer; mandatory when reason = "renamed"
 disable_date = "2027-09-01"    # optional: new installs refuse after this without --force-disabled
 ```
 
-The transitions work as follows. **Active → deprecated:** installs and `info`/`audit` warn with `reason` and `replacement`; existing installs are unaffected, and the package still receives slices. **Deprecated → disabled:** at `disable_date`, new installs refuse without `--force-disabled`; existing installs keep working and remain in locks. **Disabled → tombstoned:** the formula leaves orchard HEAD, but the index keeps a permanent tombstone — name, final version, reason, replacement — so that historical snapshots and old locks resolve forever. Two further rules are policy rather than schema: an upstream-EOL package in extended may carry `reason = "upstream-eol"` indefinitely as normal life, not failure (ORCHARD-POLICY §8); and the security fast path, straight to disabled by maintainer vote, is a policy decision the schema merely permits.
+The transitions work as follows. **Active → deprecated:** installs and `info`/`audit` warn with `reason` and `replacement`; existing installs are unaffected, and the package still receives slices. **Deprecated → disabled:** at `disable_date`, new installs refuse without `--force-disabled`; existing installs keep working and remain in locks. **Disabled → tombstoned:** the formula leaves orchard HEAD, but the index keeps a permanent tombstone — name, final version, reason, replacement — so that historical snapshots and old locks resolve forever. Two further rules are policy rather than schema: an upstream-EOL package in extended may carry `reason = "upstream-eol"` indefinitely as normal life, not failure (ORCHARD-POLICY §8); and the security fast path, straight to disabled by maintainer vote, is a policy decision the schema merely permits. `reason = "takedown"` records a verified rights-holder complaint (ORCHARD-POLICY §8); hosted slices stop being served, and the tombstone preserves the record.
 
 ### 3.15 `[livecheck]` — upstream freshness, declared (v0.6)
 
@@ -621,7 +621,7 @@ For `type = "binary"` packages, cross-OS portability means selecting a different
 
 ## 8. Validation and tooling
 
-- **`aslice lint <formula>`** runs full schema validation plus the policy checks: name rules, license validity, unpinned sources, submodule use, cycle detection, variant caps, `min_os` plausibility against the toolchain — and, for `type = "binary"`, payload-map completeness against the actual artifact, signer and notarization verification, and OS-tag consistency with bundle metadata. Orchard CI runs lint plus a sandboxed build (or payload extraction) on every PR (DESIGN §13.4).
+- **`aslice lint <formula>`** runs full schema validation plus the policy checks: name rules, license validity, unpinned sources, submodule use, cycle detection, `min_os` plausibility against the toolchain — and, for `type = "binary"`, payload-map completeness against the actual artifact, signer and notarization verification, and OS-tag consistency with bundle metadata. Orchard CI runs lint plus a sandboxed build (or payload extraction) on every PR (DESIGN §13.4).
 - **`spec` evolution is additive-only** within a `spec` major: readers reject a higher `spec` value rather than guess at it. Breaking changes bump `spec` and ship with a mechanical migrator.
 - **Unknown fields are errors**, misplaced ones included: `min_os` inside `[source]` fails lint rather than being silently ignored, and `[build]` on a `type = "binary"` package fails the same way.
 
@@ -681,7 +681,7 @@ A dependent writes `runtime = ["blas ^3"]`; the profile's provider choice — `o
 
 ### 9.4 Full-featured — ffmpeg
 
-The full formula is the one developed through §2 and §3, `orchards/core/ffmpeg/`: conditional dependencies, provider-variant requirements, variant caps, an audit CPE, a declarative service-free install. It is the reference formula that the linter's test suite round-trips.
+The full formula is the one developed through §2 and §3, `orchards/core/ffmpeg/`: conditional dependencies, provider-variant requirements, an audit CPE, a declarative service-free install. It is the reference formula that the linter's test suite round-trips.
 
 ### 9.5 Vendor binary — a pkg-only tool with a legacy artifact
 
