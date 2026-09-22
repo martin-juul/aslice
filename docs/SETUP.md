@@ -1,7 +1,7 @@
 # aslice Setup — Declarative Whole-Machine Setup with `aslice-machine.toml`
 
-- **Status:** Design draft, v0.9 — September 2026 (v0.2: editorial pass — prose revised for directness; no schema or semantic changes. v0.3: second editorial pass — sentence-level revision for readability; no schema or semantic changes. v0.4: prose rewrite throughout — chapters reworded in the project's technical-writing voice; no schema or semantic changes. v0.5: review pass — the trust-stickiness reference retargeted to REPOSITORIES.md §4; companion refreshed to DESIGN v1.14; no schema or semantic changes. v0.6: NOMENCLATURE.md vocabulary reference added to the header; companion refreshed to DESIGN v1.15; no schema or semantic changes. v0.7: companion refreshed to DESIGN v1.16; no schema or semantic changes. v0.8: companion refreshed to DESIGN v1.17; no schema or semantic changes. v0.9: the file is renamed `aslice-machine.toml` — a reserved, self-describing name that other tools can recognize — and the command surface splits by document kind: `aslice machine apply` / `export` / `import --from-brewfile` for the machine file, while top-level `aslice apply` keeps plans and lock files (owner decision, September 2026); no schema changes)
-- **Companion to:** DESIGN.md v1.18 §12.13 (architecture and rationale), MANUAL.md §10 (user guide), aslice-machine(1) (command reference). This document is the schema and semantics specification.
+- **Status:** Design draft, v0.10 — September 2026 (v0.2: editorial pass — prose revised for directness; no schema or semantic changes. v0.3: second editorial pass — sentence-level revision for readability; no schema or semantic changes. v0.4: prose rewrite throughout — chapters reworded in the project's technical-writing voice; no schema or semantic changes. v0.5: review pass — the trust-stickiness reference retargeted to REPOSITORIES.md §4; companion refreshed to DESIGN v1.14; no schema or semantic changes. v0.6: NOMENCLATURE.md vocabulary reference added to the header; companion refreshed to DESIGN v1.15; no schema or semantic changes. v0.7: companion refreshed to DESIGN v1.16; no schema or semantic changes. v0.8: companion refreshed to DESIGN v1.17; no schema or semantic changes. v0.9: the file is renamed `aslice-machine.toml` — a reserved, self-describing name that other tools can recognize — and the command surface splits by document kind: `aslice machine apply` / `export` / `import --from-brewfile` for the machine file, while top-level `aslice apply` keeps plans and lock files (owner decision, September 2026); no schema changes. v0.10: grafts — §2.8 introduces the `[grafts]` allow-list (pnpm-style pre-approval of declared installer scripts; signed manifests only), §2.1's schema overview gains the table, §3.4 gains the graft consent gate, §4.1's export captures recorded approvals, §7's attack-surface accounting gains the fourth bound, §3.2's ordering note gains the elevated-graft case, and §9's reference gains `--accept-grafts`; companion refreshed to DESIGN v1.19; model in DESIGN §12.15)
+- **Companion to:** DESIGN.md v1.19 §12.13 (architecture and rationale), MANUAL.md §10 (user guide), aslice-machine(1) (command reference). This document is the schema and semantics specification.
 - **Vocabulary:** [NOMENCLATURE.md](NOMENCLATURE.md) — project terms, acronyms, and the Homebrew translation table.
 
 ## 1. The scenario
@@ -53,6 +53,9 @@ python = "3.12"
 
 [services]                     # launchd services to enable (DESIGN §12.8)
 start = ["postgresql", "redis"]
+
+[grafts]                       # pre-approved installer-script grafts (§2.8)
+allow = ["audiolab:convolver"] #   pnpm-style allow-list; anything not listed asks
 
 [shell]
 default = "zsh"                # login shell; package names resolve through the profile (§2.5)
@@ -115,6 +118,24 @@ Writing a default for an application that is not installed yet is fine, and comm
 
 `[[repos]]` declares additional repositories. Applying one is `aslice repo add <url>`: TOFU key pinning, with its interactive confirmation (REPOSITORIES.md §7). One rule is absolute: a file **cannot elevate trust**. `verified` status comes only from the normal grant flow, never from a document. And a declared repo whose URL is already configured under another name — or whose name is configured with another URL — is a conflict error, not a silent override.
 
+### 2.8 `[grafts]`
+
+```toml
+[grafts]
+allow = ["protools-hd", "audiolab:convolver"]
+```
+
+Some packages carry **grafts** — vendor installer scripts, declared in the formula with a behavior manifest and run only with the user's approval (MANUAL §4.5; model DESIGN §12.15; schema PACKAGE-FORMAT §3.11). Interactively, an approval is given at the prompt and recorded in the state DB. The `[grafts]` table is the declarative counterpart, pnpm-style: `allow` names the packages whose grafts may run without prompting, so a known set rebuilds a machine unattended.
+
+The entries are package names in the same addressing as `packages` — plain, or `repo:`-namespaced. The semantics, with the sharp edges named:
+
+- **The list suppresses the prompt, never the display.** The plan prints every graft's behavior manifest before execution whether or not the package is allow-listed; what the list waives is the question, not the evidence.
+- **Only signed manifests can be allow-listed.** A graft whose manifest is unsigned (a third-party repository, an official package whose rehearsal has not run) prompts at every apply, per decision, whatever the file says — an allow-list entry for one is ignored with a warning. The allow-list is a form of persistence, and persistence is reserved for manifests somebody has rehearsed and signed (REPOSITORIES.md §3).
+- **Entries must name packages the file installs.** An entry absent from `packages` is a schema error; an entry for a package that declares no grafts is a no-op, noted in the plan.
+- **Refusal stays refusal.** Non-interactive applies refuse graft-bearing packages not on the list (exit 2) unless `--accept-grafts` is passed — the same contract shape as `--accept-system-changes`, one severity level down (§3.4).
+
+`aslice machine export` writes the list from your recorded approvals (§4.1), so the file you share carries the decisions you already made — and no others.
+
 ## 3. `aslice machine apply`
 
 ### 3.1 One operation, three documents
@@ -143,7 +164,7 @@ Every apply is a plan first. The plan is computed in full, rendered in the same 
 8. **System preferences and shell** — the `[defaults.system]` writes, `/etc/shells` enrollment, `chsh` (§3.4 gate).
 9. **Report** — what changed, what was already so, what needs restarting.
 
-Why this order? Because privileges are needed only at step 8. A plan that cannot get consent still lands everything unprivileged, and reports the remainder as skipped-refused rather than failed.
+Why this order? Because the setup file's own privileged writes are all at step 8 — package installation at step 4 needs privileges only if an approved graft is elevated (§2.8), and the graft approval flow handles that case (§3.4). A plan that cannot get consent still lands everything unprivileged, and reports the remainder as skipped-refused rather than failed.
 
 ### 3.3 Idempotence, convergence, and `--prune`
 
@@ -162,6 +183,8 @@ Two parts of a setup file write to OS territory. N5 (DESIGN §2.2) forbids that 
 - `[shell]` enrollment — appending to `/etc/shells`.
 
 Run interactively, each gated step prompts with what will be written and why. Run non-interactively — scripts, `--json`, pipes, the recovery-terminal scenario — gated steps are **refused** (exit 2) unless you pass `--accept-system-changes`: the same flag and the same contract as system packages and system patches (DESIGN §12.7, §12.11). `--dry-run` shows the complete plan, gated steps included, and changes nothing.
+
+Graft-bearing packages (MANUAL §4.5) are a third gate, of a different kind: nothing they do is a write until a script runs, and the gate is the graft approval flow. A package named in the file's `[grafts]` allow-list (§2.8) runs its grafts without prompting; anything else asks interactively, or is refused non-interactively (exit 2) unless `--accept-grafts` is passed — one severity level below `--accept-system-changes`, the same contract shape.
 
 The upshot: a file fetched from someone else is safe to *plan* unconditionally. Consent is per-gated-step, informed, and never bundled into a blanket "trust this file".
 
@@ -187,6 +210,7 @@ If a step fails, the plan aborts at that point. The steps that completed stand �
 - **Login shell** — exported only when it differs from the OS default (`/bin/bash` on every in-scope release). An aslice-managed shell path maps back to its package name; a foreign path (a Homebrew-installed shell, say) is commented out with the raw path and a note.
 - **Repositories** — the configured non-official repositories, name + URL. Keys are re-pinned by the applying machine through normal TOFU; exported files carry no key material.
 - **Configuration** — `[aslice]` keys whose values differ from defaults.
+- **Graft approvals** — exported as `[grafts].allow` (§2.8): the packages whose grafts you approved interactively, so a rebuilt machine replays the same decisions. Approvals of unsigned manifests are never recorded (DESIGN §12.15), so there is nothing to export — every export of the list is, by construction, a list of signed-manifest packages.
 
 The output is deterministic — sorted, stable formatting — so two exports diff cleanly. The file is meant for version control, and diffability is the price of admission.
 
@@ -237,7 +261,7 @@ Two rules keep shared files healthy:
 
 ## 7. Security and trust
 
-- **Data, not code.** No evaluation, no hooks, no shell-outs declared by the file. So the attack surface of applying a hostile file is limited to three things: installing packages (ordinary solver + trust levels), naming repositories (TOFU-pinned, never elevated), and writing preferences (user ones unprivileged, system ones consent-gated). Compare `brew bundle`, where the Brewfile is Ruby and `brew "x"` can carry arbitrary code paths.
+- **Data, not code.** No evaluation, no hooks, no shell-outs declared by the file. So the attack surface of applying a hostile file is limited to four things: installing packages (ordinary solver + trust levels), naming repositories (TOFU-pinned, never elevated), writing preferences (user ones unprivileged, system ones consent-gated), and pre-approving grafts — bounded because only signed, rehearsed manifests can be allow-listed (§2.8), so the worst a hostile file can silently run is a script the farm already watched behave, with its full manifest printed in the plan you confirmed. Compare `brew bundle`, where the Brewfile is Ruby and `brew "x"` can carry arbitrary code paths.
 - **Trust levels bind as usual.** A setup file cannot make a third-party repository serve root daemons, system packages, or system patches. The repository capabilities of REPOSITORIES.md §3 apply unchanged.
 - **Consent is per-gate, informed, and replayable.** The plan shows every write before any happens, `--dry-run` is always available, and gated steps name their target files.
 - **Attribution.** Every applied change is recorded with the file's hash and the generation that carried it (§3.5). "What did that file do to me" is always answerable, with `aslice history`.
@@ -257,6 +281,7 @@ aslice machine apply [aslice-machine.toml | https://…]
   --dry-run                       # print the full plan, change nothing
   --prune                         # also retract file-managed items no longer declared (§3.3)
   --accept-system-changes         # consent to [defaults.system] and /etc/shells enrollment, non-interactive
+  --accept-grafts                 # consent to grafts not in [grafts].allow, non-interactive (§3.4)
   --json                          # machine-readable plan and report
 aslice machine export             # write this machine's aslice-machine.toml to stdout
   --defaults <domain,…>           # also capture these user preference domains (§4.2)
