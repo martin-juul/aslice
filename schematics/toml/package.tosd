@@ -379,8 +379,7 @@ description = "Identity: what a package is, never where it stands in its life (�
     description = "binary: vendor pkg/dmg packages (§3.11); forbids build-time sections — lint. (Written through the reserved children namespace: the parent definition uses the type property itself.)"
 
     [elements.package.min_os]
-    type = "string"
-    allowedvalues = [ "10.11", "10.12", "10.13", "10.14", "10.15", "11", "12" ]
+    type = "types.osRelease"
     optional = true
     default = "10.11"
     description = "The oldest release CI builds and smoke-runs on; also controls index visibility (§3.2)."
