@@ -12,7 +12,7 @@ aslice — a package manager for Intel macOS (10.11–12, x86_64)
 
 # DESCRIPTION
 
-aslice installs and manages software on Intel Macs running macOS 10.11 through 12. Packages are **slices** — prebuilt, signed binaries — installed from signed, static **repositories** compiled from **orchards** (git repositories of formulae). Installs are binary-first, execute no package code, and never require sudo in steady state. Every mutating operation creates a new **generation**; `aslice rollback` returns to any previous one.
+aslice installs and manages software on Intel Macs running macOS 10.11 through 12. Packages are **slices** — prebuilt, signed binaries — installed from signed, static **repositories** compiled from **orchards** (git repositories of formulae). Installs are binary-first, execute no undeclared package code — a vendor installer script runs only as a declared, approved graft (aslice-graft(1)) — and never require sudo in steady state. Every mutating operation creates a new **generation**; `aslice rollback` returns to any previous one.
 
 aslice collects no telemetry or analytics of any kind — there is no opt-out because there is no instrumentation.
 
@@ -20,6 +20,9 @@ aslice collects no telemetry or analytics of any kind — there is no opt-out be
 
 **install**, **uninstall**, **upgrade**, **outdated**, **reinstall**
 :   Install, remove, and update packages. See aslice-install(1), aslice-upgrade(1), aslice-uninstall(1).
+
+**graft**
+:   Review and withdraw recorded installer-script approvals: `graft approvals`, `graft revoke`. Approving a graft happens at install; see aslice-graft(1).
 
 **search**, **info**, **flavors**, **leaves**, **why**
 :   Find and inspect packages. `flavors` shows the prebuilt matrix for this machine; `why` explains what requires a package; `leaves` lists explicitly-requested packages (`--user-built` for locally compiled ones).
@@ -70,7 +73,7 @@ aslice collects no telemetry or analytics of any kind — there is no opt-out be
 :   Execute a saved plan; replay a lock file. See aslice-apply(1).
 
 **machine**
-:   Declarative whole-machine setup: `machine apply` converges the machine to an `aslice-machine.toml` (packages, runtime selections, services, preferences, login shell), `machine export` captures this machine as the file, `machine import` translates a Brewfile. See aslice-machine(1).
+:   Declarative whole-machine setup: `machine apply` converges the machine to an `aslice-machine.toml` (packages, runtime selections, services, preferences, graft pre-approvals, login shell), `machine export` captures this machine as the file, `machine import` translates a Brewfile. See aslice-machine(1).
 
 **shellenv**, **init**
 :   Print the environment exports for the current profile; print the shell integration (bash/zsh/fish) for `aslice use`.
@@ -122,4 +125,4 @@ aslice collects no telemetry or analytics of any kind — there is no opt-out be
 
 The full user manual: `docs/MANUAL.md` in the aslice source tree. Package authoring: `docs/AUTHORING.md`. Design rationale: `docs/DESIGN.md`.
 
-aslice-install(1), aslice-upgrade(1), aslice-uninstall(1), aslice-gc(1), aslice-service(1), aslice-use(1), aslice-repo(1), aslice-orchard(1), aslice-ca-update(1), aslice-doctor(1), aslice-system-patch(1), aslice-apply(1), aslice-machine(1)
+aslice-install(1), aslice-upgrade(1), aslice-uninstall(1), aslice-gc(1), aslice-service(1), aslice-use(1), aslice-repo(1), aslice-orchard(1), aslice-ca-update(1), aslice-doctor(1), aslice-system-patch(1), aslice-apply(1), aslice-machine(1), aslice-graft(1)
