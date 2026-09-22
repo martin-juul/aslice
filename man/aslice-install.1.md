@@ -13,7 +13,7 @@ aslice-install — install packages
 
 # DESCRIPTION
 
-Installs packages, binary-first: resolves the request against the index, selects the newest version compatible with this OS release and the fastest flavor this CPU executes, downloads the slices, verifies signatures and hashes, checks library interfaces against the installed set, and links a new generation. No package code executes at any point. If any step fails, the live generation is untouched.
+Installs packages, binary-first: resolves the request against the index, selects the newest version compatible with this OS release and the fastest flavor this CPU executes, downloads the slices, verifies signatures and hashes, checks library interfaces against the installed set, and links a new generation. No undeclared package code executes at any point — a package whose installer genuinely requires a script declares it as a graft, which runs only after its behavior manifest has been shown and approved (aslice-graft(1)). If any step fails, the live generation is untouched.
 
 *package* may be a bare name (`ffmpeg`), a version constraint (`ffmpeg@v6`), a namespaced name (`audiolab:convolver`), or a runtime stream (`php@8.4` — installing a stream never changes the selected one; see aslice-use(1)).
 
@@ -39,6 +39,9 @@ Installs packages, binary-first: resolves the request against the index, selects
 **--accept-system-changes**
 :   Required consent for declared `[system]` and `[system-patch]` packages in non-interactive use. There is no persistent "always accept."
 
+**--accept-grafts**
+:   Consent, for this run only, to grafts not already covered by a recorded approval or the `[grafts]` allow-list. The behavior manifest is printed either way; without consent, non-interactive use refuses with exit status 2. See aslice-graft(1).
+
 **--allow-eol**
 :   Permit installing a package past its upstream's end-of-life. The install is announced and logged either way.
 
@@ -55,8 +58,9 @@ aslice install ffmpeg
 aslice install ffmpeg --variant +x265 --cflags="-O3 -march=native"
 aslice install php@8.4 --with-extensions-from 8.3
 aslice install foo --accept-system-changes
+aslice install convolver --accept-grafts
 ```
 
 # SEE ALSO
 
-aslice(1), aslice-upgrade(1), aslice-uninstall(1), aslice-use(1), MANUAL.md §3–§4
+aslice(1), aslice-upgrade(1), aslice-uninstall(1), aslice-use(1), aslice-graft(1), MANUAL.md §3–§4
