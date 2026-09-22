@@ -26,7 +26,7 @@ The orchard group is the maintainer's CLI: everything between authoring one form
 
 **lint** checks every formula in the tree, not just one. **doctor** is the orchard-side counterpart of aslice-doctor(1): a curated battery with stable check IDs (`orchard.lint.*`, `orchard.livecheck.*`, `orchard.deprecation.*`), pass/warn/fail with the remedy named — lint clean tree-wide, core formulae carrying `tests.star` and a working `[livecheck]`, deprecation coherence, documented patches, named maintainers, resolvable `provides`/`conflicts`/`replaces`, no duplicate names. **freshness** runs every formula's livecheck and prints days-behind-upstream per package, worst first, with the orchard median — the number the farm dashboard publishes (ORCHARD-POLICY §9). Formulae without `[livecheck]` are reported untracked, which is a finding in core.
 
-**ci** runs the merge gate (ORCHARD-POLICY §10) on your machine before the farm does: lint, a sandboxed build per declared flavor at the formula's `min_os`, the `tests.star` smoke test, and the ABI gate diffed against a published index snapshot — the same harness the farm runs. With no arguments it scopes to the packages changed against the upstream branch; `--all` prices the full orchard and says so before starting. Passing locally merges nothing; the farm re-runs all five gates.
+**ci** runs the merge gate (ORCHARD-POLICY §10) on your machine before the farm does: lint, a sandboxed build per declared flavor at the formula's `min_os`, the `tests.star` smoke test, the ABI gate diffed against a published index snapshot, and — for graft-bearing binaries — rehearsal of each declared graft against its behavior manifest — the same harness the farm runs. With no arguments it scopes to the packages changed against the upstream branch; `--all` prices the full orchard and says so before starting. Passing locally merges nothing; the farm re-runs all six gates.
 
 **dependents** prints reverse dependencies from the orchard graph (`[depends]`, `[extension]`, `[ride]`), marking which link the package's ABI — the rebuild candidates on a provider bump — and which merely exec it. The farm's dependent-rebuild cascade runs the same query server-side, so what breaks on a bump is known before the PR, not after the merge.
 
@@ -34,7 +34,7 @@ The orchard group is the maintainer's CLI: everything between authoring one form
 
 # LIMITS
 
-**ci** cannot conjure the farm's VMs: the cross-OS smoke-run tier — every release in `[min_os, 12]` — is marked deferred-to-farm, never faked. **freshness** is only as good as each formula's `[livecheck]`; a rotted strategy is a bug against the named maintainer, and **doctor** says so. The mutating verbs change nothing until their PR merges — there is no maintainer override of the merge gate for them to bypass.
+**ci** cannot conjure the farm's VMs: rehearsal runs locally on the host OS, but the cross-OS tiers — smoke-runs on every release in `[min_os, 12]`, and graft rehearsal on every OS the artifact targets — are marked deferred-to-farm, never faked. **freshness** is only as good as each formula's `[livecheck]`; a rotted strategy is a bug against the named maintainer, and **doctor** says so. The mutating verbs change nothing until their PR merges — there is no maintainer override of the merge gate for them to bypass.
 
 # EXIT STATUS
 
@@ -42,4 +42,4 @@ The orchard group is the maintainer's CLI: everything between authoring one form
 
 # SEE ALSO
 
-aslice(1), aslice-doctor(1), aslice-repo(1), aslice-machine(1), AUTHORING.md §12, DESIGN.md §12.14, ORCHARD-POLICY.md §8–§10
+aslice(1), aslice-doctor(1), aslice-repo(1), aslice-machine(1), aslice-graft(1), AUTHORING.md §12, DESIGN.md §12.14, ORCHARD-POLICY.md §8–§10
