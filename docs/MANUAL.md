@@ -204,7 +204,7 @@ aslice records whether you asked for a package by name or it arrived as a depend
 aslice mark ffmpeg --on-request       # "I want this; stop calling it a dependency"
 ```
 
-Uninstalling removes a package from future generations; old generations still reference it, so rollback keeps working until the garbage collector eventually reclaims it (§3.5).
+Uninstalling removes a package from future generations; old generations still reference it, so rollback keeps working until the garbage collector eventually reclaims it (§5.3).
 
 ### 3.5 Reclaiming disk: clean and gc
 
