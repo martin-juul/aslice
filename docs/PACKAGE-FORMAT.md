@@ -1,7 +1,7 @@
 # aslice Package Format
 
-**Status:** Format draft, v0.14 — September 2026
-**Change log:** v0.2 adds **vendor binary packages** — `type = "binary"`, `[[binary]]` artifacts with per-OS support tags, declarative payload maps, and mandatory signer pinning (§3.11); lock-file `origin` gains `"vendor-direct"` (§7.2). v0.3 opens **32-bit and universal vendor payloads**: `arch` may include `"i386"`, with the 10.14 execution ceiling derived from the artifact itself and enforced at lint and solve time (§3.11). v0.4 adds the **`[system]` declaration** for kernel extensions and SIP-disabled development tools (§3.12; mechanism and warnings in DESIGN §12.7) and replaces the checksummed-plist `[[install.service]]` with the **generated-plist `[service]` table** — the manifest describes the service, aslice writes the launchd plist (§3.8; lifecycle and stop–swap–restart upgrades in DESIGN §12.8). v0.5 adds the **multi-version runtime declarations**: `[runtime]` marks a runtime formula (shim set, ABI epoch, per-version userbase environment injection, extension scan dir), `[extension]` binds a compiled extension slice to a runtime's ABI epoch, and `[ride]` marks an interpreter-target tool that launches under the currently selected runtime (§3.13; mechanism in DESIGN §12.9). v0.6 lands the lifecycle and freshness declarations proposed in HOMEBREW-REVIEW §8 and made normative policy by ORCHARD-POLICY v0.4 §1: **`[deprecation]`** replaces the retired `[package] deprecated` boolean (§3.14), **`[livecheck]`** declares upstream freshness tracking (§3.15), **`[install]`** gains `link`/`link_reason` (the principled keg-only) and the `notes` caveats field (§3.8), the `build.star` ctx API gains **`ctx.replace`** (§6.3), and **`[system-patch]`** declares flagged replacement of Apple-provided files (§3.16; mechanism in DESIGN §12.11). v0.7: review corrections — §3.16's serving rule now matches REPOSITORIES §3 as amended (official/local by default; verified only via the explicit per-repo `allow-system-patch` grant; third-party never), and §3.8 documents `aslice link`/`aslice unlink` for `link = false` packages (DESIGN v1.10 §12.1). v0.8: §7.1 notes that `aslice apply` is now the unified convergence verb — saved plans, lock files, and declarative `setup.toml` documents (SETUP.md; DESIGN v1.11 §12.13). v0.9 is an editorial pass — prose revised for directness; no schema or semantic changes. v0.10 rewrites the prose throughout — every explanatory passage reworded for clarity, pace, and voice; no schema, semantic, or factual changes. v0.11: review pass — stray trailing whitespace removed from the §4.1 grammar block; no schema or semantic changes. v0.12 adds a NOMENCLATURE.md vocabulary reference to the header; no schema or semantic changes. v0.13 drops the variant cap from §3.5 and the lint list (policy moved to need-plus-honest-tags, DESIGN §13.2), softens the §3.11 example's redistribution comment to mechanics only, and adds `takedown` to the §3.14 lifecycle reasons. v0.14 follows the declarative-setup rename in §7.1's cross-reference: the machine file is now `aslice-machine.toml`, applied with `aslice machine apply` (SETUP.md v0.9; DESIGN v1.18 §12.13); lock replay stays top-level `aslice apply aslice.lock` — no schema or semantic changes
+**Status:** Format draft, v0.15 — September 2026
+**Change log:** v0.2 adds **vendor binary packages** — `type = "binary"`, `[[binary]]` artifacts with per-OS support tags, declarative payload maps, and mandatory signer pinning (§3.11); lock-file `origin` gains `"vendor-direct"` (§7.2). v0.3 opens **32-bit and universal vendor payloads**: `arch` may include `"i386"`, with the 10.14 execution ceiling derived from the artifact itself and enforced at lint and solve time (§3.11). v0.4 adds the **`[system]` declaration** for kernel extensions and SIP-disabled development tools (§3.12; mechanism and warnings in DESIGN §12.7) and replaces the checksummed-plist `[[install.service]]` with the **generated-plist `[service]` table** — the manifest describes the service, aslice writes the launchd plist (§3.8; lifecycle and stop–swap–restart upgrades in DESIGN §12.8). v0.5 adds the **multi-version runtime declarations**: `[runtime]` marks a runtime formula (shim set, ABI epoch, per-version userbase environment injection, extension scan dir), `[extension]` binds a compiled extension slice to a runtime's ABI epoch, and `[ride]` marks an interpreter-target tool that launches under the currently selected runtime (§3.13; mechanism in DESIGN §12.9). v0.6 lands the lifecycle and freshness declarations proposed in HOMEBREW-REVIEW §8 and made normative policy by ORCHARD-POLICY v0.4 §1: **`[deprecation]`** replaces the retired `[package] deprecated` boolean (§3.14), **`[livecheck]`** declares upstream freshness tracking (§3.15), **`[install]`** gains `link`/`link_reason` (the principled keg-only) and the `notes` caveats field (§3.8), the `build.star` ctx API gains **`ctx.replace`** (§6.3), and **`[system-patch]`** declares flagged replacement of Apple-provided files (§3.16; mechanism in DESIGN §12.11). v0.7: review corrections — §3.16's serving rule now matches REPOSITORIES §3 as amended (official/local by default; verified only via the explicit per-repo `allow-system-patch` grant; third-party never), and §3.8 documents `aslice link`/`aslice unlink` for `link = false` packages (DESIGN v1.10 §12.1). v0.8: §7.1 notes that `aslice apply` is now the unified convergence verb — saved plans, lock files, and declarative `setup.toml` documents (SETUP.md; DESIGN v1.11 §12.13). v0.9 is an editorial pass — prose revised for directness; no schema or semantic changes. v0.10 rewrites the prose throughout — every explanatory passage reworded for clarity, pace, and voice; no schema, semantic, or factual changes. v0.11: review pass — stray trailing whitespace removed from the §4.1 grammar block; no schema or semantic changes. v0.12 adds a NOMENCLATURE.md vocabulary reference to the header; no schema or semantic changes. v0.13 drops the variant cap from §3.5 and the lint list (policy moved to need-plus-honest-tags, DESIGN §13.2), softens the §3.11 example's redistribution comment to mechanics only, and adds `takedown` to the §3.14 lifecycle reasons. v0.14 follows the declarative-setup rename in §7.1's cross-reference: the machine file is now `aslice-machine.toml`, applied with `aslice machine apply` (SETUP.md v0.9; DESIGN v1.18 §12.13); lock replay stays top-level `aslice apply aslice.lock` — no schema or semantic changes. v0.15 adds **grafts** — declared vendor installer scripts for binary packages: `[[binary.graft]]` pins each script by hash and carries an exhaustive behavior manifest (`writes`, `kexts`, `daemons`, `network`, `elevated`) that doubles as its execution sandbox policy (§3.11; model and approval flow in DESIGN v1.19 §12.15, user-side declaration in SETUP §2.8). The payload-only default is unchanged: undeclared scripts still never run on any path.
 **Companion to:** [DESIGN.md](DESIGN.md) — this document is the authoritative specification for §6 (Package Format). Where they disagree, this document wins.
 **Scope:** the `package.toml` definition format, `build.star` build API, dependency and version semantics, transitive resolution, and lock files.
 - **Vocabulary:** [NOMENCLATURE.md](NOMENCLATURE.md) — project terms, acronyms, and the Homebrew translation table.
@@ -14,7 +14,7 @@ The quickest way to describe this format is by contrast. npm's `package.json` ha
 
 | npm convention | aslice decision | Why |
 |---|---|---|
-| `scripts.postinstall` — arbitrary code at install | **Does not exist.** Binary installs execute zero package code (DESIGN §10.1) | npm's install scripts are its largest supply-chain hole; we start without one |
+| `scripts.postinstall` — arbitrary code at install | **Does not exist as a formula mechanism.** Builds and binary installs execute zero package code by default; a vendor installer script runs only as a declared, approved, sandboxed graft (§3.11; DESIGN §12.15) | npm's install scripts are its largest supply-chain hole; we start without one |
 | Semver, loosely enforced | Semver-derived, **strictly normalized and validated** (§4) | A solver is only as good as its version algebra |
 | `package-lock.json` | `aslice.lock`, first-class and machine-aware (§7) | Locks record µarch flavor — a dimension npm doesn't have |
 | `dependencies` / `devDependencies` | `runtime` / `build` / `test`, plus **conditional** dependencies (§5.3) | Native builds have three distinct dependency lifecycles |
@@ -187,7 +187,7 @@ aliases   = ["ff"]                    # search/install aliases, no semantics
 
 ### 3.8 `[install]` — declarative post-install behavior
 
-Every behavior in this section is carried out by aslice itself; a package never runs code to make it happen:
+Every behavior in this section is carried out by aslice itself; a package never runs code to make it happen (declared vendor grafts, §3.11, are the sole exception):
 
 ```toml
 [install]
@@ -219,7 +219,7 @@ zsh  = "share/zsh/site-functions/_ffmpeg"
 
 The plist itself never ships in the formula. aslice **generates** it from `[service]` at enable time, writes it with the label `org.aslice.<name>`, and points `ProgramArguments[0]` through the profile (`/opt/aslice/profiles/default/bin/…`) rather than at a store path — so an upgrade or rollback that swaps store paths leaves the plist untouched. `domain = "system"` jobs run as root; they are installed and removed by `aslice-system`, each operation individually consented to (DESIGN §10.4), and only repositories holding the `system` capability may serve them (REPOSITORIES §3). User agents are unprivileged and ungated. A package declares at most one `[service]`; software with several daemons is packaged as several packages. The full lifecycle — `aslice service list/status/start/stop/restart/run`, and the stop–swap–restart upgrade transaction — is specified in DESIGN §12.8.
 
-`link = false` is the principled form of Homebrew's keg-only (REVIEW §4.5): the package installs into the store, and nothing links into any profile. In core it is the default for versioned lineages (`openssl@3` style) and for anything whose `bin/` names collide with `/usr/bin` or `/bin` (policy: ORCHARD-POLICY §6); `aslice link <pkg>` opts a package into a profile explicitly. Dependents never need the link: dependency resolution works on store paths (`ctx.deps`), so being depended upon while unlinked is a normal state. When `link = false`, lint requires `link_reason`, and `info` and the installer display it — the user is told why the package did not appear in the profile. Finally, `notes` is the caveats field: human-readable, actionable post-install lines ("config lives in …", "run `aslice service start postgresql` to …"), printed at install and shown by `info`. A line that isn't actionable isn't a note (ORCHARD-POLICY §14).
+`link = false` is the principled form of Homebrew's keg-only (REVIEW §4.5): the package installs into the store, and nothing links into any profile. In core it is the default for versioned lineages (`openssl@3` style) and for anything whose `bin/` names collide with `/usr/bin` or `/bin` (policy: ORCHARD-POLICY §6); `aslice link <pkg>` opts a package into a profile explicitly. Dependents never need the link: dependency resolution works on store paths (`ctx.deps`), so being depended upon while unlinked is a normal state. When `link = false`, lint requires `link_reason`, and `info` and the installer display it — the user is told why the package did not appear in the profile. Finally, `notes` is the caveats field: human-readable, actionable post-install lines ("config lives in etc/postgresql", "run `aslice service start postgresql` to …"), printed at install and shown by `info`. A line that isn't actionable isn't a note (ORCHARD-POLICY §14).
 
 ### 3.9 `[audit]` — vulnerability matching and lifecycle
 
@@ -280,7 +280,7 @@ signer    = "Developer ID Application: Vendor Inc. (ABCD1234)"
 notarized = true
 redistribute = false
 
-[[binary.payload]]                      # declarative extraction map — scripts never run
+[[binary.payload]]                      # declarative extraction map — scripts never run unless declared as grafts (below)
 from = "usr/local/bin/vendorcli"        # path inside the pkg Payload
 to   = "bin/vendorcli"
 
@@ -298,7 +298,7 @@ runtime = ["openssl ^3.0"]              # vendor binaries may depend on aslice p
 Rules:
 
 - **`type = "binary"` forbids `[build]`, `build.star`, `[[patch]]`, `[[source]]`, `[variants]`, and `build`/`test` dependencies.** Nothing is compiled and nothing is patched, so the pipeline compresses to `fetch → verify (hash + signer) → extract payload → abi-scan → pack → sign` (§6.1).
-- **Installer scripts never execute.** A `.pkg`'s `preinstall`/`postinstall` scripts and a `.dmg`'s autolaunch are ignored; the payload map is the entire install. A package that cannot function without its scripts is rejected at review (DESIGN §13.1) rather than accommodated.
+- **Installer scripts never run by default; declared grafts are the exception.** A `.pkg`'s `preinstall`/`postinstall` scripts and a `.dmg`'s autolaunch are ignored unless the formula declares them as grafts (below, and DESIGN §12.15): hash-pinned, described by an exhaustive behavior manifest, approved by the user before running, executed under a manifest-derived sandbox, and captured so rollback and uninstall reverse their footprint. Software that genuinely needs its scripts — audio DSP drivers, pro-video plugins, kext installers — is packageable this way; an undeclared script still never runs on any path, and a package whose undeclared scripts are load-bearing remains rejected at review (DESIGN §13.1).
 - **Signer pinning is mandatory** for signed artifacts, and `notarized` records the notarization expectation (checked on 10.14+, where notarization exists). The verifier hard-fails if the signer changes: silent signer substitution upstream is how binary distribution channels get compromised. An unsigned vendor artifact is allowed in extended with `signer` omitted, and the omission is announced at install (DESIGN §12.2).
 - **`redistribute` is required; there is no default.** `true` means the farm repackages the payload as a hosted slice — atomic, resumable, rollback-able. `false` means every client fetches the vendor URL itself, hash- and signer-pinned, and the index carries the formula but no blob. A mutated or pulled vendor artifact fails at the hash check rather than silently installing something else.
 - **`arch` defaults to `["x86_64"]`.** aslice's own builds are x86_64-only, always (DESIGN §2.2 N6). A vendor payload may additionally declare `"i386"`, alone or universal as `["x86_64", "i386"]`: 32-bit code still executes on 10.11–10.14, and much of the pkg/dmg-only software worth having — audio plugins, lab instruments, frozen pro tools — ships that way.
@@ -308,6 +308,26 @@ Rules:
 - **Flavor doesn't apply.** The `build_id` of a vendor package excludes `flavor` and `toolchain_id`; one slice serves every flavor. The ABI scan still runs on the payload at pack time, because dependents link against vendor dylibs under the same ABI contract as farm-built libraries (DESIGN §7.3).
 - **OS tags are verified, not trusted.** At pack/repack time, each artifact's declared `min_os`/`max_os` is checked against the bundle's `LSMinimumSystemVersion`, the Mach-O minimum-version load commands, and — where present — the pkg Distribution's `allowed-os-versions`. Disagreement is a lint error.
 - **Version normalization still applies** (§4): a vendor spelling like `3.2 Update 1` normalizes by the usual rules, and the verbatim string is preserved in `upstream_version`.
+
+**Declared grafts — `[[binary.graft]]`.** When vendor software genuinely requires its installer scripts, the formula declares each script as a graft under the model of DESIGN §12.15:
+
+```toml
+[[binary.graft]]
+path     = "Scripts/postinstall"    # path inside the artifact (pkg Scripts/, or dmg-resident)
+sha256   = "cc33…"                  # pinned; a mutated script is a hard fail, not a surprise
+when     = "post"                   # pre | post — relative to payload extraction
+writes   = ["/Library/Audio/Plug-Ins/HAL/VendorDSP.driver"]  # every path it may write
+kexts    = ["com.vendor.dspdriver"] # kext bundle IDs it may install or load; omit if none
+daemons  = ["com.vendor.dspd"]      # launchd jobs it may install; omit if none
+network  = false                    # default; true only for scripts that genuinely need it
+elevated = true                     # run via aslice-system as root (DESIGN §10.4)
+```
+
+- **The script is hash-pinned** (`path`, `sha256`): the farm verifies the hash at rehearsal and the client verifies it again before execution, so an upstream-mutated script fails rather than runs unreviewed.
+- **The behavior manifest is exhaustive.** `writes`, `kexts`, `daemons`, and `network` together are the sandbox policy: the graft executes under a manifest-derived profile that permits exactly the declared behavior, and any deviation aborts the install and rolls the generation back (DESIGN §12.15). An omitted or empty field means none, not unknown.
+- **Approval is per package and version, recorded** in the state DB or declared in the machine file's `[grafts] allow` list (SETUP §2.8); non-interactive installs refuse unless `--accept-grafts` is passed, and there is no always-allow switch (DESIGN §12.15).
+- **`elevated = true` routes execution through `aslice-system`** (DESIGN §10.4) — the only path on which package-associated code runs as root. A non-elevated graft runs as the installing user.
+- **The farm rehearses and signs the manifest** for core and extended, and the index carries the signed manifest so clients can show the user exactly what a graft will do — and show the unsigned-manifest warning when no signature exists (REPOSITORIES §3) — before approval.
 
 ### 3.12 `[system]` — kernel extensions and SIP-disabled tools (v0.4)
 
@@ -520,7 +540,7 @@ fetch → verify → unpack → patch → configure → build → install(stagin
 
 Only `fetch` has network access. `abi-scan` is run by aslice itself and cannot be skipped by a formula: the ABI contract is not optional metadata.
 
-For `type = "binary"` packages (§3.11) the pipeline compresses to `fetch → verify (hash + signer) → extract payload → abi-scan → pack → sign`: nothing is compiled, and embedded installer scripts are never executed. Payload extraction runs under the same no-network unpack sandbox profile as source archives (DESIGN §10.5).
+For `type = "binary"` packages (§3.11) the pipeline compresses to `fetch → verify (hash + signer) → extract payload → abi-scan → pack → sign`: nothing is compiled, and embedded installer scripts are never executed — declared grafts (§3.11) are extracted and hash-verified, not run by this pipeline; they execute only at farm rehearsal and at client install, each time under their own manifest-derived profile (DESIGN §12.15). Payload extraction runs under the same no-network unpack sandbox profile as source archives (DESIGN §10.5).
 
 ### 6.2 Declarative builds
 
@@ -557,7 +577,7 @@ The builder, not the formula, fixes the environment: `LC_ALL=C`, `TZ=UTC`, `SOUR
 
 ### 6.4 What the sandbox guarantees
 
-The security-relevant invariants this format relies on, collected in one place: no network after `fetch`; no writes outside the build directory; no reads of the host environment; no code execution at slice-install time, including vendor installer scripts, which never run on any path (§3.11); and `tests.star` runs network-free unless the formula declares `test_network = true`, which is logged at warn.
+The security-relevant invariants this format relies on, collected in one place: no network after `fetch`; no writes outside the build directory; no reads of the host environment; no code execution at slice-install time, including vendor installer scripts, which never run on any path unless declared as grafts with an exhaustive behavior manifest (§3.11; DESIGN §12.15); and `tests.star` runs network-free unless the formula declares `test_network = true`, which is logged at warn.
 
 ### 6.5 Language-ecosystem sub-managers
 
@@ -621,7 +641,7 @@ For `type = "binary"` packages, cross-OS portability means selecting a different
 
 ## 8. Validation and tooling
 
-- **`aslice lint <formula>`** runs full schema validation plus the policy checks: name rules, license validity, unpinned sources, submodule use, cycle detection, `min_os` plausibility against the toolchain — and, for `type = "binary"`, payload-map completeness against the actual artifact, signer and notarization verification, and OS-tag consistency with bundle metadata. Orchard CI runs lint plus a sandboxed build (or payload extraction) on every PR (DESIGN §13.4).
+- **`aslice lint <formula>`** runs full schema validation plus the policy checks: name rules, license validity, unpinned sources, submodule use, cycle detection, `min_os` plausibility against the toolchain — and, for `type = "binary"`, payload-map completeness against the actual artifact, signer and notarization verification, OS-tag consistency with bundle metadata — and, for every `[[binary.graft]]`, script-hash verification against the artifact plus behavior-manifest completeness (`writes`/`kexts`/`daemons`/`network` all explicitly declared, empty meaning none). Orchard CI runs lint plus a sandboxed build (or payload extraction) on every PR (DESIGN §13.4).
 - **`spec` evolution is additive-only** within a `spec` major: readers reject a higher `spec` value rather than guess at it. Breaking changes bump `spec` and ship with a mechanical migrator.
 - **Unknown fields are errors**, misplaced ones included: `min_os` inside `[source]` fails lint rather than being silently ignored, and `[build]` on a `type = "binary"` package fails the same way.
 
@@ -705,6 +725,7 @@ The full form is in §3.11; the shape to remember is **two `[[binary]]` artifact
 | `[audit]` | `cpe`, `eol`, `eol_date` |
 | `[build]` | `system`, `args`, `skip_tests` |
 | `[[binary]]` (type=binary) | `url` `sha256` `format` `min_os` `max_os` `arch` (`x86_64` default; `i386` / universal allowed, i386 ⇒ `max_os ≤ 10.14`, derived) `signer` `notarized` `redistribute` + `[[binary.payload]]` (`from`, `to`) |
+| `[[binary.graft]]` | `path` `sha256` `when` (`pre` \| `post`) + behavior manifest: `writes` `kexts` `daemons` `network` `elevated` |
 | `[system]` | `kexts` `sip_off_required` `reason` |
 | `[runtime]` | `abi_epoch` `shims` `extension_scan_dir` + `[[runtime.env]]` (`var`, `value`) |
 | `[extension]` | `runtime` `loader` `module` |
