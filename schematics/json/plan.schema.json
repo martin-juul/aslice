@@ -1,0 +1,180 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aslice.sh/schematics/json/plan.schema.json",
+  "title": "aslice plan file",
+  "description": "The machine-readable plan half of the plan/apply split: `aslice plan install ffmpeg > plan.json && aslice apply plan.json` (DESIGN §12.2). DERIVED: the prose establishes that plans are JSON and content-detected; the field layout below derives from the lock-file record (PACKAGE-FORMAT §7.2) plus the consents a plan must surface (DESIGN §12.11, §12.15). Where this file and future prose disagree, the disagreement is a bug (schematics/README.md).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "plan_version",
+    "generated_by",
+    "index_snapshot",
+    "machine",
+    "actions"
+  ],
+  "properties": {
+    "plan_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "generated_by": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Tool and version that produced the plan, e.g. aslice 0.3.0."
+    },
+    "index_snapshot": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "The TUF snapshot the plan resolved against."
+    },
+    "machine": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "os",
+        "flavor"
+      ],
+      "properties": {
+        "os": {
+          "type": "string",
+          "pattern": "^(10\\.1[1-5]|11|12)(\\.[0-9]+)?$"
+        },
+        "flavor": {
+          "type": "string",
+          "enum": [
+            "v1",
+            "v2",
+            "v3"
+          ]
+        }
+      }
+    },
+    "actions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "action",
+          "name"
+        ],
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "install",
+              "upgrade",
+              "reinstall",
+              "remove"
+            ]
+          },
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]*$"
+          },
+          "repository": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]*$",
+            "description": "Namespace of the resolving repository, when not the official one."
+          },
+          "version": {
+            "type": "string",
+            "minLength": 1
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "build_id": {
+            "type": "string",
+            "pattern": "^[0-9a-f]+$"
+          },
+          "flavor": {
+            "type": "string",
+            "enum": [
+              "v1",
+              "v2",
+              "v3"
+            ]
+          },
+          "min_os": {
+            "type": "string",
+            "enum": [
+              "10.11",
+              "10.12",
+              "10.13",
+              "10.14",
+              "10.15",
+              "11",
+              "12"
+            ]
+          },
+          "origin": {
+            "type": "string",
+            "enum": [
+              "slice",
+              "local-build",
+              "vendor-direct"
+            ],
+            "description": "PACKAGE-FORMAT §7.2."
+          },
+          "variants": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "boolean"
+            },
+            "propertyNames": {
+              "pattern": "^[a-z0-9][a-z0-9_]*$"
+            }
+          },
+          "digest": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$",
+            "description": "Slice manifest digest; vendor-direct actions carry the artifact hash."
+          },
+          "signer": {
+            "type": "string",
+            "description": "Pinned vendor signer for origin = vendor-direct."
+          },
+          "user_flags": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "properties": {
+              "cflags": {
+                "type": "string"
+              },
+              "ldflags": {
+                "type": "string"
+              }
+            },
+            "description": "Recorded for local-build origins (DESIGN §7.4); never identity-affecting."
+          }
+        }
+      }
+    },
+    "announcements": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Everything the apply must announce, not bury (DESIGN §12.2): EOL packages, deprecated variants, unsigned orchards, fallback-to-source events, unsigned or non-notarized vendor binaries."
+    },
+    "required_consents": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "grafts",
+          "system-changes",
+          "eol",
+          "sip-off"
+        ]
+      },
+      "uniqueItems": true,
+      "description": "Consent gates the apply will hit (DESIGN §12.11, §12.15); non-interactive applies refuse without the matching --accept-* flag. There is no always-allow."
+    }
+  }
+}
