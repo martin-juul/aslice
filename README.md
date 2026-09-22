@@ -2,7 +2,7 @@
 
 aslice is a package manager for Intel Macs running macOS 10.11 (El Capitan) through 12 (Monterey) — every 64-bit Intel Mac, from the 2007 Core 2 Duo machines through the final Intel models of 2020.
 
-These machines still work. What stopped working is the software supply around them: Apple no longer ships them security updates, and Homebrew, the package manager most of them run, has moved on to Apple Silicon. aslice picks up where Homebrew leaves off. It is a successor in spirit, rebuilt for a platform that will never change again — and that constraint, a burden on a moving platform, is what makes a cleaner design affordable here.
+These machines still work. What stopped working is the software supply around them: Apple no longer ships them security updates, and Homebrew, the package manager most of them run, has moved on to Apple Silicon. aslice picks up where Homebrew leaves off: a successor in spirit, rebuilt for a platform that will never change again, and able to afford a cleaner design precisely because it won't.
 
 What you get:
 
@@ -49,4 +49,4 @@ In the order a newcomer should read them:
 
 ---
 
-*History: September 2026 — grafts: vendor installer scripts are admitted as declared, user-approved, farm-rehearsed grafts rather than never running (owner decision); the vendor-binary and security bullets updated. September 2026 — rewritten for readability (second editorial pass); no content changes. September 2026 — NOMENCLATURE.md added to the document list; vocabulary pointer added. September 2026 — project domain (aslice.sh) linked in Status. September 2026 — the declarative-setup file renamed `aslice-machine.toml`, its commands grouped under `aslice machine` (apply / export / import --from-brewfile); top-level `aslice apply` keeps plans and lock files (owner decision).*
+*History: September 2026 — prose review pass: the second paragraph's tail straightened (one sentence instead of two; the *how* stays in Scope); gems kept deliberately ('These machines still work', 'infrastructure, not a product', 'on a thumb drive'); no content changes. September 2026 — grafts: vendor installer scripts are admitted as declared, user-approved, farm-rehearsed grafts rather than never running (owner decision); the vendor-binary and security bullets updated. September 2026 — rewritten for readability (second editorial pass); no content changes. September 2026 — NOMENCLATURE.md added to the document list; vocabulary pointer added. September 2026 — project domain (aslice.sh) linked in Status. September 2026 — the declarative-setup file renamed `aslice-machine.toml`, its commands grouped under `aslice machine` (apply / export / import --from-brewfile); top-level `aslice apply` keeps plans and lock files (owner decision).*
