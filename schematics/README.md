@@ -68,7 +68,7 @@ schema = {
 }
 ```
 
-Unknown keys inside `schema` are schema-load errors, as are unknown keys inside any descriptor. Schema files use the extension `.schema.star`.
+Unknown keys inside `schema` are schema-load errors, as are unknown keys inside any descriptor (the optional `description` excepted). Schema files use the extension `.schema.star`.
 
 ### Entry points
 
@@ -77,6 +77,7 @@ Unknown keys inside `schema` are schema-load errors, as are unknown keys inside 
 - `"required"` — bool, default False. A required entry point missing from the target module is a validation error.
 - `"params"` — list of parameter descriptors, in order: `{"name": "ctx", "type": "ctx"}`. A parameter may carry `"default"` (any literal) to mark it optional. A descriptor `{"varargs": True}` as the last entry permits arbitrary extra positional arguments (the `ctx.run(argv…)` shape).
 - `"returns"` — a type descriptor; default `"none"`.
+- `"description"` — optional; any descriptor at any level may carry one.
 
 A target module's entry point must match its signature exactly: same positional parameter names in the same order, no extra required parameters. `def build(ctx):` satisfies a one-parameter `ctx` signature; `def build(ctx, extra):` does not.
 
