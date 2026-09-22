@@ -163,7 +163,7 @@ Two parts of a setup file write to OS territory. N5 (DESIGN §2.2) forbids that 
 
 Run interactively, each gated step prompts with what will be written and why. Run non-interactively — scripts, `--json`, pipes, the recovery-terminal scenario — gated steps are **refused** (exit 2) unless you pass `--accept-system-changes`: the same flag and the same contract as system packages and system patches (DESIGN §12.7, §12.11). `--dry-run` shows the complete plan, gated steps included, and changes nothing.
 
-The upshot: a file fetched from someone else is safe to *plan* unconditionally. Consent is per-gate, informed, and never bundled into a blanket "trust this file".
+The upshot: a file fetched from someone else is safe to *plan* unconditionally. Consent is per-gated-step, informed, and never bundled into a blanket "trust this file".
 
 ### 3.5 Recorded inverses: preferences ride generations
 
