@@ -1,0 +1,85 @@
+# TOML Schema for etc/aslice.toml — the prefix-wide configuration file.
+# Prose specification: docs/MANUAL.md §13 (v0.11). Where this file and the prose
+# disagree, the disagreement is a bug (schematics/README.md).
+#
+# MANUAL §13 says "the keys, as of this writing" — the set below is that set,
+# closed: `aslice config set` rejects unknown keys, and so does this schema.
+
+[toml-schema]
+version = "1.0.0"
+
+[toml-schema.meta]
+target = "etc/aslice.toml"
+prose = "docs/MANUAL.md"
+prose_version = "0.11"
+schematics = "0.1"
+
+[types.sizeValue]
+type = "string"
+pattern = "^[0-9]+([.][0-9]+)? (B|KB|MB|GB|TB)$"
+description = "Human size, e.g. 20 GB."
+
+[elements.flavor]
+type = "string"
+allowedvalues = [ "v1", "v2", "v3" ]
+optional = true
+description = "CPU flavor ceiling; detected by default (MANUAL §13)."
+
+[elements.mirrors]
+type = "array"
+itemtype = "string"
+format = "uri"
+optional = true
+description = "Extra full-tree mirrors for a repository, tried in order."
+
+[elements.ca]
+type = "table"
+optional = true
+
+    [elements.ca.source]
+    type = "string"
+    optional = true
+    default = "mozilla"
+    description = "Where ca-certificates bundles come from (MANUAL §13, §8.1)."
+
+[elements.gc]
+type = "table"
+optional = true
+
+    [elements.gc.keep_generations]
+    type = "integer"
+    min = 1
+    optional = true
+    default = 5
+    description = "How many generations rollback can reach."
+
+    [elements.gc.store_watermark]
+    type = "types.sizeValue"
+    optional = true
+    default = "20 GB"
+    description = "Store size that triggers a GC suggestion on install."
+
+[elements.clean]
+type = "table"
+optional = true
+
+    [elements.clean.cache_watermark]
+    type = "types.sizeValue"
+    optional = true
+    default = "10 GB"
+    description = "Cache size that triggers LRU eviction."
+
+[elements.log]
+type = "table"
+optional = true
+
+    [elements.log.keep_days]
+    type = "integer"
+    min = 1
+    optional = true
+    default = 14
+
+    [elements.log.keep_size]
+    type = "types.sizeValue"
+    optional = true
+    default = "256 MB"
