@@ -8,7 +8,7 @@ aslice-apply — execute a saved plan; replay a lock file
 
 # SYNOPSIS
 
-`aslice apply` [*plan.json* | *aslice.lock* | *https://…*] [`--dry-run`] [`--accept-system-changes`] [`--json`]
+`aslice apply` [*plan.json* | *aslice.lock* | *https://…*] [`--dry-run`] [`--accept-system-changes`] [`--accept-grafts`] [`--json`]
 
 # DESCRIPTION
 
@@ -26,6 +26,8 @@ The document is shown and confirmed before execution. Execution is one generatio
 
 A plan or lock containing system packages or system patches is refused non-interactively — exit status 2 — unless **--accept-system-changes** is passed for that operation; interactively each gated step prompts, naming what will be written. There is deliberately no persistent always-accept setting — consent is per-decision, like the risk (DESIGN.md §12.7).
 
+Graft-bearing packages gate the same way: non-interactively the apply is refused — exit status 2 — for any graft without a recorded approval, unless **--accept-grafts** is passed for that run; interactively the behavior manifest is shown and approval asked per package (aslice-graft(1)).
+
 # EXIT STATUS
 
 **0** applied, or nothing to do. **1** error (schema, resolution, execution). **2** refused at a consent or trust gate.
@@ -41,4 +43,4 @@ Plans and the `plan`/`apply` split: DESIGN.md §12.1. The lock format: PACKAGE-F
 
 # SEE ALSO
 
-aslice(1), aslice-machine(1), aslice-install(1), aslice-use(1), aslice-service(1), aslice-repo(1)
+aslice(1), aslice-machine(1), aslice-install(1), aslice-use(1), aslice-service(1), aslice-repo(1), aslice-graft(1)
