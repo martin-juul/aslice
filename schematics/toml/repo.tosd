@@ -1,0 +1,55 @@
+# TOML Schema for repo.toml — repository root metadata.
+#
+# PROPOSED SHAPE: NOMENCLATURE defines a repository as "a Git repository of
+# formulas with a repo.toml, a trust level, and a signature-verification
+# policy", but no prose section enumerates repo.toml's keys yet. This schematic
+# is the minimal shape consistent with the corpus: the namespace the repository
+# serves (REPOSITORIES §2) plus human-facing metadata.
+#
+# It deliberately contains NO trust level: trust is assigned by the client
+# (TOFU pin, project countersignature), never claimed by the file
+# (REPOSITORIES §1, axiom 2 — a repository cannot talk its way into a higher
+# level).
+# Where this file and future prose disagree, the disagreement is a bug
+# (schematics/README.md).
+
+[toml-schema]
+version = "1.0.0"
+
+[toml-schema.meta]
+target = "repo.toml"
+prose = "docs/NOMENCLATURE.md (repository); docs/REPOSITORIES.md §1–2"
+prose_version = "n/a — proposed"
+derived = "field set proposed; prose spec pending"
+schematics = "0.1"
+
+[elements.namespace]
+type = "string"
+pattern = "^[a-z0-9][a-z0-9-]*$"
+description = "The repo: namespace this repository's packages address through (REPOSITORIES §2)."
+
+[elements.name]
+type = "string"
+optional = true
+description = "Human-facing repository name."
+
+[elements.description]
+type = "string"
+optional = true
+
+[elements.url]
+type = "string"
+format = "uri"
+optional = true
+description = "Canonical fetch URL of the published repository tree."
+
+[elements.contact]
+type = "string"
+optional = true
+description = "Maintainer contact for trust questions."
+
+[elements.maintainers]
+type = "array"
+itemtype = "string"
+minlength = 1
+optional = true
