@@ -2,7 +2,7 @@
 
 **How to write, test, and ship aslice packages.**
 
-- **Status:** v0.8 — September 2026 (v0.2: review corrections — §8's payload map uses the real `[[binary.payload]]` array-of-tables shape, the invented `ctx.dep_lib_dirs` helper becomes the documented `ctx.deps` path, the service/root-daemon gate includes local repositories (§9), and the unsigned-vendor extended-only exception is recorded (§8, appendix). v0.3: editorial pass — prose revised for directness; no guidance changes. v0.4: prose rewrite throughout — chapters reworded in the project's technical-writing voice; no guidance changes. v0.5: review pass — the source-archive reference retargeted to DESIGN §9.6 and the countersigning reference to REPOSITORIES.md §5; no guidance changes. v0.6: NOMENCLATURE.md vocabulary reference added to the header; no guidance changes. v0.7 adds chapter 12, **Maintaining the orchard** — the `aslice orchard` command group (lifecycle verbs over `[deprecation]`, orchard `lint`/`doctor`/`freshness`, the local merge gate `orchard ci`, the reverse-dependency query `orchard dependents`, and the named Homebrew importer `orchard port --from-homebrew`); pointers added from §7.1, §10, and the appendix checklist; mechanism in DESIGN v1.16 §12.14; no guidance changes elsewhere. v0.8: §5.3 drops the variant cap — guidance now matches ORCHARD-POLICY v1.5: variants are governed by need and honest ABI tags, ffmpeg-class combinations are legitimate, and non-default variants build locally at no project cost)
+- **Status:** v0.8 — September 2026 (v0.2: review corrections — §8's payload map uses the real `[[binary.payload]]` array-of-tables shape, the invented `ctx.dep_lib_dirs` helper becomes the documented `ctx.deps` path, the service/root-daemon gate includes local repositories (§9), and the unsigned-vendor extended-only exception is recorded (§8, appendix). v0.3: editorial pass — prose revised for directness; no guidance changes. v0.4: prose rewrite throughout — chapters reworded in the project's technical-writing voice; no guidance changes. v0.5: review pass — the source-archive reference retargeted to DESIGN §9.6 and the countersigning reference to REPOSITORIES.md §5; no guidance changes. v0.6: NOMENCLATURE.md vocabulary reference added to the header; no guidance changes. v0.7 adds chapter 12, **Maintaining the orchard** — the `aslice orchard` command group (lifecycle verbs over `[deprecation]`, orchard `lint`/`doctor`/`freshness`, the local merge gate `orchard ci`, the reverse-dependency query `orchard dependents`, and the named Homebrew importer `orchard port --from-homebrew`); pointers added from §7.1, §10, and the appendix checklist; mechanism in DESIGN v1.16 §12.14; no guidance changes elsewhere. v0.8: §5.3 drops the variant cap — guidance now matches ORCHARD-POLICY v1.5: variants are governed by need and honest ABI tags, ffmpeg-class combinations are legitimate, and non-default variants build locally at no project cost; §10's lint list and reviewer guidance and the appendix checklist replace cap-and-justification language with the ABI-tag check; §8 and the checklist drop the license framing around `redistribute` — the flag selects hosting mode (ORCHARD-POLICY v1.5 §12))
 - **Audience:** package authors — people writing formulae for the core or extended orchards, packaging vendor binaries, or running their own orchard. Read [MANUAL.md](MANUAL.md) chapters 1–4 first; this guide assumes the vocabulary (slice, orchard, flavor, generation) and the user's view of the system.
 - **Companions:** [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md) is the authoritative schema — when this guide and the schema disagree, the schema is right. [ORCHARD-POLICY.md](ORCHARD-POLICY.md) is the policy this guide summarizes. [BUILD-INFRA.md](BUILD-INFRA.md) is the farm your PR builds on. [MANUAL.md](MANUAL.md) is what your users read.
 - **Vocabulary:** [NOMENCLATURE.md](NOMENCLATURE.md) — project terms, acronyms, and the Homebrew translation table.
@@ -274,7 +274,7 @@ The rules, and the reasons for them:
 - **The signer is pinned.** If the vendor silently re-signs with a different identity, installs hard-fail. That is a classic supply-chain attack against binary distribution, and the pin is the whole defense. Don't leave it out because "the vendor is trustworthy" — the pin exists for the day they aren't, or the day their signing infrastructure isn't. The single exception is genuinely unsigned vendor software: permitted in the extended orchard only, with `signer` omitted and an announcement at every install (PACKAGE-FORMAT §3.11, ORCHARD-POLICY §12).
 - **OS tags are verified, or the formula doesn't merge.** Each `[[binary]]` entry declares its real `min_os`/`max_os`; the pack-time verifier checks your claims against the bundle's own metadata, and lint fails on mismatches. A vendor's "legacy 10.11 build" and "current 10.14+ build" can coexist as two entries in one formula.
 - **32-bit and universal payloads are welcome where the OS runs them** — 10.11 through 10.14. The verifier inspects every Mach-O slice in the payload, and an i386-containing artifact must declare `max_os = "10.14"`. Universal payloads install whole. Never thin them with `lipo`: thinning invalidates the vendor's code signature, and the signature outranks the disk savings.
-- **`redistribute` decides who fetches.** With `true`, the farm repackages into a normal slice and hosts it — the best user experience, and it requires the license to allow redistribution. With `false`, the formula is a pointer, and each client fetches the vendor URL itself, hash- and signer-pinned. Core tier requires `true`: core never depends on a vendor's server being up.
+- **`redistribute` decides who fetches.** With `true`, the farm repackages into a normal slice and hosts it — the best user experience. With `false`, the formula is a pointer, and each client fetches the vendor URL itself, hash- and signer-pinned. Core tier requires `true`: core never depends on a vendor's server being up.
 
 ---
 
@@ -296,7 +296,7 @@ Four declaration blocks cover the packages that don't fit the ordinary mold. Eac
 
 Every orchard PR passes five checks, with no maintainer override:
 
-1. **Lint** — schema validity plus policy (SPDX license, `min_os` accuracy, dependency rules, variant caps).
+1. **Lint** — schema validity plus policy (SPDX license, `min_os` accuracy, dependency rules, variant ABI tags).
 2. **Matrix build** — your package built in the sandbox on every declared flavor, at your declared `min_os`.
 3. **Smoke runs** — your `tests.star` across every release from `min_os` through 12.
 4. **ABI gate** — on version/revision changes to anything others depend on: interface regressions require an explicit version bump or scheduled dependent rebuilds in the same snapshot.
@@ -304,7 +304,7 @@ Every orchard PR passes five checks, with no maintainer override:
 
 Run the gates before opening the PR: `aslice orchard ci <pkg>` executes the same harness the farm runs — lint, per-flavor sandboxed builds at `min_os`, the smoke test, the ABI diff — minus the cross-OS VM tier, which it marks deferred rather than fakes (§12).
 
-What reviewers look for, beyond the gates: whether the description is accurate; whether the variants are justified; whether the patches are documented — every file in `patches/` gets a header comment saying what it does, why it is needed, and whether it went upstream; whether `min_os` is what you actually tested; and whether the formula does anything *clever*. Cleverness in a declarative system is usually a policy violation wearing a trench coat.
+What reviewers look for, beyond the gates: whether the description is accurate; whether the variant ABI tags name the real interface changes; whether the patches are documented — every file in `patches/` gets a header comment saying what it does, why it is needed, and whether it went upstream; whether `min_os` is what you actually tested; and whether the formula does anything *clever*. Cleverness in a declarative system is usually a policy violation wearing a trench coat.
 
 A word on tone. The project has no code-of-conduct document, deliberately; the expectation is simpler and older — be decent to each other. Review here is direct. A formula with a problem will be told it has a problem, and you are expected to hear that as information about the formula, not about you. Dish it out the same way. [CONTRIBUTING.md](../CONTRIBUTING.md) carries the expectation in the open, along with commit style, sign-off, and the PR template.
 
@@ -369,11 +369,11 @@ Before opening the PR:
 - [ ] `aslice build` on every flavor you declare, at your declared `min_os`
 - [ ] `aslice test` passes — and the test exercises the package's function, not just its presence
 - [ ] `min_os` is the floor you actually tested, not the floor you hope for
-- [ ] Every `abi = true` variant is justified in the PR description
+- [ ] Every `abi = true` variant names the interface it changes
 - [ ] Every patch has a header: what, why, upstream status
 - [ ] `[livecheck]` present and tested (`aslice livecheck`)
 - [ ] Dependencies are aslice packages — no `/usr/lib`, no vendored copies, no build-time downloads
-- [ ] Vendor binaries: signer pinned (or `signer` omitted — extended only, per ORCHARD-POLICY §12), OS tags verified, `redistribute` set by license, not convenience
+- [ ] Vendor binaries: signer pinned (or `signer` omitted — extended only, per ORCHARD-POLICY §12), OS tags verified, `redistribute` decided deliberately — hosted slice (`true`) or pointer formula (`false`)
 - [ ] The description would make sense to someone who has never heard of the software
 
 Or the first three and the ABI check at once: `aslice orchard ci <pkg>` — chapter 10's gates, run on your machine before the farm runs them (§12).
