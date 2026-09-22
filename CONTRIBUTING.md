@@ -11,7 +11,7 @@ aslice keeps deprecated Intel Macs (macOS 10.11–12, x86_64) useful. Contributi
 ## Ground rules (read these before your first PR)
 
 - **No telemetry, ever.** Do not submit code that phones home, counts users, measures engagement, or "anonymously" reports anything. This is a charter decision, not a preference; PRs adding metrics plumbing are closed on sight. (The farm measures *itself* — build times, queue depth, reproducibility coverage — and that is the only instrumentation that exists.)
-- **Zero install-time code.** Packages never execute code at install — no `post_install`, no installer scripts, ever. Vendor `.pkg`/`.dmg` software is payload-only extraction. This is the security model; there is no "just this once."
+- **Zero undeclared install-time code.** Packages never execute code at install — no `post_install`, and no installer scripts unless declared as a graft: hash-pinned, approved by the user per package, sandboxed to a declared behavior manifest, farm-rehearsed for core and extended (DESIGN §12.15). Vendor `.pkg`/`.dmg` software is payload-only extraction by default. This is the security model; outside a declared graft there is no "just this once."
 - **No sudo in steady state.** If your change needs root outside the declared `aslice-system` paths (kexts, SIP-off dev tools, system-domain services, `[system-patch]`), the change is wrong.
 - **The platform is the platform.** 10.11–12, x86_64. PRs for Apple Silicon, macOS 13+, or Linux are out of scope by charter, however good they are.
 
@@ -46,7 +46,7 @@ The build your laptop runs is byte-for-byte the pipeline the farm runs (BUILD-IN
 |---|---|
 | `keg_only` | `link = false` + `link_reason` (PACKAGE-FORMAT §3.8) |
 | `caveats` | `notes` — actionable only |
-| `post_install` | **does not translate** — declare `[service]`, use `notes`, or rethink |
+| `post_install` | **does not translate** — declare `[service]`, use `notes`, or rethink; a vendor installer script the payload cannot replace is declared as a graft (PACKAGE-FORMAT §3.11) |
 | `uses_from_macos` | rejected, except allowlisted frameworks |
 | `deprecate!`/`disable!` | `[deprecation]` table (§3.14) |
 | `livecheck` block | `[livecheck]` table (§3.15) — usually near-mechanical |
@@ -56,7 +56,7 @@ MacPorts and pkgsrc patches for 10.11-era portability are fair game — credit t
 
 ## The review process
 
-Merge gates are mechanical (ORCHARD-POLICY §10): lint → sandboxed build on every declared flavor → smoke-run on every OS in `[min_os, 12]` → ABI gate for provider bumps, with dependent rebuilds published in the same atomic snapshot. Signing happens post-merge on the signing host; **maintainers never hold signing keys**, so a green PR is the whole job.
+Merge gates are mechanical (ORCHARD-POLICY §10): lint → sandboxed build on every declared flavor → smoke-run on every OS in `[min_os, 12]` → ABI gate for provider bumps → graft rehearsal for graft-bearing binaries, with dependent rebuilds published in the same atomic snapshot. Signing happens post-merge on the signing host; **maintainers never hold signing keys**, so a green PR is the whole job.
 
 Review load is tiered: patch bumps need any maintainer; major bumps and new extended packages need any maintainer with gates green; new core packages, versioned lineages, `abi = true` variant additions, system-software and system-patch packages, and policy changes need two maintainers, one not the author (§17). Decisions run on lazy consensus — silence in a reasonable window is assent, and process lawyering is not a sport we play.
 
@@ -86,4 +86,4 @@ Contributions are licensed under the project's license. By opening a PR you agre
 
 ---
 
-*History: September 2026 — editorial pass: prose revised for directness; `min_os` honesty renamed `min_os` accuracy for consistency with AUTHORING.md; documentation style section added. No rule changes. September 2026 — prose rewrite throughout: reworded in the project's technical-writing voice; no rule changes. September 2026 — NOMENCLATURE.md vocabulary pointer added; no rule changes. September 2026 — variant discipline rule updated: the six-variant cap is retired (ORCHARD-POLICY v1.5); variants are governed by need and honest ABI tags.*
+*History: September 2026 — grafts: the zero-install-time-code ground rule gains its declared exception (owner decision) — vendor installer scripts as declared, user-approved, farm-rehearsed grafts (DESIGN §12.15); the rule bullet updated, the merge-gate summary gains the rehearsal gate, and the porting table's `post_install` row gains the graft path. September 2026 — editorial pass: prose revised for directness; `min_os` honesty renamed `min_os` accuracy for consistency with AUTHORING.md; documentation style section added. No rule changes. September 2026 — prose rewrite throughout: reworded in the project's technical-writing voice; no rule changes. September 2026 — NOMENCLATURE.md vocabulary pointer added; no rule changes. September 2026 — variant discipline rule updated: the six-variant cap is retired (ORCHARD-POLICY v1.5); variants are governed by need and honest ABI tags.*
