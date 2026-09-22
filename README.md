@@ -11,7 +11,7 @@ What you get:
 - **Vendor binaries, installed safely.** Software that ships only as a `.pkg` or `.dmg` is installed by extracting the payload; the vendor's installer scripts never run. This includes 32-bit and universal binaries on 10.11–10.14, the last macOS releases that execute them.
 - **A security model sized to a platform that gets no more patches.** Formulae are declarative, builds run in a sandbox, the index is TUF-signed, installing a binary executes no package code, and nothing needs sudo in steady state.
 - **Speed as a design constraint.** One C++20 binary, sub-10 ms startup, parallel solving and downloads, zstd payloads, and atomic generations you can roll back.
-- **The whole machine in one file.** `setup.toml` holds packages, runtime versions, services, macOS `defaults` preferences, and the login shell. `aslice apply` takes a Mac from fresh-out-of-recovery to ready-to-work in one command; `aslice export` writes an existing machine back into the file, so setups can be shared and diffed.
+- **The whole machine in one file.** `aslice-machine.toml` holds packages, runtime versions, services, macOS `defaults` preferences, and the login shell. `aslice machine apply` takes a Mac from fresh-out-of-recovery to ready-to-work in one command; `aslice machine export` writes an existing machine back into the file, so setups can be shared and diffed.
 - **No telemetry.** aslice collects nothing — no metrics, no analytics, no opt-out to go looking for. It is infrastructure, not a product.
 
 ## Vocabulary
@@ -39,7 +39,7 @@ In the order a newcomer should read them:
 - [Build infrastructure](docs/BUILD-INFRA.md) — the build farm and the `aslice build` / `aslice farm` harness: one pipeline, run identically by the farm and by any user's Mac
 - [Repositories](docs/REPOSITORIES.md) — the shipped official source list, repository trust levels, and the dual Ed25519/OpenPGP signing model
 - [Orchard policy](docs/ORCHARD-POLICY.md) — the maintainer rulebook: acceptance bars per tier, variant discipline, the deprecation lifecycle, patch documentation, merge gates, release cadence
-- [Declarative system setup](docs/SETUP.md) — the `setup.toml` schema and `aslice apply` / `export` / `import --from-brewfile`: rebuild a Mac from one file, capture one back into it
+- [Declarative system setup](docs/SETUP.md) — the `aslice-machine.toml` schema and the `aslice machine` commands (`apply` / `export` / `import --from-brewfile`): rebuild a Mac from one file, capture one back into it
 - [Nomenclature](docs/NOMENCLATURE.md) — every project term, acronym, and the Homebrew translation table: the dictionary for all of the above
 
 ## Scope
@@ -49,4 +49,4 @@ In the order a newcomer should read them:
 
 ---
 
-*History: September 2026 — rewritten for readability (second editorial pass); no content changes. September 2026 — NOMENCLATURE.md added to the document list; vocabulary pointer added. September 2026 — project domain (aslice.sh) linked in Status.*
+*History: September 2026 — rewritten for readability (second editorial pass); no content changes. September 2026 — NOMENCLATURE.md added to the document list; vocabulary pointer added. September 2026 — project domain (aslice.sh) linked in Status. September 2026 — the declarative-setup file renamed `aslice-machine.toml`, its commands grouped under `aslice machine` (apply / export / import --from-brewfile); top-level `aslice apply` keeps plans and lock files (owner decision).*
