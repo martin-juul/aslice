@@ -353,7 +353,7 @@ version = "6.1.0"
 # …
 
 [extension]
-runtime = "php"                        # the runtime formula this builds against
+runtime = "php"                         # the runtime formula this builds against
 loader  = "20-redis.ini"                # written into the runtime's extension_scan_dir
 module  = "lib/php/extensions/redis.so" # payload path the generated loader references
 ```
