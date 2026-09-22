@@ -1,0 +1,123 @@
+# aslice Toolchain — One Compiler Bundle, Every Build
+
+- **Status:** Design draft, v0.1 — September 2026
+- **Companion to:** [DESIGN.md](DESIGN.md) v1.21 (§4 platform floor, §7.2 build identity), [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md) v0.16 (§6 build environment), [BUILD-INFRA.md](BUILD-INFRA.md) v0.15 (farm consumption), [GENESIS.md](GENESIS.md) v0.6 (the from-nothing runbook). This document is the authoritative specification for the toolchain; where it and another document disagree, the disagreement is a bug in one of them.
+- **Vocabulary:** [NOMENCLATURE.md](NOMENCLATURE.md).
+
+## 1. What the toolchain is
+
+aslice brings its own toolchain. A user never installs Xcode or the Command Line Tools (MANUAL §2.1); every build — on the farm or on a laptop — runs with `aslice-toolchain` and nothing else.
+
+The bundle: modern Clang, LLD where viable (ld64 from cctools-port otherwise), a modern libc++, CMake, Ninja, and pkgconf, plus thin compiler wrappers that carry the build contract into every invocation (§6). It is self-hosted: it builds itself (§10), it is the authoritative toolchain for every package including aslice itself, and it is consumed as a pinned slice like any other input — content-addressed, signed, mounted read-only into builds (§8).
+
+It is also just a package. `aslice-toolchain` lives in the core orchard, and `aslice install aslice-toolchain` gives you the compiler bundle for your own work (§9).
+
+## 2. Why self-hosted
+
+Self-hosting is usually a convenience. On this platform it is load-bearing (DESIGN §4.3):
+
+- **Hosted toolchains cannot reach the floor.** Xcode 15-era toolchains refuse deployment targets below ~10.13, and hosted Intel runners never ship anything older. The platform floor is 10.11, so the toolchain that targets it cannot be Apple's current one.
+- **The C++ runtime is the real constraint.** Clang's target floor is far older than libc++'s: `-mmacosx-version-min=10.11` is still accepted, but 10.11's system libc++ predates half of C++17. The toolchain therefore ships a modern libc++ and statically links it into everything it produces (§5).
+- **Builds must not see ambient machine state.** A build job pins every input — toolchain, dependencies, sources, formula (BUILD-INFRA §2.1). A compiler borrowed from the host would be ambient state.
+- **Reproducibility needs a fixed point.** Two builders bit-compare only if the compiler is byte-identical on both; a slice mounted at its canonical path is (§8).
+
+The platform is frozen, which is what makes this affordable: the toolchain is built and archived once per bump (§11), not chased.
+
+## 3. Components
+
+| Component | Role | Notes |
+|---|---|---|
+| Clang | C/C++ compiler | Targets darwin15 through Monterey; accepts `-mmacosx-version-min=10.11` |
+| libc++ | C++ runtime | Statically linked into every product (§5); the system libc++ is never used |
+| LLD / ld64 | Linker | LLD where viable on this platform; ld64 from cctools-port otherwise. v2 moves LLD-first (§11) |
+| CMake / Ninja / pkgconf | Build tooling | The harness's `ctx.cmake` / `ctx.make` / `ctx.meson` helpers wrap these with correct defaults (PACKAGE-FORMAT §6.3) |
+| Compiler wrappers | Contract enforcement | What `CC`/`CXX` point at in a build; inject the flavor floor, the deployment target, and prefix-mapping (§6) |
+
+Exact component versions live in the toolchain slice's manifest, together with the per-OS workaround register (§4). The manifest is the inventory of record; this table is the shape.
+
+## 4. The SDK strategy
+
+One SDK serves everything: the oldest archived Apple SDK, paired with the deployment-target mechanism. `-mmacosx-version-min` is mature — a binary built against the oldest target runs correctly on every later release, provided it avoids or weak-links newer APIs (DESIGN §4.1). So a package builds once, against the oldest SDK, per flavor — not once per OS release.
+
+The consequences are handled explicitly:
+
+- **Workarounds are recorded, not remembered.** Where a component or a package needs a per-OS quirk — an availability guard, a missing-symbol shim — the workaround is written down in the toolchain's manifest (DESIGN §4.3), versioned with the toolchain.
+- **Formulae declare their own floor.** A package that cannot cleanly target 10.11 declares `min_os` and moves on (PACKAGE-FORMAT §3.2); the toolchain does not contort itself to drag it down.
+- **Claims are tested, not assumed.** The farm's VM matrix runs every claimed release, 10.11 through 12, as a guest (BUILD-INFRA §8): built against the oldest SDK, verified on the real OS.
+- **The SDKs are never-lose.** The archived Apple installers and SDKs are genesis inventory — two independent locations, one of them offline (GENESIS §3). Apple pulls old SDKs; we don't notice.
+
+## 5. Linkage rules
+
+- **libc++ is static, everywhere.** Every C++ slice links the toolchain's modern libc++ statically. Slices carry no C++ runtime dependency, at the cost of each embedding libc++ — the right trade on a platform whose system runtime is frozen at a pre-C++17 vintage.
+- **libSystem is the only dynamic dependency.** Fully static linking is impossible on macOS — `libSystem` must be dynamic — but nothing else need be (DESIGN §4.3). The manager itself is built to the same rule: C++20, static libc++ and third-party libraries, one Mach-O binary that runs on 10.11–12 with zero runtime dependencies.
+- **There is no libstdc++ path.** GCC's runtime is not shipped, not linked, not supported. One C++ runtime means one C++ ABI to reason about.
+
+## 6. Flavors and the `-march` floor
+
+The flavor vocabulary is the x86-64 psABI microarchitecture levels (DESIGN §4.2): `v1` (the SSE2 baseline every 64-bit Intel Mac meets), `v2` (SSE4.2/POPCNT), `v3` (AVX2/BMI2/FMA). There is no v4 flavor — no Intel Mac ever shipped AVX-512.
+
+The mechanics:
+
+- **The floor comes from the toolchain, never the formula.** The build environment's `CC`/`CXX` are wrappers that inject the flavor's `-march=x86-64-vN` floor, export `MACOSX_DEPLOYMENT_TARGET`, and apply prefix-mapping. Formula authors never write `-march` themselves (PACKAGE-FORMAT §3); `ctx.flavor` and `ctx.min_os` exist so scripts can *branch* on them, not so they can set flags (PACKAGE-FORMAT §6.3).
+- **User flags layer on top, outside identity.** A user's `-march=native` or `-O3` is appended at install time, recorded, and never identity-affecting (DESIGN §7.4): the ABI contract, not the flags, governs substitution.
+- **The manager is built v1.** It gains nothing from vector ISAs and must run on every supported machine (DESIGN §4.2).
+
+## 7. Identity: `toolchain_id`
+
+The toolchain is an ingredient of every build identity (DESIGN §7.2):
+
+```
+build_id = base32(sha256(canonical_json({
+    name, version, revision, abi_variants, flavor, min_os, toolchain_id,
+})))[:10]
+```
+
+The ID names the compiler and the floor — `clang-19-10.11` reads as Clang 19 targeting 10.11. Vendor binary packages exclude it: nothing is compiled, so `flavor` and `toolchain_id` drop out and the artifact's sha256 effectively is the input identity (DESIGN §7.2).
+
+Deliberately absent from the identity: optimization level, `-march` beyond the flavor floor, debug info, timestamps, build host. Two builds of one formula with the same ABI variants are the same identity — the farm's `-O2` slice and a user's `-O3 -march=native` build interchange everywhere (DESIGN §7.2).
+
+## 8. How a build consumes the toolchain
+
+The toolchain is a pinned slice, consumed like every other input:
+
+- **Pinned in the job manifest** by `build_id`, digest, and URL; the hash of a job manifest is the exact description of a build (BUILD-INFRA §2.1).
+- **Mounted read-only at its canonical store path** inside the isolated buildroot, so `-ffile-prefix-map` output is byte-for-byte identical between farm and user builds (BUILD-INFRA §3).
+- **Scrubbed, pinned environment**, set by the harness and never the formula: `LC_ALL=C`, `TZ=UTC`, `SOURCE_DATE_EPOCH` pinned to the source timestamp, prefix-mapping (PACKAGE-FORMAT §6.3; DESIGN §9.5). Determinism is a property of the harness, not of the formula.
+- **Compiler cache** — a ccache-compatible cache lives in `cache/` and survives across builds (DESIGN §11). It is a performance tool, never an input to identity.
+- **Identical everywhere.** `aslice build` on a laptop is the same sandboxed executor the farm runs (BUILD-INFRA §1). If it builds for you, it builds on the farm.
+
+## 9. Installing it yourself
+
+`aslice-toolchain` is an ordinary package: `aslice install aslice-toolchain` links the bundle into your profile like anything else, and you can compile your own software with it. It never touches `/usr`, and it coexists with Xcode or the CLT if you have them — doctor treats their presence as informational only (DESIGN §12.6).
+
+The support boundary is honest: the bundle is guaranteed as the aslice build toolchain — that is what the farm matrix exercises every day. As a general-purpose compiler it is yours to use, and bug reports about aslice builds outrank feature requests about other people's build systems.
+
+## 10. Genesis
+
+The toolchain is born twice (GENESIS §1, step 2):
+
+1. **stage0** — built on the newest available Intel macOS, with Apple's host Clang and Command Line Tools, against the oldest archived SDK.
+2. **stage1** — stage0 rebuilds the toolchain with itself. stage1 is the toolchain anyone ever uses; stage0 exists so that "who compiled the compiler?" has a documented answer.
+
+Both stages are archived as slices *and* in the repository tree, in the never-lose set (GENESIS §3). Re-standup after total loss consumes the archived stage0 — no Apple host rebuild is needed, which is precisely why it is archived — and the manager rebuilt with stage1 is digest-compared against the archived binary (GENESIS §4). The ceremony, the inventory rows, and the drill are GENESIS.md's; this section is only the what.
+
+## 11. Bumps
+
+A bump changes `toolchain_id`, and `toolchain_id` is part of every build identity — so one bump means an orchard-wide rebuild and fresh slices for everything. The policy follows from that cost:
+
+- **Need-driven.** A bump happens for a concrete cause: a security fix in the compiler or linker, or a language or library capability the orchard genuinely needs. There is no fixed schedule, and upstream's release cadence is not a reason by itself.
+- **Batched.** Everything that needs a toolchain change lands in the same bump; the orchard rebuilds once, not monthly.
+- **Announced.** A bump is an event with a changelog entry and a migration note, not a background update.
+- **Archived forever.** Every previous toolchain slice stays in the repository tree, so historical build identities keep resolving: old locks and old snapshots remain installable (snapshot retention: one year whole, monthly forever — GENESIS §3).
+
+The known roadmap item is `aslice-toolchain` v2: LLD-first linking and ccache integration (DESIGN §14).
+
+## 12. Boundaries
+
+- **x86_64 only.** No i386 flavor, no 32-bit toolchain work, no multilib (DESIGN §2.2, N6). 32-bit *execution* on 10.11–10.14 is a vendor-payload concern, handled by extraction, not compilation (PACKAGE-FORMAT §3.11).
+- **Hosted Xcode and hosted CI are a bonus layer, never load-bearing.** Where hosted runners can reach (~10.13+ deployment targets) they add coverage; the self-hosted toolchain is authoritative (DESIGN §14, §15; GENESIS §2).
+- **It targets this platform, period.** macOS 10.11–12 on Intel. It is not a cross-compiler and grows no other targets.
+
+---
+
+*History: v0.1 (September 2026) — initial document, consolidating the toolchain story previously scattered across DESIGN §4.3, GENESIS §1–§4, BUILD-INFRA §2, and PACKAGE-FORMAT §6.3; adds two owner decisions: the toolchain is an ordinary, installable package (§9), and bumps are need-driven, batched, and announced (§11).*
