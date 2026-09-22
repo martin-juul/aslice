@@ -1,0 +1,768 @@
+# TOML Schema for package.toml — the aslice formula definition.
+# Prose specification: docs/PACKAGE-FORMAT.md §3 (v0.15). Where this file and the
+# prose disagree, the disagreement is a bug (schematics/README.md).
+#
+# Semantic rules this schema cannot express — checked by `aslice lint` instead:
+#   - type = "binary" forbids [build], build.star, [[patch]], [[source]],
+#     [variants], and build/test dependencies (§3.11).
+#   - i386 content forces max_os <= "10.14", verified against the payload (§3.11).
+#   - link = false requires link_reason (§3.8).
+#   - [system] requires non-empty kexts or sip_off_required = true (§3.12).
+#   - [extension] loader/module are required exactly when the bound runtime
+#     declares extension_scan_dir (§3.13).
+#   - deprecation replacement is mandatory when reason = "renamed" (§3.14).
+#   - license is validated against the SPDX list (§3.1); version normalization
+#     follows §4; dependency constraint syntax follows §5.2.
+
+[toml-schema]
+version = "1.0.0"
+
+[toml-schema.meta]
+target = "package.toml"
+prose = "docs/PACKAGE-FORMAT.md"
+prose_version = "0.15"
+schematics = "0.1"
+
+# ---------------------------------------------------------------- types
+
+[types.nameType]
+type = "string"
+pattern = "^[a-z0-9][a-z0-9-]*$"
+maxlength = 64
+description = "Package/variant-name vocabulary: lowercase ASCII, digits, hyphens; starts with a letter or digit (§3.1)."
+
+[types.osRelease]
+type = "string"
+allowedvalues = [ "10.11", "10.12", "10.13", "10.14", "10.15", "11", "12" ]
+description = "Exactly the supported window (§3.2)."
+
+[types.flavor]
+type = "string"
+allowedvalues = [ "v1", "v2", "v3" ]
+
+[types.sha256]
+type = "string"
+pattern = "^[0-9a-f]{64}$"
+
+[types.indexDigest]
+type = "string"
+pattern = "^sha256:[0-9a-f]{64}$"
+description = "Algorithm-prefixed digest, as used by the index and lock files (§7.2)."
+
+[types.versionString]
+type = "string"
+minlength = 1
+description = "Normalized aslice version (§4); stored normalized, not verbatim-upstream."
+
+[types.depString]
+type = "string"
+minlength = 1
+description = "name [constraint] [+variant] [?condition] — full syntax in PACKAGE-FORMAT §5.2; lint checks it."
+
+[types.sourceType]
+type = "table"
+mutuallyexclusive = [ [ "url", "git" ] ]
+dependentrequired = { url = [ "sha256" ], git = [ "commit" ] }
+description = "Every source is content-pinned: archives by sha256, git by full commit hash (§3.4). Mutable refs are rejected by lint."
+
+    [types.sourceType.url]
+    type = "string"
+    format = "uri"
+    optional = true
+
+    [types.sourceType.git]
+    type = "string"
+    format = "uri"
+    optional = true
+
+    [types.sourceType.commit]
+    type = "string"
+    pattern = "^[0-9a-f]{40}$"
+    optional = true
+    description = "Full commit hash; tags alone are not pins (§3.4)."
+
+    [types.sourceType.sha256]
+    type = "types.sha256"
+    optional = true
+
+    [types.sourceType.mirrors]
+    type = "array"
+    itemtype = "string"
+    format = "uri"
+    optional = true
+
+    [types.sourceType.into]
+    type = "string"
+    optional = true
+    description = "Optional target subdirectory for multi-source formulas (§3.4)."
+
+    [types.sourceType.upstream_version]
+    type = "string"
+    optional = true
+    description = "Verbatim upstream version string, preserved when normalization rewrote it (§3.11, §4)."
+
+    [types.sourceType.pgp]
+    type = "table"
+    optional = true
+    description = "Optional PGP verification on top of the content pin; the pinned fingerprint fails closed (§3.4)."
+
+        [types.sourceType.pgp.key_url]
+        type = "string"
+        format = "uri"
+
+        [types.sourceType.pgp.fingerprint]
+        type = "string"
+
+[types.patchType]
+type = "table"
+
+    [types.patchType.file]
+    type = "string"
+    pattern = "^patches/.+"
+    description = "Patch file in the formula's patches/ directory; carries a header comment per ORCHARD-POLICY §7."
+
+    [types.patchType.sha256]
+    type = "types.sha256"
+
+[types.variantType]
+type = "table"
+
+    [types.variantType.default]
+    type = "boolean"
+    optional = true
+    default = false
+
+    [types.variantType.abi]
+    type = "boolean"
+    optional = true
+    default = false
+    description = "true: changes the exported interface, enters the build identity (§3.5). Its description must name the interface — lint."
+
+    [types.variantType.description]
+    type = "string"
+    optional = true
+
+    [types.variantType.conflicts]
+    type = "array"
+    itemtype = "string"
+    optional = true
+    description = "Mutually exclusive variants; conflicts fail fast at configure time (§3.5)."
+
+    [types.variantType.requires]
+    type = "array"
+    itemtype = "string"
+    optional = true
+
+    [types.variantType.min_os]
+    type = "types.osRelease"
+    optional = true
+
+    [types.variantType.flavors]
+    type = "array"
+    itemtype = "types.flavor"
+    uniqueitems = true
+    optional = true
+
+[types.keepAliveTable]
+type = "table"
+description = "launchd KeepAlive conditions (§3.8); contents are launchd's vocabulary, passed through."
+
+[types.dataDir]
+type = "table"
+
+    [types.dataDir.path]
+    type = "string"
+    description = "Prefix-relative; created at install, survives uninstall unless --purge (§3.8)."
+
+    [types.dataDir.mode]
+    type = "string"
+    pattern = "^0[0-7]{3}$"
+    optional = true
+
+[types.binaryPayload]
+type = "table"
+
+    [types.binaryPayload.from]
+    type = "string"
+    description = "Path inside the pkg Payload / dmg (§3.11)."
+
+    [types.binaryPayload.to]
+    type = "string"
+    description = "Prefix-relative destination; .app payloads install under <prefix>/apps/."
+
+[types.graftType]
+type = "table"
+description = "Declared vendor installer script with an exhaustive behavior manifest (§3.11; DESIGN §12.15). Omitted or empty manifest fields mean none, not unknown."
+
+    [types.graftType.path]
+    type = "string"
+    description = "Path inside the artifact (pkg Scripts/, or dmg-resident)."
+
+    [types.graftType.sha256]
+    type = "types.sha256"
+    description = "Pinned; a mutated script is a hard fail."
+
+    [types.graftType.when]
+    type = "string"
+    allowedvalues = [ "pre", "post" ]
+    description = "Relative to payload extraction."
+
+    [types.graftType.writes]
+    type = "array"
+    itemtype = "string"
+    optional = true
+    description = "Every path the script may write."
+
+    [types.graftType.kexts]
+    type = "array"
+    itemtype = "string"
+    optional = true
+    description = "Kext bundle IDs it may install or load."
+
+    [types.graftType.daemons]
+    type = "array"
+    itemtype = "string"
+    optional = true
+    description = "launchd job labels it may install."
+
+    [types.graftType.network]
+    type = "boolean"
+    optional = true
+    default = false
+    description = "true only for scripts that genuinely need the network."
+
+    [types.graftType.elevated]
+    type = "boolean"
+    optional = true
+    default = false
+    description = "true routes execution through aslice-system as root (DESIGN §10.4)."
+
+[types.binaryType]
+type = "table"
+description = "One vendor artifact with its OS/arch tags; the solver picks by tags (§3.11)."
+
+    [types.binaryType.url]
+    type = "string"
+    format = "uri"
+
+    [types.binaryType.sha256]
+    type = "types.sha256"
+
+    [types.binaryType.format]
+    type = "string"
+    allowedvalues = [ "pkg", "dmg" ]
+
+    [types.binaryType.min_os]
+    type = "types.osRelease"
+    optional = true
+    description = "Artifact-level bound; overrides the [package] default. Verified against the bundle at pack time."
+
+    [types.binaryType.max_os]
+    type = "types.osRelease"
+    optional = true
+
+    [types.binaryType.arch]
+    type = "array"
+    itemtype = "string"
+    allowedvalues = [ "x86_64", "i386" ]
+    uniqueitems = true
+    optional = true
+    default = [ "x86_64" ]
+    description = "i386 present forces max_os <= 10.14 — derived from the payload, enforced by lint (§3.11)."
+
+    [types.binaryType.signer]
+    type = "string"
+    optional = true
+    description = "Pinned signing identity, e.g. Developer ID Application: Vendor (TEAMID). Mandatory for signed artifacts; omitted only for unsigned, extended-tier artifacts, announced at install."
+
+    [types.binaryType.notarized]
+    type = "boolean"
+    optional = true
+    description = "Notarization expectation; checked on 10.14+ where notarization exists."
+
+    [types.binaryType.redistribute]
+    type = "boolean"
+    description = "Required; there is no default (§3.11). true: farm repackages as a hosted slice. false: clients fetch the vendor URL themselves."
+
+    [types.binaryType.payload]
+    type = "array"
+    itemtype = "types.binaryPayload"
+    optional = true
+    description = "Declarative extraction map; scripts never run unless declared as grafts."
+
+    [types.binaryType.graft]
+    type = "array"
+    itemtype = "types.graftType"
+    optional = true
+
+[types.runtimeEnv]
+type = "table"
+
+    [types.runtimeEnv.var]
+    type = "string"
+    pattern = "^[A-Z_][A-Z0-9_]*$"
+
+    [types.runtimeEnv.value]
+    type = "string"
+    description = "Template variables {userbase}, {profile}, {store}, {epoch}, {extension_scan_dir}; literal otherwise — no shell expansion, ever (§3.13)."
+
+# ---------------------------------------------------------------- elements
+
+[elements.spec]
+type = "integer"
+allowedvalues = [ 1 ]
+description = "Format version. A reader rejects a spec value it does not know (§3)."
+
+[elements.package]
+type = "table"
+description = "Identity: what a package is, never where it stands in its life (§3.1)."
+
+    [elements.package.name]
+    type = "types.nameType"
+    description = "Unique per orchard; matches upstream's own name unless that collides or misleads (ORCHARD-POLICY §3)."
+
+    [elements.package.version]
+    type = "types.versionString"
+
+    [elements.package.revision]
+    type = "integer"
+    min = 0
+    description = "Orchard-side packaging revision; resets to 0 on any version change."
+
+    [elements.package.epoch]
+    type = "integer"
+    min = 0
+    optional = true
+    default = 0
+    description = "Last-resort ordering override (§4.4)."
+
+    [elements.package.license]
+    type = "string"
+    minlength = 1
+    description = "SPDX expression, validated against the SPDX list by lint; LicenseRef- for unlisted licenses (§3.1)."
+
+    [elements.package.children.description]
+    type = "string"
+    description = "One line, no leading article, no marketing, ends with a period (ORCHARD-POLICY §14)."
+
+    [elements.package.homepage]
+    type = "string"
+    format = "uri"
+
+    [elements.package.documentation]
+    type = "string"
+    format = "uri"
+    optional = true
+
+    [elements.package.maintainers]
+    type = "array"
+    itemtype = "string"
+    minlength = 1
+    optional = true
+    description = "Required by policy for core/extended — a name, not 'the community' (ORCHARD-POLICY §2); lint. Schema-optional so third-party orchards parse."
+
+    [elements.package.keywords]
+    type = "array"
+    itemtype = "string"
+    optional = true
+    description = "Powers aslice search."
+
+    [elements.package.tier]
+    type = "string"
+    allowedvalues = [ "core", "extended" ]
+
+    [elements.package.children.type]
+    type = "string"
+    allowedvalues = [ "build", "binary" ]
+    optional = true
+    default = "build"
+    description = "binary: vendor pkg/dmg packages (§3.11); forbids build-time sections — lint. (Written through the reserved children namespace: the parent definition uses the type property itself.)"
+
+    [elements.package.min_os]
+    type = "string"
+    allowedvalues = [ "10.11", "10.12", "10.13", "10.14", "10.15", "11", "12" ]
+    optional = true
+    default = "10.11"
+    description = "The oldest release CI builds and smoke-runs on; also controls index visibility (§3.2)."
+
+    [elements.package.max_os]
+    type = "types.osRelease"
+    optional = true
+    description = "Real upper bounds only; never a way to dodge a build failure (ORCHARD-POLICY §4)."
+
+    [elements.package.flavors]
+    type = "array"
+    itemtype = "types.flavor"
+    uniqueitems = true
+    minlength = 1
+    optional = true
+    description = "Omit for all of v1/v2/v3. Rejected on type = binary (§3.3)."
+
+[elements.source]
+type = "array"
+itemtype = "types.sourceType"
+optional = true
+minlength = 1
+description = "Multiple sources allowed; unpacked in order (§3.4). Forbidden on type = binary."
+
+[elements.patch]
+type = "array"
+itemtype = "types.patchType"
+optional = true
+description = "§3.4; forbidden on type = binary."
+
+[elements.variants]
+type = "collection"
+itemtype = "types.variantType"
+keypattern = "^[a-z0-9][a-z0-9_]*$"
+optional = true
+description = "Feature switches with ABI tags (§3.5); no cap. Forbidden on type = binary."
+
+[elements.depends]
+type = "table"
+optional = true
+description = "Dependency semantics in §5. build/test are rejected on type = binary (§3.6)."
+
+    [elements.depends.runtime]
+    type = "array"
+    itemtype = "types.depString"
+    optional = true
+
+    [elements.depends.build]
+    type = "array"
+    itemtype = "types.depString"
+    optional = true
+
+    [elements.depends.test]
+    type = "array"
+    itemtype = "types.depString"
+    optional = true
+
+[elements.provides]
+type = "collection"
+itemtype = "types.versionString"
+keypattern = "^[a-z0-9][a-z0-9-]*$"
+optional = true
+description = "Virtual packages this one provides, with version (§3.7)."
+
+[elements.conflicts]
+type = "array"
+itemtype = "types.nameType"
+optional = true
+description = "Identity conflicts only; file collisions are detected from manifests (§3.7)."
+
+[elements.replaces]
+type = "array"
+itemtype = "types.nameType"
+optional = true
+description = "Rename/supersede: upgrades replace the old package atomically (§3.7)."
+
+[elements.aliases]
+type = "array"
+itemtype = "types.nameType"
+optional = true
+description = "Search/install aliases, no semantics (§3.7)."
+
+[elements.install]
+type = "table"
+optional = true
+description = "Declarative post-install behavior; carried out by aslice itself, never by package code (§3.8)."
+
+    [elements.install.links_priority]
+    type = "integer"
+    optional = true
+    default = 50
+    description = "Collision priority in profiles (§3.8)."
+
+    [elements.install.link]
+    type = "boolean"
+    optional = true
+    default = true
+    description = "false: the principled keg-only — store without linking into profiles (§3.8)."
+
+    [elements.install.link_reason]
+    type = "string"
+    optional = true
+    description = "Required iff link = false; shown by info and the installer (§3.8) — lint."
+
+    [elements.install.notes]
+    type = "array"
+    itemtype = "string"
+    optional = true
+    description = "Actionable post-install guidance (caveats); a line that isn't actionable isn't a note (ORCHARD-POLICY §14)."
+
+    [elements.install.data_dir]
+    type = "array"
+    itemtype = "types.dataDir"
+    optional = true
+
+    [elements.install.completions]
+    type = "collection"
+    itemtype = "string"
+    keypattern = "^[a-z0-9][a-z0-9-]*$"
+    optional = true
+    description = "Shell name → payload path of the completion file (§3.8)."
+
+[elements.service]
+type = "table"
+optional = true
+description = "launchd service, described; aslice generates the plist (§3.8). At most one per package."
+
+    [elements.service.run]
+    type = "array"
+    itemtype = "string"
+    minlength = 1
+    description = "argv, profile-relative; never a shell string."
+
+    [elements.service.domain]
+    type = "string"
+    allowedvalues = [ "user", "system" ]
+    optional = true
+    default = "user"
+    description = "system: root daemon, trust-gated (DESIGN §12.8; REPOSITORIES §3)."
+
+    [elements.service.keep_alive]
+    oneof = [ "boolean", "types.keepAliveTable" ]
+    optional = true
+
+    [elements.service.run_at_load]
+    type = "boolean"
+    optional = true
+
+    [elements.service.working_dir]
+    type = "string"
+    optional = true
+    description = "Prefix-relative."
+
+    [elements.service.environment]
+    type = "collection"
+    itemtype = "string"
+    optional = true
+    description = "Static env; per-user overrides live in $XDG_CONFIG_HOME/aslice/services/<pkg>.env."
+
+    [elements.service.log_dir]
+    type = "string"
+    optional = true
+    description = "StandardOutPath / StandardErrorPath."
+
+    [elements.service.user_name]
+    type = "string"
+    optional = true
+    description = "System domain only."
+
+[elements.audit]
+type = "table"
+optional = true
+description = "Vulnerability matching and lifecycle flags (§3.9)."
+
+    [elements.audit.cpe]
+    type = "string"
+    optional = true
+    description = "Binds the package to CVE feeds; expected whenever one exists for vendor binaries."
+
+    [elements.audit.eol]
+    type = "boolean"
+    optional = true
+    default = false
+    description = "true: installs only with --allow-eol; excluded from core (§3.9)."
+
+    [elements.audit.eol_date]
+    type = "local-date"
+    optional = true
+    description = "Upstream EOL announcement."
+
+[elements.build]
+type = "table"
+optional = true
+description = "The declarative build shortcut (§3.10, §6.2). Forbidden on type = binary."
+
+    [elements.build.system]
+    type = "string"
+    allowedvalues = [ "autotools", "cmake", "meson", "cargo", "go", "make", "custom" ]
+    description = "custom requires build.star (§6.3)."
+
+    [elements.build.args]
+    type = "array"
+    itemtype = "string"
+    optional = true
+
+    [elements.build.skip_tests]
+    type = "boolean"
+    optional = true
+    default = false
+
+    [elements.build.test_network]
+    type = "boolean"
+    optional = true
+    default = false
+    description = "Opt-in network access for tests.star; logged at warn (§6.4)."
+
+[elements.binary]
+type = "array"
+itemtype = "types.binaryType"
+minlength = 1
+optional = true
+description = "Vendor artifacts, one entry per OS/arch slice of support (§3.11). Only with type = binary."
+
+[elements.system]
+type = "table"
+optional = true
+description = "Kernel extensions and SIP-disabled tools (§3.12; mechanism DESIGN §12.7; policy ORCHARD-POLICY §13)."
+
+    [elements.system.kexts]
+    type = "array"
+    itemtype = "string"
+    pattern = "^Library/Extensions/.+[.]kext$"
+    optional = true
+    description = "Payload-relative paths; must live under Library/Extensions/ — lint."
+
+    [elements.system.sip_off_required]
+    type = "boolean"
+    optional = true
+    default = false
+    description = "true only when the software genuinely cannot function with SIP enabled."
+
+    [elements.system.reason]
+    type = "string"
+    minlength = 1
+    description = "Mandatory whenever [system] is present; shown verbatim as the warning text — write it like one."
+
+[elements.runtime]
+type = "table"
+optional = true
+description = "Marks a runtime formula (§3.13; mechanism DESIGN §12.9)."
+
+    [elements.runtime.abi_epoch]
+    type = "string"
+    minlength = 1
+    description = "Extension-ABI epoch of this version; lint cross-checks it against version."
+
+    [elements.runtime.shims]
+    type = "array"
+    itemtype = "string"
+    minlength = 1
+    description = "Tools that multiplex through the shim layer."
+
+    [elements.runtime.extension_scan_dir]
+    type = "string"
+    optional = true
+    description = "Profile-relative loader directory; {epoch} expands to abi_epoch."
+
+    [elements.runtime.env]
+    type = "array"
+    itemtype = "types.runtimeEnv"
+    optional = true
+    description = "Environment the shim injects at exec time; [runtime] formulas only."
+
+[elements.extension]
+type = "table"
+optional = true
+description = "Binds a compiled extension slice to a runtime's ABI epoch (§3.13)."
+
+    [elements.extension.runtime]
+    type = "types.nameType"
+
+    [elements.extension.loader]
+    type = "string"
+    optional = true
+    description = "Written into the runtime's extension_scan_dir; required when the runtime declares one — lint."
+
+    [elements.extension.module]
+    type = "string"
+    optional = true
+    description = "Payload path the generated loader references."
+
+[elements.ride]
+type = "table"
+optional = true
+description = "Marks an interpreter-target tool launched under the selected runtime (§3.13)."
+
+    [elements.ride.runtime]
+    type = "types.nameType"
+
+    [elements.ride.entry]
+    type = "string"
+    description = "Payload path handed to the runtime."
+
+[elements.deprecation]
+type = "table"
+optional = true
+description = "The package lifecycle, declared (§3.14; policy ORCHARD-POLICY §8)."
+
+    [elements.deprecation.date]
+    type = "local-date"
+    description = "When deprecation starts."
+
+    [elements.deprecation.reason]
+    type = "string"
+    allowedvalues = [ "upstream-eol", "security", "renamed", "unmaintainable", "takedown", "other" ]
+
+    [elements.deprecation.replacement]
+    type = "types.nameType"
+    optional = true
+    description = "Mandatory when reason = renamed — lint."
+
+    [elements.deprecation.disable_date]
+    type = "local-date"
+    optional = true
+    description = "New installs refuse after this without --force-disabled."
+
+[elements.livecheck]
+type = "table"
+optional = true
+description = "Upstream freshness, declared (§3.15). Required for core — policy."
+
+    [elements.livecheck.strategy]
+    type = "string"
+    allowedvalues = [ "git-tags", "homepage-regex", "directory-index", "crates", "npm", "pypi", "sparkle" ]
+
+    [elements.livecheck.url]
+    type = "string"
+    format = "uri"
+    optional = true
+    description = "Strategy-specific."
+
+    [elements.livecheck.regex]
+    type = "string"
+    optional = true
+    description = "Optional pattern with a version capture group."
+
+    [elements.livecheck.skip_prerelease]
+    type = "boolean"
+    optional = true
+    default = true
+
+    [elements.livecheck.throttle_days]
+    type = "integer"
+    min = 0
+    optional = true
+    default = 3
+
+    [elements.livecheck.cooldown_days]
+    type = "integer"
+    min = 2
+    optional = true
+    default = 2
+    description = "Supply-chain poisoning window; never below 2 (ORCHARD-POLICY §9)."
+
+[elements."system-patch"]
+type = "table"
+optional = true
+description = "Flagged replacement of Apple-provided files (§3.16; mechanism DESIGN §12.11; policy ORCHARD-POLICY §13). The strictest declaration in the format."
+
+    [elements."system-patch".targets]
+    type = "array"
+    itemtype = "string"
+    pattern = "^/"
+    minlength = 1
+    description = "Absolute paths this package replaces; the refused-by-construction list is lint-enforced (§3.16)."
+
+    [elements."system-patch".sip_off_required]
+    type = "boolean"
+    optional = true
+    default = false
+
+    [elements."system-patch".reason]
+    type = "string"
+    minlength = 1
+    description = "Mandatory; shown verbatim at every decision point — write it as warning text."
