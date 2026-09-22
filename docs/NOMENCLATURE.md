@@ -1,7 +1,7 @@
 # aslice Nomenclature — The Words of the Project
 
-- **Status:** Reference v0.1 — September 2026
-- **Companions:** [DESIGN.md](DESIGN.md) v1.15, [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md) v0.12, [AUTHORING.md](AUTHORING.md) v0.6, [BUILD-INFRA.md](BUILD-INFRA.md) v0.10, [ORCHARD-POLICY.md](ORCHARD-POLICY.md) v1.3, [REPOSITORIES.md](REPOSITORIES.md) v1.3, [MANUAL.md](MANUAL.md) v0.8, [SETUP.md](SETUP.md) v0.6, [HOMEBREW-REVIEW.md](HOMEBREW-REVIEW.md) v0.17
+- **Status:** Reference v0.2 — September 2026 (v0.2: the **tombstone** entry gains its second sense — the permanent index record of a removed formula (PACKAGE-FORMAT §3.14, ORCHARD-POLICY §8), alongside the setup.toml negated declaration — prompted by the `aslice orchard tombstone` verb (DESIGN v1.16 §12.14); companion versions refreshed — DESIGN v1.16, AUTHORING v0.7, BUILD-INFRA v0.11, ORCHARD-POLICY v1.4, REPOSITORIES v1.4, SETUP v0.7, HOMEBREW-REVIEW v0.18)
+- **Companions:** [DESIGN.md](DESIGN.md) v1.16, [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md) v0.12, [AUTHORING.md](AUTHORING.md) v0.7, [BUILD-INFRA.md](BUILD-INFRA.md) v0.11, [ORCHARD-POLICY.md](ORCHARD-POLICY.md) v1.4, [REPOSITORIES.md](REPOSITORIES.md) v1.4, [MANUAL.md](MANUAL.md) v0.8, [SETUP.md](SETUP.md) v0.7, [HOMEBREW-REVIEW.md](HOMEBREW-REVIEW.md) v0.18
 - **Audience:** every reader. When a document uses a word you do not know, it is defined here — or should be.
 
 A project that names everything owes its readers a place where the names are explained. This is that place. Terms are defined once, in one line where possible, with a pointer to the document that owns the term. Section numbers refer to the September 2026 corpus listed above.
@@ -41,7 +41,7 @@ The words we made up, or made ours.
 
 **leaf** — an installed package that nothing installed depends on; a removal candidate. *(DESIGN §10.4.)* *cf.* wishlist.
 
-**tombstone** — a negated declaration in setup.toml: "this shall not be present," enforced by apply. *(SETUP §2; DESIGN §12.6.)*
+**tombstone** — two permanent records share the word. In a repository index: what a removed formula leaves behind — name, final version, reason, replacement — so historical snapshots and old locks resolve forever; the `aslice orchard tombstone` verb writes one. *(PACKAGE-FORMAT §3.14; ORCHARD-POLICY §8; DESIGN §12.14.)* In setup.toml: a negated declaration, "this shall not be present," enforced by apply. *(SETUP §2; DESIGN §12.6.)*
 
 **wishlist** — the set of implicit roots: installed leaves the user has not declared but has not removed either. The resolver keeps them honest. *(DESIGN §10.5, §12.4.)*
 
@@ -221,6 +221,7 @@ For readers arriving from the other orchard. The left word is theirs; the right 
 | cask | a vendor-binary (payload-only, redistribute) package |
 | keg-only | `link = false` in the formula |
 | `post_install` | nothing — rejected; do it in a service or an extension |
+| `deprecate!` / `disable!` | the `[deprecation]` table, edited by `aslice orchard deprecate` / `disable` |
 | `uses_from_macos` | nothing — rejected; we never borrow from the OS |
 | `brew services` | `aslice service` |
 | Brewfile | setup.toml |
@@ -241,4 +242,4 @@ Documents cite each other by section, and the citations follow fixed rules so th
 
 ---
 
-*History: v0.1 (September 2026) — initial nomenclature, covering the corpus as of DESIGN v1.15, PACKAGE-FORMAT v0.12, BUILD-INFRA v0.10, ORCHARD-POLICY v1.3, REPOSITORIES v1.3, HOMEBREW-REVIEW v0.17, SETUP v0.6, AUTHORING v0.6, MANUAL v0.8.*
+*History: v0.1 (September 2026) — initial nomenclature, covering the corpus as of DESIGN v1.15, PACKAGE-FORMAT v0.12, BUILD-INFRA v0.10, ORCHARD-POLICY v1.3, REPOSITORIES v1.3, HOMEBREW-REVIEW v0.17, SETUP v0.6, AUTHORING v0.6, MANUAL v0.8. v0.2 (September 2026) — the tombstone entry gains its index sense; the translation table gains the `deprecate!`/`disable!` row; companions refreshed to DESIGN v1.16, PACKAGE-FORMAT v0.12, AUTHORING v0.7, BUILD-INFRA v0.11, ORCHARD-POLICY v1.4, REPOSITORIES v1.4, MANUAL v0.8, SETUP v0.7, HOMEBREW-REVIEW v0.18.*
