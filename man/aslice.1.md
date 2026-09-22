@@ -48,6 +48,9 @@ aslice collects no telemetry or analytics of any kind — there is no opt-out be
 **repo**
 :   Add, enable, inspect, and publish package repositories. See aslice-repo(1).
 
+**orchard**
+:   Maintain a formula tree: lifecycle verbs (deprecate/disable/tombstone/rename), orchard-wide lint/doctor/freshness, the local merge gate (`ci`), reverse-dependency queries, the Homebrew-formula importer. See aslice-orchard(1).
+
 **audit**, **provenance**
 :   Report known vulnerabilities in the installed set; show a package's build provenance.
 
@@ -116,4 +119,4 @@ aslice collects no telemetry or analytics of any kind — there is no opt-out be
 
 The full user manual: `docs/MANUAL.md` in the aslice source tree. Package authoring: `docs/AUTHORING.md`. Design rationale: `docs/DESIGN.md`.
 
-aslice-install(1), aslice-upgrade(1), aslice-uninstall(1), aslice-gc(1), aslice-service(1), aslice-use(1), aslice-repo(1), aslice-ca-update(1), aslice-doctor(1), aslice-system-patch(1), aslice-apply(1)
+aslice-install(1), aslice-upgrade(1), aslice-uninstall(1), aslice-gc(1), aslice-service(1), aslice-use(1), aslice-repo(1), aslice-orchard(1), aslice-ca-update(1), aslice-doctor(1), aslice-system-patch(1), aslice-apply(1)
