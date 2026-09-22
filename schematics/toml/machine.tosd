@@ -1,0 +1,208 @@
+# TOML Schema for aslice-machine.toml — declarative system setup.
+# Prose specification: docs/SETUP.md §2 (v0.11). Where this file and the prose
+# disagree, the disagreement is a bug (schematics/README.md).
+#
+# Semantic rules `aslice machine apply` keeps beyond this schema:
+#   - [grafts] allow entries must name packages the file installs (SETUP §2.8).
+#   - Only signed graft manifests can be allow-listed; unsigned ones prompt (§2.8).
+#   - A file cannot elevate trust: verified status comes only from the grant
+#     flow, never from a document (§2.7).
+#   - [[repos]] name/URL conflicts with existing configuration are errors (§2.7).
+
+[toml-schema]
+version = "1.0.0"
+
+[toml-schema.meta]
+target = "aslice-machine.toml"
+prose = "docs/SETUP.md"
+prose_version = "0.11"
+schematics = "0.1"
+
+[types.pkgAddress]
+type = "string"
+pattern = "^([a-z0-9][a-z0-9-]*:)?[a-z0-9][a-z0-9-]*$"
+description = "Plain or repo:-namespaced package name (SETUP §2.8)."
+
+[types.wishlistEntry]
+type = "string"
+pattern = "^([a-z0-9][a-z0-9-]*:)?[a-z0-9][a-z0-9-]*(@[0-9][a-zA-Z0-9._-]*)?( [+-][a-z0-9][a-z0-9_]*)*$"
+description = "name [@constraint] [+variant / -variant] [repo:] — the syntax aslice install accepts (SETUP §2.2)."
+
+[types.stream]
+type = "string"
+pattern = "^[0-9][a-zA-Z0-9._-]*$"
+description = "A release stream such as 8.4 or 3.12 — never an exact patch (DESIGN §12.9)."
+
+[types.sizeValue]
+type = "string"
+pattern = "^[0-9]+([.][0-9]+)? (B|KB|MB|GB|TB)$"
+description = "Human size, e.g. 20 GB (MANUAL §13)."
+
+[types.scalar]
+oneof = [ "string", "integer", "float", "boolean" ]
+
+[types.scalarArray]
+type = "array"
+itemtype = "types.scalar"
+
+[types.defaultsValue]
+anyof = [ "types.scalar", "types.scalarArray" ]
+description = "Schema 1 supports string, integer, float, boolean, and arrays of those; dict, data, date, and by-host domains are deferred (SETUP §2.6)."
+
+[types.defaultsDomain]
+type = "collection"
+itemtype = "types.defaultsValue"
+keypattern = "^[a-zA-Z0-9][a-zA-Z0-9.-]*$"
+description = "One preference domain, e.g. com.apple.dock."
+
+[types.repoEntry]
+type = "table"
+description = "An additional repository; applying one is aslice repo add with TOFU pinning (SETUP §2.7)."
+
+    [types.repoEntry.name]
+    type = "string"
+    pattern = "^[a-z0-9][a-z0-9-]*$"
+
+    [types.repoEntry.url]
+    type = "string"
+    format = "uri"
+
+[elements.schema]
+type = "integer"
+allowedvalues = [ 1 ]
+description = "Document version; unknown versions are a hard error (SETUP §2.1)."
+
+[elements.aslice]
+type = "table"
+optional = true
+description = "aslice's own configuration, applied exactly as aslice config set would (SETUP §2.7; key vocabulary MANUAL §13)."
+
+    [elements.aslice.flavor]
+    type = "string"
+    allowedvalues = [ "v1", "v2", "v3" ]
+    optional = true
+    description = "CPU flavor ceiling; lower it when preparing an install for an older machine."
+
+    [elements.aslice.mirrors]
+    type = "array"
+    itemtype = "string"
+    format = "uri"
+    optional = true
+    description = "Extra full-tree mirrors, tried in order."
+
+    [elements.aslice.ca]
+    type = "table"
+    optional = true
+
+        [elements.aslice.ca.source]
+        type = "string"
+        optional = true
+        description = "Configured bundle source; default mozilla (MANUAL §13)."
+
+    [elements.aslice.gc]
+    type = "table"
+    optional = true
+
+        [elements.aslice.gc.keep_generations]
+        type = "integer"
+        min = 1
+        optional = true
+        default = 5
+
+        [elements.aslice.gc.store_watermark]
+        type = "types.sizeValue"
+        optional = true
+
+    [elements.aslice.clean]
+    type = "table"
+    optional = true
+
+        [elements.aslice.clean.cache_watermark]
+        type = "types.sizeValue"
+        optional = true
+
+    [elements.aslice.log]
+    type = "table"
+    optional = true
+
+        [elements.aslice.log.keep_days]
+        type = "integer"
+        min = 1
+        optional = true
+        default = 14
+
+        [elements.aslice.log.keep_size]
+        type = "types.sizeValue"
+        optional = true
+
+[elements.repos]
+type = "array"
+itemtype = "types.repoEntry"
+optional = true
+description = "Repositories beyond the pre-pinned official one (SETUP §2.7)."
+
+[elements.packages]
+type = "array"
+itemtype = "types.wishlistEntry"
+optional = true
+description = "The wishlist: constraints, not exact state (SETUP §2.2)."
+
+[elements.runtimes]
+type = "table"
+optional = true
+description = "Runtime stream selections (SETUP §2.3; DESIGN §12.9)."
+
+    [elements.runtimes.default]
+    type = "collection"
+    itemtype = "types.stream"
+    keypattern = "^[a-z0-9][a-z0-9-]*$"
+    description = "Profile-wide defaults, applied as aslice default <runtime> <stream>."
+
+[elements.services]
+type = "table"
+optional = true
+description = "launchd services to enable after install (SETUP §2.4)."
+
+    [elements.services.start]
+    type = "array"
+    itemtype = "types.pkgAddress"
+    optional = true
+
+[elements.grafts]
+type = "table"
+optional = true
+description = "Pre-approved installer-script grafts, pnpm-style (SETUP §2.8). Suppresses the prompt, never the display."
+
+    [elements.grafts.allow]
+    type = "array"
+    itemtype = "types.pkgAddress"
+    optional = true
+    description = "Packages whose grafts may run without prompting; entries must name installed packages — apply checks."
+
+[elements.shell]
+type = "table"
+optional = true
+description = "Login shell (SETUP §2.5); package names resolve through the profile path."
+
+    [elements.shell.default]
+    type = "string"
+    minlength = 1
+    optional = true
+    description = "An aslice package name (zsh, fish, bash) or an absolute path."
+
+[elements.defaults]
+type = "table"
+optional = true
+description = "macOS preference keys with defaults(1) semantics (SETUP §2.6)."
+
+    [elements.defaults.user]
+    type = "collection"
+    itemtype = "types.defaultsDomain"
+    optional = true
+    description = "Current-user domains (~/Library/Preferences); no privileges."
+
+    [elements.defaults.system]
+    type = "collection"
+    itemtype = "types.defaultsDomain"
+    optional = true
+    description = "System-wide domains (/Library/Preferences); written by aslice-system, consent-gated (SETUP §3.4)."
