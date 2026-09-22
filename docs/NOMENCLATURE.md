@@ -1,7 +1,7 @@
 # aslice Nomenclature — The Words of the Project
 
-- **Status:** Reference v0.2 — September 2026 (v0.2: the **tombstone** entry gains its second sense — the permanent index record of a removed formula (PACKAGE-FORMAT §3.14, ORCHARD-POLICY §8), alongside the setup.toml negated declaration — prompted by the `aslice orchard tombstone` verb (DESIGN v1.16 §12.14); companion versions refreshed — DESIGN v1.16, AUTHORING v0.7, BUILD-INFRA v0.11, ORCHARD-POLICY v1.4, REPOSITORIES v1.4, SETUP v0.7, HOMEBREW-REVIEW v0.18)
-- **Companions:** [DESIGN.md](DESIGN.md) v1.16, [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md) v0.12, [AUTHORING.md](AUTHORING.md) v0.7, [BUILD-INFRA.md](BUILD-INFRA.md) v0.11, [ORCHARD-POLICY.md](ORCHARD-POLICY.md) v1.4, [REPOSITORIES.md](REPOSITORIES.md) v1.4, [MANUAL.md](MANUAL.md) v0.8, [SETUP.md](SETUP.md) v0.7, [HOMEBREW-REVIEW.md](HOMEBREW-REVIEW.md) v0.18
+- **Status:** Reference v0.3 — September 2026 (v0.2: the **tombstone** entry gains its second sense — the permanent index record of a removed formula (PACKAGE-FORMAT §3.14, ORCHARD-POLICY §8), alongside the setup.toml negated declaration — prompted by the `aslice orchard tombstone` verb (DESIGN v1.16 §12.14); companion versions refreshed — DESIGN v1.16, AUTHORING v0.7, BUILD-INFRA v0.11, ORCHARD-POLICY v1.4, REPOSITORIES v1.4, SETUP v0.7, HOMEBREW-REVIEW v0.18. v0.3: the **vendor binary / redistribute** entry now describes the two modes (hosted vs vendor-fetched) and points at ORCHARD-POLICY §12 where the vendor-binary policy lives; the **dashboard** entry gains its second sense — the farm's public web dashboard at aslice.sh/dashboard, part of the owner's domain layout (September 2026); companion versions refreshed — DESIGN v1.17, AUTHORING v0.8, BUILD-INFRA v0.12, ORCHARD-POLICY v1.6, REPOSITORIES v1.5, MANUAL v0.9, SETUP v0.8, HOMEBREW-REVIEW v0.19)
+- **Companions:** [DESIGN.md](DESIGN.md) v1.17, [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md) v0.13, [AUTHORING.md](AUTHORING.md) v0.8, [BUILD-INFRA.md](BUILD-INFRA.md) v0.12, [ORCHARD-POLICY.md](ORCHARD-POLICY.md) v1.6, [REPOSITORIES.md](REPOSITORIES.md) v1.5, [MANUAL.md](MANUAL.md) v0.9, [SETUP.md](SETUP.md) v0.8, [HOMEBREW-REVIEW.md](HOMEBREW-REVIEW.md) v0.19
 - **Audience:** every reader. When a document uses a word you do not know, it is defined here — or should be.
 
 A project that names everything owes its readers a place where the names are explained. This is that place. Terms are defined once, in one line where possible, with a pointer to the document that owns the term. Section numbers refer to the September 2026 corpus listed above.
@@ -69,7 +69,7 @@ The words we made up, or made ours.
 
 **vendored sources** — the blob archive of upstream tarballs the project keeps so that dead URLs cannot kill old builds. *(DESIGN §13.4; GENESIS §3.)*
 
-**dashboard** — the curses UI for watching and driving the machinery without a browser. *(DESIGN §13.6.)*
+**dashboard** — two things share the word: the curses UI for watching and driving the machinery without a browser *(DESIGN §13.6)*, and the farm's public web dashboard at aslice.sh/dashboard *(BUILD-INFRA §10, ORCHARD-POLICY §9)*.
 
 **transparency log** — the append-only, signed record of everything published; the public answer to "who released this, when." *(DESIGN §5.6; BUILD-INFRA §9.4.)*
 
@@ -145,7 +145,7 @@ The words we made up, or made ours.
 
 **payload-only** — a slice with no build phase: repackaged upstream bits. *(PACKAGE-FORMAT §4.)*
 
-**vendor binary / redistribute** — upstream's own build, shipped under a license that permits redistribution; the cask-shaped case. *(ORCHARD-POLICY §8.)*
+**vendor binary / redistribute** — upstream's own build, repackaged and hosted by the farm (`redistribute = true`) or fetched from the vendor at install (`redistribute = false`); the cask-shaped case. *(ORCHARD-POLICY §12.)*
 
 **pointer formula** — a formula whose whole job is depending on another name, for renames and aliases. *(AUTHORING §11.)*
 
@@ -242,4 +242,4 @@ Documents cite each other by section, and the citations follow fixed rules so th
 
 ---
 
-*History: v0.1 (September 2026) — initial nomenclature, covering the corpus as of DESIGN v1.15, PACKAGE-FORMAT v0.12, BUILD-INFRA v0.10, ORCHARD-POLICY v1.3, REPOSITORIES v1.3, HOMEBREW-REVIEW v0.17, SETUP v0.6, AUTHORING v0.6, MANUAL v0.8. v0.2 (September 2026) — the tombstone entry gains its index sense; the translation table gains the `deprecate!`/`disable!` row; companions refreshed to DESIGN v1.16, PACKAGE-FORMAT v0.12, AUTHORING v0.7, BUILD-INFRA v0.11, ORCHARD-POLICY v1.4, REPOSITORIES v1.4, MANUAL v0.8, SETUP v0.7, HOMEBREW-REVIEW v0.18.*
+*History: v0.1 (September 2026) — initial nomenclature, covering the corpus as of DESIGN v1.15, PACKAGE-FORMAT v0.12, BUILD-INFRA v0.10, ORCHARD-POLICY v1.3, REPOSITORIES v1.3, HOMEBREW-REVIEW v0.17, SETUP v0.6, AUTHORING v0.6, MANUAL v0.8. v0.2 (September 2026) — the tombstone entry gains its index sense; the translation table gains the `deprecate!`/`disable!` row; companions refreshed to DESIGN v1.16, PACKAGE-FORMAT v0.12, AUTHORING v0.7, BUILD-INFRA v0.11, ORCHARD-POLICY v1.4, REPOSITORIES v1.4, MANUAL v0.8, SETUP v0.7, HOMEBREW-REVIEW v0.18. v0.3 (September 2026) — the vendor-binary entry describes both modes and cites ORCHARD-POLICY §12; the dashboard entry gains its web sense (aslice.sh/dashboard); companions refreshed to DESIGN v1.17, PACKAGE-FORMAT v0.13, AUTHORING v0.8, BUILD-INFRA v0.12, ORCHARD-POLICY v1.6, REPOSITORIES v1.5, MANUAL v0.9, SETUP v0.8, HOMEBREW-REVIEW v0.19.*
