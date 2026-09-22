@@ -27,7 +27,7 @@ Every other term the documents use is defined in [NOMENCLATURE.md](docs/NOMENCLA
 
 ## Status
 
-Design phase. The documents below are the specification as it stands; there is no release to install yet.
+Design phase. The documents below are the specification as it stands; there is no release to install yet. The project lives at [aslice.sh](https://aslice.sh) — the documentation will be served at [aslice.sh/docs](https://aslice.sh/docs), and the installer will come from [get.aslice.sh](https://get.aslice.sh/install.sh) once a release exists.
 
 ## Documents
 
@@ -49,4 +49,4 @@ In the order a newcomer should read them:
 
 ---
 
-*History: September 2026 — rewritten for readability (second editorial pass); no content changes. September 2026 — NOMENCLATURE.md added to the document list; vocabulary pointer added.*
+*History: September 2026 — rewritten for readability (second editorial pass); no content changes. September 2026 — NOMENCLATURE.md added to the document list; vocabulary pointer added. September 2026 — project domain (aslice.sh) linked in Status.*
