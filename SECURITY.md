@@ -2,7 +2,7 @@
 
 This document states how to report a vulnerability **in aslice itself** — the package manager, its helpers, the installer, the repository and signing infrastructure, and the farm tooling. Vulnerabilities in packaged software go elsewhere; see "Out of scope" below.
 
-aslice is security infrastructure for machines that no longer receive security updates from anyone else; reports are taken accordingly seriously.
+aslice is security infrastructure for machines that no longer receive security updates from anyone else; reports are handled with that in mind.
 
 *Project terms, acronyms, and the Homebrew translation table: [docs/NOMENCLATURE.md](docs/NOMENCLATURE.md).*
 
@@ -66,4 +66,4 @@ That is our incident, not your report — but it is handled in the open, per the
 
 ---
 
-*History: September 2026 — editorial pass: prose revised for directness; no policy changes. September 2026 — prose rewrite throughout: the policy reworded in the project's technical-writing voice; no policy changes. September 2026 — NOMENCLATURE.md vocabulary pointer added; no policy changes. September 2026 — contact moves to security@aslice.sh with the project domain (owner decision); no policy changes.*
+*History: September 2026 — prose review pass: the opening's seriousness clause rebuilt ('handled with that in mind'); gems kept deliberately ('A reproducer beats a write-up', 'the threat model starts below that line', 'rotation is drilled, not hoped for'); no policy changes. September 2026 — editorial pass: prose revised for directness; no policy changes. September 2026 — prose rewrite throughout: the policy reworded in the project's technical-writing voice; no policy changes. September 2026 — NOMENCLATURE.md vocabulary pointer added; no policy changes. September 2026 — contact moves to security@aslice.sh with the project domain (owner decision); no policy changes.*
