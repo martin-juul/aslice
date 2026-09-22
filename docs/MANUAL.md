@@ -2,7 +2,7 @@
 
 **The user guide for aslice — a package manager for Intel macOS.**
 
-- **Status:** v0.10 — September 2026 (v0.2: review corrections — §2.3 covers bash alongside zsh, §2.5 lists the three outside-prefix exceptions to a clean removal instead of claiming none exist, §3's man-page claim is softened to what actually ships, §3.1 documents `link`/`unlink` for `link = false` packages, and §7.1's root-daemon gate includes local repositories. v0.3: new chapter 10 — declarative whole-machine setup with `setup.toml`, `aslice apply`, `aslice export`, and `aslice import --from-brewfile` (SETUP.md); chapters 10–13 renumber to 11–14. v0.4: editorial pass — prose revised for directness throughout; no factual or behavioral changes. v0.5: second editorial pass — sentence-level revision for readability; no factual or behavioral changes. v0.6: prose rewrite throughout — chapters reworded in the project's technical-writing voice; no factual or behavioral changes. v0.7: review pass — the lock-file pointer in §10.2 now cites PACKAGE-FORMAT §7; no factual or behavioral changes. v0.8: NOMENCLATURE.md vocabulary reference added to the header; no factual or behavioral changes. v0.9: §1's honesty sentence gains the pointer-mode mechanics — a vendor binary that cannot be hosted is fetched from the vendor's own server at install; the header gains the project-home line — aslice.sh carries the homepage, documentation, and public dashboard, with the installer served from get.aslice.sh (owner decision, September 2026); no behavioral changes. v0.10: the setup file is renamed `aslice-machine.toml` and its commands move under `aslice machine` (apply / export / import --from-brewfile); top-level `aslice apply` keeps plans and lock files (owner decision, September 2026); no behavioral changes)
+- **Status:** v0.11 — September 2026 (v0.2: review corrections — §2.3 covers bash alongside zsh, §2.5 lists the three outside-prefix exceptions to a clean removal instead of claiming none exist, §3's man-page claim is softened to what actually ships, §3.1 documents `link`/`unlink` for `link = false` packages, and §7.1's root-daemon gate includes local repositories. v0.3: new chapter 10 — declarative whole-machine setup with `setup.toml`, `aslice apply`, `aslice export`, and `aslice import --from-brewfile` (SETUP.md); chapters 10–13 renumber to 11–14. v0.4: editorial pass — prose revised for directness throughout; no factual or behavioral changes. v0.5: second editorial pass — sentence-level revision for readability; no factual or behavioral changes. v0.6: prose rewrite throughout — chapters reworded in the project's technical-writing voice; no factual or behavioral changes. v0.7: review pass — the lock-file pointer in §10.2 now cites PACKAGE-FORMAT §7; no factual or behavioral changes. v0.8: NOMENCLATURE.md vocabulary reference added to the header; no factual or behavioral changes. v0.9: §1's honesty sentence gains the pointer-mode mechanics — a vendor binary that cannot be hosted is fetched from the vendor's own server at install; the header gains the project-home line — aslice.sh carries the homepage, documentation, and public dashboard, with the installer served from get.aslice.sh (owner decision, September 2026); no behavioral changes. v0.10: the setup file is renamed `aslice-machine.toml` and its commands move under `aslice machine` (apply / export / import --from-brewfile); top-level `aslice apply` keeps plans and lock files (owner decision, September 2026); no behavioral changes. v0.11: grafts — §1's no-code-at-install claim gains the declared-graft exception, §4 gains §4.5 (the user-facing graft approval flow: the manifest you are shown, the prompt, the allow-list, the unsigned warning, and why rollback still holds), §9.2's no-code-from-repositories sentence and §9.3's signature-scope note gain the graft scope, §10.3's consent gates gain the graft approval step, and the appendix quick reference gains the `graft` row; model in DESIGN v1.19 §12.15; no other behavioral changes)
 - **Project home:** [aslice.sh](https://aslice.sh) — homepage, documentation (aslice.sh/docs), and the public dashboard (aslice.sh/dashboard); the installer is served from get.aslice.sh (§2).
 - **Audience:** people who install and run software with aslice; that is most of what follows. If you *write* packages, read chapters 1–4 and then move to [AUTHORING.md](AUTHORING.md). If you want to know *why* things are the way they are, the rationale lives in [DESIGN.md](DESIGN.md).
 - **Companions:** the man pages in [man/](../man/) (also available as `aslice help <command>`), [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md), [ORCHARD-POLICY.md](ORCHARD-POLICY.md), [REPOSITORIES.md](REPOSITORIES.md), [GENESIS.md](GENESIS.md).
@@ -16,7 +16,7 @@ aslice is a package manager for Intel Macs running macOS 10.11 (El Capitan) thro
 
 Three facts about aslice explain almost everything else:
 
-**It installs binaries, and it never runs them at install time.** Packages arrive as *slices* — prebuilt, signed, compressed archives. To install one, aslice verifies the signature, checks every file against the manifest, and links the result into place. At no point does the package get to run a script on your machine. Homebrew's `post_install` has no equivalent here, and never will.
+**It installs binaries, and it never runs them at install time.** Packages arrive as *slices* — prebuilt, signed, compressed archives. To install one, aslice verifies the signature, checks every file against the manifest, and links the result into place. At no point does the package get to run a script on your machine. There is one declared exception — the *graft*, for software whose installer script genuinely cannot be declarative (audio DSP drivers, pro-video plugins): it runs only after you have read its declared behavior and approved it, confined to exactly what it declared, with everything it changes recorded for rollback (§4.5). Homebrew's `post_install` — arbitrary package code, run unannounced — has no equivalent here, and never will.
 
 **Old states of your system are kept, and you can go back to them.** Installed packages live in an immutable store; what you actually use is a *generation*, a view of the store made of symlinks. Every install, upgrade, or uninstall builds a new generation and then flips a single symlink. When an upgrade breaks something, `aslice rollback` puts the old state back in seconds. Nix proved this idea at scale; aslice keeps it small enough to stay understandable.
 
@@ -234,7 +234,7 @@ Installing a slice is six steps, and none of them runs code from the package:
 5. Register it in the state database.
 6. Build the new generation and flip the profile symlink.
 
-If any step fails, nothing changes: the live generation is not touched until the new one is complete.
+If any step fails, nothing changes: the live generation is not touched until the new one is complete. None of the six runs package code; a graft-bearing package adds one declared, approved, sandboxed step of its own, covered in §4.5.
 
 ### 4.2 Flavors: matching builds to your CPU
 
@@ -259,6 +259,35 @@ The practical consequences:
 ### 4.4 Variants, briefly
 
 Packages can declare *variants* — optional features like `+x265` or `+ssl`. A variant the author marked as interface-changing gets its own builds, which coexist in the store; a build-flavor variant (debug symbols and the like) triggers a local compile. The full model, including the rules that keep variants from sprawling, is in [AUTHORING.md](AUTHORING.md) §5. As a user, three things suffice: `aslice info <pkg>` lists a package's variants, `--variant +name` enables one, and aslice tells you whether a prebuilt slice exists for the combination before it starts compiling.
+
+### 4.5 Grafts: when installing takes a script
+
+Some software cannot be reduced to files in a payload. An audio DSP suite registers a plugin with CoreAudio's hardware abstraction layer; a pro-video plugin framework installs a component the host application scans for; a driver bundle loads a kext. Their installers carry scripts, and banning scripts would ban the software — so aslice puts the script under the project's own rules instead. A vendor installer script is a **graft**, and a graft never runs unannounced, unapproved, or unrecorded.
+
+When a package carries grafts, you see them before anything executes:
+
+```
+$ aslice install convolver
+convolver 3.1 declares 1 graft:
+
+  Scripts/postinstall  (sha256: 9f2c…d4, runs after payload)
+    writes:   /Library/Audio/Plug-Ins/HAL/VendorDSP.driver
+    kexts:    none
+    daemons:  none
+    network:  no
+    elevated: yes (via aslice-system)
+  manifest: signed (core orchard — farm-rehearsed)
+
+Allow convolver 3.1 to run its script? [y/N]
+```
+
+The list you are shown is the whole truth about the script, and it is enforced, not advisory: if the script tries to write outside the listed paths, load an unlisted kext, register an unlisted daemon, or touch the network without declaring it, the sandbox blocks the attempt, the install aborts, and the generation rolls back — with the deviation logged whether or not you asked for verbosity. You are not being asked to trust the script; you are being shown its leash.
+
+Answering no stops the install before anything is extracted or executed. Answering yes records the approval in the state database, bound to the package, the version, and the script hashes — a changed script asks again. `aslice graft approvals` lists what you have approved; `aslice graft revoke <pkg>` withdraws one. If you keep your machine in `aslice-machine.toml` (§10), the `[grafts]` allow-list replays your approvals without prompting on a rebuild (SETUP §2.8). A graft marked `elevated: yes` runs through aslice's own privileged helper, not as `sudo` from inside the vendor's script. Non-interactive installs refuse graft-bearing packages with exit code 2 unless you pass `--accept-grafts` — the same contract shape as `--accept-system-changes`, one severity down. There is deliberately no "allow everything" switch: the unit of approval is one package's grafts at one version.
+
+One warning matters more than the others. A graft's behavior manifest is normally **signed** — for core and extended packages, the build farm has rehearsed the script in a VM on every OS the package targets and verified that it does exactly what the manifest declares. A third-party repository can serve a graft whose manifest is **unsigned**: nobody has rehearsed anything, and aslice says so in letters you cannot miss before it asks. The decision is yours, taken with open eyes — and approval of an unsigned manifest is never remembered, so you are asked every time.
+
+Whichever way you answer, the rollback claim holds. Every write an approved graft makes is recorded against the new generation: created files are listed, overwritten files are backed up first, registered kexts and daemons are noted. `aslice rollback` and `aslice uninstall` reverse the graft's footprint along with everything else (§5).
 
 ---
 
@@ -439,13 +468,13 @@ Every repository carries an enforced trust level — a set of capabilities, not 
 | **third-party** | You added it; key pinned on first use | yes | never | never |
 | **local** | Your own `file://` tree | formulae by default | yes (your machine, your authority) | yes |
 
-`aslice repo enable <name>` turns on a verified repo; enabling *is* the consent, so its binaries install immediately afterwards. `aslice repo list`, `repo keys`, and `repo audit <name>` show the state of your sources. One thing no repository at any level can do is make aslice execute package code at install time — that door is closed structurally.
+`aslice repo enable <name>` turns on a verified repo; enabling *is* the consent, so its binaries install immediately afterwards. `aslice repo list`, `repo keys`, and `repo audit <name>` show the state of your sources. One thing no repository at any level can do is make aslice execute package code at install time outside the graft mechanism (§4.5) — and even a graft needs your explicit approval, so the door stays closed to surprise.
 
 When two repositories offer the same package name, aslice asks you once, remembers the answer, and asks again if the situation changes. `aslice repo resolutions` shows your answers; `repo:pkg` addressing (`audiolab:convolver`) bypasses the question entirely.
 
 ### 9.3 What "verified" and "signed" do and don't mean
 
-Signatures and trust levels answer narrow questions precisely: *are these bits exactly what this repository published, and how much did I decide to trust this repository?* They do not make claims about the software's behavior — a signed, verified slice of malicious software is still malicious software, now with better paperwork. The design document's limitations section (DESIGN §10.7) says this at length; the short version is that aslice's guarantees are about provenance and integrity, and it never pretends otherwise in its messages.
+Signatures and trust levels answer narrow questions precisely: *are these bits exactly what this repository published, and how much did I decide to trust this repository?* They do not make claims about the software's behavior — a signed, verified slice of malicious software is still malicious software, now with better paperwork. The design document's limitations section (DESIGN §10.7) says this at length; the short version is that aslice's guarantees are about provenance and integrity, and it never pretends otherwise in its messages. For graft-bearing packages (§4.5) the question extends to the behavior manifest: a signed manifest means the farm — or, one trust level down, a verified repository under its own vouched key — rehearsed the script and verified it behaves as declared, while an unsigned manifest means nobody did, and the client says so loudly at the install decision.
 
 ### 9.4 Checking what you're running
 
@@ -515,7 +544,7 @@ With no argument, `aslice machine apply` reads `./aslice-machine.toml`. Every ap
 
 Applying is **convergent**: apply the same file twice and the second run reports "0 changes". It is also **additive**: apply never removes something merely because the file doesn't mention it. If you *do* want the file to be the whole truth, `aslice machine apply --prune` retracts what the file previously applied but no longer declares — and nothing else. Your hand-installed packages and hand-set preferences are invisible to prune.
 
-Two kinds of step write to OS territory and are therefore **consent-gated**: system-wide preference domains (`/Library/Preferences`), and enrolling an aslice-provided login shell in `/etc/shells`. Interactively, you are shown what will be written and asked. In a script or a recovery terminal, pass `--accept-system-changes` — the same flag as for system packages (§8.4) — or those steps are refused while everything unprivileged still lands.
+Two kinds of step write to OS territory and are therefore **consent-gated**: system-wide preference domains (`/Library/Preferences`), and enrolling an aslice-provided login shell in `/etc/shells`. Interactively, you are shown what will be written and asked. In a script or a recovery terminal, pass `--accept-system-changes` — the same flag as for system packages (§8.4) — or those steps are refused while everything unprivileged still lands. Graft-bearing packages keep their own approval step (§4.5): a machine file may carry a `[grafts]` allow-list so a known set applies without prompting (SETUP §2.8); anything not listed asks in the usual way, and `--accept-grafts` is the non-interactive escape.
 
 The safety net is the one you already know: before each preference write or shell change, aslice records the old value against the new **generation**, so `aslice rollback` (§5) restores preferences and login shell along with the packages. `aslice history` shows which file applied what, and when.
 
@@ -658,4 +687,5 @@ The prefix layout, for orientation: `store/` (immutable packages), `profiles/gen
 | `shellenv` / `init` | Print shell environment; print shell integration |
 | `exec` / `test` / `livecheck` | Run in a temporary view; run a package's smoke tests; check for newer upstream releases |
 | `system-patch list/status/restore` | Inspect and reverse declared system-file replacements |
+| `graft approvals` / `graft revoke` | Review and withdraw recorded installer-script approvals (§4.5) |
 | `help` | The man page for any command, in your terminal |
