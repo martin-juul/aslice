@@ -222,6 +222,8 @@ Bring-up must validate the chosen hypervisor version, host OS, each guest's boot
 
 ## 9. From result to repository
 
+The environment and release-version contract is [ORCHARD-POLICY §18.1–§18.2](ORCHARD-POLICY.md#181-environments-branching-and-promoted-builds), for aslice and every orchard, including third-party orchards. Build the candidate on `develop` (dev), then promote the identical artifact inventory to `beta` (staging) and `master` (prod) in the same repository. The flow below runs for the authorized destination environment; promotion reuses frozen artifacts and authenticated build receipts instead of scheduling new served builds. Destination tests and current security checks still apply. Branch merges that change release content require a new base version and a fresh dev candidate. Environment suffixes belong to external release metadata, never rewritten payloads. Operational configuration is supplied externally.
+
 ```
 owner-approved orchard merge → CI → agent staging (untrusted)
       → publisher: quarantine gates → repo build → authenticated candidate
@@ -234,7 +236,7 @@ owner-approved orchard merge → CI → agent staging (untrusted)
 
 KEY-RUNBOOK §2.1 specifies candidate contents, authenticated owner-merge authorization, retained signing state, serialized publication, and idempotent retries. Owner merge is the final human approval, including new core slices. Stale candidates must reconcile against current repository and signing state before signing again. The root Pi is not used for routine releases. The publisher refreshes timestamps daily for the valid approved snapshot; targets/snapshot renew automatically below 30 days using the last approved content. Root renewal and top-level key replacement remain offline operations (KEY-RUNBOOK §1.1, §3). Client metadata refresh makes releases discoverable; publication does not force installation. Execute the end-to-end and failure drills in KEY-RUNBOOK §7 before launch.
 
-The index snapshot is published atomically with its dependent rebuilds (§6.1). Missing required flavor builds, tests, rehearsals, or independent rebuilds keep the affected publication set pending; laptop absence never permits a partial provider/dependent update. Retention follows REVIEW §6: snapshots ≤ 1 year are kept whole, monthly ones forever — and that is what makes historical installs (REVIEW §4.14) true.
+The index snapshot is published atomically with its dependent rebuilds (§6.1). Those builds are part of the frozen dev candidate and are reused in staging and prod. Missing required flavor builds, tests, rehearsals, or independent rebuilds keep the affected publication set pending; laptop absence never permits a partial provider/dependent update. Retention follows REVIEW §6: snapshots ≤ 1 year are kept whole, monthly ones forever — and that is what makes historical installs (REVIEW §4.14) true.
 
 The same publish deposits **every source artifact the build fetched** into the tree's `blobs/sha256/` area: the vendored-source archive (DESIGN §9.6). Upstreams delete, reshuffle, and re-roll tarballs constantly. An orchard that vendors its sources never notices, and a from-nothing re-standup never starves (GENESIS.md §2).
 

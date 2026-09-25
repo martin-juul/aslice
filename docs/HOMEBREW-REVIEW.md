@@ -297,7 +297,7 @@ Semantics: **active → deprecated** (installs warn, `audit`/`info` surface it) 
 
 ### 4.14 P2 — Opportunities Homebrew doesn't have (not gaps, but cheap differentiators surfaced by the review)
 
-- **Channels.** TUF snapshots make "stable" vs "edge" almost free: `stable` tracks a snapshot delayed N days with a soak report, `edge` tracks latest. Homebrew's git-tap rolling model can't express this; aslice's snapshot model can. `aslice config set channel stable`.
+- **Environments and promotion.** The earlier stable/edge proposal is superseded by [ORCHARD-POLICY §18.1–§18.2](ORCHARD-POLICY.md#181-environments-branching-and-promoted-builds): dev (`develop`), staging (`beta`), and prod (`master`) in the same repository, for aslice and all orchards. Build once and promote the same artifact inventory through all three; environment suffixes are external release labels, and content changes require a new base version with a recorded reason.
 - **Delta updates between revisions.** zstd `--long` payloads already help; true binary deltas (bsdiff-style) between successive revisions of the same package would cut bandwidth for the upgrade-heavy use case. Farm-side only, client falls back to full slices.
 - **Historical installs as a feature.** `aslice install ffmpeg --index-snapshot 2026-09-01` — the snapshot is content-addressed and retained, so "the exact package set from the day this paper's results were produced" is a one-liner. Homebrew can approximate this only by archaeology. Worth marketing to the lab/CI audience.
 - **`aslice why --explain` everywhere.** The derivation-tree rendering is already spec'd for solves; extend it to `outdated` and `audit` ("why is this flagged") — explainability as the house style.

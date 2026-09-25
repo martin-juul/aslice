@@ -17,6 +17,8 @@ aslice keeps deprecated Intel Macs (macOS 10.11–12, x86_64) useful. Contributi
 
 ## Writing a formula
 
+Target changes at `develop` (dev). Staging uses `beta` and production uses `master`, all in the same repository and its mirrors. This applies to aslice and third-party orchards as well as core and extended. Build and freeze a candidate once, then promote its identical artifacts through staging to prod. Do not hardcode environment-specific configuration or edit payloads to change version suffixes. See [ORCHARD-POLICY §18.1](docs/ORCHARD-POLICY.md#181-environments-branching-and-promoted-builds) for branching and [§18.2](docs/ORCHARD-POLICY.md#182-release-versioning-and-unchanged-content-enforcement) for `x.y.z-develop` → `x.y.z-beta` → `x.y.z`, required bumps, and promotion-failure reports.
+
 The format is specified in `docs/PACKAGE-FORMAT.md` (read §3 and §6 first), the rules in `docs/ORCHARD-POLICY.md`. What reviewers enforce, in short:
 
 - **`min_os` accuracy.** Declare the oldest OS you are prepared to stand behind. CI builds at that floor and smoke-runs every release up to 12 on the VM matrix — optimism does not survive that gauntlet. Patch heroics land as *patches*, and the floor is lowered only when CI proves it (ORCHARD-POLICY §4).

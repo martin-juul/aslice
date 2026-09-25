@@ -78,6 +78,8 @@ Some rules hold at every level:
 
 ## 4. Adding a third-party repository
 
+All orchards, including third-party orchards, follow the [shared environment and promotion contract](ORCHARD-POLICY.md#181-environments-branching-and-promoted-builds): dev → `develop`, staging → `beta`, prod → `master`. These branches belong to one repository identity, replicated by its mirrors; environment selection changes the branch pointer, not the repository or mirror URL. Production is the default, and dev/staging require explicit selection with no automatic cross-environment fallback. Each environment has isolated cached metadata and rollback-protection state. Promotion reuses immutable artifacts under the [release-version rules](ORCHARD-POLICY.md#182-release-versioning-and-unchanged-content-enforcement). Third-party publishers use their own authorities; this workflow does not alter trust levels or capabilities. Environment selection and promotion metadata still need implementation and schema design; no new keys are implied in the existing closed schemas.
+
 ```
 $ aslice repo add https://repo.example.org/aslice
 Fetching TUF root metadata…
