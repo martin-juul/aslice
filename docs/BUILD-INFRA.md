@@ -1,7 +1,7 @@
 # aslice Build Infrastructure — One Harness, Two Scales
 
-- **Status:** Design draft, v0.15 — September 2026 (v0.2: companion references refreshed — DESIGN v1.7, PACKAGE-FORMAT v0.6, HOMEBREW-REVIEW v0.9; all internal cross-references re-verified against current section numbering, no content change. v0.3: companion references refreshed — DESIGN v1.8, PACKAGE-FORMAT v0.6, HOMEBREW-REVIEW v0.10; no content change. v0.4: the malware-signature gate — every staged slice is scanned against current definitions before signing-host promotion (new §7.5, §7.1 gate 5, §11 failure row, §12 Phase 1); the scanner is the orchard's own `clamav` core package (ORCHARD-POLICY v0.7 §2); client-side scanning stays the user's decision. v0.5: the gate's genesis protocol — the first `clamav` slice is scanned by a throwaway hand-built scanner with a `bootstrap` receipt, the other four quarantine gates carry full weight, go-live is a transparency-log event, and the packaged scanner sweeps the pre-gate backlog including its own origin slice (§7.5). v0.6: the genesis audit — every fetched source is vendored into the repository tree (§3, §9), VM golden-image genesis and the installer-app archive are specified (§8), and the from-nothing sequence lands as GENESIS.md (§12); companions DESIGN v1.9 / REVIEW v0.11. v0.7: editorial pass — prose revised for directness; no content change. v0.8: prose rewrite throughout — chapters reworded in the project's technical-writing voice; no content change. v0.9: review pass — the three bare §9.4 references now name DESIGN §9.4 explicitly; companion references refreshed; no content change. v0.10: NOMENCLATURE.md vocabulary reference added to the header; companions refreshed to DESIGN v1.15, PACKAGE-FORMAT v0.12, HOMEBREW-REVIEW v0.17; no content change. v0.11: companions refreshed to DESIGN v1.16, PACKAGE-FORMAT v0.12, HOMEBREW-REVIEW v0.18; no content change. v0.12: the project domain lands — the farm coordinator's canonical endpoint is farm.aslice.sh (§7.4) and the transparency dashboard's public home is aslice.sh/dashboard (§10), per the owner's layout decision of paths for humans and subdomains for machines (September 2026); companion references refreshed to DESIGN v1.17, PACKAGE-FORMAT v0.13, HOMEBREW-REVIEW v0.19; no content change. v0.13: graft rehearsal lands in the farm spec — §6.4's PR-gate chain gains the rehearsal gate for graft-bearing binaries (per-OS VM rehearsal, observed behavior diffed against the declared manifest, signing only on exact match — DESIGN v1.19 §12.15), §7.1's quarantine list gains the rehearsal-receipt gate as its sixth check (and §7.5's layer counts follow), §8's VM matrix gains the rehearsal run shape, §3's binary pipeline notes grafts are hash-verified but never run by the harness, and §12's Phase 2 names the rehearsal lane; companions refreshed (DESIGN v1.19, PACKAGE-FORMAT v0.15, HOMEBREW-REVIEW v0.21). v0.14: prose review pass — two throat-clearing connectives removed (§2.1, §7.3); gems kept deliberately ('The coordinator is boring by design', 'the matrix's marginal cost is electricity, not maintenance', 'identical code, zero authority'); companion reference refreshed to DESIGN v1.20; no content change. v0.15: TOOLCHAIN.md v0.1 joins the companions — §2's pinned toolchain slice is specified there; companion references refreshed — DESIGN v1.21, PACKAGE-FORMAT v0.16; no content change)
-- **Companion to:** [DESIGN.md](DESIGN.md) v1.21 (§4.3 toolchain, §5.1 process layout, §9 distribution, §10 security), [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md) v0.16 (build phases §6), [HOMEBREW-REVIEW.md](HOMEBREW-REVIEW.md) v0.21 (§4.7 merge gates, §6 risks), [TOOLCHAIN.md](TOOLCHAIN.md) v0.1 (the pinned toolchain slice of §2)
+- **Status:** Design draft, v0.16 — September 2026 (v0.2: companion references refreshed — DESIGN v1.7, PACKAGE-FORMAT v0.6, HOMEBREW-REVIEW v0.9; all internal cross-references re-verified against current section numbering, no content change. v0.3: companion references refreshed — DESIGN v1.8, PACKAGE-FORMAT v0.6, HOMEBREW-REVIEW v0.10; no content change. v0.4: the malware-signature gate — every staged slice is scanned against current definitions before signing-host promotion (new §7.5, §7.1 gate 5, §11 failure row, §12 Phase 1); the scanner is the orchard's own `clamav` core package (ORCHARD-POLICY v0.7 §2); client-side scanning stays the user's decision. v0.5: the gate's genesis protocol — the first `clamav` slice is scanned by a throwaway hand-built scanner with a `bootstrap` receipt, the other four quarantine gates carry full weight, go-live is a transparency-log event, and the packaged scanner sweeps the pre-gate backlog including its own origin slice (§7.5). v0.6: the genesis audit — every fetched source is vendored into the repository tree (§3, §9), VM golden-image genesis and the installer-app archive are specified (§8), and the from-nothing sequence lands as GENESIS.md (§12); companions DESIGN v1.9 / REVIEW v0.11. v0.7: editorial pass — prose revised for directness; no content change. v0.8: prose rewrite throughout — chapters reworded in the project's technical-writing voice; no content change. v0.9: review pass — the three bare §9.4 references now name DESIGN §9.4 explicitly; companion references refreshed; no content change. v0.10: NOMENCLATURE.md vocabulary reference added to the header; companions refreshed to DESIGN v1.15, PACKAGE-FORMAT v0.12, HOMEBREW-REVIEW v0.17; no content change. v0.11: companions refreshed to DESIGN v1.16, PACKAGE-FORMAT v0.12, HOMEBREW-REVIEW v0.18; no content change. v0.12: the project domain lands — the farm coordinator's canonical endpoint is farm.aslice.sh (§7.4) and the transparency dashboard's public home is aslice.sh/dashboard (§10), per the owner's layout decision of paths for humans and subdomains for machines (September 2026); companion references refreshed to DESIGN v1.17, PACKAGE-FORMAT v0.13, HOMEBREW-REVIEW v0.19; no content change. v0.13: graft rehearsal lands in the farm spec — §6.4's PR-gate chain gains the rehearsal gate for graft-bearing binaries (per-OS VM rehearsal, observed behavior diffed against the declared manifest, signing only on exact match — DESIGN v1.19 §12.15), §7.1's quarantine list gains the rehearsal-receipt gate as its sixth check (and §7.5's layer counts follow), §8's VM matrix gains the rehearsal run shape, §3's binary pipeline notes grafts are hash-verified but never run by the harness, and §12's Phase 2 names the rehearsal lane; companions refreshed (DESIGN v1.19, PACKAGE-FORMAT v0.15, HOMEBREW-REVIEW v0.21). v0.14: prose review pass — two throat-clearing connectives removed (§2.1, §7.3); gems kept deliberately ('The coordinator is boring by design', 'the matrix's marginal cost is electricity, not maintenance', 'identical code, zero authority'); companion reference refreshed to DESIGN v1.20; no content change. v0.15: TOOLCHAIN.md v0.1 joins the companions — §2's pinned toolchain slice is specified there; companion references refreshed — DESIGN v1.21, PACKAGE-FORMAT v0.16; no content change. v0.16: topology rewritten for the owned Mac Pro and on-demand MacBook Pro; capability scheduling, batched VM validation, pending gates, independent rebuild limits, and shared-host signing risk made explicit)
+- **Companion to:** [DESIGN.md](DESIGN.md) v1.22 (§4.3 toolchain, §5.1 process layout, §9 distribution, §10 security), [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md) v0.16 (build phases §6), [HOMEBREW-REVIEW.md](HOMEBREW-REVIEW.md) v0.21 (§4.7 merge gates, §6 risks), [TOOLCHAIN.md](TOOLCHAIN.md) v0.2 (the pinned toolchain slice of §2)
 - **Scope:** the build harness (`aslice build`), farm orchestration (`aslice farm`), scheduling, worker trust, the VM test matrix, and the pipeline from build result to published repository.
 - **Vocabulary:** [NOMENCLATURE.md](NOMENCLATURE.md) — project terms, acronyms, and the Homebrew translation table.
 
@@ -9,9 +9,9 @@
 
 ## 1. The founding axiom
 
-**The farm is not a special system.** Every build the project ever runs goes through exactly the machinery a user invokes when they type `aslice build` — no CI-only code path, no farm-secret tooling, no build that cannot be reproduced by a contributor on a 2012 Mac mini in a closet. Three properties follow from this axiom:
+**The farm is not a special system.** Every build the project runs goes through the machinery a user invokes with `aslice build`. Contributors can reproduce a job on a Mac with the required CPU, OS, and resources. Three properties follow from this axiom:
 
-- **Debuggability.** A failing farm build can be reproduced locally with one command. "Works on my machine" is not merely unlikely but eliminated by construction: it is, logically, the same machine.
+- **Debuggability.** A failing farm build can be reproduced locally with one command on a compatible machine, using the same pinned inputs and harness. Host and guest capabilities still matter (§6.1).
 - **Resilience.** A farm outage costs binary *freshness*, never user capability: the farm's pipeline is the user's pipeline, so users can always build from source. (Here lies the structural difference from Homebrew — its bottle pipeline is infrastructure users never touch, and when it stops, bottles stop.)
 - **Trust.** Reproducibility cross-checks (§7) are volunteers running the same harness — no special access, no special build of the tooling.
 
@@ -55,7 +55,7 @@ A job refers to no ambient machine state: the toolchain is a pinned slice, depen
 ```json
 {
   "job_sha256": "…",
-  "agent":      { "id": "mini-2018-2", "key_fp": "…", "os": "12.7", "flavor": "v3" },
+  "agent":      { "id": "mbp-2015", "key_fp": "…", "os": "12.7", "flavor": "v3" },
   "slice":      { "digest": "sha256:…", "size": 18112331 },
   "abi_report": "abi/ffmpeg-7.1.0-v3.json",
   "log":        "logs/ffmpeg-7.1.0-v3.jsonl.gz",
@@ -109,19 +109,24 @@ DESIGN §9.3 lists the hardware; here each machine is given its role:
 
 | Machine | Role |
 |---|---|
-| 2–4 × Mac mini 2018 (Coffee Lake) | `v3` builders; VM hosts for the 10.11–12 guest matrix; one doubles as coordinator |
-| Mac Pro 2013 / Mac mini 2012 (Ivy Bridge) | `v2` builder + tester |
-| Core 2 Duo (when obtainable) | `v1` smoke tester — tests only, never builds |
-| Signing host (mini, network-restricted) | verification gate + slice signing; YubiKey-custodied keys (DESIGN §10.2) |
-| Any user's Mac | optional evidence builder (§7.4) — reproduction jobs only |
+| Owned 2013 Mac Pro (trashcan) | Primary production `v1`/`v2` builder and tester; coordinator; compatible OS-test VMs; restricted signing VM |
+| Owned 2015 MacBook Pro | On-demand `v3` builder and tester; additional `v1`/`v2` builds and independent rebuild checks; compatible `v3` OS-test guests |
 
-The coordinator is boring by design: one process, a SQLite queue, an orchard checkout. It can live on a mini or a $5 VPS, and its entire state can be reconstructed from orchard git history plus the result store. The GitHub Actions integration is a thin adapter — a self-hosted runner job that literally executes `aslice farm agent --once` — so the system of record never depends on Actions semantics (DESIGN §9.2: hosted CI is a bonus layer, never load-bearing).
+No new hardware purchase is required by this topology. CPU configuration, RAM, storage, and build/guest concurrency remain unspecified until measured during bring-up. Core 2 Duo smoke testing is optional future coverage, outside the owned inventory. Community Macs may supply reproduction evidence (§7.4); they are not assumed capacity.
+
+The coordinator is boring by design: one process on the Mac Pro, a SQLite queue, an orchard checkout. Its state can be reconstructed from orchard git history plus the result store. The GitHub Actions integration is a thin adapter — a self-hosted runner job that executes `aslice farm agent --once` — so the system of record never depends on Actions semantics (DESIGN §9.2).
+
+The **signing host** named throughout this document and its companions is a restricted VM on the Mac Pro, not a separate physical machine. It performs verification and signing, with only the network access needed for staging, definitions, and publication. Repository credentials, online keys, and access to signing tokens are unavailable to build guests. Root custody remains offline under KEY-RUNBOOK. This VM shares a physical host with builds and the coordinator; compromise of that host or its hypervisor can compromise signing isolation (§7.2).
 
 ## 6. Scheduling: plan, lanes, leases
 
 ### 6.1 The build plan
 
 `aslice farm plan` computes the work: it diffs the orchard in git, expands each affected formula into jobs across its declared matrix — every flavor its `min_os` allows, with smoke tests for each OS release in `[min_os, 12]` — and topologically orders the resulting DAG.
+
+Assignment requires detected CPU features, OS support for those features, validated guest capabilities, and available resources. Within the owned farm, complete `v3` jobs run exclusively on the laptop. A compiler can emit `v3` machine code on a weaker CPU, but configure probes, generated build tools, dependencies, and tests may execute it during the same job. Code generation alone does not establish that the package can build on the Mac Pro. Its VMs cannot supply the missing `v3` execution capability.
+
+When the laptop is unavailable, `v3` work stays queued; eligible `v1`/`v2` jobs continue on the Mac Pro. Unsupported flavors are never assigned or silently substituted. Required OS/flavor tests and independent rebuilds without a capable worker remain pending. Capacity shortages do not narrow a formula's declared support or waive a gate. Resource values in example job manifests (§2.1) are illustrative, not measured capacity or concurrency commitments.
 
 A provider change triggers the **ABI gate** (REVIEW §4.7): the old and new provider slices are scan-diffed, and on regression the dependent revision-bump jobs are generated *into the same plan*. The index snapshot that eventually lands therefore contains the provider and its rebuilt dependents **together** — the broken-window state Homebrew users know ("everything's broken until the rebuilds land") is structurally absent, because the snapshot is atomic.
 
@@ -154,11 +159,11 @@ Every agent result lands in an **untrusted staging area**, and nothing from stag
 5. the slice passes the malware-signature gate (§7.5) — scanned against current definitions, verdict recorded in its provenance;
 6. for graft-bearing slices, the per-OS rehearsal receipts show exact matches against the declared behavior manifest, and the manifest itself is signed at promotion (§6.4) — no exact receipt, no promotion.
 
-Only then: sign, and feed `aslice repo build` (DESIGN §9.6).
+Missing required tests or independent rebuilds leave promotion pending; unavailable capacity is never a pass. Only then: sign, and feed `aslice repo build` (DESIGN §9.6).
 
 ### 7.2 Agents are expendable
 
-An agent holds exactly four things: the coordinator's public key (job manifests are signed, and unsigned or unknown jobs are refused), a per-agent Ed25519 identity for *result* signing (evidence, not authority), a dedicated `_aslicefarm` user, and Seatbelt phase profiles. It holds **no credentials** for the repository, the signing host, or anything else. The worst a fully rooted agent can do is delay the queue and produce garbage that dies in quarantine; it cannot ship a bad slice.
+An agent holds the coordinator's public key (unsigned or unknown jobs are refused), a per-agent Ed25519 identity for result signing, a dedicated `_aslicefarm` user, and Seatbelt phase profiles. Build guests hold no repository or signing credentials and have no access to signing tokens. A compromised guest can falsify evidence or disrupt jobs; quarantine and independent rebuilds reduce that risk but do not prove arbitrary package code safe. A compromise that reaches the shared Mac Pro host or hypervisor can defeat the signing VM's isolation. Treat that as a signing incident under KEY-RUNBOOK §4, not merely a failed build.
 
 Builds of third-party-orchard PRs are hostile-adjacent input by definition, so agents run the whole job inside a fresh VM snapshot, reverted afterwards (§8). Seatbelt alone contains *builds*; PR review should not double as an exploit-bounty program for the farm.
 
@@ -172,6 +177,8 @@ Not every package is bit-reproducible yet, and the record must say so. Each form
 | `normalized` | matches after stripping known-nondeterministic sections (e.g. Mach-O Code Directory hashes, embedded UUIDs) | gate on the normalized comparison |
 | `unreproducible` | known divergence, source recorded in the formula | tracked as debt; class upgrades happen only by orchard PR with evidence |
 
+The two owned machines can cross-check `v1`/`v2` jobs on independent physical builders when both are available. They provide only one physical `v3` builder. A second VM or repeated run on the laptop is not an independent physical rebuild. Where the class or package policy requires an independent `v3` rebuild, promotion remains pending until a capable independent evidence builder is available; neither the requirement nor the class is weakened to fit capacity. This also applies to the scanner genesis requirement (§7.5).
+
 ### 7.4 Community builders — the user's machine, enlisted safely
 
 The harness runs anywhere — so anyone can enroll a spare Mac:
@@ -181,7 +188,7 @@ aslice farm enroll --project https://farm.aslice.sh   # issues agent key, pins c
 aslice farm agent --reproduce-only                     # verification jobs only, forever
 ```
 
-A community agent receives only `repro_of` jobs: rebuild a published job manifest and compare digests. The results are **pure evidence** — agreement raises a slice's reproducibility confidence (feeding the `reproducible: true` badge of DESIGN §9.5); disagreement files an automatic investigation event. A community agent is never asked for, and never given, the ability to produce a served artifact.
+A community agent receives only `repro_of` jobs: rebuild a staged or published job manifest and compare digests. Staged jobs allow required independent evidence to arrive before promotion (§7.3), including scanner genesis (§7.5). The results are **pure evidence** — agreement raises a slice's reproducibility confidence (feeding the `reproducible: true` badge of DESIGN §9.5); disagreement files an automatic investigation event. A community agent is never asked for, and never given, the ability to produce a served artifact.
 
 The project gains a distributed rebuild network on the very machines the software targets; the volunteer gains dashboard credit and a warm Mac mini. This is "the farm must be runnable on a user's machine" answered at the trust level: **identical code, zero authority.**
 
@@ -201,12 +208,14 @@ Every staged slice is scanned against current ClamAV definitions before the sign
 
 ## 8. The VM test matrix
 
-Builds happen on the newest build host against the oldest SDK (DESIGN §4.3); **tests run on the real OS.** The seven-guest matrix (10.11 → 12) is hosted on the minis under VMware Fusion or Parallels:
+Builds use the pinned toolchain and archived SDK on a capable worker (DESIGN §4.3); **tests run on the claimed OS and flavor.** The target matrix has seven releases: 10.11, 10.12, 10.13, 10.14, 10.15, 11, and 12. Run it in batches on the two owned Macs, with concurrency set only after measuring resources. Seven releases does not mean seven simultaneous guests.
+
+Bring-up must validate the chosen hypervisor version, host OS, each guest's boot and test behavior, and CPU features visible inside it. VMware Fusion or Parallels are candidates, not verified configurations. The Mac Pro supplies compatible `v1`/`v2` guests; `v3` guests require the laptop and validated feature exposure. A guest cannot add CPU instructions the physical host lacks. Coverage remains planned until recorded by successful runs; an unavailable required OS/flavor combination blocks its gate.
 
 - Each release has a golden image, snapshotted clean. A test run is: revert → boot → mount a read-only shared folder containing the staged slice → `aslice farm agent --vm-guest` executes `tests.star` → structured results out → revert. No guest has network beyond the coordinator wire; no state survives between runs.
 - **Image genesis is documented and archived.** Per release: the Apple installer app → `createinstallmedia` (or the virtualization app's new-VM flow) → minimal install → golden snapshot. The installer apps are archived, with their sha256, in the farm's installer manifest: Apple can and does pull old installers, and the matrix must be re-creatable from nothing but the archive. Installers, images, and manifest are in the never-lose set (GENESIS.md §3).
-- Because the platform is frozen, images are built once and cached forever; the matrix's marginal cost is electricity, not maintenance. (This is precisely the property GitHub's runner retirement destroys for Homebrew and preserves for aslice.)
-- `v1` tests also run on real Core 2 Duo hardware when one is attached: VMs emulate the OS, not silicon errata.
+- Archive validated images and their host/hypervisor requirements; revalidate after host or virtualization changes. Image retention does not establish continuing compatibility.
+- Real Core 2 Duo `v1` smoke testing is optional future coverage. Neither owned Mac nor an OS VM establishes coverage of that older silicon.
 - **Graft rehearsal rides the same matrix.** A graft-bearing install is rehearsed once per OS release the artifact targets: revert → boot → install under instrumentation → diff observed behavior against the declared behavior manifest → revert (§6.4). The no-network guest rule doubles as the graft's first exam question — a manifest declaring no network access rehearses with the wire off.
 
 ## 9. From result to repository
@@ -219,7 +228,7 @@ agent → staging (untrusted)
       → dashboard update
 ```
 
-The index snapshot is published atomically with its dependent rebuilds (§6.1). Retention follows REVIEW §6: snapshots ≤ 1 year are kept whole, monthly ones forever — and that is what makes historical installs (REVIEW §4.14) true.
+The index snapshot is published atomically with its dependent rebuilds (§6.1). Missing required flavor builds, tests, rehearsals, or independent rebuilds keep the affected publication set pending; laptop absence never permits a partial provider/dependent update. Retention follows REVIEW §6: snapshots ≤ 1 year are kept whole, monthly ones forever — and that is what makes historical installs (REVIEW §4.14) true.
 
 The same publish deposits **every source artifact the build fetched** into the tree's `blobs/sha256/` area: the vendored-source archive (DESIGN §9.6). Upstreams delete, reshuffle, and re-roll tarballs constantly. An orchard that vendors its sources never notices, and a from-nothing re-standup never starves (GENESIS.md §2).
 
@@ -236,7 +245,11 @@ No user telemetry exists anywhere in this system (DESIGN §2.2 N7). What the far
 | Signing host down | Repository freezes at the last good snapshot — clients unaffected, freshness pauses |
 | Poisoned/faulty result | Quarantined forever; digest mismatch or class violation files an investigation event |
 | Scanner detection (§7.5) | Slice quarantined permanently pending maintainer review; investigation event filed; promotion pauses if definitions are stale |
-| VM host down | Its guests' tests queue; builds continue (tests are the gate, not the build) |
+| Laptop unavailable | `v3` builds/tests and required laptop rebuild checks queue; eligible `v1`/`v2` work continues on the Mac Pro |
+| Mac Pro down | Primary builds, coordinator, its guests, and signing stop together; recover coordinator state before the laptop can take queued eligible builds; publication waits for signing recovery |
+| Required guest or CPU flavor unavailable | Affected work remains pending; no flavor substitution or assumed test pass |
+| Required independent rebuild unavailable | Promotion waits for a capable independent builder, including for `v3` |
+| VM host down | Its guests' tests queue; only work on surviving capable workers can continue; publication still requires all gates |
 | Disk pressure | Watermarks pause agents; scheduled farm-side `clean` sweeps staging and caches |
 | GitHub Actions changes | The adapter is disposable; the standalone coordinator is the system of record |
 
@@ -245,4 +258,4 @@ No user telemetry exists anywhere in this system (DESIGN §2.2 N7). What the far
 - **Phase 0:** the harness skeleton — `aslice build` local mode with the full sandboxed pipeline; toolchain-as-slice; job/result schemas; `farm plan`. The from-nothing sequence (GENESIS.md §1) is executed end-to-end and written down as it runs: the project must be able to stand up from nothing, repeatedly, before it has users.
 - **Phase 1:** coordinator + agents + leases; Actions adapter; VM matrix bring-up; PR gates for the core orchard; staging → quarantine → signing-host pipeline including the §7.5 malware-signature gate, bootstrapped per its genesis protocol, with the `clamav` core package the gate runs on.
 - **Phase 2:** ABI-gate dependent-rebuild cascades; vendor-repackaging lane including graft rehearsal (§6.4); backfill lane with DESIGN §9.4 priorities; public dashboard.
-- **Phase 3:** two-builder cross-checks for core; community evidence builders (`enroll`, `--reproduce-only`); transparency log; reproducibility class upgrades as a standing program.
+- **Phase 3:** two-machine `v1`/`v2` cross-checks for core; capable independent evidence builders for required `v3` rebuilds; community evidence builders (`enroll`, `--reproduce-only`); transparency log; reproducibility class upgrades as a standing program.

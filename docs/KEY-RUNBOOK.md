@@ -15,13 +15,15 @@ Four rules govern everything below, and no procedure in this document suspends t
 
 ## 1. Key inventory
 
+Here, **signing host** means the restricted VM on the owned 2013 Mac Pro (BUILD-INFRA §5). Build guests have no signing credentials or token access; root custody remains offline. The coordinator and builders share the physical Mac Pro with this VM, so host or hypervisor compromise can compromise signing isolation and triggers the incident procedure (§4). Recreating the signing VM requires the same restore drill as a new signing host (§7).
+
 | Key | Scheme | Custody | Lifetime | What a compromise can do |
 |---|---|---|---|---|
 | **TUF root** | Ed25519, 3-of-5 threshold | 5 YubiKeys, 5 founding maintainers, geographically distributed, offline | Years (rotate on custodian change, compromise, or drill failure) | Everything. This is the keys to the kingdom — hence offline, thresholded, and slow to use by design |
 | **TUF targets** | Ed25519 | Signing host, YubiKey | ~1 year, or on suspicion | Sign index metadata naming malicious slices — mitigated by minisign per-slice verification and the transparency log |
 | **TUF snapshot + timestamp** | Ed25519 | Signing host, online (the only online keys) | Hours–days, rotated automatically | Freeze or rollback attacks for the key's lifetime — short-lived so the blast radius self-heals |
 | **Slice-signing (minisign)** | Ed25519 (minisign-compatible) | Signing host, YubiKey | ~1 year, or on suspicion | Sign individual slices — caught by the transparency log on next publish; clients reject unknown signers |
-| **Coordinator job-signing** | Ed25519 | Coordinator host | ~6 months | Inject build jobs into the farm — results die in quarantine without signing-host promotion (BUILD-INFRA §7.1), so this buys noise, not compromise |
+| **Coordinator job-signing** | Ed25519 | Coordinator host | ~6 months | Inject build jobs into the farm — results still require quarantine gates (BUILD-INFRA §7.1); compromise of the shared host also threatens signing isolation |
 | **Per-agent identities** | Ed25519 | Each agent, generated at `farm enroll` | Until revoked | Forge *evidence* (build results). Never authority: agents cannot ship slices by construction (BUILD-INFRA §7.2) |
 | **Security-contact PGP** | OpenPGP, modern algorithms only | Project owner, hardware token | ~2 years | Intercept/spoof vulnerability reports — bad, recoverable, and cross-signed into the repo so tampering shows |
 
@@ -112,3 +114,5 @@ This path will be embarrassing if it ever happens. It is written down so that it
 ---
 
 *History: September 2026 — editorial pass: prose revised for directness; no procedural changes. September 2026 — prose rewrite throughout: the runbook reworded in the project's technical-writing voice; no procedural changes. September 2026 — review pass: the DESIGN §10.2 quotation restored to its current wording; no procedural changes. September 2026 — NOMENCLATURE.md vocabulary pointer added; no procedural changes. September 2026 — prose review pass: the opening's purpose sentence dropped its hedge ('can be stated in' → 'is'); gems kept deliberately ('a procedure, not an improvisation', 'Silence during a key event is how trust dies', 'only embarrassing'); no procedural changes.*
+
+*History: September 2026 — signing host mapped to the restricted Mac Pro VM; shared-host compromise and VM restore obligations clarified.*

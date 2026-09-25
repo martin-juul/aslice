@@ -10,11 +10,13 @@ One standing rule governs all of this, inherited from the toolchain genesis, the
 
 ## 1. The from-nothing sequence
 
-The sequence below is executed in the order given. Steps 1–5 need one Intel Mac running the newest Intel macOS available, Apple's Command Line Tools, this repository, and the root custodians — and nothing else: no aslice, no orchard, no farm, no network services of ours.
+The sequence below is a runbook, not a record of completed bring-up. Use the owned 2013 Mac Pro for the initial `v1` bootstrap and `v1`/`v2` seed builds, with Monterey as the proposed baseline. Validate the host Clang, CLT, archived SDK, and toolchain source versions together first (TOOLCHAIN §10). Bring the owned 2015 MacBook Pro online for complete `v3` jobs and independent `v1`/`v2` rebuilds when required. No newer Intel macOS or additional machine purchase is assumed.
+
+The initial inputs are Apple's compatible Command Line Tools, archived SDKs, this repository, upstream sources, and the root custodians. Set up the restricted signing VM on the Mac Pro before signing the bootstrap binary or repository; build guests receive no signing credentials or token access (BUILD-INFRA §5, §7.2). Required tests and independent rebuilds remain gates even during bring-up, except for explicitly documented genesis exceptions.
 
 | # | Step | Produces | Spec |
 |---|---|---|---|
-| 0 | **Preconditions** — an Intel Mac (the stage0 host), Apple CLT, the spec repo, ≥4 of 5 root custodians | a clean room | — |
+| 0 | **Preconditions** — owned Mac Pro with validated Monterey bootstrap tools, archived SDK, spec repo, ≥4 of 5 root custodians; prepare restricted signing VM and verify credential isolation before signing | bootstrap and signing environments | TOOLCHAIN §10, BUILD-INFRA §5 |
 | 1 | **Root key ceremony** — generate the 3-of-5 threshold root on YubiKeys, sign root metadata, publish fingerprints to three placements (repo, second transport, installer pin) | TUF root | KEY-RUNBOOK §2 |
 | 2 | **Toolchain genesis** — build `aslice-toolchain` with the host Clang against the oldest archived SDK, then rebuild the toolchain *with itself*; archive both stages | stage0 + stage1 toolchain | TOOLCHAIN.md §10, DESIGN §4.3 |
 | 3 | **Build aslice** with the stage1 toolchain; minisign-sign the binary, Apple-notarize it | the bootstrap binary | DESIGN §10.3 |
@@ -22,7 +24,7 @@ The sequence below is executed in the order given. Steps 1–5 need one Intel Ma
 | 5 | **Orchard seed** — build the ~30 core packages (curl, git, openssl, python, zstd, cmake, ninja, …) on real hardware; every fetched source is vendored into the tree as it is downloaded | the seed slices + the source archive's first generation | DESIGN §14, BUILD-INFRA §3 |
 | 6 | **First repository** — `aslice repo build / sign / publish` on the signing host; the transparency log's genesis entry references the ceremony hash from step 1 | snapshot #1 | DESIGN §9.6 |
 | 7 | **Installer published** — bootstrap binary + signed checksums on both transports (Release asset + Pages) | the curlable first step | DESIGN §10.3 |
-| 8 | **Farm stand-up** — agents enroll, VM matrix images built per the §8 procedure, quarantine gates live; `clamav` per its genesis protocol, then the backlog sweep | the system of record | BUILD-INFRA §5–§8, §7.5 |
+| 8 | **Farm stand-up** — coordinator and signing VM on Mac Pro, laptop agent on demand; measure resources and CPU/guest capabilities, validate OS matrix in batches per BUILD-INFRA §8, quarantine gates live; `clamav` per its genesis protocol, then the backlog sweep | validated capacity and coverage records; pending work for unavailable combinations | BUILD-INFRA §5–§8, §7.5 |
 | 9 | **Acceptance** — a wiped 10.11 VM runs the installer and installs from snapshot #1. The whole chain, end to end, or it didn't happen | a living project | §5 |
 
 The order is load-bearing, and it deserves to be stated as a litany: keys before metadata, toolchain before manager, manager before orchard, orchard before repository, repository before installer — all of it before the first user.
@@ -35,7 +37,7 @@ The inventory below lists every "what makes the thing that makes the thing" pair
 |---|---|---|---|
 | TUF root metadata | 3-of-5 custodian ceremony | air-gapped ceremony, three placements, transparency-log genesis | KEY-RUNBOOK §2 |
 | `aslice` bootstrap binary | the stage1 toolchain | toolchain genesis (below); signed + notarized; reproducible rebuild is a Phase 3 cross-check starting with aslice itself | DESIGN §10.3, §4.3 |
-| `aslice-toolchain` | Apple's host Clang (stage0), then itself (stage1) | newest Intel macOS + CLT + archived SDK; both stages archived; per-OS workarounds in the manifest | TOOLCHAIN.md, DESIGN §4.3, §14 |
+| `aslice-toolchain` | Apple's host Clang (stage0), then itself (stage1) | proposed Monterey baseline on owned Mac Pro, validated CLT + archived SDK + toolchain recipe; both stages archived; per-OS workarounds in the manifest | TOOLCHAIN.md, DESIGN §4.3, §14 |
 | Archived SDKs | Apple's Xcode releases | cached on the farm, in the never-lose set (§3) | DESIGN §15 |
 | TLS for aslice's own fetches | compiled-in TLS stack + CA bundle | `aslice-fetch` never touches the system store — the rotten-roots problem is designed out, not bootstrapped around | DESIGN §4.1 |
 | The installer's own fetch | system curl — **on a machine whose TLS may be dead** | HTTPS first; on failure, plain HTTP for the *same hash-pinned artifacts*, with a prominent notice — the pins, signature, and TUF root are the trust, the transport never was | DESIGN §10.3 |
@@ -46,7 +48,7 @@ The inventory below lists every "what makes the thing that makes the thing" pair
 | Source tarballs | upstreams — which disappear | **every fetched source is vendored** into the tree's `blobs/sha256/`; fetch order is upstream → formula `mirrors` → the repository's own blob area, all three under the same pinned sha256 — the archive is a fallback, never a new trust path | DESIGN §9.6, BUILD-INFRA §3 |
 | Upstream PGP keys | upstreams | fingerprint pinned in the formula at authoring time (TOFU with the pin recorded); key substitution fails closed | PACKAGE-FORMAT §3 |
 | VM matrix golden images | Apple's 10.11–12 installers | per-release build procedure; installer apps archived with sha256 in the farm's installer manifest — Apple pulls old installers, we don't notice | BUILD-INFRA §8 |
-| Coordinator / signing host | commodity hardware | coordinator: boring by design, state reconstructible; signing host: rebuilt from the ceremony archive, restore drill before it may sign | BUILD-INFRA §5, KEY-RUNBOOK §7 |
+| Coordinator / signing host | owned Mac Pro / restricted VM on that Mac Pro | coordinator state reconstructible; signing VM restored per ceremony archive and drilled before signing; shared-host compromise can defeat isolation | BUILD-INFRA §5, KEY-RUNBOOK §7 |
 | GitHub (all of it) | a vendor | the repository tree is trivially mirrorable; mirrors are first-class config; hosted CI is a disposable bonus layer, never load-bearing | DESIGN §9.1, §9.2 |
 
 ## 3. The never-lose set
@@ -79,3 +81,5 @@ Once a year, on a clean machine, using **only** the never-lose set, run §1 end-
 ---
 
 *History: v0.1 (September 2026) — initial runbook, from the genesis audit that followed the §7.5 scanner-genesis discussion: collected the documented genesis paths (toolchain, root ceremony, scanner, bootstrap TLS), filled the gaps it found (installer TLS-dead fallback in DESIGN v1.9 §10.3; vendored-source archive in DESIGN v1.9 §9.6 / BUILD-INFRA v0.6 §3 / REPOSITORIES v0.8 §2; VM-image genesis and the installer-app archive in BUILD-INFRA v0.6 §8), and wrote the never-lose set and the annual re-standup drill down as obligations rather than intentions. v0.2 (September 2026) — editorial pass: prose revised for directness; no procedural changes. v0.3 (September 2026) — prose rewrite throughout: the runbook reworded in the project's technical-writing voice; no procedural changes. v0.4 (September 2026) — NOMENCLATURE.md vocabulary pointer added; no procedural changes. v0.5 (September 2026) — prose review pass: the opening's motivation sentence dropped its hedge ('can be stated in' → 'is'); gems kept deliberately ('a bad week, not a death', 'the checklist that keeps §1 honest', 'documented exceptions with receipts, never silent gaps'); no procedural changes. v0.6 (September 2026) — TOOLCHAIN.md references added to §1 step 2 and the §2 toolchain row; no procedural changes.*
+
+*History: v0.7 (September 2026) — align bootstrap, signing VM preparation, and farm bring-up with the two owned Macs; proposed Monterey baseline and measured guest coverage replace assumed capacity. Procedures remain unvalidated until executed.*
