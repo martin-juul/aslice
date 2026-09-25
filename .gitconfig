@@ -1,0 +1,47 @@
+[init]
+    defaultBranch = main
+
+[core]
+    # Never let Git convert line endings implicitly — this is what breaks
+    # files when the same repo is checked out on Linux/macOS/Windows.
+    # Use .gitattributes (below) to control endings per file type instead.
+    autocrlf = false
+    eol = native
+    # Windows-only: allow paths >260 chars (harmless elsewhere)
+    longpaths = true
+    # A C++-friendly whitespace check: flags trailing spaces and
+    # indent-with-non-tab issues; adjust tabwidth to your project's style
+    whitespace = trailing-space,space-before-tab,indent-with-non-tab,tabwidth=4
+    editor = vim
+
+[fetch]
+    prune = true
+
+[pull]
+    # Avoids pointless merge commits when pulling local work
+    rebase = true
+
+[push]
+    default = simple
+    autoSetupRemote = true
+
+[merge]
+    conflictstyle = zdiff3   ; much easier to read for big C++ conflicts
+
+[diff]
+    algorithm = histogram    ; better diffs for moved/changed code blocks
+
+[apply]
+    # Don't let Windows patch files flip endings during am/rebase
+    whitespace = fix
+
+[alias]
+    st  = status -sb
+    co  = checkout
+    br  = branch -vv
+    ci  = commit
+    unstage = reset HEAD --
+    last = log -1 --stat
+    lg  = log --oneline --graph --decorate --all
+    df  = diff --stat
+    fixup = commit --amend --no-edit
