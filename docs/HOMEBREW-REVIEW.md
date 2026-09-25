@@ -32,7 +32,7 @@ None of these require rearchitecting anything. All of them are cheaper to spec n
 |---|---|---|---|
 | Install-time package code | `post_install` Ruby deprecated in 7.0, migrating to `*_steps` DSL; third-party taps still arbitrary Ruby, now gated by tap trust (6.0) — trust prompts, not elimination | **Zero undeclared** package code at binary install, from day one, for every orchard — vendor installer scripts run only as declared, approved, sandboxed, rehearsed grafts (DESIGN v1.19 §12.15) | Ahead — aslice starts where Homebrew converges |
 | Binary provenance | Sigstore/GitHub attestations; verification **opt-in** (`HOMEBREW_VERIFY_ATTESTATIONS`, default off), depends on the `gh` CLI and authenticated GitHub API; backfill waterfall for pre-2024 bottles | minisign/Ed25519 signatures verified **before extraction on every slice**, no external tool, plus SLSA-style provenance in the manifest | Ahead — always-on, self-contained |
-| Index/metadata integrity | JWS-signed JSON API (a real improvement; signed metadata) | Full **TUF**: initially 1-of-1 offline root, offline targets/snapshot keys, online timestamp key — rollback, freeze, and mix-and-match protection | Ahead |
+| Index/metadata integrity | JWS-signed JSON API (a real improvement; signed metadata) | Full **TUF**: initially 1-of-1 offline root, dedicated networked targets/snapshot signer, publisher timestamp key — rollback, freeze, and mix-and-match protection | Ahead |
 | Feature variants/flags | Removed from `homebrew-core` in 2019; options live only in third-party taps and break bottle assumptions | ABI-aware variant model: optimization never enters identity; `abi = true` variants do | Ahead — the founding insight |
 | Rollback | None; old kegs linger until `cleanup`, no atomic switch | Generations with atomic `rename(2)` swap; `rollback`, `switch-generation` | Ahead |
 | µarch targeting | None (one build per OS/arch) | v1/v2/v3 flavors, solver-enforced | Ahead |
@@ -240,7 +240,7 @@ Semantics: **active → deprecated** (installs warn, `audit`/`info` surface it) 
 2. Sandboxed build on **every declared flavor** (v1/v2/v3) at the formula's `min_os`, plus smoke-run on **each OS release in `[min_os, 12]`** via the farm VMs (tests can be flavor/OS-skippable where genuinely irrelevant, e.g., pure data packages).
 3. `tests.star` passes on at least one OS × flavor (core) — already policy, make it mechanical.
 4. **ABI gate for provider bumps:** if the PR changes a library's version/revision, CI runs the ABI scan diff between old and new slice; if `compatibility_version` or the symbol fingerprint regresses, the PR must either bump the soname-bearing version, or mark and schedule **dependent rebuilds** (which the farm does automatically on merge, publishing dependents' revision bumps in the same index snapshot — so clients never see the window Homebrew users know as "everything's broken until the rebuilds land").
-5. Slice and snapshot signing happen only post-merge, on the offline release Pi; the publisher verifies and atomically publishes the returned batch (KEY-RUNBOOK §2.1).
+5. Slice and snapshot signing happen automatically only after owner-approved merge and required gates, on the dedicated networked release Pi; the publisher verifies and atomically publishes the returned candidate (KEY-RUNBOOK §2.1).
 
 ### 4.8 P1 — Discovery: the public web index
 

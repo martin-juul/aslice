@@ -56,9 +56,9 @@ MacPorts and pkgsrc patches for 10.11-era portability are fair game — credit t
 
 ## The review process
 
-Merge gates are mechanical (ORCHARD-POLICY §10): lint → sandboxed build on every declared flavor → smoke-run on every OS in `[min_os, 12]` → ABI gate for provider bumps → graft rehearsal for graft-bearing binaries, with dependent rebuilds published in the same atomic snapshot. Signing happens post-merge in an offline release batch; orchard review grants no signing authority. The project owner operates the separate release Pi, and the publisher verifies the returned bundle before publication (KEY-RUNBOOK §2.1).
+Merge gates are mechanical (ORCHARD-POLICY §10): lint → sandboxed build on every declared flavor → smoke-run on every OS in `[min_os, 12]` → ABI gate for provider bumps → graft rehearsal for graft-bearing binaries, with dependent rebuilds published in the same atomic snapshot. Malware checks and required independent rebuilds remain publication gates; missing capacity leaves releases pending. During single-owner launch, the owner’s merge is the final human release approval. The publisher automatically delivers an authenticated candidate to the dedicated networked release Pi, verifies returned signatures, and activates the complete release atomically (KEY-RUNBOOK §2.1). Clients discover it at metadata refresh; publication does not install it.
 
-Review load is tiered: patch bumps need any maintainer; major bumps and new extended packages need any maintainer with gates green; new core packages, versioned lineages, `abi = true` variant additions, system-software and system-patch packages, and policy changes need two maintainers, one not the author (§17). Decisions run on lazy consensus — silence in a reasonable window is assent, and process lawyering is not a sport we play.
+Owner approval applies to all changes during single-owner launch, including new core packages, versioned lineages, `abi = true` variants, system-software and system-patch packages, and policy changes. The owner may approve their own changes; second-reviewer and maintainer-vote requirements are superseded for this phase (ORCHARD-POLICY §17). Independent maintainers can help review; multi-party governance remains a future transition. Automated gates cannot be waived.
 
 ## Documentation style
 

@@ -344,7 +344,7 @@ aslice orchard tombstone ffmpeg      # the formula leaves HEAD; the index tombst
 aslice orchard undeprecate ffmpeg    # rescind
 ```
 
-Dates are validated in order, a `renamed` deprecation refuses to ship without a resolving `replacement`, and a tombstone refuses a name that still has dependents. The security fast path — straight to disabled, by maintainer vote — is `deprecate --reason security --disable-date <today>`: the vote happens in the PR, and the command keeps the mechanics honest.
+Dates are validated in order, a `renamed` deprecation refuses to ship without a resolving `replacement`, and a tombstone refuses a name that still has dependents. The security fast path — straight to disabled, by owner approval during single-owner launch — is `deprecate --reason security --disable-date <today>`: the approval is recorded in the PR, and the command keeps the mechanics honest.
 
 **Health.** `aslice orchard doctor` is the orchard-side counterpart of the machine doctor: lint clean across the tree, every core formula carrying `tests.star` and a working `[livecheck]`, deprecation chains coherent, patches documented, maintainers named — each finding with a stable check ID and the remedy spelled out, `--json` for scripts. `aslice orchard lint` is the tree-wide version of the per-formula lint you already run. `aslice orchard freshness` runs every livecheck and ranks packages by days-behind-upstream, worst first — the number the farm dashboard publishes (ORCHARD-POLICY §9), so you see the dashboard's input, not its summary.
 

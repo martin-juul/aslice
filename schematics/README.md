@@ -29,6 +29,8 @@ One rule picks the language: **the schema is written in the file's own family.**
 
 The TUF schematics under `json/tuf/` are local copies derived from the upstream TUF 1.0 specification, shipped so a validator never has to fetch a schema to check repository metadata. Where they and the upstream spec disagree, upstream wins and the copy is a bug — report it.
 
+Automatic official publication ([KEY-RUNBOOK §2.1](../docs/KEY-RUNBOOK.md#21-automatic-orchard-to-client-publication)) changes orchestration, not these schemas. Merge authorization, gate receipts, candidate/base identity, and durable signing state are internal records whose service formats remain to be implemented; do not add them as top-level TUF or index fields. Renewals use the existing TUF `version` and `expires` fields, snapshot metadata bindings, and timestamp's `snapshot.json` reference. Unchanged-content renewal preserves target bytes, including the index: its `snapshot_version` is a format version, not a TUF release counter. Ed25519/minisign signature formats are unchanged. Schema validation alone cannot verify authorization, freshness, atomic publication, or signing-state consistency; those require the runbook's service checks and acceptance drills.
+
 ## Authority and precedence
 
 The prose specifications in `docs/` are authoritative for semantics; the schematics here are the machine-checkable structural companion. If a schematic and its prose specification disagree, the disagreement is a bug — file an issue against whichever is wrong. This mirrors ORCHARD-POLICY.md §1's mechanism/policy split.

@@ -62,7 +62,7 @@ Pre-1.0: **the latest release only**. Self-update is a first-class, rollback-com
 
 ## If a key is compromised
 
-That is our incident, not your report — but it is handled in the open, per **[docs/KEY-RUNBOOK.md](docs/KEY-RUNBOOK.md)**. Initial releases trust one operator: a 1-of-1 root on an offline Pi, separate release keys on a second offline Pi, encrypted offline backups, and only the repository timestamp key online. Metadata expires; stopping publication does not instantly revoke client trust. Recovery and rotation drills are required before launch. Independent custodians and hardware tokens are future options, not launch prerequisites.
+That is our incident, not your report — but it is handled in the open, per **[docs/KEY-RUNBOOK.md](docs/KEY-RUNBOOK.md)**. Initial releases trust one operator: owner merge authorizes automatic release processing after all required gates. A 1-of-1 root stays on an offline Pi; a dedicated networked Pi holds distinct targets, snapshot, and slice-signing keys, while the Mac Pro publisher holds publication credentials and the timestamp key. Online signer compromise can authorize malicious releases. Offline root custody supports authority replacement but cannot undo installations or make compromised content trustworthy. Metadata expires; stopping publication does not instantly revoke client trust. Encrypted offline backups, recovery and rotation drills remain launch requirements. Independent custodians and hardware tokens are future options, not launch prerequisites. This is the specified design; the services and drills remain implementation work.
 
 ---
 
