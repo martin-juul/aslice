@@ -56,7 +56,7 @@ MacPorts and pkgsrc patches for 10.11-era portability are fair game — credit t
 
 ## The review process
 
-Merge gates are mechanical (ORCHARD-POLICY §10): lint → sandboxed build on every declared flavor → smoke-run on every OS in `[min_os, 12]` → ABI gate for provider bumps → graft rehearsal for graft-bearing binaries, with dependent rebuilds published in the same atomic snapshot. Signing happens post-merge on the signing host; **maintainers never hold signing keys**, so a green PR is the whole job.
+Merge gates are mechanical (ORCHARD-POLICY §10): lint → sandboxed build on every declared flavor → smoke-run on every OS in `[min_os, 12]` → ABI gate for provider bumps → graft rehearsal for graft-bearing binaries, with dependent rebuilds published in the same atomic snapshot. Signing happens post-merge in an offline release batch; orchard review grants no signing authority. The project owner operates the separate release Pi, and the publisher verifies the returned bundle before publication (KEY-RUNBOOK §2.1).
 
 Review load is tiered: patch bumps need any maintainer; major bumps and new extended packages need any maintainer with gates green; new core packages, versioned lineages, `abi = true` variant additions, system-software and system-patch packages, and policy changes need two maintainers, one not the author (§17). Decisions run on lazy consensus — silence in a reasonable window is assent, and process lawyering is not a sport we play.
 
