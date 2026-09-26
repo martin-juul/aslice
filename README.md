@@ -27,7 +27,33 @@ Every other term the documents use is defined in [NOMENCLATURE.md](docs/NOMENCLA
 
 ## Status
 
-Design phase. The documents below are the specification as it stands; there is no release to install yet. The project lives at [aslice.sh](https://aslice.sh) — the documentation will be served at [aslice.sh/docs](https://aslice.sh/docs), and the installer will come from [get.aslice.sh](https://get.aslice.sh/install.sh) once a release exists.
+Early prototype. The C++20 CLI implements help, version reporting, and offline
+`aslice db schema` for all six database roles. `aslice dev fixture` exercises a local
+fixture package lifecycle: resolve, install, execute, upgrade, roll back, and
+remove. Portable commands also normalize and compare versions, resolve dependency
+ranges, validate artifact manifests and payloads, and pack or inspect bounded
+unsigned `.slice` containers. These commands run in native Windows CLion builds
+as well as Docker. Production package installation and live database commands remain
+unimplemented. The documents below remain the
+specification; there is no release to install yet. The project lives at
+[aslice.sh](https://aslice.sh) — the documentation will be served at
+[aslice.sh/docs](https://aslice.sh/docs), and the installer will come from
+[get.aslice.sh](https://get.aslice.sh/install.sh) once a release exists.
+
+Build and try the prototype with Docker Desktop using Linux containers:
+
+```sh
+docker build -t aslice-prototype .
+docker run --rm aslice-prototype --help
+docker run --rm aslice-prototype db schema --role client-state
+docker run --rm --network none --entrypoint sh aslice-prototype /src/tools/demo-prototype.sh
+docker run --rm --entrypoint ctest aslice-prototype --test-dir /build --output-on-failure
+```
+
+The image uses LLVM 20 and libc++, checks formatting and analysis, and runs tests, including loading each
+emitted schema into SQLite. Linux is a development host for this portable code;
+these tests do not establish macOS compatibility. See the
+[prototype build guide](docs/runbooks/PROTOTYPE.md) for local builds and limits.
 
 ## License
 
@@ -62,6 +88,10 @@ remediation, farm qualification, and benchmarks remain pending.
 
 | Date | Changes |
 |---|---|
+| 2026-09-27 | Establish typed C++ boundaries, command registry help, and mandatory formatting, analysis, and sanitizer checks; retain fixture wire identities. |
+| September 2026 | Split source by subsystem; add portable version constraints, manifest/payload verification, and unsigned slice packing and inspection. |
+| September 2026 | Add the disposable package lifecycle experiment and native CLion/MinGW development dependencies. |
+| September 2026 | Add the first C++ CLI prototype and Docker build instructions; macOS runtime acceptance remains pending. |
 | September 2026 | Consolidate revision notes into a collapsible history table; no specification changes. |
 | September 2026 | prose review pass: the second paragraph's tail straightened (one sentence instead of two; the *how* stays in Scope); gems kept deliberately ('These machines still work', 'infrastructure, not a product', 'on a thumb drive'); no content changes. |
 | September 2026 | grafts: vendor installer scripts are admitted as declared, user-approved, farm-rehearsed grafts rather than never running (owner decision); the vendor-binary and security bullets updated. |

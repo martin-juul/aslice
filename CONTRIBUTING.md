@@ -62,6 +62,64 @@ Merge gates are mechanical ([ORCHARD-POLICY §10](docs/ORCHARD-POLICY.md#merge-g
 
 Owner approval applies to all changes during single-owner launch, including new core packages, versioned lineages, `abi = true` variants, system-software and system-patch packages, and policy changes. The owner may approve their own changes; second-reviewer and maintainer-vote requirements are superseded for this phase ([ORCHARD-POLICY §17](docs/ORCHARD-POLICY.md#governance-and-review-process)). Independent maintainers can help review; multi-party governance remains a future transition. Automated gates cannot be waived.
 
+## C++ changes
+
+To check a change locally, configure a Debug build, build it, and run the same
+format and analysis targets used by CI:
+
+```sh
+cmake -S . -B build/check -G Ninja -DCMAKE_BUILD_TYPE=Debug
+cmake --build build/check
+cmake --build build/check --target format-check tidy
+ctest --test-dir build/check --output-on-failure
+```
+
+Use `cmake --build build/check --target format` when you want to rewrite formatting.
+The checking targets never rewrite files. Docker supplies the LLVM 20 compiler,
+formatter, and analyzer baseline; `docker build -t aslice-check .` runs the gates.
+For ASan and UBSan, add `--build-arg ASLICE_SANITIZERS=ON`. That matrix uses
+libstdc++ because the Ubuntu libc++abi exception-message path triggers an
+[allocation/deallocation mismatch](https://github.com/llvm/llvm-project/issues/59432)
+under ASan. The ordinary matrix retains libc++ coverage; sanitizer diagnostics
+remain enabled. Native Windows builds
+run the portable suites and analyze their own compilation database, including
+the Windows filesystem implementation. POSIX lifecycle tests run on Linux.
+
+CMake exports `compile_commands.json`. Set `ASLICE_CLANG_FORMAT` and
+`ASLICE_CLANG_TIDY` to tool paths at configure time if they are not on `PATH`.
+CLion reads the checked-in configurations; validate its bundled analyzer with
+`clang-tidy --verify-config`. For a standalone analyzer, install its matching
+resource headers as well as the executable. `tools/quality.py tidy` discovers
+MinGW's C++ and CRT include paths from the compilation-database compiler.
+`--resource-dir` or `ASLICE_CLANG_RESOURCE_DIR` can select matching Clang headers.
+Do not combine different LLVM versions' intrinsic headers.
+
+Write C++20 with the LLVM layout, four-space indentation, attached braces, and a
+100-column limit. Use braces for every control body, with the body on separate
+lines. Types use `PascalCase`; functions and variables use `snake_case`; private
+members end in `_`. Include the headers that declare what you use, declare one
+variable per statement, and name individual imports instead of using a namespace
+directive. Document how long borrowed views remain valid.
+
+Validated objects come from factories and keep their invariants private. Pass
+typed candidates, dependencies, targets, inventories, and generations between
+subsystems. Parse and serialize JSON at boundaries. The unsigned fixture adapter
+owns inline payloads and generation JSON; core package and resolver targets must
+not depend on it. A manifest's document and digest cannot be changed independently.
+
+Fallible operations return `core::Result<T>`, backed by pinned tl-expected 1.3.1.
+Translate library exceptions within the owning boundary. Internal validation
+unwinding is caught there; the CLI renders diagnostics and maps failure codes to
+exit statuses. Own descriptors, native handles, SQLite statements, and crypto
+contexts with move-only RAII, including error paths.
+
+Enabled clang-tidy diagnostics are errors. Generated code and dependencies are
+excluded. Any suppression must name its check and explain the specific C API or
+platform constraint beside the affected operation; blanket file suppressions and
+accepted-warning baselines are not permitted. Formatting, Linux analysis,
+native Windows builds/tests and analysis, sanitizer tests, demonstrations, and
+documentation checks are merge gates.
+
 ## Documentation style
 
 Follow [STRUCTURE.md](STRUCTURE.md) for file placement and the boundary between durable documentation and work records.
@@ -156,6 +214,7 @@ Original contributions are licensed under [Apache-2.0](LICENSE), the project's l
 
 | Date | Changes |
 |---|---|
+| 2026-09-27 | Establish typed C++ boundaries, command registry help, and mandatory formatting, analysis, and sanitizer checks; retain fixture wire identities. |
 | September 2026 | Add executable SQLite schema and recovery-model checks; these do not establish runtime or platform acceptance. |
 | September 2026 | Move documentation checker instructions here and remove standalone audit, coverage, checks, and remediation reports from the project documentation. |
 | September 2026 | Consolidate revision notes into a collapsible history table and document the history convention; historical wording is unchanged. |

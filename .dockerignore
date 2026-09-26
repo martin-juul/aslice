@@ -1,0 +1,9 @@
+.git
+.idea
+.agents
+.codex
+build
+out
+cmake-build-*
+**/__pycache__
+docs/refs

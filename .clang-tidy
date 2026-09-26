@@ -1,0 +1,42 @@
+Checks: >-
+  -*,
+  clang-analyzer-*,
+  bugprone-argument-comment,
+  bugprone-assert-side-effect,
+  bugprone-bool-pointer-implicit-conversion,
+  bugprone-dangling-handle,
+  bugprone-forward-declaration-namespace,
+  bugprone-inaccurate-erase,
+  bugprone-infinite-loop,
+  bugprone-macro-parentheses,
+  bugprone-misplaced-widening-cast,
+  bugprone-move-forwarding-reference,
+  bugprone-sizeof-expression,
+  bugprone-string-constructor,
+  bugprone-suspicious-semicolon,
+  bugprone-use-after-move,
+  performance-*,
+  portability-*,
+  cppcoreguidelines-init-variables,
+  cppcoreguidelines-narrowing-conversions,
+  cppcoreguidelines-slicing,
+  cppcoreguidelines-owning-memory,
+  modernize-make-unique,
+  modernize-use-nullptr,
+  modernize-use-override,
+  modernize-use-equals-delete,
+  readability-braces-around-statements,
+  readability-identifier-naming,
+  readability-isolate-declaration,
+  readability-redundant-control-flow,
+  misc-uniqueptr-reset-release,
+  misc-include-cleaner
+WarningsAsErrors: '*'
+HeaderFilterRegex: '(^|[/\\])(src|tests)[/\\].*\.(hpp|cpp)$'
+CheckOptions:
+  readability-identifier-naming.ClassCase: CamelCase
+  readability-identifier-naming.StructCase: CamelCase
+  readability-identifier-naming.EnumCase: CamelCase
+  readability-identifier-naming.FunctionCase: lower_case
+  readability-identifier-naming.VariableCase: lower_case
+  readability-identifier-naming.PrivateMemberSuffix: _

@@ -2,8 +2,7 @@
 
 This document is the authority for organizing the aslice repository. It defines
 where contributors place durable project material and how the C++ implementation
-will be organized. The project is in its design phase; planned paths below do not
-yet exist in the tracked tree.
+is organized. Paths marked planned below do not yet exist in the tracked tree.
 
 ## Directory responsibilities
 
@@ -17,9 +16,10 @@ yet exist in the tracked tree.
 | `schematics/` | Existing | Machine-readable contracts for project formats and build interfaces. See the [schematics guide](schematics/README.md). |
 | `tests/` | Existing | Validation code, regression tests, and fixtures. |
 | `.agents/skills/` | Existing | Repository automation skills and their supporting instructions and scripts. |
-| `src/` | Planned | C++ implementation and private headers, grouped by subsystem. |
+| `src/` | Existing | C++ implementation and private headers, grouped by the subsystem responsibilities below. |
 | `include/aslice/` | Planned | Headers deliberately exposed to consumers outside the implementation. |
-| `tools/` | Planned | Reusable developer utilities, including the planned Homebrew formula importer. |
+| `.github/workflows/` | Existing | Required Linux quality/sanitizer, native Windows analysis/test, and documentation CI gates. |
+| `tools/` | Existing | Reusable developer utilities, including Windows dependency bootstrap; the Homebrew formula importer remains planned. |
 
 ## Durable documentation and work records
 
@@ -36,7 +36,27 @@ embedded in specifications with the contracts they explain. The source archive u
 Writing conventions and checker instructions are maintained in
 [CONTRIBUTING.md](CONTRIBUTING.md#documentation-style).
 
-## Planned implementation layout
+## Implementation layout
+
+| Path | Responsibility |
+|---|---|
+| `src/cli/` | Command registry, generated help, argument validation, exit statuses, and JSON output. |
+| `src/core/` | Bounded JSON/file reads, shared errors, and SHA-256 support. |
+| `src/package/` | Validated identities, targets, candidates, versions, constraints, artifact manifests, and slice containers. |
+| `src/adapters/` | Unsigned fixture catalog, inline payload, and retained-generation JSON translation. |
+| `src/resolver/` | Candidate selection, dependency consistency, and profile collision checks. |
+| `src/store/` | Immutable fixture payload import and verification. |
+| `src/profile/` | Generation construction, activation, inspection, and rollback checks. |
+| `src/platform/` | Native file creation and POSIX directory synchronization, ownership, and locking. |
+| `src/db/` | Bounded read-only database snapshot queries. |
+
+Portable package, resolver, store, and profile sources compile on both Windows
+and POSIX hosts. Platform operations live in separate translation units selected
+by CMake. Windows supports exclusive archive output; installation prefix locking
+and activation currently require POSIX. These are internal interfaces, not a
+public SDK or completed production installer. CMake follows those dependencies: core
+package and resolver libraries do not link the fixture adapter; store and profile
+libraries use it explicitly.
 
 Organize `src/` by subsystem, keeping implementation files and private headers
 together. Place a header under `include/aslice/` only when it is deliberately

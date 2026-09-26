@@ -1,0 +1,15 @@
+{
+  "format": "aslice-prototype-1",
+  "packages": [
+    {
+      "name": "core:greeting", "version": "2.0.0", "flavor": "v1", "min_os": "10.11",
+      "dependencies": {},
+      "files": {"share/greeting/message.txt": {"text": "dependency 2.0.0\n", "executable": false}}
+    },
+    {
+      "name": "core:hello", "version": "2.0.0", "flavor": "v1", "min_os": "10.11",
+      "dependencies": {"core:greeting": "=2.0.0"},
+      "files": {"bin/hello": {"text": "#!/bin/sh\nhere=$(CDPATH= cd -- \"$(dirname -- \"$0\")\" && pwd)\nprintf 'hello 2.0.0: '\ncat \"$here/../share/greeting/message.txt\"\n", "executable": true}}
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "version": 3,
+  "configurePresets": [
+    {
+      "name": "windows-clion",
+      "displayName": "Windows - CLion bundled MinGW",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/windows-clion",
+      "condition": {"type": "equals", "lhs": "${hostSystemName}", "rhs": "Windows"},
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_C_COMPILER": "$env{LOCALAPPDATA}/Programs/CLion/bin/mingw/bin/gcc.exe",
+        "CMAKE_CXX_COMPILER": "$env{LOCALAPPDATA}/Programs/CLion/bin/mingw/bin/g++.exe",
+        "CMAKE_MAKE_PROGRAM": "$env{LOCALAPPDATA}/Programs/CLion/bin/ninja/win/x64/ninja.exe"
+      },
+      "environment": {
+        "PATH": "$env{LOCALAPPDATA}/Programs/CLion/bin/mingw/bin;$penv{PATH}"
+      }
+    }
+  ],
+  "buildPresets": [{"name": "windows-clion", "configurePreset": "windows-clion"}],
+  "testPresets": [{"name": "windows-clion", "configurePreset": "windows-clion", "output": {"outputOnFailure": true}}]
+}
