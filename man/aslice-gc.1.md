@@ -28,6 +28,28 @@ Both print what would go, and why, with **--dry-run**; the watermarks are config
 
 Keep the last 5 generations by default. `gc.store_watermark` is the store limit (default 20 GB); `gc.warning_margin_percent` is the warning margin below it (default 10, range 0–100). Warn when usage reaches `limit × (1 - margin / 100)`. At or above the limit, ask `Run garbage collection? [y/N]`; No is the default. Never run GC automatically from the size check. Non-interactive checks print the warning and the `aslice gc` remedy without collecting. Explicit `aslice gc` remains available. Collection retains every root required by [STATE-AND-RECOVERY §2](../docs/STATE-AND-RECOVERY.md#abi-and-execution-requirements) and [STATE-AND-RECOVERY §5](../docs/STATE-AND-RECOVERY.md#durable-transactions-and-recovery); a threshold does not make reachable artifacts collectible.
 
+# EXAMPLES
+
+```sh
+aslice gc --dry-run --older-than 30d
+aslice clean --dry-run
+aslice store verify
+aslice store verify --quarantine x264
+```
+
+# EXIT STATUS
+
+The common statuses in [aslice(1)](aslice.1.md#exit-status) apply where
+relevant: 0 success, 1 error or recovery required, 2 plan refused, 4 contention
+without unresolved recovery, and 130 safely completed cancellation. No additional
+family-specific numeric statuses are specified.
+
+# AGE FILTER
+
+**--older-than** supplies the explicit GC age filter (for example `30d`). It never
+makes a reachable artifact collectible. The full duration grammar and treatment of
+age boundaries are not specified; cache age policy remains clean's separate rule.
+
 # SEE ALSO
 
 aslice(1), aslice-doctor(1), [MANUAL §3.5](../docs/MANUAL.md#reclaiming-disk-clean-and-gc) and [MANUAL §5.3](../docs/MANUAL.md#housekeeping)

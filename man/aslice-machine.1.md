@@ -53,6 +53,15 @@ Graft-bearing packages require a matching local approval or a fresh decision. `[
 
 The full schema and semantics: SETUP.md. The user-facing walkthrough: [MANUAL §10](../docs/MANUAL.md#one-file-one-command-rebuilding-a-machine). The rationale: [DESIGN §12.13](../docs/DESIGN.md#declarative-system-setup-aslice-machinetoml-and-the-aslice-machine-commands).
 
+# EXAMPLES
+
+```sh
+aslice machine apply --dry-run
+aslice machine apply aslice-machine.toml
+aslice machine export --defaults com.apple.dock > aslice-machine.toml
+aslice machine import --from-brewfile Brewfile > aslice-machine.toml
+```
+
 # SEE ALSO
 
 aslice(1), aslice-apply(1), aslice-install(1), aslice-use(1), aslice-service(1), aslice-system-patch(1), aslice-repo(1), aslice-graft(1)

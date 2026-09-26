@@ -30,6 +30,25 @@ Bare **ca-update** refreshes the signed private CA bundle for compatible aslice 
 
 **--from-file** installs a local private bundle and records its SHA-256 without fetching. It grants no authority to import unrestricted system trust. PEM extraction omits some browser trust restrictions; the private bundle is not a complete reproduction of browser policy. See [STATE-AND-RECOVERY §9](../docs/STATE-AND-RECOVERY.md#certificate-trust-lifecycle).
 
+# EXAMPLES
+
+```sh
+aslice ca-update --check
+aslice ca-update
+aslice ca-update --crypto
+aslice ca-update --keychain
+aslice ca-update --keychain-remove
+aslice ca-update --apple-certs
+aslice ca-update --from-file bundle.pem
+```
+
+# EXIT STATUS
+
+The common statuses in [aslice(1)](aslice.1.md#exit-status) apply where
+relevant: 0 success, 1 error or recovery required, 2 plan refused, 4 contention
+without unresolved recovery, and 130 safely completed cancellation. No additional
+family-specific numeric statuses are specified.
+
 # SEE ALSO
 
 aslice(1), aslice-doctor(1), [MANUAL §8](../docs/MANUAL.md#keeping-tls-alive-on-an-old-os)

@@ -12,11 +12,11 @@ aslice-system-patch — inspect and reverse declared replacements of Apple-provi
 
 `aslice system-patch status` [*path*]
 
-`aslice system-patch restore` *path*
+`aslice system-patch restore` *path* [`--accept-system-changes`]
 
-`aslice system-patch prepare`
+`aslice system-patch prepare` [`--accept-system-changes`]
 
-`aslice system-patch finalize`
+`aslice system-patch finalize` [`--accept-system-changes`]
 
 # DESCRIPTION
 
@@ -39,6 +39,32 @@ An OS update establishes a new baseline. aslice reports drift and never reapplie
 # LIMITS
 
 Rollback is a journaled restoration plan. Protected-volume rollback can require Recovery and reboot, and service data is outside its scope. Uninstall is refused until managed patches are restored or a restoration is durably pending with its recovery tools retained. Originals and prior snapshots remain retained while referenced by an installed patch or unresolved operation.
+
+# ARGUMENTS, CONSENT, AND EXAMPLES
+
+*path* names the managed Apple-provided file to inspect or restore. Omitting it
+from status requests the overall patch state. Prepare and finalize act on the
+protected transition; additional plan/path selectors are not yet specified.
+Every mutation requires explicit system-change consent. Unattended system changes
+require **--accept-system-changes**; authentication, repository capability, and
+validated platform-adapter requirements still apply. No command-specific dry-run
+grammar is established here.
+
+```sh
+aslice system-patch list
+aslice system-patch status
+aslice system-patch status /usr/bin/rsync
+aslice system-patch restore /usr/bin/rsync
+aslice system-patch prepare
+# Complete the prescribed Recovery and reboot workflow before finalizing:
+aslice system-patch finalize
+```
+
+# EXIT STATUS
+
+The common [aslice(1)](aslice.1.md#exit-status) statuses apply. Pending reboot or
+unresolved recovery returns 1, not successful restoration; consent refusal returns 2.
+Status reporting does not itself finalize a pending transition.
 
 # FILES
 

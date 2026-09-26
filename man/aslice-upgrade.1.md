@@ -68,6 +68,15 @@ overrides. A failed or timed-out check returns nonzero and explicitly reports
 committed installation. Any eligible rollback is a new transaction. A stop request
 after commit stops checks safely and reports incomplete verification.
 
+# EXAMPLES
+
+```sh
+aslice outdated --json
+aslice upgrade ffmpeg --dry-run
+aslice upgrade --security
+aslice upgrade --security --minimal --allow-source-builds
+```
+
 # SEE ALSO
 
 aslice(1), aslice-install(1), aslice-service(1), [MANUAL §3.2](../docs/MANUAL.md#upgrading) and [MANUAL §7.2](../docs/MANUAL.md#upgrades-and-the-rollback-prompt)

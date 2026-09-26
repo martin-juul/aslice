@@ -32,6 +32,13 @@ There is no "always allow" and no global switch. The nearest thing is the `[graf
 
 **0** success; **1** error.
 
+# EXAMPLES
+
+```sh
+aslice graft approvals --json
+aslice graft revoke audiolab:convolver
+```
+
 # SEE ALSO
 
 aslice(1), aslice-install(1), aslice-machine(1), [MANUAL §4.5](../docs/MANUAL.md#grafts-when-installing-takes-a-script), [SETUP §2.8](../docs/SETUP.md#grafts), [PACKAGE-FORMAT §3.11](../docs/PACKAGE-FORMAT.md#binary--vendor-binaries-pkgdmg-only-software), [DESIGN §12.15](../docs/DESIGN.md#vendor-install-scripts-grafts--declared-approved-monitored-reversible)

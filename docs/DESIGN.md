@@ -4,7 +4,7 @@
 
 **Name.** *aslice* — an apple slice: a nod to the Macintosh apple and to the shape of the project itself. Binary packages are **slices**; formula repositories are **orchards**; the manager picks slices off the orchard, prebuilt or baked to order. The vocabulary is kept distinct from Homebrew's beer terminology to avoid community confusion and trademark friction. The project name is styled lowercase everywhere, including sentence starts — like the command.
 
-- **Status:** Design draft, v1.32 — September 2026
+- **Status:** Design draft, v1.33 — September 2026
 - **Scope:** macOS 10.11 (El Capitan) through 12 (Monterey), Intel x86_64 only
 - **Implementation:** C++20 core, single self-contained binary
 - **Audience:** Maintainers, founding contributors, and early reviewers
@@ -668,81 +668,193 @@ administrator can request stopping: attempt rollback before commit; after commit
 stop checks safely and report incomplete verification. See
 [STATE-AND-RECOVERY §5](STATE-AND-RECOVERY.md#durable-transactions-and-recovery).
 
+The index covers specified public commands, including maintainer and farm
+operations. Historical spellings and internal helper executables are excluded.
+These interfaces remain specifications, not a claim of completed implementation.
+Each family page defines its arguments, options, examples, limits, and applicable
+exit statuses; details not yet specified are identified there.
+
+`OPTIONS` refers to the owning page. Database and recovery `SELECTORS` mean
+`--role ROLE` and either `--prefix PATH` or `--instance ID`; selection grants no
+authority. Global verbosity, JSON/log rendering, and authorized lock waiting are
+documented in [aslice(1)](../man/aslice.1.md#global-options). A dry-run is supported
+only where its command contract says so.
+
+**Package management**
+
+| Syntax | Purpose and manual |
+|---|---|
+| `aslice install PACKAGE… [OPTIONS]` | Install the newest eligible packages; disclose source builds. [aslice-install(1)](../man/aslice-install.1.md). |
+| `aslice reinstall PACKAGE… [OPTIONS]` | Relink the same version to repair profile entries. [aslice-install(1)](../man/aslice-install.1.md). |
+| `aslice upgrade [PACKAGE…] [--security [--minimal]] [--allow-source-builds]` | Update all or selected packages; security modes retain unresolved findings. [aslice-upgrade(1)](../man/aslice-upgrade.1.md). |
+| `aslice outdated [--json]` | Show proposed updates and package holds. [aslice-upgrade(1)](../man/aslice-upgrade.1.md). |
+| `aslice uninstall PACKAGE…` | Remove packages from future generations. [aslice-uninstall(1)](../man/aslice-uninstall.1.md). |
+| `aslice autoremove [--dry-run]` | Remove dependencies no longer needed by requested packages. [aslice-uninstall(1)](../man/aslice-uninstall.1.md). |
+| `aslice mark PACKAGE --on-request\|--as-dependency` | Repair the requested/dependency record. [aslice-uninstall(1)](../man/aslice-uninstall.1.md). |
+| `aslice pin PACKAGE` | Hold a package against upgrades (one argument). [aslice-uninstall(1)](../man/aslice-uninstall.1.md). |
+| `aslice unpin PACKAGE` | Release an upgrade hold. [aslice-uninstall(1)](../man/aslice-uninstall.1.md). |
+| `aslice plan install PACKAGE… [OPTIONS]` | Resolve a request to a saved plan without executing. [aslice-apply(1)](../man/aslice-apply.1.md). |
+| `aslice lock export` | Write the current exact resolution to stdout. [aslice-apply(1)](../man/aslice-apply.1.md). |
+| `aslice apply DOCUMENT [--dry-run] [OPTIONS]` | Execute a plan or replay a lock; DOCUMENT may be an HTTPS URL. [aslice-apply(1)](../man/aslice-apply.1.md). |
+| `aslice adopt --from-homebrew` | Produce a migration plan from the installed Homebrew leaf set. [aslice-adopt(1)](../man/aslice-adopt.1.md). |
+| `aslice graft approvals [--json]` | Review recorded script approvals. [aslice-graft(1)](../man/aslice-graft.1.md). |
+| `aslice graft revoke PACKAGE…` | Withdraw approvals; a later install asks again. [aslice-graft(1)](../man/aslice-graft.1.md). |
+
+**Inspection**
+
+| Syntax | Purpose and manual |
+|---|---|
+| `aslice search QUERY` | Match package names and descriptions. [aslice-inspect(1)](../man/aslice-inspect.1.md). |
+| `aslice info PACKAGE` | Show versions, variants, dependencies, notes, and provenance. [aslice-inspect(1)](../man/aslice-inspect.1.md). |
+| `aslice flavors PACKAGE` | Show the prebuilt matrix for this machine. [aslice-inspect(1)](../man/aslice-inspect.1.md). |
+| `aslice leaves [--user-built]` | List packages without installed dependents. [aslice-inspect(1)](../man/aslice-inspect.1.md). |
+| `aslice why PACKAGE` | Explain installed dependents. [aslice-inspect(1)](../man/aslice-inspect.1.md). |
+| `aslice provenance PACKAGE` | Show authenticated build or repackaging evidence. [aslice-inspect(1)](../man/aslice-inspect.1.md). |
+| `aslice audit` | Report known vulnerabilities in the installed set. [aslice-inspect(1)](../man/aslice-inspect.1.md). |
+| `aslice needs-restarting [--json]` | Report restart, rebuild, reboot, and unknown inspection coverage. [aslice-needs-restarting(1)](../man/aslice-needs-restarting.1.md). |
+
+**Profiles and runtime selection**
+
+| Syntax | Purpose and manual |
+|---|---|
+| `aslice history` | List retained generations and attributed changes. [aslice-profile(1)](../man/aslice-profile.1.md). |
+| `aslice rollback [GENERATION]` | Journal restoration of retained managed state. [aslice-profile(1)](../man/aslice-profile.1.md). |
+| `aslice switch-generation GENERATION` | Select a retained generation explicitly. [aslice-profile(1)](../man/aslice-profile.1.md). |
+| `aslice link PACKAGE` | Expose an installed package in the profile. [aslice-profile(1)](../man/aslice-profile.1.md). |
+| `aslice unlink PACKAGE` | Retract profile exposure without removing dependency bindings. [aslice-profile(1)](../man/aslice-profile.1.md). |
+| `aslice profile prefer NAME PROVIDER` | Select a colliding name or virtual provider. [aslice-profile(1)](../man/aslice-profile.1.md). |
+| `aslice exec PACKAGE -- COMMAND [ARGUMENT…]` | Run in a temporary profile view. [aslice-profile(1)](../man/aslice-profile.1.md). |
+| `aslice exec --replacement PATH -- PACKAGE COMMAND [ARGUMENT…]` | Explicitly run a verified isolated replacement closure. [aslice-profile(1)](../man/aslice-profile.1.md). |
+| `aslice use RUNTIME STREAM [--install]` | Select a stream for the current shell through emitted shell code. [aslice-use(1)](../man/aslice-use.1.md). |
+| `aslice use RUNTIME --clear` | Clear the session selection. [aslice-use(1)](../man/aslice-use.1.md). |
+| `aslice pin RUNTIME STREAM [--install]` | Write a project runtime pin (two arguments). [aslice-use(1)](../man/aslice-use.1.md). |
+| `aslice default [RUNTIME [STREAM]]` | Set or inspect profile-wide fallback selections. [aslice-use(1)](../man/aslice-use.1.md). |
+| `aslice versions RUNTIME` | Show installed streams, selections, and extensions. [aslice-use(1)](../man/aslice-use.1.md). |
+| `aslice which RUNTIME` | Trace runtime resolution to the store path. [aslice-use(1)](../man/aslice-use.1.md). |
+
+**Maintenance and recovery**
+
+| Syntax | Purpose and manual |
+|---|---|
+| `aslice gc [--dry-run] [--older-than 30d]` | Collect unreachable store artifacts. [aslice-gc(1)](../man/aslice-gc.1.md). |
+| `aslice clean [--dry-run]` | Evict eligible cache entries. [aslice-gc(1)](../man/aslice-gc.1.md). |
+| `aslice store verify [--quarantine PACKAGE]` | Rehash artifacts and optionally quarantine a mismatch. [aslice-gc(1)](../man/aslice-gc.1.md). |
+| `aslice doctor [--fix] [--json] [--brief] [--deep] [--offline]` | Inspect health; fix only the documented no-data-loss cases. [aslice-doctor(1)](../man/aslice-doctor.1.md). |
+| `aslice log [--last-op] [--follow] [--level LEVEL]` | Query local operation logs. [aslice-doctor(1)](../man/aslice-doctor.1.md). |
+| `aslice db list [--role ROLE] [--json]` | List configured visible database instances. [aslice-db(1)](../man/aslice-db.1.md). |
+| `aslice db [SELECTORS] schema [--live]` | Show shipped DDL or inspect the live schema. [aslice-db(1)](../man/aslice-db.1.md). |
+| `aslice db [SELECTORS] query SQL [--json]` | Run one bounded read-only query. [aslice-db(1)](../man/aslice-db.1.md). |
+| `aslice db [SELECTORS] check [--json]` | Validate identity, integrity, references, and records. [aslice-db(1)](../man/aslice-db.1.md). |
+| `aslice db [SELECTORS] maintain [--dry-run] [--json]` | Run bounded maintenance and report deferrals. [aslice-db(1)](../man/aslice-db.1.md). |
+| `aslice db [SELECTORS] compact [--dry-run] [--json]` | Reclaim file space through a validated versioned copy. [aslice-db(1)](../man/aslice-db.1.md). |
+| `aslice db [SELECTORS] backup DESTINATION [--json]` | Write an owner-authorized coordinated backup set. [aslice-db(1)](../man/aslice-db.1.md). |
+| `aslice db [SELECTORS] restore SET [--dry-run\|--confirm DIGEST] [--json]` | Preview and explicitly authorize restoration. [aslice-db(1)](../man/aslice-db.1.md). |
+| `aslice recover [SELECTORS] [--continue\|--manual\|--salvage\|--activate] [OPTIONS]` | Guide recovery; unattended actions bind to a reviewed plan digest. [aslice-recover(1)](../man/aslice-recover.1.md). |
+| `aslice operation status [--json]` | Inspect owner, phase, helpers, and recovery state. [aslice-recover(1)](../man/aslice-recover.1.md). |
+| `aslice operation stop [--operation-id ID] [--json]` | Request authorized safe stopping; ID is required unattended. [aslice-recover(1)](../man/aslice-recover.1.md). |
+| `aslice self-update [--check]` | Update the manager with retained recovery capability. [aslice-self-update(1)](../man/aslice-self-update.1.md). |
+| `aslice decommission [--dry-run]` | Restore managed external effects before removing the prefix. [aslice-self-update(1)](../man/aslice-self-update.1.md). |
+
+**Repositories and authoring**
+
+| Syntax | Purpose and manual |
+|---|---|
+| `aslice repo add URL [--trust local]` | Add a signed repository and establish trust. [aslice-repo(1)](../man/aslice-repo.1.md). |
+| `aslice repo list [--sources-diff] [--json]` | List repositories. [aslice-repo(1)](../man/aslice-repo.1.md). |
+| `aslice repo enable NAME` | Enable a listed source. [aslice-repo(1)](../man/aslice-repo.1.md). |
+| `aslice repo disable NAME` | Disable a source. [aslice-repo(1)](../man/aslice-repo.1.md). |
+| `aslice repo remove NAME` | Remove a configured source. [aslice-repo(1)](../man/aslice-repo.1.md). |
+| `aslice repo re-pin NAME` | Replace key authority after independent verification. [aslice-repo(1)](../man/aslice-repo.1.md). |
+| `aslice repo keys NAME` | Inspect keys. [aslice-repo(1)](../man/aslice-repo.1.md). |
+| `aslice repo audit NAME` | Inspect trust, countersignature, and staleness. [aslice-repo(1)](../man/aslice-repo.1.md). |
+| `aslice repo allow-system-patch NAME` | Grant a verified repository patch permission. [aslice-repo(1)](../man/aslice-repo.1.md). |
+| `aslice repo deny-system-patch NAME` | Revoke its patch permission. [aslice-repo(1)](../man/aslice-repo.1.md). |
+| `aslice repo build PATH` | Compile an orchard or manifest directory into a repository. [aslice-repo(1)](../man/aslice-repo.1.md). |
+| `aslice repo sign PATH [--sign-with ed25519\|openpgp]` | Apply repository signing keys. [aslice-repo(1)](../man/aslice-repo.1.md). |
+| `aslice repo publish PATH` | Publish through the configured transport. [aslice-repo(1)](../man/aslice-repo.1.md). |
+| `aslice orchard add ORG/ORCHARD` | Follow a formula orchard. [aslice-orchard(1)](../man/aslice-orchard.1.md). |
+| `aslice orchard pin ORG/ORCHARD COMMIT` | Pin an orchard to a commit. [aslice-orchard(1)](../man/aslice-orchard.1.md). |
+| `aslice orchard lint [PATH] [--json]` | Validate every formula. [aslice-orchard(1)](../man/aslice-orchard.1.md). |
+| `aslice orchard doctor [PATH] [--json]` | Report orchard health. [aslice-orchard(1)](../man/aslice-orchard.1.md). |
+| `aslice orchard freshness [PATH] [--json]` | Report upstream freshness. [aslice-orchard(1)](../man/aslice-orchard.1.md). |
+| `aslice orchard ci [PKG…] [--flavors v2,v3] [--all]` | Run local merge gates; unavailable farm tiers remain deferred. [aslice-orchard(1)](../man/aslice-orchard.1.md). |
+| `aslice orchard dependents PKG [--transitive] [--json]` | Inspect reverse dependencies and rebuild impact. [aslice-orchard(1)](../man/aslice-orchard.1.md). |
+| `aslice orchard deprecate PKG --reason REASON [--replacement PKG] --date DATE [--disable-date DATE]` | Declare lifecycle dates and reason. [aslice-orchard(1)](../man/aslice-orchard.1.md). |
+| `aslice orchard disable PKG` | Bring the disable date forward to today. [aslice-orchard(1)](../man/aslice-orchard.1.md). |
+| `aslice orchard undeprecate PKG` | Remove deprecation metadata. [aslice-orchard(1)](../man/aslice-orchard.1.md). |
+| `aslice orchard tombstone PKG` | Remove the formula while retaining its index tombstone. [aslice-orchard(1)](../man/aslice-orchard.1.md). |
+| `aslice orchard rename OLD NEW` | Deprecate as renamed and scaffold a successor. [aslice-orchard(1)](../man/aslice-orchard.1.md). |
+| `aslice orchard port --from-homebrew FORMULA` | Translate a Homebrew formula into a reviewed draft. [aslice-orchard(1)](../man/aslice-orchard.1.md). |
+| `aslice create URL` | Draft a formula from a source URL. [aslice-author(1)](../man/aslice-author.1.md). |
+| `aslice lint FORMULA` | Validate one formula against schema and policy. [aslice-author(1)](../man/aslice-author.1.md). |
+| `aslice build PACKAGE-OR-DIRECTORY [BUILD-OPTIONS]` | Compile locally with the farm harness; reproduction has its own form. [aslice-author(1)](../man/aslice-author.1.md). |
+| `aslice build --reproduce PACKAGE VERSION FLAVOR BUILD-REFERENCE` | Compile locally with the farm harness; reproduction has its own form. [aslice-author(1)](../man/aslice-author.1.md). |
+| `aslice test PACKAGE` | Run the installed slice smoke tests. [aslice-author(1)](../man/aslice-author.1.md). |
+| `aslice livecheck [PACKAGE \| --all]` | Query upstream versions. [aslice-author(1)](../man/aslice-author.1.md). |
+| `aslice bump-pr PACKAGE VERSION` | Edit, lint, smoke-build, and open a version-bump PR. [aslice-author(1)](../man/aslice-author.1.md). |
+| `aslice farm plan` | Compute the affected build and test DAG. [aslice-farm(1)](../man/aslice-farm.1.md). |
+| `aslice farm coordinator` | Schedule work, gate, and collect evidence. [aslice-farm(1)](../man/aslice-farm.1.md). |
+| `aslice farm agent [--once] [--vm-guest] [--reproduce-only]` | Run a worker or guest test agent. [aslice-farm(1)](../man/aslice-farm.1.md). |
+| `aslice farm enroll --project URL` | Enroll an evidence worker and pin the coordinator. [aslice-farm(1)](../man/aslice-farm.1.md). |
+
+**Machine setup**
+
+| Syntax | Purpose and manual |
+|---|---|
+| `aslice machine apply [aslice-machine.toml \| https://…] [--dry-run] [--prune] [--accept-system-changes] [--accept-grafts] [--json]` | Converge a machine wishlist; default ./aslice-machine.toml. [aslice-machine(1)](../man/aslice-machine.1.md). |
+| `aslice machine export [--defaults DOMAIN,…] [--system-defaults DOMAIN,…]` | Capture managed state; preference domains are opt-in. [aslice-machine(1)](../man/aslice-machine.1.md). |
+| `aslice machine import --from-brewfile Brewfile` | Translate a Brewfile with a skip list. [aslice-machine(1)](../man/aslice-machine.1.md). |
+| `aslice service list` | List managed launchd services. [aslice-service(1)](../man/aslice-service.1.md). |
+| `aslice service status PACKAGE` | Report launchd state and last exit. [aslice-service(1)](../man/aslice-service.1.md). |
+| `aslice service start PACKAGE` | Start the declared service. [aslice-service(1)](../man/aslice-service.1.md). |
+| `aslice service stop PACKAGE` | Stop the declared service. [aslice-service(1)](../man/aslice-service.1.md). |
+| `aslice service restart PACKAGE` | Restart the declared service. [aslice-service(1)](../man/aslice-service.1.md). |
+| `aslice service run PACKAGE` | Run in the foreground without registration. [aslice-service(1)](../man/aslice-service.1.md). |
+| `aslice ca-update [--check]` | Refresh private trust or explicitly selected trust/crypto layers. [aslice-ca-update(1)](../man/aslice-ca-update.1.md). |
+| `aslice ca-update --keychain` | Refresh private trust or explicitly selected trust/crypto layers. [aslice-ca-update(1)](../man/aslice-ca-update.1.md). |
+| `aslice ca-update --keychain-remove` | Refresh private trust or explicitly selected trust/crypto layers. [aslice-ca-update(1)](../man/aslice-ca-update.1.md). |
+| `aslice ca-update --crypto` | Refresh private trust or explicitly selected trust/crypto layers. [aslice-ca-update(1)](../man/aslice-ca-update.1.md). |
+| `aslice ca-update --apple-certs` | Refresh private trust or explicitly selected trust/crypto layers. [aslice-ca-update(1)](../man/aslice-ca-update.1.md). |
+| `aslice ca-update --from-file bundle.pem` | Refresh private trust or explicitly selected trust/crypto layers. [aslice-ca-update(1)](../man/aslice-ca-update.1.md). |
+| `aslice system-patch list` | List managed replacements of Apple files. [aslice-system-patch(1)](../man/aslice-system-patch.1.md). |
+| `aslice system-patch status [PATH]` | Inspect baseline, hashes, drift, and pending reboot. [aslice-system-patch(1)](../man/aslice-system-patch.1.md). |
+| `aslice system-patch restore PATH [--accept-system-changes]` | Restore through the compatible OS backend. [aslice-system-patch(1)](../man/aslice-system-patch.1.md). |
+| `aslice system-patch prepare [--accept-system-changes]` | Persist protected recovery material before Recovery. [aslice-system-patch(1)](../man/aslice-system-patch.1.md). |
+| `aslice system-patch finalize [--accept-system-changes]` | Verify the booted result before committing. [aslice-system-patch(1)](../man/aslice-system-patch.1.md). |
+
+**Shell and configuration**
+
+| Syntax | Purpose and manual |
+|---|---|
+| `aslice shellenv` | Print profile paths and trust-store environment exports; no writes. [aslice-shell(1)](../man/aslice-shell.1.md). |
+| `aslice init SHELL` | Print integration for bash, zsh, or fish. [aslice-shell(1)](../man/aslice-shell.1.md). |
+| `aslice config get KEY` | Read configuration; detailed get behavior remains unspecified. [aslice-shell(1)](../man/aslice-shell.1.md). |
+| `aslice config set KEY VALUE` | Set a configuration key. [aslice-shell(1)](../man/aslice-shell.1.md). |
+| `aslice help COMMAND` | Print the owning man-page text. [aslice-shell(1)](../man/aslice-shell.1.md). |
+
+Representative choices retain their distinct meanings:
+
 ```sh
 aslice install ffmpeg                  # newest eligible version; flavor auto-detected
 aslice install ffmpeg --build-from-source
 aslice install ffmpeg --variant +x265 --cflags="-O3 -march=native"
-aslice install ffmpeg@v6               # version pinning
-aslice install audiolab:convolver      # explicit repository namespace (§9.6)
-aslice upgrade / aslice upgrade ffmpeg [--rollback-on-service-failure]   # the flag is the unattended path; interactively aslice asks (§12.8)
-aslice uninstall x264 / aslice autoremove
-aslice search / info / leaves / why <pkg>
-aslice flavors ffmpeg                  # show the prebuilt matrix for this machine
-aslice provenance ffmpeg               # builder, source hash, SLSA attestation
-aslice audit                           # CVE report for the installed set
-aslice ca-update [--check]             # refresh the CA trust bundle: signed slice, generation-managed (§12.10)
-aslice ca-update --keychain            # also import missing roots into the System keychain — opt-in, recorded, reversible
-aslice ca-update --crypto              # also upgrade the crypto-provider slices — modern ciphers/TLS for userland (§12.10)
-aslice ca-update --apple-certs         # also import Apple's own roots (Software Update, App Store, iCloud, Developer ID) into the System keychain
-aslice rollback / switch-generation / history
-aslice service list / status <pkg>       # launchd truth: pid, state, last exit (§12.8)
-aslice service start / stop / restart <pkg> / service run <pkg>   # run = foreground, for debugging
-aslice install php@8.4                   # a runtime release stream; coexists with every other installed stream (§12.9)
-aslice use php 8.4                       # select for the current shell (session) — via shell integration or eval
-aslice pin php 8.4                       # select for this project tree — writes ./aslice.toml (commit it)
-aslice default php 8.4                   # select the profile-wide fallback
-aslice versions php / aslice which php   # installed streams; trace *why* this php resolved
-aslice install php-redis                 # extension slice — binds to the selected php's ABI epoch (§12.9)
-aslice install composer                  # a tool that *rides* the selected runtime (§12.9)
-aslice init zsh                          # prints the shell integration for `aslice use` (bash/zsh/fish)
-aslice gc [--dry-run] [--older-than 30d]
-aslice orchard add myorg/orchard / orchard pin myorg/orchard <commit>
-aslice orchard lint / doctor / freshness [path] [--json]  # whole-orchard checks (§12.14)
-aslice orchard ci [pkg…] [--flavors v2,v3] [--all]   # the §13.4 merge gate, locally (§12.14)
-aslice orchard dependents <pkg> [--transitive]       # reverse deps — the ABI blast radius (§12.14)
-aslice orchard deprecate / disable / tombstone / rename / undeprecate <pkg>  # lifecycle (§12.14)
-aslice orchard port --from-homebrew <formula>        # Ruby-formula importer (§13.3)
-aslice repo add https://repo.example.org   # add a signed repository (§9.6)
-aslice repo list / repo remove <name> / repo build / repo publish
-aslice repo enable / repo disable <name>   # verified repos ship listed-but-disabled
-aslice repo re-pin / keys / audit <name>   # trust-level machinery (REPOSITORIES.md §7)
-aslice adopt --from-homebrew           # migration assistant (§13.3)
-aslice apply plan.json / aslice.lock   # execute a saved plan; replay a lock file (§12.13)
-aslice plan install ffmpeg > plan.json   # resolve without executing — the plan half of the plan/apply split (§12.2)
-aslice lock export > aslice.lock         # write the current resolution as a lock file (PACKAGE-FORMAT §7)
-aslice machine apply [aslice-machine.toml]   # declarative whole-machine setup: packages, runtime selections, services, defaults, login shell (§12.13)
-aslice machine export [--defaults com.apple.dock,…]   # capture this machine as an aslice-machine.toml — explicitly requested packages + selections; preferences on demand (§12.13)
-aslice machine import --from-brewfile Brewfile   # translate a Brewfile into an aslice-machine.toml, skip list printed (§12.13)
-aslice config set flavor v2            # overrides
-aslice doctor                          # environment sanity checks (§12.6)
-aslice log [--follow] [--level debug]  # query the local operation log (§12.5)
-aslice install foo --accept-system-changes   # explicit consent for [system] and [system-patch] packages, non-interactive (§12.7, §12.11)
-aslice install protools-hd --accept-grafts   # explicit consent to run a package's declared vendor scripts, non-interactive (§12.15)
-aslice graft approvals / aslice graft revoke <pkg>   # review and rescind recorded graft approvals (§12.15)
-aslice system-patch list / status        # which Apple-provided files are currently replaced, by which package (§12.11)
-aslice self-update [--check]           # aslice updates itself — package zero, generation swap, health-checked (§12.12)
-aslice outdated [--json]               # what would upgrade, and why; honors pins
-aslice reinstall ffmpeg                # same version, fresh link — repairs a damaged profile entry
-aslice link openssl3 / aslice unlink openssl3   # per-profile opt-in/out for `link = false` shadowing packages (PACKAGE-FORMAT §3.8); each flip is a new generation
-aslice profile prefer blas openblas       # flip a colliding name's priority without touching the store (§8.2)
-aslice pin openssl / aslice unpin openssl   # hold a package: upgrade skips it, outdated says so (one argument — distinct from runtime `pin php 8.4`, §12.9)
-aslice mark ffmpeg --on-request           # repair the installed-on-request record when it disagrees with reality (§8.4)
-aslice clean [--dry-run]               # cache eviction (§8.4); gc owns the store, clean owns the cache
-aslice livecheck [pkg|--all]           # query upstream for newer releases (PACKAGE-FORMAT §3.15)
-aslice test ffmpeg                     # run a package's tests.star against the installed slice, on demand
-aslice create <url>                    # fetch, hash, sniff the build system, emit a package.toml draft
-aslice bump-pr <pkg> <version>         # the human version bump: edit, lint, smoke-build one flavor, open the orchard PR
-aslice exec ffmpeg -- ffprobe in.mov   # run a command in a temporary profile view, discarded on exit
-aslice shellenv                        # print PATH/MANPATH/INFOPATH + trust-store exports for the current profile (pure echo, no writes)
-aslice store verify [--quarantine <pkg>]   # re-hash store paths against manifests — the immutability tripwire (§8.1)
-aslice db list                            # configured database roles (DATABASE.md)
-aslice db query "SELECT * FROM installed"  # bounded read-only client-state inspection
-aslice db check                           # schema, integrity, references, and records
-aslice db backup <destination>            # coordinated owner backup set
-aslice db restore <set> --dry-run         # validate and preview recovery before confirmation
-aslice help <command>                     # the command's man page, in the terminal (man/)
-# every command: -v / -vv raise verbosity, --quiet suppresses all but errors,
-# --log-format json|human selects rendering (§12.5)
+aslice install ffmpeg@v6               # version constraint
+aslice install audiolab:convolver      # explicit repository namespace
+aslice install php@8.4                 # coexisting runtime stream; does not select it
+aslice install php-redis               # extension bound to the selected runtime
+aslice install composer                # tool that rides the selected runtime
+aslice pin openssl                     # one argument: package upgrade hold
+aslice pin php 8.4                     # two arguments: project runtime selection
+aslice upgrade ffmpeg --rollback-on-service-failure
+aslice upgrade --security
+aslice upgrade --security --minimal --allow-source-builds
+aslice install foo --accept-system-changes
+aslice install protools-hd --accept-grafts
+aslice plan install ffmpeg > plan.json
+aslice lock export > aslice.lock
+aslice profile prefer blas openblas
+aslice config set flavor v2
+aslice init zsh
 ```
 
 <a id="interaction-principles"></a>
@@ -1252,5 +1364,6 @@ Artifact identity, protected execution, exact replay, and transaction recovery a
 | v1.28 | September 2026 | Documentation audit repairs: contract summaries aligned; owner-approved namespace, rollback, GC, naming, prefix, and graft decisions applied where relevant; semantic anchors and explicit citations added. Runtime implementation and platform acceptance remain pending. |
 | v1.31 | September 2026 | Describe aslice mechanisms without competitive rankings; align artifact bindings, protected restoration, and self-update commit boundaries, and retarget specification citations. |
 | v1.32 | September 2026 | Specify dependency-driven security remediation, explicit update and origin decisions, and the applicable farm, maintenance, and evidence contracts. Supersedes ABI-only rebuild and cost-first selection policies where previously stated; runtime and measured acceptance remain pending. |
+| v1.33 | September 2026 | Replace the example command list in §12.1 with a purpose-grouped public command index linked to owning man pages; complete family coverage and distinguish unspecified interfaces from implemented behavior. No command contracts changed. |
 
 </details>

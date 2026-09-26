@@ -12,6 +12,8 @@ aslice — a package manager for Intel macOS (10.11–12, x86_64)
 
 # DESCRIPTION
 
+These are specified interfaces; command implementation and installed help routing remain pending.
+
 aslice installs and manages software on Intel Macs running macOS 10.11 through 12. Packages are **slices** — prebuilt, signed binaries — installed from signed, static **repositories** compiled from **orchards** (git repositories of formulae). Installs are binary-first, execute no undeclared package code — a vendor installer script runs only as a declared, approved graft (aslice-graft(1)) — and never require sudo in steady state. Package activation creates a new **generation**. `aslice rollback` restores retained managed state through the transaction journal; external conflicts and reboot requirements are reported, and application data needs its own backup procedure.
 
 aslice collects no telemetry or analytics of any kind — there is no opt-out because there is no instrumentation.
@@ -67,7 +69,7 @@ aslice collects no telemetry or analytics of any kind — there is no opt-out be
 :   Update aslice itself — signed, generation-managed, health-checked, with automatic rollback on failure. `--check` reports without installing.
 
 **system-patch**
-:   `list`, `status`, `restore` — inspect and reverse declared replacements of Apple-provided files. See aslice-system-patch(1).
+:   `list`, `status`, `restore`, `prepare`, `finalize` — inspect and reverse declared replacements of Apple-provided files. See aslice-system-patch(1).
 
 **adopt**
 :   `--from-homebrew` — produce an install plan recreating a Homebrew leaf set.
@@ -83,6 +85,38 @@ aslice collects no telemetry or analytics of any kind — there is no opt-out be
 
 **exec**, **test**, **livecheck**, **config**, **help**
 :   Run a command in a temporary profile view; run a package's smoke tests; query upstream for newer releases; get/set configuration; print the man page for a command.
+
+**recover**, **decommission**
+:   Offer guided recover-and-continue, resuming saved progress when evidence agrees; unattended recovery requires explicit authorization. Conflicting mutations are blocked while unaffected verified packages and external repair tools remain accessible. Recovery can prepare a verified replacement beside the preserved original and report partial usability without claiming activation. Decommission inventories and removes managed external effects before deleting the prefix. `decommission --dry-run` inventories without changes; pending restoration preserves recovery tools ([STATE-AND-RECOVERY §6](../docs/STATE-AND-RECOVERY.md#self-update-and-decommission)).
+
+# COMMAND FAMILIES
+
+| Family page | Commands |
+|---|---|
+| [aslice-install(1)](aslice-install.1.md) | `install`, `reinstall` |
+| [aslice-upgrade(1)](aslice-upgrade.1.md) | `upgrade`, `outdated` |
+| [aslice-uninstall(1)](aslice-uninstall.1.md) | `uninstall`, `autoremove`, `mark`, `pin`, `unpin` |
+| [aslice-apply(1)](aslice-apply.1.md) | `plan install`, `lock export`, `apply` |
+| [aslice-adopt(1)](aslice-adopt.1.md) | `adopt --from-homebrew` |
+| [aslice-graft(1)](aslice-graft.1.md) | `graft approvals`, `graft revoke` |
+| [aslice-inspect(1)](aslice-inspect.1.md) | `search`, `info`, `flavors`, `leaves`, `why`, `provenance`, `audit` |
+| [aslice-needs-restarting(1)](aslice-needs-restarting.1.md) | `needs-restarting` |
+| [aslice-profile(1)](aslice-profile.1.md) | `history`, `rollback`, `switch-generation`, `link`, `unlink`, `profile prefer`, `exec`, `exec --replacement` |
+| [aslice-use(1)](aslice-use.1.md) | `use`, `pin`, `default`, `versions`, `which` |
+| [aslice-gc(1)](aslice-gc.1.md) | `gc`, `clean`, `store verify` |
+| [aslice-doctor(1)](aslice-doctor.1.md) | `doctor`, `log` |
+| [aslice-db(1)](aslice-db.1.md) | `db list`, `db schema`, `db query`, `db check`, `db maintain`, `db compact`, `db backup`, `db restore` |
+| [aslice-recover(1)](aslice-recover.1.md) | `recover`, `operation status`, `operation stop` |
+| [aslice-self-update(1)](aslice-self-update.1.md) | `self-update`, `decommission` |
+| [aslice-repo(1)](aslice-repo.1.md) | `repo add`, `repo list`, `repo enable`, `repo disable`, `repo remove`, `repo re-pin`, `repo keys`, `repo audit`, `repo allow-system-patch`, `repo deny-system-patch`, `repo build`, `repo sign`, `repo publish` |
+| [aslice-orchard(1)](aslice-orchard.1.md) | `orchard add`, `orchard pin`, `orchard lint`, `orchard doctor`, `orchard freshness`, `orchard ci`, `orchard dependents`, `orchard deprecate`, `orchard disable`, `orchard undeprecate`, `orchard tombstone`, `orchard rename`, `orchard port` |
+| [aslice-author(1)](aslice-author.1.md) | `create`, `lint`, `build`, `test`, `livecheck`, `bump-pr` |
+| [aslice-farm(1)](aslice-farm.1.md) | `farm plan`, `farm coordinator`, `farm agent`, `farm enroll` |
+| [aslice-machine(1)](aslice-machine.1.md) | `machine apply`, `machine export`, `machine import` |
+| [aslice-service(1)](aslice-service.1.md) | `service list`, `service status`, `service start`, `service stop`, `service restart`, `service run` |
+| [aslice-ca-update(1)](aslice-ca-update.1.md) | `ca-update`, `ca-update --keychain`, `ca-update --keychain-remove`, `ca-update --crypto`, `ca-update --apple-certs`, `ca-update --from-file` |
+| [aslice-system-patch(1)](aslice-system-patch.1.md) | `system-patch list`, `system-patch status`, `system-patch restore`, `system-patch prepare`, `system-patch finalize` |
+| [aslice-shell(1)](aslice-shell.1.md) | `shellenv`, `init`, `config get`, `config set`, `help` |
 
 # GLOBAL OPTIONS
 
@@ -129,9 +163,6 @@ aslice collects no telemetry or analytics of any kind — there is no opt-out be
 # EXIT STATUS
 
 **0** success; **1** general error or recovery required; **4** contention without unresolved recovery; **130** safely completed cancellation; **2** plan refused (trust, policy, or consent gate). aslice-doctor(1) and [aslice-db(1)](aslice-db.1.md) define their own exit codes.
-
-**recover**, **decommission**
-:   Offer guided recover-and-continue, resuming saved progress when evidence agrees; unattended recovery requires explicit authorization. Conflicting mutations are blocked while unaffected verified packages and external repair tools remain accessible. Recovery can prepare a verified replacement beside the preserved original and report partial usability without claiming activation. Decommission inventories and removes managed external effects before deleting the prefix. `decommission --dry-run` inventories without changes; pending restoration preserves recovery tools ([STATE-AND-RECOVERY §6](../docs/STATE-AND-RECOVERY.md#self-update-and-decommission)).
 
 # GUIDED OPERATION AND RECOVERY COMMANDS
 

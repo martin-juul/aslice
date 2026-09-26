@@ -8,13 +8,41 @@ aslice-apply — execute a saved plan; replay a lock file
 
 # SYNOPSIS
 
-`aslice apply` [*plan.json* | *aslice.lock* | *https://…*] [`--dry-run`] [`--accept-system-changes`] [`--accept-grafts`] [`--json`]
+`aslice apply` [*plan.json* | *aslice.lock* | *https://…*] [`--dry-run`] [`--accept-system-changes`] [`--accept-grafts`] [`--allow-source-builds`] [`--json`]
+
+`aslice plan install` *package*… [*install-options*]
+
+`aslice lock export`
 
 # DESCRIPTION
 
 **apply** detects the document kind from its content and executes the exact state it records. A saved **plan** (JSON, from `aslice plan`) is executed step for step. A **lock file** (`lock_version = 2`, [PACKAGE-FORMAT §7](../docs/PACKAGE-FORMAT.md#lock-files)) is replayed exactly — the recorded package set becomes a new generation. An `https://` argument is fetched, hash-printed, and shown before any consent is asked. With no argument there is no default document — apply prints its usage.
 
 A whole-machine **setup file** (`schema = 1`, SETUP.md) is refused here with a pointer to `aslice machine apply` (aslice-machine(1)). That command resolves a machine wishlist and uses `./aslice-machine.toml` as its default document. Exact-state replay belongs to the top-level command; wishlist convergence belongs under `aslice machine`.
+
+# PRODUCING PLANS AND LOCKS
+
+**plan install** resolves the named package request without executing it and emits
+a saved JSON plan. Package identifiers, targeted batch options, and solver choices
+follow [aslice-install(1)](aslice-install.1.md). The specifications demonstrate the
+install form; a complete grammar for other plan actions is not yet defined.
+Planning does not transfer consent to later execution.
+
+**lock export** writes the current profile's exact resolution to stdout as a
+version-2 lock file. It records exact artifacts and bindings, not a wishlist;
+replay cannot silently substitute another artifact. Additional profile-selector
+syntax for export is unspecified. Both documents require authentic records and
+available exact artifacts; a lock alone is not an offline backup of their bytes.
+
+# EXAMPLES
+
+```sh
+aslice plan install ffmpeg > plan.json
+aslice apply plan.json --dry-run
+aslice apply plan.json
+aslice lock export > aslice.lock
+aslice apply aslice.lock
+```
 
 # APPLY SEMANTICS
 

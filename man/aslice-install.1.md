@@ -90,6 +90,13 @@ no consent. Refusal returns 2 and never silently selects an older cached binary.
 Version-1 plans/locks are rejected; regenerate version 2 from authenticated records
 and explicit provider/replacement selections. Exact replay retains exact artifacts.
 
+# EXIT STATUS
+
+The common statuses in [aslice(1)](aslice.1.md#exit-status) apply where
+relevant: 0 success, 1 error or recovery required, 2 plan refused, 4 contention
+without unresolved recovery, and 130 safely completed cancellation. No additional
+family-specific numeric statuses are specified.
+
 # SEE ALSO
 
 aslice(1), aslice-upgrade(1), aslice-uninstall(1), aslice-use(1), aslice-graft(1), [MANUAL §3](../docs/MANUAL.md#everyday-commands) and [MANUAL §4](../docs/MANUAL.md#how-installs-actually-work)

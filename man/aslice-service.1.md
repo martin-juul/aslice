@@ -12,7 +12,11 @@ aslice-service — manage launchd services declared by packages
 
 `aslice service status` *package*
 
-`aslice service start`|`stop`|`restart` *package*
+`aslice service start` *package*
+
+`aslice service stop` *package*
+
+`aslice service restart` *package*
 
 `aslice service run` *package*
 
@@ -41,6 +45,32 @@ ownership through checks, defaulting to 60 seconds per service. Use
 override. A failed or timed-out check returns nonzero and explicitly reports
 committed installation. Any eligible rollback is a new transaction. A stop request
 after commit stops checks safely and reports incomplete verification.
+
+# EXAMPLES
+
+```sh
+aslice service list
+aslice service status redis
+aslice service start redis
+aslice service stop redis
+aslice service restart redis
+aslice service run redis
+```
+
+# EXIT STATUS
+
+The common statuses in [aslice(1)](aslice.1.md#exit-status) apply where
+relevant: 0 success, 1 error or recovery required, 2 plan refused, 4 contention
+without unresolved recovery, and 130 safely completed cancellation. No additional
+family-specific numeric statuses are specified.
+
+# COMMAND ARGUMENTS
+
+*package* names an installed package with a service declaration. **list** reports
+all managed services; **start** starts the declared job, **stop** stops it, and
+**restart** stops and starts it. These verbs do not accept arbitrary launchd labels
+as authority to control unrelated jobs. A family-wide dry-run interface and
+additional persistent-enable command spellings are not specified.
 
 # SEE ALSO
 

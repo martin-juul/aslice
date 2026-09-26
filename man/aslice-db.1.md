@@ -117,6 +117,8 @@ output is evidence, not an approved restore source.
 ```sh
 aslice db list --json
 aslice db schema
+aslice db maintain --dry-run --json
+aslice db compact --dry-run --json
 aslice db query 'SELECT profile,repository,name,artifact_id FROM installed'
 aslice db --role client-cache check --json
 aslice db --role client-state backup /Volumes/Backup/aslice/prefix-set-001
@@ -169,6 +171,11 @@ backup or failed check never exits successfully.
     in a coordinated backup set; a database file alone is insufficient.
 
 # SEE ALSO
+
+[aslice-recover(1)](aslice-recover.1.md) owns guided continuation, manual repair,
+salvage, activation, and operation status/stop. Its action confirmation and exit
+contract applies to those recovery operations; db restore retains its own
+`--confirm` preview-digest contract above.
 
 aslice(1), aslice-doctor(1), aslice-gc(1), aslice-repo(1),
 [DATABASE](../docs/DATABASE.md),

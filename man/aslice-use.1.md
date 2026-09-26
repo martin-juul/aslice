@@ -8,11 +8,13 @@ aslice-use, aslice-pin, aslice-default, aslice-versions, aslice-which — select
 
 # SYNOPSIS
 
-`aslice use` *runtime* *stream* [**--clear**] [**--install**]
+`aslice use` *runtime* *stream* [**--install**]
+
+`aslice use` *runtime* **--clear**
 
 `aslice pin` *runtime* *stream* [**--install**]
 
-`aslice default` *runtime* [*stream*]
+`aslice default` [*runtime* [*stream*]]
 
 `aslice versions` *runtime*
 
@@ -45,6 +47,24 @@ Upgrades stay in their lane: `aslice upgrade php` moves within the selected stre
 
 `~/.aslice/runtimes/<runtime>/<stream>/`
 :   Per-stream userbases for ecosystem installers (`pip install`, `gem install`, …). User territory: aslice never audits or deletes them, and warns about orphans on uninstall.
+
+# EXAMPLES
+
+```sh
+aslice use php 8.4
+aslice use php --clear
+aslice pin php 8.4
+aslice default php 8.4
+aslice versions php
+aslice which php
+```
+
+# EXIT STATUS
+
+The common statuses in [aslice(1)](aslice.1.md#exit-status) apply where
+relevant: 0 success, 1 error or recovery required, 2 plan refused, 4 contention
+without unresolved recovery, and 130 safely completed cancellation. No additional
+family-specific numeric statuses are specified.
 
 # SEE ALSO
 

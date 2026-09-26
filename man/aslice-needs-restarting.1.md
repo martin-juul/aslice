@@ -39,6 +39,13 @@ Inspection and reporting stay local; no telemetry is sent.
 Specified interface. Process inspection on macOS 10.11–12 and integration with
 service and protected-effect receipts remain pending.
 
+# EXAMPLES
+
+```sh
+aslice needs-restarting
+aslice needs-restarting --json
+```
+
 # SEE ALSO
 
 aslice(1), aslice-upgrade(1), aslice-service(1),

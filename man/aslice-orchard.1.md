@@ -12,7 +12,11 @@ aslice-orchard — maintain an orchard: lifecycle, health, the local merge gate
 
 `aslice orchard pin` *org/orchard* *commit*
 
-`aslice orchard lint`|`doctor`|`freshness` [*path*] [`--json`]
+`aslice orchard lint` [*path*] [`--json`]
+
+`aslice orchard doctor` [*path*] [`--json`]
+
+`aslice orchard freshness` [*path*] [`--json`]
 
 `aslice orchard ci` [*pkg*…] [`--flavors` *v2,v3*] [`--all`]
 
@@ -20,7 +24,11 @@ aslice-orchard — maintain an orchard: lifecycle, health, the local merge gate
 
 `aslice orchard deprecate` *pkg* `--reason` *reason* [`--replacement` *pkg*] `--date` *date* [`--disable-date` *date*]
 
-`aslice orchard disable`|`undeprecate`|`tombstone` *pkg*
+`aslice orchard disable` *pkg*
+
+`aslice orchard undeprecate` *pkg*
+
+`aslice orchard tombstone` *pkg*
 
 `aslice orchard rename` *old* *new*
 
@@ -47,6 +55,24 @@ The orchard group is the maintainer's CLI: everything between authoring one form
 # EXIT STATUS
 
 **lint**, **doctor**, **freshness**, **ci**: 0 all-pass, 1 warnings only, 2 any fail — the aslice-doctor(1) contract. The mutating verbs return 0 when the PR (or branch and diff) is ready.
+
+# EXAMPLES
+
+```sh
+aslice orchard add myorg/orchard
+aslice orchard pin myorg/orchard "$commit"
+aslice orchard lint
+aslice orchard doctor --json
+aslice orchard freshness
+aslice orchard ci ffmpeg --flavors v2,v3
+aslice orchard dependents x264 --transitive
+aslice orchard deprecate ffmpeg --reason upstream-eol --date 2027-03-01
+aslice orchard disable ffmpeg
+aslice orchard undeprecate ffmpeg
+aslice orchard rename ffmpeg ffmpeg7
+aslice orchard tombstone ffmpeg
+aslice orchard port --from-homebrew ffmpeg
+```
 
 # SEE ALSO
 
