@@ -2,7 +2,7 @@
 
 > State, identity, privilege, and recovery contracts: [STATE-AND-RECOVERY](STATE-AND-RECOVERY.md). Protected-volume patching: [SYSTEM-VOLUMES](SYSTEM-VOLUMES.md). These specifications do not establish completed implementation or platform validation.
 
-**Status:** Format draft, v0.16 — September 2026
+**Status:** Format draft, v0.17 — September 2026
 **Change log:** v0.2 adds **vendor binary packages** — `type = "binary"`, `[[binary]]` artifacts with per-OS support tags, declarative payload maps, and mandatory signer pinning (§3.11); lock-file `origin` gains `"vendor-direct"` (§7.2). v0.3 opens **32-bit and universal vendor payloads**: `arch` may include `"i386"`, with the 10.14 execution ceiling derived from the artifact itself and enforced at lint and solve time (§3.11). v0.4 adds the **`[system]` declaration** for kernel extensions and SIP-disabled development tools (§3.12; mechanism and warnings in DESIGN §12.7) and replaces the checksummed-plist `[[install.service]]` with the **generated-plist `[service]` table** — the manifest describes the service, aslice writes the launchd plist (§3.8; lifecycle and stop–swap–restart upgrades in DESIGN §12.8). v0.5 adds the **multi-version runtime declarations**: `[runtime]` marks a runtime formula (shim set, ABI epoch, per-version userbase environment injection, extension scan dir), `[extension]` binds a compiled extension slice to a runtime's ABI epoch, and `[ride]` marks an interpreter-target tool that launches under the currently selected runtime (§3.13; mechanism in DESIGN §12.9). v0.6 lands the lifecycle and freshness declarations proposed in HOMEBREW-REVIEW §8 and made normative policy by ORCHARD-POLICY v0.4 §1: **`[deprecation]`** replaces the retired `[package] deprecated` boolean (§3.14), **`[livecheck]`** declares upstream freshness tracking (§3.15), **`[install]`** gains `link`/`link_reason` (the principled keg-only) and the `notes` caveats field (§3.8), the `build.star` ctx API gains **`ctx.replace`** (§6.3), and **`[system-patch]`** declares flagged replacement of Apple-provided files (§3.16; mechanism in DESIGN §12.11). v0.7: review corrections — §3.16's serving rule now matches REPOSITORIES §3 as amended (official/local by default; verified only via the explicit per-repo `allow-system-patch` grant; third-party never), and §3.8 documents `aslice link`/`aslice unlink` for `link = false` packages (DESIGN v1.10 §12.1). v0.8: §7.1 notes that `aslice apply` is now the unified convergence verb — saved plans, lock files, and declarative `setup.toml` documents (SETUP.md; DESIGN v1.11 §12.13). v0.9 is an editorial pass — prose revised for directness; no schema or semantic changes. v0.10 rewrites the prose throughout — every explanatory passage reworded for clarity, pace, and voice; no schema, semantic, or factual changes. v0.11: review pass — stray trailing whitespace removed from the §4.1 grammar block; no schema or semantic changes. v0.12 adds a NOMENCLATURE.md vocabulary reference to the header; no schema or semantic changes. v0.13 drops the variant cap from §3.5 and the lint list (policy moved to need-plus-honest-tags, DESIGN §13.2), softens the §3.11 example's redistribution comment to mechanics only, and adds `takedown` to the §3.14 lifecycle reasons. v0.14 follows the declarative-setup rename in §7.1's cross-reference: the machine file is now `aslice-machine.toml`, applied with `aslice machine apply` (SETUP.md v0.9; DESIGN v1.18 §12.13); lock replay stays top-level `aslice apply aslice.lock` — no schema or semantic changes. v0.15 adds **grafts** — declared vendor installer scripts for binary packages: `[[binary.graft]]` pins each script by hash and carries an exhaustive behavior manifest (`writes`, `kexts`, `daemons`, `network`, `elevated`) that doubles as its execution sandbox policy (§3.11; model and approval flow in DESIGN v1.19 §12.15, user-side declaration in SETUP §2.8). The payload-only default is unchanged: undeclared scripts still never run on any path. v0.16 adds the TOOLCHAIN.md companion reference; no schema changes
 **Companion to:** [DESIGN.md](DESIGN.md) — this document is the authoritative specification for §6 (Package Format). Where they disagree, this document wins. The toolchain this format's builds run on is specified in [TOOLCHAIN.md](TOOLCHAIN.md).
 **Scope:** the `package.toml` definition format, `build.star` build API, dependency and version semantics, transitive resolution, and lock files.
@@ -101,7 +101,7 @@ flavors = ["v2", "v3"]    # omit → all of ["v1", "v2", "v3"]
 ```
 
 - A package that genuinely needs AVX2 — hand-written AVX2 kernels with no dispatch fallback, say — declares `flavors = ["v3"]`. The farm then skips its `v1`/`v2` slices, and v1/v2 machines get a clear solve-time message.
-- The toolchain, not the formula, supplies the flavor's `-march=x86-64-vN` floor (§6.3); formula authors never write `-march` themselves. A user's `-march=native` request layers on top at install time (DESIGN §7.4) and does not affect identity.
+- The toolchain, not the formula, supplies the flavor's `-march=x86-64-vN` floor (§6.3); formula authors never write `-march` themselves. A user's `-march=native` request layers on top at install time (DESIGN §7.4). ABI-neutral choices may share a compatibility key; exact flags and CPU requirements enter the artifact manifest. ABI-changing flags require a declared ABI variant or are rejected, and unknown effects require an isolated build and explicit dependency validation (STATE-AND-RECOVERY §2).
 - `min_os` and `flavors` are orthogonal axes, and both enter the build identity (DESIGN §7.2).
 - `flavors` remains a source-build axis. Vendor artifacts instead require `cpu_features` and `requires_i386`, describing actual execution requirements. Nothing being compiled does not imply compatibility with every CPU (STATE-AND-RECOVERY §2).
 
@@ -142,7 +142,7 @@ description = "HEVC encoding via x265"
 
 [variants.debug]
 default     = false
-abi         = false       # build-flavor only; never enters identity
+abi         = false       # ABI-neutral; may share a compatibility key
 description = "Build with debug symbols"
 
 [variants.lto]
@@ -267,7 +267,7 @@ sha256    = "aa11…"
 format    = "pkg"                       # pkg | dmg
 min_os    = "10.11"                     # artifact-level bounds; override [package] defaults
 max_os    = "10.13"                     # vendor's legacy build genuinely stops at 10.13
-arch      = ["x86_64", "i386"]          # universal; i386 present ⇒ max_os ≤ "10.14" (derived)
+arch      = ["x86_64", "i386"]          # universal; the ceiling follows required i386-only execution
 signer    = "Developer ID Application: Vendor Inc. (ABCD1234)"   # pinned; change = hard fail
 notarized = false                       # pre-notarization-era artifact; expected and announced
 redistribute = false                    # clients fetch the vendor URL themselves
@@ -307,7 +307,7 @@ Rules:
 - **The 32-bit ceiling follows required execution.** Required i386-only executables/helpers/plugins impose `max_os <= "10.14"`. A fat executable with a usable x86_64 member does not require i386 merely because an alternative member exists. Lint checks the declared entry points and dependency paths and requires evidence for ambiguous plugins (STATE-AND-RECOVERY §2).
 - **Universal payloads install whole.** Thinning a fat binary with `lipo -thin` would invalidate the vendor's code signature, and signer integrity outranks disk savings; the extraction is forbidden, and the store receives the artifact exactly as signed.
 - **Pre-notarization-era artifacts are expected, not merely tolerated.** Software old enough to contain 32-bit code usually predates notarization (10.14+) and sometimes predates Developer ID signing altogether. `notarized = false` — or, in the extended tier, an omitted `signer` — is the normal case for these packages; it is announced at install, never blocked.
-- **Execution requirements still apply.** Vendor compatibility keys omit compiler/flavor fields but bind the vendor digest. Every artifact records CPU features and whether execution requires i386. ABI scanning retains exact dependency bindings when evidence is incomplete (STATE-AND-RECOVERY §2).
+- **Execution requirements still apply.** Vendor compatibility keys set compiler/flavor fields to null and bind the vendor digest. Every artifact records CPU features and whether execution requires i386. ABI scanning retains exact dependency bindings when evidence is incomplete (STATE-AND-RECOVERY §2).
 - **OS tags are verified, not trusted.** At pack/repack time, each artifact's declared `min_os`/`max_os` is checked against the bundle's `LSMinimumSystemVersion`, the Mach-O minimum-version load commands, and — where present — the pkg Distribution's `allowed-os-versions`. Disagreement is a lint error.
 - **Version normalization still applies** (§4): a vendor spelling like `3.2 Update 1` normalizes by the usual rules, and the verbatim string is preserved in `upstream_version`.
 
@@ -427,7 +427,7 @@ cooldown_days   = 2                # wait after upstream release — supply-chai
 
 ### 3.16 `[system-patch]` — flagged replacement of Apple-provided files (v0.6)
 
-This is the strictest declaration in the format. A system-patch package replaces an Apple-provided file: the original is backed up, the replacement is a profile symlink, and a restore is byte-exact. The mechanism and consent flow are specified in DESIGN §12.11, the acceptance policy in ORCHARD-POLICY §13.
+This is the strictest declaration in the format. A system-patch package replaces an Apple-provided file through the protected helper. Originals and metadata remain in root-owned storage; executable replacements and their dependencies come from a verified root-owned closure. Supported symlinks target that closure, never the user-writable profile (STATE-AND-RECOVERY §3). The OS-specific backend governs application and restoration, including Recovery and reboot where needed (SYSTEM-VOLUMES). The mechanism and consent flow are specified in DESIGN §12.11, the acceptance policy in ORCHARD-POLICY §13.
 
 ```toml
 [system-patch]
@@ -573,7 +573,7 @@ The language is Starlark: deterministic, no network, filesystem confined to the 
 | `ctx.env` | map | Controlled environment; `ctx.env.set(k, v)` / `ctx.env.append(k, v)`; reads of host env are denied |
 | `ctx.run(argv…)` | fn | Exec, argv-array only — **no shell**, no string interpolation attacks |
 | `ctx.make(*args)`, `ctx.cmake(*args)`, `ctx.meson(*args)` | fn | Tool helpers with correct defaults |
-| `ctx.user_cflags` / `ctx.user_ldflags` | string | User flags from install time (DESIGN §7.4); appended, recorded, never identity-affecting |
+| `ctx.user_cflags` / `ctx.user_ldflags` | string | User flags from install time (DESIGN §7.4); appended and recorded in the artifact manifest; ABI-changing flags need a declared ABI variant, unknown effects need dependency validation |
 | `ctx.patch(file)` | fn | Apply a checksummed patch from `patches/` |
 | `ctx.replace(file, pattern, replacement)` | fn | In-place text substitution for trivial fixups without a patch file (Homebrew's `inreplace`, its most-used helper); count-checked — zero replacements is a build error, never a silent no-op |
 
@@ -698,7 +698,7 @@ The full form is in §3.11; the shape to remember is **two `[[binary]]` artifact
 | `[service]` | `run` `domain` `keep_alive` `run_at_load` `working_dir` `environment` `log_dir` `user_name` |
 | `[audit]` | `cpe`, `eol`, `eol_date` |
 | `[build]` | `system`, `args`, `skip_tests` |
-| `[[binary]]` (type=binary) | `url` `sha256` `format` `min_os` `max_os` `arch` (`x86_64` default; `i386` / universal allowed, i386 ⇒ `max_os ≤ 10.14`, derived) `signer` `notarized` `redistribute` + `[[binary.payload]]` (`from`, `to`) |
+| `[[binary]]` (type=binary) | `url` `sha256` `format` `min_os` `max_os` `arch` (`x86_64` default; `i386` / universal allowed, required i386-only execution ⇒ `max_os ≤ 10.14`, derived) `signer` `notarized` `redistribute` + `[[binary.payload]]` (`from`, `to`) |
 | `[[binary.graft]]` | `path` `sha256` `when` (`pre` \| `post`) + behavior manifest: `writes` `kexts` `daemons` `network` `elevated` |
 | `[system]` | `kexts` `sip_off_required` `reason` |
 | `[runtime]` | `abi_epoch` `shims` `extension_scan_dir` + `[[runtime.env]]` (`var`, `value`) |
@@ -710,3 +710,5 @@ The full form is in §3.11; the shape to remember is **two `[[binary]]` artifact
 | lock file | `lock_version`, `generated_by`, `index_snapshot`, `[machine]`, `[[package]]` (incl. `origin` = `slice` \| `local-build` \| `vendor-direct`) |
 
 *History: September 2026 — corpus review corrections: artifact identity, protected execution, durable recovery, trust persistence, replay, platform limits, and examples aligned with STATE-AND-RECOVERY and SYSTEM-VOLUMES. These are specification changes; runtime acceptance remains pending.*
+
+*History: v0.17 (September 2026) — resolve stale summaries and example comments for build flags, vendor-key null fields, required i386 execution, and protected system-patch closures. These corrections follow STATE-AND-RECOVERY and SYSTEM-VOLUMES; schema structure is unchanged.*

@@ -9,6 +9,7 @@ Use UTF-8 plain text, meaningful filenames, local links, explicit dates, and ver
 ## Catalog
 
 - [Apple Configuring System Integrity Protection](APPLE_CONFIGURING_SYSTEM_INTEGRITY_PROTECTION.MD)
+- [Apple Default Login Shell](APPLE_DEFAULT_LOGIN_SHELL.MD)
 - [Apple Dynamic Library Design Guidelines](APPLE_DYNAMIC_LIBRARY_DESIGN_GUIDELINES.MD)
 - [Apple Signed System Volume Security](APPLE_SIGNED_SYSTEM_VOLUME_SECURITY.MD)
 - [Apple Writable Root Volume Discussion](APPLE_WRITABLE_ROOT_VOLUME_DISCUSSION.MD)

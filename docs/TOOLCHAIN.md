@@ -2,7 +2,7 @@
 
 > State, identity, privilege, and recovery contracts: [STATE-AND-RECOVERY](STATE-AND-RECOVERY.md). Protected-volume patching: [SYSTEM-VOLUMES](SYSTEM-VOLUMES.md). These specifications do not establish completed implementation or platform validation.
 
-- **Status:** Design draft, v0.4 — September 2026
+- **Status:** Design draft, v0.5 — September 2026
 - **Companion to:** [DESIGN.md](DESIGN.md) v1.22 (§4 platform floor, §7.2 build identity), [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md) v0.16 (§6 build environment), [BUILD-INFRA.md](BUILD-INFRA.md) v0.16 (farm consumption), [GENESIS.md](GENESIS.md) v0.7 (the from-nothing runbook). This document is the authoritative specification for the toolchain; where it and another document disagree, the disagreement is a bug in one of them.
 - **Vocabulary:** [NOMENCLATURE.md](NOMENCLATURE.md).
 
@@ -61,24 +61,25 @@ The flavor vocabulary is the x86-64 psABI microarchitecture levels (DESIGN §4.2
 The mechanics:
 
 - **The floor comes from the toolchain, never the formula.** The build environment's `CC`/`CXX` are wrappers that inject the flavor's `-march=x86-64-vN` floor, export `MACOSX_DEPLOYMENT_TARGET`, and apply prefix-mapping. Formula authors never write `-march` themselves (PACKAGE-FORMAT §3); `ctx.flavor` and `ctx.min_os` exist so scripts can *branch* on them, not so they can set flags (PACKAGE-FORMAT §6.3).
-- **User flags layer on top, outside identity.** A user's `-march=native` or `-O3` is appended at install time, recorded, and never identity-affecting (DESIGN §7.4): the ABI contract, not the flags, governs substitution.
+- **User flags layer on top, subject to the ABI contract.** A user's `-march=native` or `-O3` is appended at install time and recorded in the artifact manifest (DESIGN §7.4). ABI-neutral choices may share a compatibility key, but byte-distinct results have distinct artifact identities. The harness rejects unsupported ABI-changing flags unless represented by a declared ABI variant; unknown effects require an isolated build and explicit dependency validation. Substitution also checks actual CPU/OS requirements (STATE-AND-RECOVERY §2).
 - **The manager is built v1.** It gains nothing from vector ISAs and must run on every supported machine (DESIGN §4.2).
 
 The owned Mac Pro handles `v1`/`v2`; complete `v3` jobs run on the on-demand 2015 MacBook Pro. Emitting instructions is only one part of a build: configure probes, generated tools, dependencies, and tests may execute them. Assignment therefore requires detected CPU and OS capabilities, including those exposed inside guests. Mac Pro VMs cannot provide `v3` execution; jobs wait when no capable worker is available (BUILD-INFRA §6.1).
 
 ## 7. Identity: `toolchain_id`
 
-The toolchain is an ingredient of every build identity (DESIGN §7.2):
+The toolchain is an ingredient of each source-build compatibility key (DESIGN §7.2). The following pseudocode summarizes STATE-AND-RECOVERY §1; the result is the full 64 lowercase hexadecimal digits, never a truncated storage key:
 
 ```
-build_id = base32(sha256(canonical_json({
-    name, version, revision, abi_variants, flavor, min_os, toolchain_id,
-})))[:10]
+build_id = hex_lower(sha256(rfc8785({
+    repository, name, version, epoch, revision, abi_variants,  # normalized version
+    runtime_abi_epoch, flavor, min_os, toolchain_id, vendor_digest,
+})))
 ```
 
-The ID names the compiler and the floor — `clang-19-10.11` reads as Clang 19 targeting 10.11. Vendor binary packages exclude it: nothing is compiled, so `flavor` and `toolchain_id` drop out and the artifact's sha256 effectively is the input identity (DESIGN §7.2).
+The `toolchain_id` names the compiler and the floor — `clang-19-10.11` reads as Clang 19 targeting 10.11. Vendor packages set `flavor` and `toolchain_id` to null and bind the vendor artifact digest; source builds use null for the absent vendor digest. Other absent optional identity fields are explicit nulls, and ABI variant maps contain the complete resolved assignment (STATE-AND-RECOVERY §1).
 
-Deliberately absent from the identity: optimization level, `-march` beyond the flavor floor, debug info, timestamps, build host. Two builds may share a compatibility key while having different artifact identities. A native build records its exact flags and CPU requirements; substituting it requires ABI evidence and a compatible target machine (STATE-AND-RECOVERY §1–§2).
+ABI-neutral optimization choices, debug information, timestamps, and build host are absent from the compatibility key. Exact flags, payload hashes, dependency bindings, and CPU requirements enter the artifact manifest. Two builds may share a compatibility key while having different artifact identities; substitution requires ABI evidence, dependent tests, and a compatible target machine (STATE-AND-RECOVERY §1–§2). Short digests are display abbreviations only.
 
 ## 8. How a build consumes the toolchain
 
@@ -131,3 +132,5 @@ The known roadmap item is `aslice-toolchain` v2: LLD-first linking and ccache in
 *History: September 2026 — corpus review corrections: artifact identity, protected execution, durable recovery, trust persistence, replay, platform limits, and examples aligned with STATE-AND-RECOVERY and SYSTEM-VOLUMES. These are specification changes; runtime acceptance remains pending.*
 
 *History: v0.4 (September 2026) — prose rewrite of the self-hosting rationale, component inventory, and recovery explanation; no content changes.*
+
+*History: v0.5 (September 2026) — resolve compatibility-key and build-flag conflicts against STATE-AND-RECOVERY §1–§2: full hexadecimal keys, complete identity inputs, separate artifact identity, and conditional substitution. No runtime implementation is claimed.*

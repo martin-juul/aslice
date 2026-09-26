@@ -4,7 +4,7 @@
 
 **The user guide for aslice — a package manager for Intel macOS.**
 
-- **Status:** v0.13 — September 2026 (v0.2: review corrections — §2.3 covers bash alongside zsh, §2.5 lists the three outside-prefix exceptions to a clean removal instead of claiming none exist, §3's man-page claim is softened to what actually ships, §3.1 documents `link`/`unlink` for `link = false` packages, and §7.1's root-daemon gate includes local repositories. v0.3: new chapter 10 — declarative whole-machine setup with `setup.toml`, `aslice apply`, `aslice export`, and `aslice import --from-brewfile` (SETUP.md); chapters 10–13 renumber to 11–14. v0.4: editorial pass — prose revised for directness throughout; no factual or behavioral changes. v0.5: second editorial pass — sentence-level revision for readability; no factual or behavioral changes. v0.6: prose rewrite throughout — chapters reworded in the project's technical-writing voice; no factual or behavioral changes. v0.7: review pass — the lock-file pointer in §10.2 now cites PACKAGE-FORMAT §7; no factual or behavioral changes. v0.8: NOMENCLATURE.md vocabulary reference added to the header; no factual or behavioral changes. v0.9: §1's honesty sentence gains the pointer-mode mechanics — a vendor binary that cannot be hosted is fetched from the vendor's own server at install; the header gains the project-home line — aslice.sh carries the homepage, documentation, and public dashboard, with the installer served from get.aslice.sh (owner decision, September 2026); no behavioral changes. v0.10: the setup file is renamed `aslice-machine.toml` and its commands move under `aslice machine` (apply / export / import --from-brewfile); top-level `aslice apply` keeps plans and lock files (owner decision, September 2026); no behavioral changes. v0.11: grafts — §1's no-code-at-install claim gains the declared-graft exception, §4 gains §4.5 (the user-facing graft approval flow: the manifest you are shown, the prompt, the allow-list, the unsigned warning, and why rollback still holds), §9.2's no-code-from-repositories sentence and §9.3's signature-scope note gain the graft scope, §10.3's consent gates gain the graft approval step, and the appendix quick reference gains the `graft` row; model in DESIGN v1.19 §12.15; no other behavioral changes. v0.12: TOOLCHAIN.md joins the companions and §2.1's no-Xcode sentence links it; no behavioral changes)
+- **Status:** v0.14 — September 2026 (v0.2: review corrections — §2.3 covers bash alongside zsh, §2.5 lists the three outside-prefix exceptions to a clean removal instead of claiming none exist, §3's man-page claim is softened to what actually ships, §3.1 documents `link`/`unlink` for `link = false` packages, and §7.1's root-daemon gate includes local repositories. v0.3: new chapter 10 — declarative whole-machine setup with `setup.toml`, `aslice apply`, `aslice export`, and `aslice import --from-brewfile` (SETUP.md); chapters 10–13 renumber to 11–14. v0.4: editorial pass — prose revised for directness throughout; no factual or behavioral changes. v0.5: second editorial pass — sentence-level revision for readability; no factual or behavioral changes. v0.6: prose rewrite throughout — chapters reworded in the project's technical-writing voice; no factual or behavioral changes. v0.7: review pass — the lock-file pointer in §10.2 now cites PACKAGE-FORMAT §7; no factual or behavioral changes. v0.8: NOMENCLATURE.md vocabulary reference added to the header; no factual or behavioral changes. v0.9: §1's honesty sentence gains the pointer-mode mechanics — a vendor binary that cannot be hosted is fetched from the vendor's own server at install; the header gains the project-home line — aslice.sh carries the homepage, documentation, and public dashboard, with the installer served from get.aslice.sh (owner decision, September 2026); no behavioral changes. v0.10: the setup file is renamed `aslice-machine.toml` and its commands move under `aslice machine` (apply / export / import --from-brewfile); top-level `aslice apply` keeps plans and lock files (owner decision, September 2026); no behavioral changes. v0.11: grafts — §1's no-code-at-install claim gains the declared-graft exception, §4 gains §4.5 (the user-facing graft approval flow: the manifest you are shown, the prompt, the allow-list, the unsigned warning, and why rollback still holds), §9.2's no-code-from-repositories sentence and §9.3's signature-scope note gain the graft scope, §10.3's consent gates gain the graft approval step, and the appendix quick reference gains the `graft` row; model in DESIGN v1.19 §12.15; no other behavioral changes. v0.12: TOOLCHAIN.md joins the companions and §2.1's no-Xcode sentence links it; no behavioral changes)
 - **Project home:** [aslice.sh](https://aslice.sh) — homepage, documentation (aslice.sh/docs), and the public dashboard (aslice.sh/dashboard); the installer is served from get.aslice.sh (§2).
 - **Audience:** people who install and run software with aslice; that is most of what follows. If you *write* packages, read chapters 1–4 and then move to [AUTHORING.md](AUTHORING.md). If you want to know *why* things are the way they are, the rationale lives in [DESIGN.md](DESIGN.md).
 - **Companions:** the man pages in [man/](../man/) (also available as `aslice help <command>`), [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md), [ORCHARD-POLICY.md](ORCHARD-POLICY.md), [REPOSITORIES.md](REPOSITORIES.md), [GENESIS.md](GENESIS.md), [TOOLCHAIN.md](TOOLCHAIN.md).
@@ -164,7 +164,7 @@ aslice install ffmpeg --variant +x265 --cflags="-O3"       # non-default options
 aslice install ffmpeg --cflags="-O3 -march=native" --lto   # tuned to your machine
 ```
 
-Custom-flag builds interoperate with prebuilt packages: your `-march=native` ffmpeg links fine against the farm's x264, because compatibility is checked against the libraries' published interfaces, not their origin (§4.3). A non-default *feature* variant (`--variant`) may or may not have a prebuilt slice; when it doesn't, aslice says so and builds locally. Either way, the plan tells you which before anything downloads.
+Custom-flag builds can use prebuilt dependencies when their ABI evidence, dependent tests, and CPU/OS requirements permit it (§4.3). A `-march=native` ffmpeg records the selected CPU features; sharing a compatibility key does not make it usable on every machine. Unsupported ABI-changing flags are rejected unless covered by a declared ABI variant, and unknown effects require an isolated build and explicit dependency validation (STATE-AND-RECOVERY §2). A non-default *feature* variant (`--variant`) may or may not have a prebuilt slice; when it doesn't, aslice says so and builds locally. Either way, the plan tells you which before anything downloads.
 
 **Shadowed packages and `link`.** A package can be installed into the store without being linked into your profile — the principled keg-only case, declared `link = false` in the formula with a mandatory `link_reason`, usually because the package shadows something macOS ships (OpenSSL, curl). `aslice info` shows the reason. `aslice link openssl@3` opts in per profile, `aslice unlink openssl@3` backs out, and each flip is a new generation, so `rollback` undoes it like anything else. Packages that declared the dependency build and run against the store copy either way (PACKAGE-FORMAT §3.8, DESIGN §12.1).
 
@@ -231,14 +231,14 @@ A slice is aslice's binary package: a zstd-compressed archive of files, a manife
 
 Installing a slice is six steps, and none of them runs code from the package:
 
-1. Verify the slice's signature against the repository's pinned key.
-2. Verify every file against the manifest's hashes.
-3. Extract into a fresh store path.
-4. Check the package's library interfaces against the things that will link to it.
-5. Register it in the state database.
-6. Build the new generation and flip the profile symlink.
+1. Authenticate repository metadata and verify the complete archive's length, digest, and package signature.
+2. Validate the container descriptor and canonical manifest, then extract into bounded staging.
+3. Verify every staged file against the manifest, apply authorized relocation, and register the immutable artifact.
+4. Check exact dependency bindings, ABI evidence, and CPU/OS requirements for the proposed package set.
+5. Prepare the complete generation, backups, and durable transaction intent before live changes.
+6. Apply journaled operations, switch the profile, record the generation in the state database, and commit after reconciliation and health checks.
 
-If any step fails, nothing changes: the live generation is not touched until the new one is complete. None of the six runs package code; a graft-bearing package adds one declared, approved, sandboxed step of its own, covered in §4.5.
+Preparation failures leave the live generation unchanged. After live changes begin, failures require journal recovery; intervening external edits can require attention, and protected-volume restoration may require Recovery and reboot. Package rollback does not restore application data (STATE-AND-RECOVERY §5; SYSTEM-VOLUMES §4). None of the six runs package code; a graft-bearing package adds one declared, approved, sandboxed step of its own, covered in §4.5.
 
 ### 4.2 Flavors: matching builds to your CPU
 
@@ -252,13 +252,13 @@ The solver treats flavor as a hard constraint: a v3 slice is never offered to a 
 
 ### 4.3 Mixing binary and source builds
 
-Homebrew removed build options because of combinatorial explosion: every combination of options would have needed its own binaries, and local builds broke against prebuilt ones. aslice's answer is to check compatibility where it actually lives — in the libraries' published interfaces. Every built package records which libraries it provides (with versions and symbol fingerprints) and which it requires, and substitution is allowed whenever a provider's interface covers a consumer's requirements, regardless of who compiled what with which optimization flags.
+Homebrew removed build options because of combinatorial explosion: every combination of options would have needed its own binaries, and local builds broke against prebuilt ones. aslice's answer is to check compatibility where it actually lives — in the libraries' published interfaces. Every built package records its provided and required interfaces, exact dependency artifacts, CPU requirements, and evidence quality. Substitution requires adequate ABI evidence and dependent tests on a compatible machine. Incomplete evidence retains the exact provider or requires rebuilding and testing dependents (STATE-AND-RECOVERY §2).
 
 The practical consequences:
 
-- `--cflags="-O3 -march=native"` affects only the package you name; its dependencies stay binary.
-- A locally built library with the same interface *is* the same package as far as everything else is concerned. The database remembers that it was locally built (`aslice info` shows this), but nothing treats it as second-class.
-- If a rebuilt library would break its dependents — a symbol set that regressed, a compatibility version that went backwards — the solver refuses the combination at install time and names the interface that changed. You find out now, not three weeks from now at runtime.
+- `--cflags="-O3 -march=native"` affects only the package you name; its dependencies stay binary where their contracts are satisfied.
+- A locally built library may be a compatible provider while retaining its own artifact identity. Existing consumers keep exact artifact bindings until an explicit rebuild or verified relocation creates a new artifact and reruns dependency tests. `aslice info` records the local-build origin; origin alone neither grants nor prevents substitution.
+- If the recorded evidence shows an incompatible interface, the solver refuses the combination and names the mismatch. A scanner cannot detect every ABI or behavioral break; unknown evidence does not count as compatibility.
 
 ### 4.4 Variants, briefly
 
@@ -680,3 +680,5 @@ The prefix layout, for orientation: `store/` (immutable packages), `profiles/gen
 | `help` | The man page for any command, in your terminal |
 
 *History: September 2026 — corpus review corrections: artifact identity, protected execution, durable recovery, trust persistence, replay, platform limits, and examples aligned with STATE-AND-RECOVERY and SYSTEM-VOLUMES. These are specification changes; runtime acceptance remains pending.*
+
+*History: v0.14 (September 2026) — resolve install-failure and custom-build summaries against STATE-AND-RECOVERY §1–§2, §5 and SYSTEM-VOLUMES: staged preparation, journal recovery, exact artifact bindings, ABI evidence, dependent tests, CPU/OS checks, and unsupported/unknown flag handling.*
