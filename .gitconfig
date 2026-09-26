@@ -1,5 +1,5 @@
 [init]
-    defaultBranch = main
+    defaultBranch = master
 
 [core]
     # Never let Git convert line endings implicitly — this is what breaks
