@@ -28,6 +28,7 @@ to be done.
 |---|---|
 | [Design](DESIGN.md) | Platform scope, architecture, security model, and roadmap. |
 | [State and recovery](STATE-AND-RECOVERY.md) | Artifact identity, privilege boundaries, transactions, replay, and acceptance gates. |
+| [Database](DATABASE.md) | Six SQLite roles, executable schemas, durable records, inspection, backup, and disaster recovery. |
 | [Slice format](SLICE-FORMAT.md) | Binary archive layout, manifests, verification, and extraction limits. |
 | [Package format](PACKAGE-FORMAT.md) | Package definitions, dependency and version semantics, lock files, and the build API. |
 | [Setup](SETUP.md) | Declarative machine configuration and the semantics of applying, exporting, and importing it. |

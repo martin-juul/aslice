@@ -2,7 +2,7 @@
 
 > State, identity, privilege, and recovery contracts: [STATE-AND-RECOVERY](STATE-AND-RECOVERY.md). Protected-volume patching: [SYSTEM-VOLUMES](SYSTEM-VOLUMES.md). These specifications do not establish completed implementation or platform validation.
 
-- **Status:** Design draft, v1.12 — September 2026
+- **Status:** Design draft, v1.13 — September 2026
 - **Companion to:** [DESIGN.md](DESIGN.md), [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md), [BUILD-INFRA.md](BUILD-INFRA.md), [ORCHARD-POLICY.md](ORCHARD-POLICY.md)
 - **Scope:** the shipped official source list, adding third-party repositories, the inherent trust-level model, and the dual signature scheme (Ed25519 canonical, OpenPGP supported).
 - **Vocabulary:** [NOMENCLATURE.md](NOMENCLATURE.md) — project terms, acronyms, and the Homebrew translation table.
@@ -258,20 +258,22 @@ Machine files, recipes, and scripts use the same naming rule. Use `extended:vend
 
 ## 11. The state database's role
 
-SQLite records installed state and caches verified repository data. Authoritative trust and recovery journals remain separate ([STATE-AND-RECOVERY §5](STATE-AND-RECOVERY.md#durable-transactions-and-recovery) and [STATE-AND-RECOVERY §7](STATE-AND-RECOVERY.md#persistent-trust-and-initial-bootstrap)). The database holds:
+SQLite separates [client state](DATABASE.md#3-client-state) from the
+[disposable cache](DATABASE.md#4-disposable-client-cache). Protected system state,
+the farm coordinator, publisher, and release signer have distinct owner databases.
+[DATABASE](DATABASE.md) owns their executable schemas, lifecycles, maintenance
+commands, and disaster recovery; this section summarizes repository interactions.
 
-| Table (indicative) | Contents | Written by |
+| Projection | Contents | Written by |
 |---|---|---|
-| `installed` | installed set: build_id, origin, `on_request`, generation membership | install/uninstall/rollback |
-| `repo_pins` | read-only cache of authoritative `trust/` records; cannot grant authority | authenticated trust-state reconciliation |
-| `solve_cache` | memoized resolutions keyed by index snapshot hash | the solver |
-| `history` | every mutating operation with timestamp, operation ID, and generation delta | every transaction |
+| Client `artifacts`, `bindings`, `members`, `requests` | Exact installed origins, generation membership, dependency bindings, and requested roots | Journaled install/uninstall/rollback/mark |
+| Client `holds`, `runtime_defaults`, `profile_priorities`, `history` | Durable choices, collision-provider priorities, and compact operation history | Journaled mutations, including those without a generation change |
+| Cache `snapshots`, `packages`, `solve_cache`, `solve_inputs` | Verified index and recipe projections and solves bound to their complete inputs | Authenticated refresh and solver |
+| Cache `trust_projections` | Non-authoritative descriptions of retained trust records | Authenticated trust-state reconciliation |
 
-Three properties carry the design:
-
-- **WAL mode, prepared statements, single file** ([DESIGN §5.2](DESIGN.md#major-components)). Concurrent `aslice` processes serialize cleanly, and a crash leaves the file consistent.
-- **Security authority lives in `trust/`, not the SQLite cache.** Pins, root chains, grants, revocations, trusted version high-water marks, and offline verification receipts are retained independently per repository/environment. Deleting SQLite requires installed-state reconstruction but preserves trust. Missing or corrupt `trust/` fails closed and requires explicit recovery; it never silently restarts TOFU ([STATE-AND-RECOVERY §7](STATE-AND-RECOVERY.md#persistent-trust-and-initial-bootstrap)).
-- **Inspectable.** `aslice db query` (read-only, schema-documented) exists so that power users and fleet tooling can see their own state. The format is SQLite, chosen precisely because standard tools already read it.
+- **WAL and prepared statements apply within each owner database.** Use the pinned SQLite build and connection policy in [DATABASE](DATABASE.md#10-sqlite-connection-and-migration-policy). There is no cross-database atomic commit; journals coordinate projections and external effects.
+- **Security authority lives in `trust/`.** Pins, root chains, grants, revocations, version high-water marks, and offline receipts remain independently retained per repository/environment. Database reconstruction preserves that authority; missing trust fails closed and never silently restarts TOFU ([STATE-AND-RECOVERY §7](STATE-AND-RECOVERY.md#persistent-trust-and-initial-bootstrap)).
+- **Inspection is read-only.** [aslice db](../man/aslice-db.1.md) lists roles, shows schemas, queries bounded snapshots, checks integrity and records, and performs owner-authorized backup/restore. Deleting the cache loses no choices; deleting durable projections stops mutations until reconstruction and recovery finish.
 
 ## History
 
@@ -280,6 +282,7 @@ Three properties carry the design:
 
 | Version | Date | Changes |
 |---|---|---|
+| v1.13 | September 2026 | Replace the single-file database summary with six owner roles, durable choices, disposable cache, and DATABASE command/recovery contracts; public formats and trust boundaries are unchanged. |
 | v1.11 | September 2026 | Consolidate revision notes into a collapsible history table; no specification changes. |
 | v1.9 | September 2026 | owner merge becomes the final human release approval, with automatic signing on a dedicated networked Pi and serialized atomic publication. Automatic targets/snapshot renewal replaces manual renewal; the root remains offline. The manual-release design above is superseded. Services and acceptance drills remain implementation work (KEY-RUNBOOK §2.1, §7); schemas and client signature formats are unchanged. |
 | v1.8 | September 2026 | **Superseded design record:** initial signing uses a single owner, separate offline root and release Pis, encrypted backups, and manual release batches. The Mac Pro VM prepares and publishes; multi-party custody and hardware tokens are deferred. KEY-RUNBOOK defines renewal, rotation, recovery, and pre-launch drills; prior custody requirements are superseded. |

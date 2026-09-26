@@ -108,6 +108,7 @@ python -m pip install -r tests/requirements.txt
 python tests/check_docs.py
 python -m unittest discover -s tests -p test_docs.py
 python tests/check_contracts.py
+python -m unittest discover -s tests -p test_database.py
 python .agents/skills/ref-curator/scripts/refs.py verify --root .
 git diff --check
 ```
@@ -155,6 +156,7 @@ Original contributions are licensed under [Apache-2.0](LICENSE), the project's l
 
 | Date | Changes |
 |---|---|
+| September 2026 | Add executable SQLite schema and recovery-model checks; these do not establish runtime or platform acceptance. |
 | September 2026 | Move documentation checker instructions here and remove standalone audit, coverage, checks, and remediation reports from the project documentation. |
 | September 2026 | Consolidate revision notes into a collapsible history table and document the history convention; historical wording is unchanged. |
 | September 2026 | grafts: the zero-install-time-code ground rule gains its declared exception (owner decision) — vendor installer scripts as declared, user-approved, farm-rehearsed grafts (DESIGN §12.15); the rule bullet updated, the merge-gate summary gains the rehearsal gate, and the porting table's `post_install` row gains the graft path. |

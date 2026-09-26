@@ -2,7 +2,7 @@
 
 > State, identity, privilege, and recovery contracts: [STATE-AND-RECOVERY](STATE-AND-RECOVERY.md). Protected-volume patching: [SYSTEM-VOLUMES](SYSTEM-VOLUMES.md). These specifications do not establish completed implementation or platform validation.
 
-- **Status:** Reference v0.14 — September 2026
+- **Status:** Reference v0.15 — September 2026
 - **Companions:** [DESIGN.md](DESIGN.md), [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md), [AUTHORING.md](AUTHORING.md), [BUILD-INFRA.md](BUILD-INFRA.md), [ORCHARD-POLICY.md](ORCHARD-POLICY.md), [REPOSITORIES.md](REPOSITORIES.md), [MANUAL.md](MANUAL.md), [SETUP.md](SETUP.md), [HOMEBREW-REVIEW.md](HOMEBREW-REVIEW.md), [TOOLCHAIN.md](TOOLCHAIN.md)
 - **Audience:** every reader. When a document uses a word you do not know, it is defined here — or should be.
 
@@ -91,7 +91,7 @@ The words we made up, or made ours.
 
 **origin=local-build** — the attribution label on a slice built on your machine rather than fetched; never confused with a farm build. *([BUILD-INFRA §3](BUILD-INFRA.md#the-pipeline-shared-at-both-scales) and [BUILD-INFRA §4](BUILD-INFRA.md#user-mode-aslice-build).)*
 
-**state DB** — the SQLite database (WAL mode) recording what is installed, why, and from where. *([DESIGN §8.1](DESIGN.md#layout); [REPOSITORIES §11](REPOSITORIES.md#the-state-databases-role).)*
+**state DB** — the client SQLite projection recording what is installed, why, and from where; durable choice/history records reconstruct it. Cache, protected system state, coordinator, publisher, and release signer use separate databases ([DATABASE](DATABASE.md)). *([DESIGN §8.1](DESIGN.md#layout); [REPOSITORIES §11](REPOSITORIES.md#the-state-databases-role).)*
 
 **pin** — a *version pin* (`aslice pin`) holds an installed package at its exact release, and the lock records it ([MANUAL §3.3](MANUAL.md#holding-a-package-pin-and-unpin); [PACKAGE-FORMAT §7](PACKAGE-FORMAT.md#lock-files)). *Not to be confused with* hash-pinning: every source artifact's sha256 is declared in the formula and countersigned in the index ([AUTHORING §1](AUTHORING.md#overview); [DESIGN §10.2](DESIGN.md#signatures-and-repository-integrity-tuf)).
 
@@ -306,6 +306,7 @@ Historical labels and ordering below are preserved as recorded, including repeat
 
 | Version | Date | Changes |
 |---|---|---|
+| v0.15 | September 2026 | Clarify state DB as one of six SQLite roles with separate durable records and disposable cache. |
 | v0.14 | September 2026 | Point documentation checker guidance to CONTRIBUTING after removing standalone workflow reports. |
 | v0.12 | September 2026 | Consolidate revision notes into a collapsible history table; no specification changes. |
 | v0.10 | September 2026 | signing host, publisher, and quarantine follow automatic publication with a dedicated networked release Pi; the root remains offline. The manual-release design is superseded (KEY-RUNBOOK §2.1). |

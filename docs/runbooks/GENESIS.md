@@ -1,6 +1,6 @@
 # GENESIS — Standing Up aslice From Nothing
 
-**Document version:** v0.13 — September 2026
+**Document version:** v0.14 — September 2026
 
 > State, identity, privilege, and recovery contracts: [STATE-AND-RECOVERY](../STATE-AND-RECOVERY.md). Protected-volume patching: [SYSTEM-VOLUMES](../SYSTEM-VOLUMES.md). These specifications do not establish completed implementation or platform validation.
 
@@ -64,6 +64,13 @@ The inventory below lists every "what makes the thing that makes the thing" pair
 
 ## 3. The never-lose set
 
+Include the coordinated database recovery sets from
+[DATABASE](../DATABASE.md#11-backup-sets-and-restore): durable records, checkpoint
+provenance, exact signed objects, reservations, quarantine and gate evidence, and
+publication receipts. A SQLite snapshot on the lost disk is not an independent
+backup. The ordered [database recovery procedure](../DATABASE.md#112-ordered-restore-procedure)
+must establish current heads before the services in §4 resume.
+
 Everything the project cannot regenerate must exist in **at least two independent locations**, one of them off GitHub and one of them offline. The loss of any single item is an inconvenience; the loss of the set is the disaster path (§4).
 
 1. **The git repositories** — orchards and spec — with a full non-GitHub mirror (any static host or `file://` NAS; the repo tree's own mirror mechanism covers distribution content).
@@ -102,6 +109,7 @@ Once a year, on a clean machine, using **only** the never-lose set, rehearse §1
 
 | Version | Date | Changes |
 |---|---|---|
+| v0.14 | September 2026 | Extend the never-lose set with coordinated database records, evidence, and independent backup boundaries; link staged restore and continuity checks. |
 | v0.11 | September 2026 | Consolidate revision notes into a collapsible history table; no specification changes. |
 | v0.10 | September 2026 | prose rewrite of bootstrap ordering and recovery verification; no content changes. |
 | v0.9 | September 2026 | owner merge becomes the final human release approval, with automatic signing on a dedicated networked Pi and serialized atomic publication. Automatic targets/snapshot renewal replaces manual renewal; the root remains offline. The manual-release design above is superseded. Services and acceptance drills remain implementation work (KEY-RUNBOOK §2.1, §7); schemas and client signature formats are unchanged. |

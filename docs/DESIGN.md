@@ -4,7 +4,7 @@
 
 **Name.** *aslice* — an apple slice: a nod to the Macintosh apple and to the shape of the project itself. Binary packages are **slices**; formula repositories are **orchards**; the manager picks slices off the orchard, prebuilt or baked to order. The vocabulary is kept distinct from Homebrew's beer terminology to avoid community confusion and trademark friction. The project name is styled lowercase everywhere, including sentence starts — like the command.
 
-- **Status:** Design draft, v1.28 — September 2026
+- **Status:** Design draft, v1.29 — September 2026
 - **Scope:** macOS 10.11 (El Capitan) through 12 (Monterey), Intel x86_64 only
 - **Implementation:** C++20 core, single self-contained binary
 - **Audience:** Maintainers, founding contributors, and early reviewers
@@ -202,7 +202,7 @@ Privilege separation is structural: the helpers are separate executables (spawne
 | **Profiles / generations** | Atomic merged views | Symlink forests with rename-swap; rollback = flip a symlink (§8.3) |
 | **Builder** | Fetch→unpack→patch→configure→build→install in sandbox | Deterministic environment; DESTDIR staging; ABI scan on output (§7.3) |
 | **Verifier** | Signature, hash, ABI, and policy checks before linking | Nothing reaches the profile without passing (§10.2) |
-| **Database** | Installed-set and caches | SQLite records installed state and decisions; `trust/` separately owns security authority and the operation journal coordinates external effects ([STATE-AND-RECOVERY §5](STATE-AND-RECOVERY.md#durable-transactions-and-recovery) and [STATE-AND-RECOVERY §7](STATE-AND-RECOVERY.md#persistent-trust-and-initial-bootstrap)) |
+| **Database** | Separate owner projections and disposable cache | [DATABASE](DATABASE.md) specifies six SQLite roles and executable schemas; client state records installed state and durable decisions; `trust/` separately owns security authority and the operation journal coordinates external effects ([STATE-AND-RECOVERY §5](STATE-AND-RECOVERY.md#durable-transactions-and-recovery) and [STATE-AND-RECOVERY §7](STATE-AND-RECOVERY.md#persistent-trust-and-initial-bootstrap)) |
 | **Reporter** | SBOM generation, `audit`, provenance display | SPDX SBOM per package; OSV feed integration (§10.6) |
 | **Logger** | Structured operation and security-event logging | JSONL on disk under `log/`, human rendering on the terminal; local-only, forever (§12.5) |
 | **Shim resolver** | Version selection for multi-version runtimes | Multicall `argv[0]` dispatch; session → project → default resolution; exec-only, no wrapper process (§12.9) |
@@ -379,7 +379,7 @@ Version and variant resolution uses a PubGrub-style CDCL algorithm:
 - **Terms** are (package, version-range, variant-assignment, flavor).
 - **Flavor is a hard constraint** injected from hardware detection — a v3 flavor on a v2 machine is a conflict at solve time with a clear message, never a SIGILL at runtime.
 - **Binary-first preference:** among valid solutions, the solver maximizes use of available slices (objective: minimize local builds, then minimize download size, then maximize versions). `--prefer-source` flips the objective.
-- **Deterministic and explainable:** every resolution emits a human-readable derivation tree (`aslice install --explain ffmpeg` shows why each version/variant was chosen). Solve results are cached in SQLite keyed by index snapshot hash; typical repeated solves are sub-millisecond.
+- **Deterministic and explainable:** every resolution emits a human-readable derivation tree (`aslice install --explain ffmpeg` shows why each version/variant was chosen). Solve results are cached in the disposable SQLite cache keyed by complete input digest ([DATABASE](DATABASE.md#4-disposable-client-cache)); typical repeated solves are sub-millisecond.
 
 The prebuilt variant domain per package is small by policy (§13.2: the farm builds defaults plus demonstrated-demand variants, and everything else compiles locally), so the combinatorial explosion that killed Homebrew options stays boxed in — containment by prebuild scope, not by forbidding combinations.
 
@@ -409,7 +409,9 @@ The prebuilt variant domain per package is small by policy (§13.2: the farm bui
  ├── cache/        # slices, sources, index snapshots
  ├── log/          # structured operation logs (§12.5)
  ├── trust/        # authoritative trust records; not reconstructed from SQLite
- ├── db/state.sqlite
+ ├── records/      # durable choices and compact operation history
+ ├── cache/db/cache.sqlite # disposable verified projections and solves
+ ├── db/state.sqlite # client state; other owners have separate databases
  └── etc/aslice.toml
 ```
 
@@ -710,7 +712,11 @@ aslice bump-pr <pkg> <version>         # the human version bump: edit, lint, smo
 aslice exec ffmpeg -- ffprobe in.mov   # run a command in a temporary profile view, discarded on exit
 aslice shellenv                        # print PATH/MANPATH/INFOPATH + trust-store exports for the current profile (pure echo, no writes)
 aslice store verify [--quarantine <pkg>]   # re-hash store paths against manifests — the immutability tripwire (§8.1)
-aslice db query                           # read-only inspection of the state database (REPOSITORIES.md §11)
+aslice db list                            # configured database roles (DATABASE.md)
+aslice db query "SELECT * FROM installed"  # bounded read-only client-state inspection
+aslice db check                           # schema, integrity, references, and records
+aslice db backup <destination>            # coordinated owner backup set
+aslice db restore <set> --dry-run         # validate and preview recovery before confirmation
 aslice help <command>                     # the command's man page, in the terminal (man/)
 # every command: -v / -vv raise verbosity, --quiet suppresses all but errors,
 # --log-format json|human selects rendering (§12.5)
@@ -1177,6 +1183,7 @@ Two-builder reproducibility cross-checks; transparency log; community mirror pro
 
 | Version | Date | Changes |
 |---|---|---|
+| v1.29 | September 2026 | Integrate six-role SQLite storage, complete solve-cache keys, durable records, and database maintenance commands from DATABASE; runtime implementation remains pending. |
 | v1.27 | September 2026 | Consolidate revision notes into a collapsible history table; no specification changes. |
 | v1.26 | September 2026 | align user-flag and universal-vendor summaries with STATE-AND-RECOVERY §1–§2: conditional ABI/CPU substitution, distinct artifact identity, and the i386 ceiling based on required execution. |
 | v1.24 | September 2026 | owner merge becomes the final human release approval, with automatic signing on a dedicated networked Pi and serialized atomic publication. Automatic targets/snapshot renewal replaces manual renewal; the root remains offline. The manual-release design above is superseded. Services and acceptance drills remain implementation work (KEY-RUNBOOK §2.1, §7); schemas and client signature formats are unchanged. |

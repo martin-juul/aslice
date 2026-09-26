@@ -10,6 +10,7 @@ yet exist in the tracked tree.
 | Path | Status | Responsibility |
 |---|---|---|
 | `docs/` | Existing | Durable aslice specifications, guides, policies, and operational documentation. |
+| `docs/sqlite/` | Existing | Executable SQLite schema companions owned by [DATABASE](docs/DATABASE.md); these are specification assets, not runtime services. |
 | `docs/runbooks/` | Existing | Standalone operational runbooks for project bring-up, signing, and recovery. See the [runbooks index](docs/runbooks/README.md). |
 | `docs/refs/` | Existing | Supporting source archive, with captured references, provenance, licenses, and checksums. See the [archive guide](docs/refs/README.MD). |
 | `man/` | Existing | Command manuals. See the [manual index](man/README.md). |

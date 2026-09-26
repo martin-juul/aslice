@@ -34,3 +34,5 @@ The specified aslice build will run this command for every `*.1.md` here and ins
 - When behavior differs between interactive and non-interactive runs, the page says so explicitly — scripts are readers too.
 
 When you add a command, add its page in the same PR. A command without a page doesn't ship.
+
+Database maintenance and reconstruction: [aslice-db(1)](aslice-db.1.md), including role selection, read-only inspection, coordinated backup, and confirmed restore.

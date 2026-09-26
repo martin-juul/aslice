@@ -1,6 +1,6 @@
 # State, artifacts, and recovery
 
-- **Status:** Specification v0.4 — September 2026. These contracts are specified, not implemented or validated on macOS.
+- **Status:** Specification v0.5 — September 2026. These contracts are specified, not implemented or validated on macOS.
 - **Authority:** This document owns artifact identity, privileged ownership, transaction recovery, replay, and retained trust. DESIGN explains the architecture; PACKAGE-FORMAT describes author input. Examples and schemas must agree with these contracts.
 
 Navigation: [1. Compatibility and artifact identity](#compatibility-and-artifact-identity) · [2. ABI and execution requirements](#abi-and-execution-requirements) · [3. Privileged ownership and capability checks](#privileged-ownership-and-capability-checks) · [4. Graft execution boundary](#graft-execution-boundary) · [5. Durable transactions and recovery](#durable-transactions-and-recovery) · [6. Self-update and decommission](#self-update-and-decommission) · [7. Persistent trust and initial bootstrap](#persistent-trust-and-initial-bootstrap) · [8. Plans, locks, archives, and offline use](#plans-locks-archives-and-offline-use) · [9. Certificate trust lifecycle](#certificate-trust-lifecycle) · [10. Acceptance and implementation order](#acceptance-and-implementation-order)
@@ -61,6 +61,8 @@ Approval binds repository identity, package version, script digests, and the com
 
 ## 5. Durable transactions and recovery
 
+[DATABASE](DATABASE.md) owns the six SQLite projections, durable choice/history records, backup sets, and database reconstruction. Compact records are retained indefinitely, including changes that create no package generation; verbose logs and resolved backups keep their existing retention policies.
+
 One process holds the prefix mutation lock before changing state; it rechecks the planned base generation after acquiring it. Privileged operations additionally take the system-root lock, always after the prefix lock. GC follows the same order. Cross-prefix privileged operations serialize at the system lock. Locks are OS-managed and released on process death; durable journals survive that release.
 
 Each transaction records its identifier, base and proposed generation digests, exact artifact set, authorization, ordered operations, before/after fingerprints, backups, and progress. Privileged journals and backups live in the protected root. Before-images preserve file kind, bytes, mode, owner, ACLs, xattrs, and symlink targets where supported; unsupported metadata is a preflight refusal. Files, journal records, and affected directory entries are flushed before the next durable phase. HFS+ and APFS power-loss behavior must be validated, including the selected `fsync`/`F_FULLFSYNC` strategy; rename atomicity alone is not durability.
@@ -79,7 +81,7 @@ Package rollback does not restore application databases, userbases, or remote sy
 
 ## 6. Self-update and decommission
 
-A known-good supervisor remains alive while the new manager runs as a child against a prepared state snapshot. It validates execution, version, database compatibility, index reading, and a bounded health timeout before activation. Post-activation failure is recovered by that supervisor or, after power loss, by a protected bootstrap recovery entry point retained outside the switched generation. The recovery entry point is updated separately only after the replacement has passed recovery drills. Old managers remain usable with their state snapshots. Destructive in-place database migrations are forbidden; use a versioned copy and journal its activation.
+A known-good supervisor remains alive while the new manager runs as a child against a prepared state snapshot. It validates execution, version, database compatibility, index reading, and a bounded health timeout before activation. Post-activation failure is recovered by that supervisor or, after power loss, by a protected bootstrap recovery entry point retained outside the switched generation. The recovery entry point is updated separately only after the replacement has passed recovery drills. Old managers remain usable with their compatible state snapshots; switching back after newer writes requires compatible replay so it cannot erase choices or high-water state ([DATABASE](DATABASE.md#10-sqlite-connection-and-migration-policy)). Destructive in-place database migrations are forbidden; use a versioned copy and journal its activation.
 
 Self-update updates shim targets transactionally as well as the manager. Hardlinks to the old multicall binary are not silently left behind. Crash injection covers failure to execute, crash before health reporting, timeout, disk exhaustion, migration failure, pointer changes, and supervisor loss. `aslice recover` invokes the retained recovery entry point and refuses ordinary package mutations until recovery is resolved.
 
@@ -91,7 +93,7 @@ Only after cleanup succeeds may the prefix be deleted. Root-owned closures, rece
 
 ## 7. Persistent trust and initial bootstrap
 
-`trust/` is authoritative security state, separate from the recoverable installed-set/solve cache in SQLite. It retains repository identities, initial anchors, authenticated root chains, TUF high-water versions, grants, countersignatures, revocations, and previously verified cache receipts, scoped by repository and environment. SQLite may cache these records but cannot grant authority. Missing or corrupt trust state fails closed for new trust decisions and requires explicit recovery. Never silently recreate a TOFU decision. Ordinary user-owned trust protects against network substitution, not an attacker who already controls that user; privileged verification uses the protected copy from §3.
+`trust/` is authoritative security state, separate from the reconstructed client-state database and disposable solve/index cache in SQLite. It retains repository identities, initial anchors, authenticated root chains, TUF high-water versions, grants, countersignatures, revocations, and previously verified cache receipts, scoped by repository and environment. SQLite may cache these records but cannot grant authority. Missing or corrupt trust state fails closed for new trust decisions and requires explicit recovery. Never silently recreate a TOFU decision. Ordinary user-owned trust protects against network substitution, not an attacker who already controls that user; privileged verification uses the protected copy from §3.
 
 The compiled root pin authenticates the initial anchor, not an eternally fixed current key. Sequential root updates must satisfy the old and new thresholds and remain retained. Discovery files may advertise a successor but cannot bypass that chain. User-requested third-party re-pinning and root-compromise rebootstrap are distinct operations with explicit independent verification. Root loss does not authorize an automatic reset of metadata versions.
 
@@ -145,6 +147,7 @@ The two owned Macs do not establish complete guest coverage or independent v3 re
 
 | Version | Date | Changes |
 |---|---|---|
+| v0.5 | September 2026 | Integrate separate SQLite roles, indefinite compact choice/history records, coordinated backups, and copy-migration compatibility; preserve the existing external-effect and trust recovery contracts. |
 | v0.3 | September 2026 | Consolidate revision notes into a collapsible history table; no specification changes. |
 | v0.2 | September 2026 | prose rewrite of the rollback transaction explanation; no content changes. |
 | v0.4 | September 2026 | Documentation audit repairs: contract summaries aligned; owner-approved namespace, rollback, GC, naming, prefix, and graft decisions applied where relevant; semantic anchors and explicit citations added. Runtime implementation and platform acceptance remain pending. |

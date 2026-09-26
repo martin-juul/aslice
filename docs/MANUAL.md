@@ -4,7 +4,7 @@
 
 **The user guide for aslice — a package manager for Intel macOS.**
 
-- **Status:** v0.17 — September 2026
+- **Status:** v0.18 — September 2026
 - **Project home:** [aslice.sh](https://aslice.sh) — homepage, documentation (aslice.sh/docs), and the public dashboard (aslice.sh/dashboard); the installer is served from get.aslice.sh (§2).
 - **Audience:** people who install and run software with aslice; that is most of what follows. If you *write* packages, read chapters 1–4 and then move to [AUTHORING.md](AUTHORING.md). If you want to know *why* things are the way they are, the rationale lives in [DESIGN.md](DESIGN.md).
 - **Companions:** the man pages in [man/](../man/) (also available as `aslice help <command>`), [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md), [ORCHARD-POLICY.md](ORCHARD-POLICY.md), [REPOSITORIES.md](REPOSITORIES.md), [GENESIS.md](runbooks/GENESIS.md), [TOOLCHAIN.md](TOOLCHAIN.md).
@@ -776,7 +776,18 @@ Environment variables that matter:
 
 The environment group in `aslice doctor` lists every `ASLICE_*` variable currently overriding configuration — overrides are shown, never hidden.
 
-The prefix layout, for orientation: `store/` (immutable packages), `profiles/generations/` (the symlink forests), `shims/` (runtime multiplexing, ahead of the profile on `PATH`), `apps/` (vendor `.app` bundles), `cache/`, `log/`, `db/state.sqlite` (the state database), `etc/aslice.toml`.
+The prefix layout, for orientation: `store/` (immutable packages), `profiles/generations/` (the symlink forests), `shims/` (runtime multiplexing, ahead of the profile on `PATH`), `apps/` (vendor `.app` bundles), `cache/`, `log/`, `db/state.sqlite` (client state), `cache/db/cache.sqlite` (disposable projections), `records/` (durable choices and compact history), `etc/aslice.toml`.
+
+Use `aslice db list` to inspect configured database roles and `aslice db check` to
+check client state. `aslice db query 'SELECT * FROM installed'` reads a bounded
+snapshot. `aslice db backup <destination>` captures a coordinated backup set;
+`aslice db restore <set> --dry-run` validates and previews it before explicit
+confirmation. `--role` selects another owner boundary; it grants no permissions.
+`aslice recover` reconstructs missing projections from retained records and resolves
+interrupted operations. Cache rebuilding preserves trust. See
+[aslice-db(1)](../man/aslice-db.1.md) for refusal conditions and output contracts.
+Compact choices and operation history are retained indefinitely; the log rotation
+bounds above apply to verbose logs.
 
 ---
 
@@ -827,6 +838,7 @@ Historical labels and ordering below are preserved as recorded, including repeat
 
 | Version | Date | Changes |
 |---|---|---|
+| v0.18 | September 2026 | Add database inspection, coordinated backup/restore, reconstruction, role selection, and durable-history guidance; update the client layout. |
 | v0.15 | September 2026 | Consolidate revision notes into a collapsible history table; no specification changes. |
 | v0.14 | September 2026 | resolve install-failure and custom-build summaries against STATE-AND-RECOVERY §1–§2, §5 and SYSTEM-VOLUMES: staged preparation, journal recovery, exact artifact bindings, ABI evidence, dependent tests, CPU/OS checks, and unsupported/unknown flag handling. |
 | v0.12 | Not recorded | TOOLCHAIN.md joins the companions and §2.1's no-Xcode sentence links it; no behavioral changes |

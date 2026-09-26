@@ -2,7 +2,7 @@
 
 > State, identity, privilege, and recovery contracts: [STATE-AND-RECOVERY](STATE-AND-RECOVERY.md). Protected-volume patching: [SYSTEM-VOLUMES](SYSTEM-VOLUMES.md). These specifications do not establish completed implementation or platform validation.
 
-- **Status:** Design draft, v0.22 — September 2026
+- **Status:** Design draft, v0.23 — September 2026
 - **Companion to:** [DESIGN.md](DESIGN.md), [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md), [HOMEBREW-REVIEW.md](HOMEBREW-REVIEW.md), [TOOLCHAIN.md](TOOLCHAIN.md)
 - **Scope:** the build harness (`aslice build`), farm orchestration (`aslice farm`), scheduling, worker trust, the VM test matrix, and the pipeline from build result to published repository.
 - **Vocabulary:** [NOMENCLATURE.md](NOMENCLATURE.md) — project terms, acronyms, and the Homebrew translation table.
@@ -134,7 +134,7 @@ aslice build ffmpeg --keep --shell                 # keep build dir; sandboxed s
 
 No new hardware purchase is required by this topology. CPU configuration, RAM, storage, and build/guest concurrency remain unspecified until measured during bring-up. Core 2 Duo smoke testing is optional future coverage, outside the owned inventory. Community Macs may supply reproduction evidence (§7.4); they are not assumed capacity.
 
-The coordinator is boring by design: one process on the Mac Pro, a SQLite queue, an orchard checkout. Its state can be reconstructed from orchard git history plus the result store. The GitHub Actions integration is a thin adapter — a self-hosted runner job that executes `aslice farm agent --once` — so the system of record never depends on Actions semantics ([DESIGN §9.2](DESIGN.md#the-github-ci-problem)).
+The coordinator is boring by design: one process on the Mac Pro, a SQLite queue, an orchard checkout. Its state is reconstructed from archived orchard commits, signed plans/results, enrollment and lease history, quarantine decisions, and gate evidence, as specified in [DATABASE](DATABASE.md#6-farm-coordinator). Git and result bytes alone do not preserve those decisions. Agents exchange jobs and results; they never share the coordinator database. The GitHub Actions integration is a thin adapter — a self-hosted runner job that executes `aslice farm agent --once` — so the system of record never depends on Actions semantics ([DESIGN §9.2](DESIGN.md#the-github-ci-problem)).
 
 The **signing host** is a dedicated networked release Pi holding distinct targets, snapshot, and slice-signing keys. A separate offline root Pi holds the 1-of-1 root. Both use encrypted software keys and offline backups; KEY-RUNBOOK governs custody and recovery. The restricted VM on the Mac Pro is the **publisher**: it checks gates, delivers authenticated release candidates automatically, verifies returned signatures, stages complete releases, and activates them atomically. It holds repository credentials and the timestamp key only; build guests receive neither and cannot submit signing requests. The release Pi runs no package builds or supplied scripts. Shared-host compromise can corrupt evidence and publication and expose the timestamp key (§7.2); online signer compromise can authorize malicious releases. Offline root custody permits authority replacement but cannot undo installations or establish content safety. The Pis are existing devices; validate their OS and signing tools before launch. Initial setup and unlocking after signer restart may require the owner; routine releases require no intervention. These services remain implementation work.
 
@@ -294,10 +294,12 @@ No user telemetry exists anywhere in this system ([DESIGN §2.2](DESIGN.md#non-g
 
 ## 11. Failure modes, planned
 
+[DATABASE](DATABASE.md#11-backup-sets-and-restore) defines coordinated backup boundaries for coordinator, publisher, and signer. Retain reservations, fence epochs, quarantine decisions, and publication evidence outside SQLite; keep independent off-site copies. Missing records do not become successful gates after reconstruction.
+
 | Failure | Behavior |
 |---|---|
 | Agent dies mid-job | Lease expires, job requeues, partial staging ignored |
-| Coordinator dies | Queue is SQLite + git; restore on any machine, agents reconnect |
+| Coordinator dies | Restore the coordinator records and evidence on a provisioned replacement, expire inherited leases, reconcile results and quarantine, then reconnect agents ([DATABASE](DATABASE.md#12-recovery-decisions-and-failure-matrix)) |
 | Release Pi down | No new releases or automatic targets/snapshot renewals; daily timestamps may continue for valid approved metadata, but expired snapshot/targets metadata blocks updates; restore and drill before signing |
 | Poisoned/faulty result | Quarantined forever; digest mismatch or class violation files an investigation event |
 | Scanner detection (§7.5) | Slice quarantined permanently pending maintainer review; investigation event filed; promotion pauses if definitions are stale |
@@ -325,6 +327,7 @@ No user telemetry exists anywhere in this system ([DESIGN §2.2](DESIGN.md#non-g
 
 | Version | Date | Changes |
 |---|---|---|
+| v0.23 | September 2026 | Specify coordinator reconstruction sources and integrate separate coordinator/publisher/signer backup and recovery boundaries; agents continue using the job/result protocol. |
 | v0.21 | September 2026 | Consolidate revision notes into a collapsible history table; no specification changes. |
 | v0.20 | September 2026 | prose rewrite of helper execution and job-lease recovery; no content changes. |
 | v0.18 | September 2026 | owner merge becomes the final human release approval, with automatic signing on a dedicated networked Pi and serialized atomic publication. Automatic targets/snapshot renewal replaces manual renewal; the root remains offline. The manual-release design above is superseded. Services and acceptance drills remain implementation work (KEY-RUNBOOK §2.1, §7); schemas and client signature formats are unchanged. |

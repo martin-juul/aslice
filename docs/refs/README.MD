@@ -54,6 +54,7 @@ Each source has one primary entry. Related records link across subjects; origina
 - [JSON Schema 2020 12 Validation](JSON_SCHEMA_2020_12_VALIDATION.MD) — Complete fixed draft: assertions, presence, formats, and annotations.
 - [libarchive tar format manual](LIBARCHIVE_TAR_FORMAT.MD) — Complete tar(5): records, pax overrides, checksums, and extensions.
 - [RFC 8785 JSON Canonicalization Scheme](RFC_8785_JSON_CANONICALIZATION_SCHEME.MD) — Complete JCS algorithm, Unicode/numeric rules, sorting, and vectors.
+- [SQLite storage, compatibility, and recovery](SQLITE_STORAGE_AND_RECOVERY.MD) — Official WAL fixes, synchronization, backup, salvage, schema compatibility, and query controls.
 - [TOML 1 0 Specification](TOML_1_0_SPECIFICATION.MD) — Complete language syntax, distinct from project semantics.
 - [TOML Schema Specification](TOML_SCHEMA_SPECIFICATION.MD) — Complete schema language, effective constraints, closure, and evaluation.
 - [Zstandard Compression and the application/zstd Media Type](RFC_8878_ZSTANDARD.MD) — Complete compression format, frames, dictionaries, and resource considerations.
@@ -65,7 +66,7 @@ Each source has one primary entry. Related records link across subjects; origina
 
 ## Coverage
 
-The catalog contains 32 records. Thirteen have complete source assets: eight retained standards/manuals and five Homebrew release/policy originals added in the 2026-09-26 review. The other nineteen are attributed technical or discussion accounts. Complete assets retain their notices; [the inventory](SOURCE-INVENTORY.MD) names uncaptured dependencies and unresolved evidence.
+The catalog contains 33 records. Thirteen have complete source assets: eight retained standards/manuals and five Homebrew release/policy originals added in the 2026-09-26 review. The other twenty are attributed technical or discussion accounts, including the SQLite documentation account added for DATABASE. Complete assets retain their notices; [the inventory](SOURCE-INVENTORY.MD) names uncaptured dependencies and unresolved evidence.
 
 The review recovered content from every primary source using direct HTTP or the web reader. Direct HTTP recovered Homebrew 6 after the web reader failed; Apple's forum returned an HTTP security challenge, so its account uses the web reader's visible thread. All eight existing complete assets matched fresh downloads byte for byte. Live branch/page accounts without immutable revision IDs remain dated snapshots, not evidence of earlier content. Discussion pages with collapsed comments remain partial even when their opening page loads successfully.
 

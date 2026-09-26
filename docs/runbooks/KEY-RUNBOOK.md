@@ -148,6 +148,15 @@ Keep Ed25519 and minisign for launch. Changing algorithms requires a separate cl
 
 ## 7. Drills and acceptance
 
+[DATABASE](../DATABASE.md#11-backup-sets-and-restore) defines the coordinated
+publisher/signer backup boundary, including unpublished reservations, exact signed
+bytes, fence epochs, and activation/acknowledgement receipts. Private keys remain
+outside SQLite and follow this runbook's separate custody procedures. Restore into
+staging, prove record continuity against independent heads, and reconcile current
+publication before signing. If the high-water state is uncertain, stop: a database
+rebuild or key rotation alone cannot recover missing version history. The offline
+root Pi retains ceremony records without a new database.
+
 Before launch, record successful runs of:
 
 - Merge a new core slice as owner, complete all CI and quarantine gates, and observe automatic signing and atomic publication with no further approval. On a supported 10.11 test VM, refresh metadata, search for the slice, install it, and run it. Verify bootstrap/checksum signatures too. Record commit, receipts, candidate digest, signed versions, activation, and client output; publication alone leaves installed generations unchanged.
@@ -174,6 +183,7 @@ Users' machines have no project-held per-user keys or accounts. Third-party orch
 
 | Date | Changes |
 |---|---|
+| September 2026 | Integrate coordinated publisher/signer database backups and restore continuity checks from DATABASE; preserve separate private-key custody and offline root ceremonies. |
 | September 2026 | Consolidate revision notes into a collapsible history table; no specification changes. |
 | September 2026 | the manual offline-release design is superseded by owner-merge authorization, a dedicated networked release signer, automatic metadata renewal, and serialized atomic publication. The offline 1-of-1 root, encrypted backups, recovery drills, Ed25519/minisign formats, and future multi-party migration remain. Services and hardware drills are not yet implemented or validated. |
 | September 2026 | corpus review corrections: artifact identity, protected execution, durable recovery, trust persistence, replay, platform limits, and examples aligned with STATE-AND-RECOVERY and SYSTEM-VOLUMES. These are specification changes; runtime acceptance remains pending. |

@@ -57,6 +57,9 @@ aslice collects no telemetry or analytics of any kind — there is no opt-out be
 **audit**, **provenance**
 :   Report known vulnerabilities in the installed set; show a package's build provenance.
 
+**db**
+:   Inspect schemas and read-only queries, check records, and perform owner-authorized backup/restore. See [aslice-db(1)](aslice-db.1.md).
+
 **doctor**, **log**
 :   Run the health battery; query the local operation log. See aslice-doctor(1).
 
@@ -115,11 +118,11 @@ aslice collects no telemetry or analytics of any kind — there is no opt-out be
 # FILES
 
 **/opt/aslice** (or **~/.aslice**)
-:   The prefix: `store/`, `profiles/generations/`, `shims/`, `apps/`, `cache/`, `log/`, `db/state.sqlite`, `etc/aslice.toml`.
+:   The prefix: `store/`, `profiles/generations/`, `shims/`, `apps/`, `cache/`, `log/`, `db/state.sqlite`, `cache/db/cache.sqlite`, `records/`, `etc/aslice.toml`.
 
 # EXIT STATUS
 
-**0** success; **1** general error; **2** plan refused (trust, policy, or consent gate). aslice-doctor(1) defines its own battery exit codes.
+**0** success; **1** general error; **2** plan refused (trust, policy, or consent gate). aslice-doctor(1) and [aslice-db(1)](aslice-db.1.md) define their own exit codes.
 
 **recover**, **decommission**
 :   Resume durable recovery, or inventory and remove managed external effects before deleting the prefix. `decommission --dry-run` inventories without changes; pending restoration preserves recovery tools ([STATE-AND-RECOVERY §6](../docs/STATE-AND-RECOVERY.md#self-update-and-decommission)).

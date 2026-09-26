@@ -4,6 +4,10 @@ Reviewed 2026-09-26 UTC. Every catalog record was compared with its primary sour
 
 ## Catalog coverage
 
+The database specification adds a 2026-09-26 UTC comparison of seven official
+SQLite documentation pages, preserved in one technical account. This extends the
+earlier review above; it does not revise its historical source comparisons.
+
 Complete source means the named document's bytes are local, not that all its links or implementation dependencies are archived. Technical accounts preserve the supported decision context in original wording. Discussion accounts are selective, attributed reports; missing comments and dates are explicit. Each record supplies its canonical URL and exact local claim links.
 
 | Record | Coverage | Omissions and unresolved evidence |
@@ -34,6 +38,7 @@ Complete source means the named document's bytes are local, not that all its lin
 | [OWC Intel Mac Transition Report](OWC_INTEL_MAC_TRANSITION_REPORT.MD) | Attributed account | Buying advice, product promotions, images, and broader model lists are omitted. No primary Apple support-lifetime announcement is preserved here; do not infer a security end date. |
 | [RFC 8785 JSON Canonicalization Scheme](RFC_8785_JSON_CANONICALIZATION_SCHEME.MD) | Complete source + account | The complete Informational RFC and notices are retained. Referenced ECMAScript/I-JSON editions and later errata are not independently archived; the RFC alone is not a parser implementation. |
 | [Zstandard Compression and the application/zstd Media Type](RFC_8878_ZSTANDARD.MD) | Complete source + account | The complete RFC is preserved. Later errata and a specific decoder implementation are not included. The previous wrapper's tar-roff sentence was a copy error; roff applies to the separate libarchive asset, not this RFC. |
+| [SQLite storage, compatibility, and recovery](SQLITE_STORAGE_AND_RECOVERY.MD) | Attributed technical account | Seven official documentation pages compared on 2026-09-26 UTC; complete HTML, pinned source/build artifacts, VFS details, and power-loss/security/recovery acceptance transcripts remain uncaptured. |
 | [SmartCard HSM Algorithms](SMARTCARD_HSM_ALGORITHMS.MD) | Attributed account | Pricing, accessory offers, full datasheets, firmware/API manuals, and measured recovery behavior are not captured. The ambiguous URL/model relationship requires supplier confirmation rather than an assumption that older devices gained these features. |
 | [The Update Framework Specification](THE_UPDATE_FRAMEWORK_SPECIFICATION.MD) | Complete source + account | The complete specification and Community Specification License remain intact. The retained master snapshot is identified by content hash, not a recovered commit ID. Linked TAPs/POUF documents, conformance tests, and cryptographic implementation assets are not all archived. |
 | [TOML 1 0 Specification](TOML_1_0_SPECIFICATION.MD) | Complete source + account | The entire v1.0.0 specification and MIT license are retained. No later TOML version or parser conformance is implied; project semantic examples remain governed by their own sections. |
