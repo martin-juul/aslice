@@ -35,23 +35,12 @@ Original project material is licensed under [Apache-2.0](LICENSE). Third-party m
 
 ## Documents
 
-[Project structure](STRUCTURE.md) defines where repository content belongs and the planned C++ layout.
-
-In the order a newcomer should read them:
-
-- [State and recovery](docs/STATE-AND-RECOVERY.md) — artifact identities, privilege boundaries, transactions, replay, and acceptance gates
-- [Slice format](docs/SLICE-FORMAT.md) — archive layout, container and manifest schematics, verification, and extraction limits
-- [Protected system volumes](docs/SYSTEM-VOLUMES.md) — Recovery and boot-snapshot patching across the supported OS range
-- [Design document](docs/DESIGN.md) — architecture, platform matrix, distribution, security model, roadmap
-- [Helpers and background services](docs/HELPERS.md) — client process roles, privileged operations, runtime shims, and package services
-- [Package format specification](docs/PACKAGE-FORMAT.md) — the `package.toml` schema, dependency semantics, versioning, lock files, the build API
-- [Homebrew comparison & gap review](docs/HOMEBREW-REVIEW.md) — a feature-by-feature review against Homebrew 7.0, what's missing, and the spec amendments it produced
-- [Build infrastructure](docs/BUILD-INFRA.md) — the build farm and the `aslice build` / `aslice farm` harness: one pipeline, run identically by the farm and by any user's Mac
-- [Toolchain](docs/TOOLCHAIN.md) — the self-hosted compiler bundle: what's in it, how builds consume it, how it is born and archived
-- [Repositories](docs/REPOSITORIES.md) — the shipped official source list, repository trust levels, and the dual Ed25519/OpenPGP signing model
-- [Orchard policy](docs/ORCHARD-POLICY.md) — the maintainer rulebook: acceptance bars per tier, variant discipline, the deprecation lifecycle, patch documentation, merge gates, release cadence
-- [Declarative system setup](docs/SETUP.md) — the `aslice-machine.toml` schema and the `aslice machine` commands (`apply` / `export` / `import --from-brewfile`): rebuild a Mac from one file, capture one back into it
-- [Nomenclature](docs/NOMENCLATURE.md) — every project term, acronym, and the Homebrew translation table: the dictionary for all of the above
+- [Complete documentation index](docs/README.md) — reading paths and the full catalog.
+- [User manual](docs/MANUAL.md) — installing and using aslice.
+- [Authoring guide](docs/AUTHORING.md) — writing, testing, and shipping packages.
+- [Architecture and design](docs/DESIGN.md) — platform, architecture, security model, and roadmap.
+- [Contributing guidelines](CONTRIBUTING.md) — proposing changes and running checks.
+- [Project structure](STRUCTURE.md) — repository organization and planned C++ layout.
 
 ## Scope
 
@@ -78,5 +67,6 @@ In the order a newcomer should read them:
 | September 2026 | prose rewrite of the introduction and machine-setup overview; no content changes. |
 | September 2026 | Add the helpers and background services reference to the documentation index; no runtime changes. |
 | September 2026 | Link the repository structure guidelines and planned C++ layout. |
+| September 2026 | Simplify README navigation and add docs/README.md with reading paths, a complete document catalog, and supporting resources. |
 
 </details>
