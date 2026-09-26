@@ -285,14 +285,22 @@ Bring-up must validate the chosen hypervisor version, host OS, each guest's boot
 
 The environment and release-version contract is [ORCHARD-POLICY §18.1](ORCHARD-POLICY.md#181-environments-branching-and-promoted-builds) and [ORCHARD-POLICY §18.2](ORCHARD-POLICY.md#182-release-versioning-and-unchanged-content-enforcement), for aslice and every orchard, including third-party orchards. For normal releases, build the candidate on `develop` (dev), then promote the identical artifact inventory to `beta` (staging) and `master` (prod) in the same repository. The flow below runs for the authorized destination environment; promotion reuses frozen artifacts and authenticated build receipts instead of scheduling new served builds. Destination tests and current security checks still apply. Branch merges that change release content require a new base version and a fresh dev candidate. Environment suffixes belong to external release metadata, never rewritten payloads. Operational configuration is supplied externally.
 
-```text
-owner-approved orchard merge → CI → agent staging (untrusted)
-      → publisher: quarantine gates → repo build → authenticated candidate
-      → networked release Pi: verify authorization, gates, state → repo sign
-      → publisher: re-verify → stage complete set → repo publish (atomic)
-      → client metadata refresh → search / install / upgrade
-      → transparency-log append (snapshot hash, public)
-      → dashboard update
+```mermaid
+flowchart TD
+    merge["Owner-approved orchard merge"] --> ci["CI"]
+    ci --> staging["Agent staging (untrusted)"]
+    staging --> gates["Publisher: quarantine gates"]
+    gates --> build["repo build"]
+    build --> candidate["Authenticated candidate"]
+    candidate --> verify["Networked release Pi: verify authorization, gates, state"]
+    verify --> sign["repo sign"]
+    sign --> reverify["Publisher: re-verify"]
+    reverify --> complete["Stage complete set"]
+    complete --> publish["repo publish (atomic)"]
+    publish --> refresh["Client metadata refresh"]
+    refresh --> client["search / install / upgrade"]
+    client --> log["Transparency-log append (snapshot hash, public)"]
+    log --> dashboard["Dashboard update"]
 ```
 
 [KEY-RUNBOOK §2.1](runbooks/KEY-RUNBOOK.md#automatic-orchard-to-client-publication) specifies candidate contents, authenticated owner-merge authorization, retained signing state, serialized publication, and idempotent retries. Owner merge is the final human approval, including new core slices. Stale candidates must reconcile against current repository and signing state before signing again. The root Pi is not used for routine releases. The publisher refreshes timestamps daily for the valid approved snapshot; targets/snapshot renew automatically below 30 days using the last approved content. Root renewal and top-level key replacement remain offline operations ([KEY-RUNBOOK §1.1](runbooks/KEY-RUNBOOK.md#metadata-validity-and-renewal) and [KEY-RUNBOOK §3](runbooks/KEY-RUNBOOK.md#routine-key-rotation)). Client metadata refresh makes releases discoverable; publication does not force installation. Execute the end-to-end and failure drills in [KEY-RUNBOOK §7](runbooks/KEY-RUNBOOK.md#drills-and-acceptance) before launch.
