@@ -1323,8 +1323,12 @@ Artifact identity, protected execution, exact replay, and transaction recovery a
 
 | Version | Date | Changes |
 |---|---|---|
+| v1.33 | September 2026 | Replace the example command list in §12.1 with a purpose-grouped public command index linked to owning man pages; complete family coverage and distinguish unspecified interfaces from implemented behavior. No command contracts changed. |
+| v1.32 | September 2026 | Specify dependency-driven security remediation, explicit update and origin decisions, and the applicable farm, maintenance, and evidence contracts. Supersedes ABI-only rebuild and cost-first selection policies where previously stated; runtime and measured acceptance remain pending. |
+| v1.31 | September 2026 | Describe aslice mechanisms without competitive rankings; align artifact bindings, protected restoration, and self-update commit boundaries, and retarget specification citations. |
 | v1.30 | September 2026 | Align guided recovery, mixed-orchard transactions, explicit waiting, post-commit service checks, trusted rebuilding, and unaffected runtime access; link pending engineering decisions and acceptance targets. |
 | v1.29 | September 2026 | Integrate six-role SQLite storage, complete solve-cache keys, durable records, and database maintenance commands from DATABASE; runtime implementation remains pending. |
+| v1.28 | September 2026 | Documentation audit repairs: contract summaries aligned; owner-approved namespace, rollback, GC, naming, prefix, and graft decisions applied where relevant; semantic anchors and explicit citations added. Runtime implementation and platform acceptance remain pending. |
 | v1.27 | September 2026 | Consolidate revision notes into a collapsible history table; no specification changes. |
 | v1.26 | September 2026 | align user-flag and universal-vendor summaries with STATE-AND-RECOVERY §1–§2: conditional ABI/CPU substitution, distinct artifact identity, and the i386 ceiling based on required execution. |
 | v1.24 | September 2026 | owner merge becomes the final human release approval, with automatic signing on a dedicated networked Pi and serialized atomic publication. Automatic targets/snapshot renewal replaces manual renewal; the root remains offline. The manual-release design above is superseded. Services and acceptance drills remain implementation work (KEY-RUNBOOK §2.1, §7); schemas and client signature formats are unchanged. |
@@ -1361,9 +1365,5 @@ Artifact identity, protected execution, exact replay, and transaction recovery a
 | v0.3 | Not recorded | resolves open question #4: **aslice collects no telemetry or analytics of any kind, ever** — the project is infrastructure, not a product (§2.2 N7, §9.4, §15). |
 | v0.2 | Not recorded | extends the platform floor from 10.15 (Catalina) to 10.11 (El Capitan) — see §4 for the consequences (three flavors, self-hosted toolchain in Phase 0, HFS+ support). |
 | Not recorded | September 2026 | corpus review corrections: artifact identity, protected execution, durable recovery, trust persistence, replay, platform limits, and examples aligned with STATE-AND-RECOVERY and SYSTEM-VOLUMES. These are specification changes; runtime acceptance remains pending. |
-| v1.28 | September 2026 | Documentation audit repairs: contract summaries aligned; owner-approved namespace, rollback, GC, naming, prefix, and graft decisions applied where relevant; semantic anchors and explicit citations added. Runtime implementation and platform acceptance remain pending. |
-| v1.31 | September 2026 | Describe aslice mechanisms without competitive rankings; align artifact bindings, protected restoration, and self-update commit boundaries, and retarget specification citations. |
-| v1.32 | September 2026 | Specify dependency-driven security remediation, explicit update and origin decisions, and the applicable farm, maintenance, and evidence contracts. Supersedes ABI-only rebuild and cost-first selection policies where previously stated; runtime and measured acceptance remain pending. |
-| v1.33 | September 2026 | Replace the example command list in §12.1 with a purpose-grouped public command index linked to owning man pages; complete family coverage and distinguish unspecified interfaces from implemented behavior. No command contracts changed. |
 
 </details>

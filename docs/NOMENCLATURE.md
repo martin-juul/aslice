@@ -306,8 +306,10 @@ Historical labels and ordering below are preserved as recorded, including repeat
 
 | Version | Date | Changes |
 |---|---|---|
+| v0.16 | September 2026 | Remove retired comparison references and competitive framing; retain aslice requirements and link their owning specifications. Align affected contract summaries where applicable. |
 | v0.15 | September 2026 | Clarify state DB as one of six SQLite roles with separate durable records and disposable cache. |
 | v0.14 | September 2026 | Point documentation checker guidance to CONTRIBUTING after removing standalone workflow reports. |
+| v0.13 | September 2026 | Documentation audit repairs: contract summaries aligned; owner-approved namespace, rollback, GC, naming, prefix, and graft decisions applied where relevant; semantic anchors and explicit citations added. Runtime implementation and platform acceptance remain pending. |
 | v0.12 | September 2026 | Consolidate revision notes into a collapsible history table; no specification changes. |
 | v0.10 | September 2026 | signing host, publisher, and quarantine follow automatic publication with a dedicated networked release Pi; the root remains offline. The manual-release design is superseded (KEY-RUNBOOK §2.1). |
 | v0.9 | September 2026 | **Superseded design record:** initial signing used a single owner and two offline Pis with manual release batches. |
@@ -325,7 +327,5 @@ Historical labels and ordering below are preserved as recorded, including repeat
 | v0.2 | September 2026 | the tombstone entry gains its index sense; the translation table gains the `deprecate!`/`disable!` row; companions refreshed to DESIGN v1.16, PACKAGE-FORMAT v0.12, AUTHORING v0.7, BUILD-INFRA v0.11, ORCHARD-POLICY v1.4, REPOSITORIES v1.4, MANUAL v0.8, SETUP v0.7 |
 | v0.1 | September 2026 | initial nomenclature, covering the corpus as of DESIGN v1.15, PACKAGE-FORMAT v0.12, BUILD-INFRA v0.10, ORCHARD-POLICY v1.3, REPOSITORIES v1.3, SETUP v0.6, AUTHORING v0.6, MANUAL v0.8. |
 | Not recorded | September 2026 | corpus review corrections: artifact identity, protected execution, durable recovery, trust persistence, replay, platform limits, and examples aligned with STATE-AND-RECOVERY and SYSTEM-VOLUMES. These are specification changes; runtime acceptance remains pending. |
-| v0.13 | September 2026 | Documentation audit repairs: contract summaries aligned; owner-approved namespace, rollback, GC, naming, prefix, and graft decisions applied where relevant; semantic anchors and explicit citations added. Runtime implementation and platform acceptance remain pending. |
-| v0.16 | September 2026 | Remove retired comparison references and competitive framing; retain aslice requirements and link their owning specifications. Align affected contract summaries where applicable. |
 
 </details>

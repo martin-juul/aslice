@@ -595,13 +595,13 @@ decision models do not prove runtime remediation, isolation, or publication dura
 
 | Version | Date | Changes |
 |---|---|---|
+| v0.9 | September 2026 | Add security and farm contract versions, authority-preserving reconstruction, and structural/model acceptance boundaries. |
+| v0.8 | September 2026 | Close recovery storage, signed checkpoint, admission, activation, grouped conflict, batch grammar, and command outcome contracts; specify protected-volume pending-reboot and manager-integrity commit boundaries with structural schemas and model cases. Runtime/platform acceptance remains pending. |
 | v0.7 | September 2026 | Specify guided recovery, trusted prefix rebuilding, committed execution catalogs, mixed-orchard transactions, explicit waiting, helper ownership, and post-commit service checks; record owner-approved storage, trust, isolation, activation, and command decisions, superseded rules, UX targets, and pending implementation acceptance. |
 | v0.6 | September 2026 | Cross-link cumulative lock waits, phase-aware stopping, and bounded recovery without weakening commit or fingerprint rules. |
 | v0.5 | September 2026 | Integrate separate SQLite roles, indefinite compact choice/history records, coordinated backups, and copy-migration compatibility; preserve the existing external-effect and trust recovery contracts. |
+| v0.4 | September 2026 | Documentation audit repairs: contract summaries aligned; owner-approved namespace, rollback, GC, naming, prefix, and graft decisions applied where relevant; semantic anchors and explicit citations added. Runtime implementation and platform acceptance remain pending. |
 | v0.3 | September 2026 | Consolidate revision notes into a collapsible history table; no specification changes. |
 | v0.2 | September 2026 | prose rewrite of the rollback transaction explanation; no content changes. |
-| v0.4 | September 2026 | Documentation audit repairs: contract summaries aligned; owner-approved namespace, rollback, GC, naming, prefix, and graft decisions applied where relevant; semantic anchors and explicit citations added. Runtime implementation and platform acceptance remain pending. |
-| v0.8 | September 2026 | Close recovery storage, signed checkpoint, admission, activation, grouped conflict, batch grammar, and command outcome contracts; specify protected-volume pending-reboot and manager-integrity commit boundaries with structural schemas and model cases. Runtime/platform acceptance remains pending. |
-| v0.9 | September 2026 | Add security and farm contract versions, authority-preserving reconstruction, and structural/model acceptance boundaries. |
 
 </details>

@@ -349,7 +349,10 @@ Exit status: **0** applied (or nothing to do); **1** error (schema, resolution, 
 
 | Version | Date | Changes |
 |---|---|---|
+| v0.19 | September 2026 | Align wishlist resolution with newest-eligible selection and explicit source-build consent. |
+| v0.18 | September 2026 | Remove retired comparison references and competitive framing; retain aslice requirements and link their owning specifications. Align affected contract summaries where applicable. |
 | v0.17 | September 2026 | Hold mutation ownership through preparation and post-commit service checks; distinguish whole-batch pre-commit rollback from committed health failure. |
+| v0.16 | September 2026 | Documentation audit repairs: contract summaries aligned; owner-approved namespace, rollback, GC, naming, prefix, and graft decisions applied where relevant; semantic anchors and explicit citations added. Runtime implementation and platform acceptance remain pending. |
 | v0.15 | September 2026 | Consolidate revision notes into a collapsible history table; no specification changes. |
 | v0.14 | September 2026 | resolve the default-shell contradiction: distinguish pre-Catalina defaults, Catalina-and-later new accounts, and actual account state; keep shell enrollment separate from account selection. Apple source captured locally. |
 | v0.13 | September 2026 | prose rewrite of the setup scenario, TOML format, and export explanation; no content changes. |
@@ -364,8 +367,5 @@ Exit status: **0** applied (or nothing to do); **1** error (schema, resolution, 
 | v0.3 | Not recorded | second editorial pass — sentence-level revision for readability; no schema or semantic changes. |
 | v0.2 | Not recorded | editorial pass — prose revised for directness; no schema or semantic changes. |
 | Not recorded | September 2026 | corpus review corrections: artifact identity, protected execution, durable recovery, trust persistence, replay, platform limits, and examples aligned with STATE-AND-RECOVERY and SYSTEM-VOLUMES. These are specification changes; runtime acceptance remains pending. |
-| v0.16 | September 2026 | Documentation audit repairs: contract summaries aligned; owner-approved namespace, rollback, GC, naming, prefix, and graft decisions applied where relevant; semantic anchors and explicit citations added. Runtime implementation and platform acceptance remain pending. |
-| v0.18 | September 2026 | Remove retired comparison references and competitive framing; retain aslice requirements and link their owning specifications. Align affected contract summaries where applicable. |
-| v0.19 | September 2026 | Align wishlist resolution with newest-eligible selection and explicit source-build consent. |
 
 </details>

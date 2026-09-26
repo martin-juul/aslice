@@ -183,10 +183,10 @@ Each schematic versions with the prose specification it tracks, and its metadata
 
 | Version | Date | Changes |
 |---|---|---|
+| v0.6 | September 2026 | Add security and farm contract versions, authority-preserving reconstruction, and structural/model acceptance boundaries. |
+| v0.5 | September 2026 | Add version-1 recovery records, receipts, initialization/heads, catalogs, gates, exports, signed checkpoints, recovery plans, and command request/outcome schemas with illustrative fixtures and decision-model tests. Runtime verification remains pending. |
+| v0.4 | September 2026 | Documentation audit repairs: contract summaries aligned; owner-approved namespace, rollback, GC, naming, prefix, and graft decisions applied where relevant; semantic anchors and explicit citations added. Runtime implementation and platform acceptance remain pending. |
 | v0.3 | September 2026 | Consolidate revision notes into a collapsible history table; no specification changes. |
 | v0.2 | September 2026 | prose rewrite of the schema directory introduction and host-member validation explanation; no content changes. |
-| v0.4 | September 2026 | Documentation audit repairs: contract summaries aligned; owner-approved namespace, rollback, GC, naming, prefix, and graft decisions applied where relevant; semantic anchors and explicit citations added. Runtime implementation and platform acceptance remain pending. |
-| v0.5 | September 2026 | Add version-1 recovery records, receipts, initialization/heads, catalogs, gates, exports, signed checkpoints, recovery plans, and command request/outcome schemas with illustrative fixtures and decision-model tests. Runtime verification remains pending. |
-| v0.6 | September 2026 | Add security and farm contract versions, authority-preserving reconstruction, and structural/model acceptance boundaries. |
 
 </details>

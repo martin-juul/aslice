@@ -447,6 +447,9 @@ Or the first three and the ABI check at once: `aslice orchard ci <pkg>` — chap
 
 | Version | Date | Changes |
 |---|---|---|
+| v0.17 | September 2026 | Specify dependency-driven security remediation, explicit update and origin decisions, and the applicable farm, maintenance, and evidence contracts. Supersedes ABI-only rebuild and cost-first selection policies where previously stated; runtime and measured acceptance remain pending. |
+| v0.16 | September 2026 | Remove retired comparison references and competitive framing; retain aslice requirements and link their owning specifications. Align affected contract summaries where applicable. |
+| v0.15 | September 2026 | Documentation audit repairs: contract summaries aligned; owner-approved namespace, rollback, GC, naming, prefix, and graft decisions applied where relevant; semantic anchors and explicit citations added. Runtime implementation and platform acceptance remain pending. |
 | v0.14 | September 2026 | Consolidate revision notes into a collapsible history table; no specification changes. |
 | v0.13 | September 2026 | resolve build-flag, protected-execution, i386-ceiling, and local/farm coverage conflicts using STATE-AND-RECOVERY, SYSTEM-VOLUMES, and BUILD-INFRA. Replace unconditional compatibility and farm-success claims with their evidence and capability gates. |
 | v0.12 | September 2026 | prose rewrite of the iteration guidance, formula introduction, and repository publishing explanation; no content changes. |
@@ -460,8 +463,5 @@ Or the first three and the ABI check at once: `aslice orchard ci <pkg>` — chap
 | v0.3 | Not recorded | editorial pass — prose revised for directness; no guidance changes. |
 | v0.2 | Not recorded | review corrections — §8's payload map uses the real `[[binary.payload]]` array-of-tables shape, the invented `ctx.dep_lib_dirs` helper becomes the documented `ctx.deps` path, the service/root-daemon gate includes local repositories (§9), and the unsigned-vendor extended-only exception is recorded (§8, appendix). |
 | Not recorded | September 2026 | corpus review corrections: artifact identity, protected execution, durable recovery, trust persistence, replay, platform limits, and examples aligned with STATE-AND-RECOVERY and SYSTEM-VOLUMES. These are specification changes; runtime acceptance remains pending. |
-| v0.15 | September 2026 | Documentation audit repairs: contract summaries aligned; owner-approved namespace, rollback, GC, naming, prefix, and graft decisions applied where relevant; semantic anchors and explicit citations added. Runtime implementation and platform acceptance remain pending. |
-| v0.16 | September 2026 | Remove retired comparison references and competitive framing; retain aslice requirements and link their owning specifications. Align affected contract summaries where applicable. |
-| v0.17 | September 2026 | Specify dependency-driven security remediation, explicit update and origin decisions, and the applicable farm, maintenance, and evidence contracts. Supersedes ABI-only rebuild and cost-first selection policies where previously stated; runtime and measured acceptance remain pending. |
 
 </details>

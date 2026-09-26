@@ -1036,10 +1036,10 @@ do not satisfy these platform and security acceptance gates.
 
 | Version | Date | Changes |
 |---|---|---|
+| v0.5 | September 2026 | Add security and farm contract versions, authority-preserving reconstruction, and structural/model acceptance boundaries. |
+| v0.4 | September 2026 | Align durable record values, recovery object formats, and protected-volume finalization with the recovery contracts; retain a single durable commit decision and independent participant evidence. |
 | v0.3 | September 2026 | Specify ordered independent recovery history with protected receipts and committed execution-catalog publication; align explicit waiting, surviving-helper ownership, post-commit checks, guided recovery, and unaffected shim access. Supersede blanket runtime denial and distinguish existing models from pending runtime acceptance. |
 | v0.2 | September 2026 | Specify cumulative contention waits, phase-aware cancellation, automatic maintenance, cleanup retention, explicit compaction, and schema-2 copy migration; extend executable policy models. |
 | v0.1 | September 2026 | Specify six SQLite roles, executable schemas, durable reconstruction, inspection, coordinated backups, migration, and disaster recovery. Runtime and hardware acceptance remain pending. |
-| v0.4 | September 2026 | Align durable record values, recovery object formats, and protected-volume finalization with the recovery contracts; retain a single durable commit decision and independent participant evidence. |
-| v0.5 | September 2026 | Add security and farm contract versions, authority-preserving reconstruction, and structural/model acceptance boundaries. |
 
 </details>

@@ -925,9 +925,13 @@ Historical labels and ordering below are preserved as recorded, including repeat
 
 | Version | Date | Changes |
 |---|---|---|
+| v0.22 | September 2026 | Specify dependency-driven security remediation, explicit update and origin decisions, and the applicable farm, maintenance, and evidence contracts. Supersedes ABI-only rebuild and cost-first selection policies where previously stated; runtime and measured acceptance remain pending. |
+| v0.21 | September 2026 | Remove retired comparison references and competitive framing; retain aslice requirements and link their owning specifications. Align affected contract summaries where applicable. |
 | v0.20 | September 2026 | Explain guided recovery, preserved working access, trusted replacement preparation, batch options, explicit waiting, and committed health failures; align whole-machine refusal and rollback guidance. |
 | v0.19 | September 2026 | Document configurable lock waits, safe cancellation, automatic database maintenance, and explicit compaction. |
 | v0.18 | September 2026 | Add database inspection, coordinated backup/restore, reconstruction, role selection, and durable-history guidance; update the client layout. |
+| v0.17 | September 2026 | Documentation audit repairs: contract summaries aligned; owner-approved namespace, rollback, GC, naming, prefix, and graft decisions applied where relevant; semantic anchors and explicit citations added. Runtime implementation and platform acceptance remain pending. |
+| v0.16 | September 2026 | Add §1.3 and the helper reference link, explaining temporary helpers, package services, runtime shims, and the future multi-user daemon; no runtime changes. |
 | v0.15 | September 2026 | Consolidate revision notes into a collapsible history table; no specification changes. |
 | v0.14 | September 2026 | resolve install-failure and custom-build summaries against STATE-AND-RECOVERY §1–§2, §5 and SYSTEM-VOLUMES: staged preparation, journal recovery, exact artifact bindings, ABI evidence, dependent tests, CPU/OS checks, and unsupported/unknown flag handling. |
 | v0.12 | Not recorded | TOOLCHAIN.md joins the companions and §2.1's no-Xcode sentence links it; no behavioral changes |
@@ -942,9 +946,5 @@ Historical labels and ordering below are preserved as recorded, including repeat
 | v0.3 | Not recorded | new chapter 10 — declarative whole-machine setup with `setup.toml`, `aslice apply`, `aslice export`, and `aslice import --from-brewfile` (SETUP.md); chapters 10–13 renumber to 11–14. |
 | v0.2 | Not recorded | review corrections — §2.3 covers bash alongside zsh, §2.5 lists the three outside-prefix exceptions to a clean removal instead of claiming none exist, §3's man-page claim is softened to what actually ships, §3.1 documents `link`/`unlink` for `link = false` packages, and §7.1's root-daemon gate includes local repositories. |
 | Not recorded | September 2026 | corpus review corrections: artifact identity, protected execution, durable recovery, trust persistence, replay, platform limits, and examples aligned with STATE-AND-RECOVERY and SYSTEM-VOLUMES. These are specification changes; runtime acceptance remains pending. |
-| v0.16 | September 2026 | Add §1.3 and the helper reference link, explaining temporary helpers, package services, runtime shims, and the future multi-user daemon; no runtime changes. |
-| v0.17 | September 2026 | Documentation audit repairs: contract summaries aligned; owner-approved namespace, rollback, GC, naming, prefix, and graft decisions applied where relevant; semantic anchors and explicit citations added. Runtime implementation and platform acceptance remain pending. |
-| v0.21 | September 2026 | Remove retired comparison references and competitive framing; retain aslice requirements and link their owning specifications. Align affected contract summaries where applicable. |
-| v0.22 | September 2026 | Specify dependency-driven security remediation, explicit update and origin decisions, and the applicable farm, maintenance, and evidence contracts. Supersedes ABI-only rebuild and cost-first selection policies where previously stated; runtime and measured acceptance remain pending. |
 
 </details>

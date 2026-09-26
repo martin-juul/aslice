@@ -158,12 +158,12 @@ The known roadmap item is `aslice-toolchain` v2: LLD-first linking and ccache in
 
 | Version | Date | Changes |
 |---|---|---|
+| v0.7 | September 2026 | Documentation audit repairs: contract summaries aligned; owner-approved namespace, rollback, GC, naming, prefix, and graft decisions applied where relevant; semantic anchors and explicit citations added. Runtime implementation and platform acceptance remain pending. |
 | v0.6 | September 2026 | Consolidate revision notes into a collapsible history table; no specification changes. |
 | v0.5 | September 2026 | resolve compatibility-key and build-flag conflicts against STATE-AND-RECOVERY §1–§2: full hexadecimal keys, complete identity inputs, separate artifact identity, and conditional substitution. No runtime implementation is claimed. |
 | v0.4 | September 2026 | prose rewrite of the self-hosting rationale, component inventory, and recovery explanation; no content changes. |
 | v0.2 | September 2026 | owned-hardware bootstrap with proposed Monterey baseline subject to toolchain validation; capability requirements and pending VM coverage made explicit; companion versions refreshed. |
 | v0.1 | September 2026 | initial document, consolidating the toolchain story previously scattered across DESIGN §4.3, GENESIS §1–§4, BUILD-INFRA §2, and PACKAGE-FORMAT §6.3; adds two owner decisions: the toolchain is an ordinary, installable package (§9), and bumps are need-driven, batched, and announced (§11). |
 | Not recorded | September 2026 | corpus review corrections: artifact identity, protected execution, durable recovery, trust persistence, replay, platform limits, and examples aligned with STATE-AND-RECOVERY and SYSTEM-VOLUMES. These are specification changes; runtime acceptance remains pending. |
-| v0.7 | September 2026 | Documentation audit repairs: contract summaries aligned; owner-approved namespace, rollback, GC, naming, prefix, and graft decisions applied where relevant; semantic anchors and explicit citations added. Runtime implementation and platform acceptance remain pending. |
 
 </details>

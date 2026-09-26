@@ -64,9 +64,9 @@ Until an adapter passes these gates, the client reports that exact configuration
 
 | Version | Date | Changes |
 |---|---|---|
+| v0.5 | September 2026 | Separate pre-commit boot/patch integrity from post-commit service readiness and define explicit resumption of durable pending-reboot intent. |
+| v0.4 | September 2026 | Documentation audit repairs: contract summaries aligned; owner-approved namespace, rollback, GC, naming, prefix, and graft decisions applied where relevant; semantic anchors and explicit citations added. Runtime implementation and platform acceptance remain pending. |
 | v0.3 | September 2026 | Consolidate revision notes into a collapsible history table; no specification changes. |
 | v0.2 | September 2026 | prose rewrite of the adapter acceptance explanation; no content changes. |
-| v0.4 | September 2026 | Documentation audit repairs: contract summaries aligned; owner-approved namespace, rollback, GC, naming, prefix, and graft decisions applied where relevant; semantic anchors and explicit citations added. Runtime implementation and platform acceptance remain pending. |
-| v0.5 | September 2026 | Separate pre-commit boot/patch integrity from post-commit service readiness and define explicit resumption of durable pending-reboot intent. |
 
 </details>

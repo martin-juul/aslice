@@ -110,6 +110,8 @@ Once a year, on a clean machine, using **only** the never-lose set, rehearse §1
 | Version | Date | Changes |
 |---|---|---|
 | v0.14 | September 2026 | Extend the never-lose set with coordinated database records, evidence, and independent backup boundaries; link staged restore and continuity checks. |
+| v0.13 | September 2026 | Relocate to `docs/runbooks/` and rebase relative links; no procedural changes. |
+| v0.12 | September 2026 | Documentation audit repairs: contract summaries aligned; owner-approved namespace, rollback, GC, naming, prefix, and graft decisions applied where relevant; semantic anchors and explicit citations added. Runtime implementation and platform acceptance remain pending. |
 | v0.11 | September 2026 | Consolidate revision notes into a collapsible history table; no specification changes. |
 | v0.10 | September 2026 | prose rewrite of bootstrap ordering and recovery verification; no content changes. |
 | v0.9 | September 2026 | owner merge becomes the final human release approval, with automatic signing on a dedicated networked Pi and serialized atomic publication. Automatic targets/snapshot renewal replaces manual renewal; the root remains offline. The manual-release design above is superseded. Services and acceptance drills remain implementation work (KEY-RUNBOOK §2.1, §7); schemas and client signature formats are unchanged. |
@@ -122,7 +124,5 @@ Once a year, on a clean machine, using **only** the never-lose set, rehearse §1
 | v0.2 | September 2026 | editorial pass: prose revised for directness; no procedural changes. |
 | v0.1 | September 2026 | initial runbook, from the genesis audit that followed the §7.5 scanner-genesis discussion: collected the documented genesis paths (toolchain, root ceremony, scanner, bootstrap TLS), filled the gaps it found (installer TLS-dead fallback in DESIGN v1.9 §10.3; vendored-source archive in DESIGN v1.9 §9.6 / BUILD-INFRA v0.6 §3 / REPOSITORIES v0.8 §2; VM-image genesis and the installer-app archive in BUILD-INFRA v0.6 §8), and wrote the never-lose set and the annual re-standup drill down as obligations rather than intentions. |
 | Not recorded | September 2026 | corpus review corrections: artifact identity, protected execution, durable recovery, trust persistence, replay, platform limits, and examples aligned with STATE-AND-RECOVERY and SYSTEM-VOLUMES. These are specification changes; runtime acceptance remains pending. |
-| v0.12 | September 2026 | Documentation audit repairs: contract summaries aligned; owner-approved namespace, rollback, GC, naming, prefix, and graft decisions applied where relevant; semantic anchors and explicit citations added. Runtime implementation and platform acceptance remain pending. |
-| v0.13 | September 2026 | Relocate to `docs/runbooks/` and rebase relative links; no procedural changes. |
 
 </details>

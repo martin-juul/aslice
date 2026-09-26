@@ -354,7 +354,10 @@ No user telemetry exists anywhere in this system ([DESIGN §2.2](DESIGN.md#non-g
 
 | Version | Date | Changes |
 |---|---|---|
+| v0.25 | September 2026 | Specify dependency-driven security remediation, explicit update and origin decisions, and the applicable farm, maintenance, and evidence contracts. Supersedes ABI-only rebuild and cost-first selection policies where previously stated; runtime and measured acceptance remain pending. |
+| v0.24 | September 2026 | Remove retired comparison references and competitive framing; retain aslice requirements and link their owning specifications. Align affected contract summaries where applicable. |
 | v0.23 | September 2026 | Specify coordinator reconstruction sources and integrate separate coordinator/publisher/signer backup and recovery boundaries; agents continue using the job/result protocol. |
+| v0.22 | September 2026 | Documentation audit repairs: contract summaries aligned; owner-approved namespace, rollback, GC, naming, prefix, and graft decisions applied where relevant; semantic anchors and explicit citations added. Runtime implementation and platform acceptance remain pending. |
 | v0.21 | September 2026 | Consolidate revision notes into a collapsible history table; no specification changes. |
 | v0.20 | September 2026 | prose rewrite of helper execution and job-lease recovery; no content changes. |
 | v0.18 | September 2026 | owner merge becomes the final human release approval, with automatic signing on a dedicated networked Pi and serialized atomic publication. Automatic targets/snapshot renewal replaces manual renewal; the root remains offline. The manual-release design above is superseded. Services and acceptance drills remain implementation work (KEY-RUNBOOK §2.1, §7); schemas and client signature formats are unchanged. |
@@ -375,8 +378,5 @@ No user telemetry exists anywhere in this system ([DESIGN §2.2](DESIGN.md#non-g
 | v0.3 | Not recorded | companion references refreshed — DESIGN v1.8, PACKAGE-FORMAT v0.6; no content change. |
 | v0.2 | Not recorded | companion references refreshed — DESIGN v1.7, PACKAGE-FORMAT v0.6; all internal cross-references re-verified against current section numbering, no content change. |
 | Not recorded | September 2026 | corpus review corrections: artifact identity, protected execution, durable recovery, trust persistence, replay, platform limits, and examples aligned with STATE-AND-RECOVERY and SYSTEM-VOLUMES. These are specification changes; runtime acceptance remains pending. |
-| v0.22 | September 2026 | Documentation audit repairs: contract summaries aligned; owner-approved namespace, rollback, GC, naming, prefix, and graft decisions applied where relevant; semantic anchors and explicit citations added. Runtime implementation and platform acceptance remain pending. |
-| v0.24 | September 2026 | Remove retired comparison references and competitive framing; retain aslice requirements and link their owning specifications. Align affected contract summaries where applicable. |
-| v0.25 | September 2026 | Specify dependency-driven security remediation, explicit update and origin decisions, and the applicable farm, maintenance, and evidence contracts. Supersedes ABI-only rebuild and cost-first selection policies where previously stated; runtime and measured acceptance remain pending. |
 
 </details>
