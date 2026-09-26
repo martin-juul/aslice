@@ -2,14 +2,29 @@
 
 > State, identity, privilege, and recovery contracts: [STATE-AND-RECOVERY](STATE-AND-RECOVERY.md). Protected-volume patching: [SYSTEM-VOLUMES](SYSTEM-VOLUMES.md). These specifications do not establish completed implementation or platform validation.
 
-- **Status:** Design draft, v1.15 — September 2026
+- **Status:** Design draft, v1.16 — September 2026
 - **Companion to:** [DESIGN.md](DESIGN.md), [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md), [BUILD-INFRA.md](BUILD-INFRA.md), [ORCHARD-POLICY.md](ORCHARD-POLICY.md)
 - **Scope:** the shipped official source list, adding third-party repositories, the inherent trust-level model, and the dual signature scheme (Ed25519 canonical, OpenPGP supported).
 - **Vocabulary:** [NOMENCLATURE.md](NOMENCLATURE.md) — project terms, acronyms, and the Homebrew translation table.
 
 ---
 
-Navigation: [1. Axioms](#axioms) · [2. The shipped source list](#the-shipped-source-list) · [3. Trust levels](#trust-levels) · [4. Adding a third-party repository](#adding-a-third-party-repository) · [5. Signing keys: two schemes, one verification pipeline](#signing-keys-two-schemes-one-verification-pipeline) · [6. Repository tree addition: `keys/`](#repository-tree-addition-keys) · [7. `aslice repo` command surface, completed](#aslice-repo-command-surface-completed) · [8. Failure and edge cases](#failure-and-edge-cases) · [9. Amendments carried into the other documents](#amendments-carried-into-the-other-documents) · [10. Overlapping packages across repositories](#overlapping-packages-across-repositories) · [11. The state database's role](#the-state-databases-role)
+<details>
+<summary>Contents</summary>
+
+- [1. Axioms](#axioms)
+- [2. The shipped source list](#the-shipped-source-list)
+- [3. Trust levels](#trust-levels)
+- [4. Adding a third-party repository](#adding-a-third-party-repository)
+- [5. Signing keys: two schemes, one verification pipeline](#signing-keys-two-schemes-one-verification-pipeline)
+- [6. Repository tree addition: `keys/`](#repository-tree-addition-keys)
+- [7. `aslice repo` command surface, completed](#aslice-repo-command-surface-completed)
+- [8. Failure and edge cases](#failure-and-edge-cases)
+- [9. Amendments carried into the other documents](#amendments-carried-into-the-other-documents)
+- [10. Overlapping packages across repositories](#overlapping-packages-across-repositories)
+- [11. The state database's role](#the-state-databases-role)
+
+</details>
 
 <a id="axioms"></a>
 
@@ -298,6 +313,7 @@ commands, and disaster recovery; this section summarizes repository interactions
 
 | Version | Date | Changes |
 |---|---|---|
+| v1.16 | September 2026 | Replace inline navigation with a collapsible Contents list; preserve section labels, links, and order. |
 | v1.15 | September 2026 | Specify dependency-driven security remediation, explicit update and origin decisions, and the applicable farm, maintenance, and evidence contracts. Supersedes ABI-only rebuild and cost-first selection policies where previously stated; runtime and measured acceptance remain pending. |
 | v1.14 | September 2026 | Remove retired comparison references and competitive framing; retain aslice requirements and link their owning specifications. Align affected contract summaries where applicable. |
 | v1.13 | September 2026 | Replace the single-file database summary with six owner roles, durable choices, disposable cache, and DATABASE command/recovery contracts; public formats and trust boundaries are unchanged. |

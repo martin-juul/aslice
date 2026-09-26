@@ -4,7 +4,7 @@
 
 **Name.** *aslice* — an apple slice: a nod to the Macintosh apple and to the shape of the project itself. Binary packages are **slices**; formula repositories are **orchards**; the manager picks slices off the orchard, prebuilt or baked to order. The vocabulary is kept distinct from Homebrew's beer terminology to avoid community confusion and trademark friction. The project name is styled lowercase everywhere, including sentence starts — like the command.
 
-- **Status:** Design draft, v1.33 — September 2026
+- **Status:** Design draft, v1.34 — September 2026
 - **Scope:** macOS 10.11 (El Capitan) through 12 (Monterey), Intel x86_64 only
 - **Implementation:** C++20 core, single self-contained binary
 - **Audience:** Maintainers, founding contributors, and early reviewers
@@ -12,7 +12,28 @@
 
 ---
 
-Navigation: [1. Context and Opportunity](#context-and-opportunity) · [2. Goals and Non-Goals](#goals-and-non-goals) · [3. Design decisions](#design-decisions) · [4. Platform Matrix and Microarchitecture Strategy](#platform-matrix-and-microarchitecture-strategy) · [5. Core Architecture](#core-architecture) · [6. Package Format](#package-format) · [7. The Variant and ABI Model — Interoperability by Design](#the-variant-and-abi-model--interoperability-by-design) · [8. Store, Profiles, and Generations](#store-profiles-and-generations) · [9. Distribution and the Build Farm](#distribution-and-the-build-farm) · [10. Security Model](#security-model) · [11. Performance Model](#performance-model) · [12. CLI and User Experience](#cli-and-user-experience) · [13. Policies, Governance, and Migration](#policies-governance-and-migration) · [14. Roadmap](#roadmap) · [15. Risks and Open Questions](#risks-and-open-questions) · [Appendix A. Specification status](#appendix-a-specification-status) · [Appendix B. References](#appendix-b-references)
+<details>
+<summary>Contents</summary>
+
+- [1. Context and Opportunity](#context-and-opportunity)
+- [2. Goals and Non-Goals](#goals-and-non-goals)
+- [3. Design decisions](#design-decisions)
+- [4. Platform Matrix and Microarchitecture Strategy](#platform-matrix-and-microarchitecture-strategy)
+- [5. Core Architecture](#core-architecture)
+- [6. Package Format](#package-format)
+- [7. The Variant and ABI Model — Interoperability by Design](#the-variant-and-abi-model--interoperability-by-design)
+- [8. Store, Profiles, and Generations](#store-profiles-and-generations)
+- [9. Distribution and the Build Farm](#distribution-and-the-build-farm)
+- [10. Security Model](#security-model)
+- [11. Performance Model](#performance-model)
+- [12. CLI and User Experience](#cli-and-user-experience)
+- [13. Policies, Governance, and Migration](#policies-governance-and-migration)
+- [14. Roadmap](#roadmap)
+- [15. Risks and Open Questions](#risks-and-open-questions)
+- [Appendix A. Specification status](#appendix-a-specification-status)
+- [Appendix B. References](#appendix-b-references)
+
+</details>
 
 <a id="context-and-opportunity"></a>
 
@@ -1323,6 +1344,7 @@ Artifact identity, protected execution, exact replay, and transaction recovery a
 
 | Version | Date | Changes |
 |---|---|---|
+| v1.34 | September 2026 | Replace inline navigation with a collapsible Contents list; preserve section labels, links, and order. |
 | v1.33 | September 2026 | Replace the example command list in §12.1 with a purpose-grouped public command index linked to owning man pages; complete family coverage and distinguish unspecified interfaces from implemented behavior. No command contracts changed. |
 | v1.32 | September 2026 | Specify dependency-driven security remediation, explicit update and origin decisions, and the applicable farm, maintenance, and evidence contracts. Supersedes ABI-only rebuild and cost-first selection policies where previously stated; runtime and measured acceptance remain pending. |
 | v1.31 | September 2026 | Describe aslice mechanisms without competitive rankings; align artifact bindings, protected restoration, and self-update commit boundaries, and retarget specification citations. |

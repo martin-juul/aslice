@@ -2,14 +2,37 @@
 
 > State, identity, privilege, and recovery contracts: [STATE-AND-RECOVERY](STATE-AND-RECOVERY.md). Protected-volume patching: [SYSTEM-VOLUMES](SYSTEM-VOLUMES.md). These specifications do not establish completed implementation or platform validation.
 
-- **Status:** Policy v1.18 — September 2026
+- **Status:** Policy v1.19 — September 2026
 - **Companion to:** [DESIGN.md](DESIGN.md), [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md), [BUILD-INFRA.md](BUILD-INFRA.md), [REPOSITORIES.md](REPOSITORIES.md), [TOOLCHAIN.md](TOOLCHAIN.md)
 - **Audience:** orchard maintainers, reviewers, and contributors
 - **Vocabulary:** [NOMENCLATURE.md](NOMENCLATURE.md) — project terms, acronyms, and the Homebrew translation table.
 
 ---
 
-Navigation: [1. Purpose and precedence](#purpose-and-precedence) · [2. Orchard tiers and the acceptance bar](#orchard-tiers-and-the-acceptance-bar) · [3. Naming, versioning, and revisions](#naming-versioning-and-revisions) · [4. OS and flavor declarations: the honesty rule](#os-and-flavor-declarations-the-honesty-rule) · [5. Variant discipline](#variant-discipline) · [6. Dependencies and system software](#dependencies-and-system-software) · [7. Patches](#patches) · [8. Deprecation and removal lifecycle](#deprecation-and-removal-lifecycle) · [9. Freshness: livecheck and autobump](#freshness-livecheck-and-autobump) · [10. Merge gates: what CI must prove](#merge-gates-what-ci-must-prove) · [11. Prebuild policy: what gets slices](#prebuild-policy-what-gets-slices) · [12. Vendor binary packages (pkg/dmg)](#vendor-binary-packages-pkgdmg) · [13. System software packages (kexts, SIP-disabled tools, and system patches)](#system-software-packages-kexts-sip-disabled-tools-and-system-patches) · [14. Package documentation standards](#package-documentation-standards) · [15. Reproducibility and the build environment](#reproducibility-and-the-build-environment) · [16. Security response](#security-response) · [17. Governance and review process](#governance-and-review-process) · [18. Release cadence](#release-cadence) · [19. Amending this policy](#amending-this-policy)
+<details>
+<summary>Contents</summary>
+
+- [1. Purpose and precedence](#purpose-and-precedence)
+- [2. Orchard tiers and the acceptance bar](#orchard-tiers-and-the-acceptance-bar)
+- [3. Naming, versioning, and revisions](#naming-versioning-and-revisions)
+- [4. OS and flavor declarations: the honesty rule](#os-and-flavor-declarations-the-honesty-rule)
+- [5. Variant discipline](#variant-discipline)
+- [6. Dependencies and system software](#dependencies-and-system-software)
+- [7. Patches](#patches)
+- [8. Deprecation and removal lifecycle](#deprecation-and-removal-lifecycle)
+- [9. Freshness: livecheck and autobump](#freshness-livecheck-and-autobump)
+- [10. Merge gates: what CI must prove](#merge-gates-what-ci-must-prove)
+- [11. Prebuild policy: what gets slices](#prebuild-policy-what-gets-slices)
+- [12. Vendor binary packages (pkg/dmg)](#vendor-binary-packages-pkgdmg)
+- [13. System software packages (kexts, SIP-disabled tools, and system patches)](#system-software-packages-kexts-sip-disabled-tools-and-system-patches)
+- [14. Package documentation standards](#package-documentation-standards)
+- [15. Reproducibility and the build environment](#reproducibility-and-the-build-environment)
+- [16. Security response](#security-response)
+- [17. Governance and review process](#governance-and-review-process)
+- [18. Release cadence](#release-cadence)
+- [19. Amending this policy](#amending-this-policy)
+
+</details>
 
 <a id="purpose-and-precedence"></a>
 
@@ -373,6 +396,7 @@ Historical labels and ordering below are preserved as recorded, including repeat
 
 | Version | Date | Changes |
 |---|---|---|
+| v1.19 | September 2026 | Replace inline navigation with a collapsible Contents list; preserve section labels, links, and order. |
 | v1.18 | September 2026 | Specify dependency-driven security remediation, explicit update and origin decisions, and the applicable farm, maintenance, and evidence contracts. Supersedes ABI-only rebuild and cost-first selection policies where previously stated; runtime and measured acceptance remain pending. |
 | v1.17 | September 2026 | Remove retired comparison references and competitive framing; retain aslice requirements and link their owning specifications. Align affected contract summaries where applicable. |
 | v1.16 | September 2026 | Documentation audit repairs: contract summaries aligned; owner-approved namespace, rollback, GC, naming, prefix, and graft decisions applied where relevant; semantic anchors and explicit citations added. Runtime implementation and platform acceptance remain pending. |

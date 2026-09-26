@@ -4,7 +4,7 @@
 
 **The user guide for aslice — a package manager for Intel macOS.**
 
-- **Status:** v0.22 — September 2026
+- **Status:** v0.23 — September 2026
 - **Project home:** [aslice.sh](https://aslice.sh) — homepage, documentation (aslice.sh/docs), and the public dashboard (aslice.sh/dashboard); the installer is served from get.aslice.sh (§2).
 - **Audience:** people who install and run software with aslice; that is most of what follows. If you *write* packages, read chapters 1–4 and then move to [AUTHORING.md](AUTHORING.md). If you want to know *why* things are the way they are, the rationale lives in [DESIGN.md](DESIGN.md).
 - **Companions:** the man pages in [man/](../man/) (also available as `aslice help <command>`), [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md), [ORCHARD-POLICY.md](ORCHARD-POLICY.md), [REPOSITORIES.md](REPOSITORIES.md), [GENESIS.md](runbooks/GENESIS.md), [TOOLCHAIN.md](TOOLCHAIN.md).
@@ -12,7 +12,26 @@
 
 ---
 
-Navigation: [1. Overview](#overview) · [2. Installing aslice](#installing-aslice) · [3. Everyday commands](#everyday-commands) · [4. How installs actually work](#how-installs-actually-work) · [5. Rollback and generations](#rollback-and-generations) · [6. Managing runtimes: PHP, Python, Ruby, Node](#managing-runtimes-php-python-ruby-node) · [7. Running services](#running-services) · [8. Keeping TLS alive on an old OS](#keeping-tls-alive-on-an-old-os) · [9. Repositories, trust, and staying offline](#repositories-trust-and-staying-offline) · [10. One file, one command: rebuilding a machine](#one-file-one-command-rebuilding-a-machine) · [11. aslice and Homebrew](#aslice-and-homebrew) · [12. When something goes wrong](#when-something-goes-wrong) · [13. Configuration reference](#configuration-reference) · [14. Getting help](#getting-help) · [Appendix. Command quick reference](#appendix-command-quick-reference)
+<details>
+<summary>Contents</summary>
+
+- [1. Overview](#overview)
+- [2. Installing aslice](#installing-aslice)
+- [3. Everyday commands](#everyday-commands)
+- [4. How installs actually work](#how-installs-actually-work)
+- [5. Rollback and generations](#rollback-and-generations)
+- [6. Managing runtimes: PHP, Python, Ruby, Node](#managing-runtimes-php-python-ruby-node)
+- [7. Running services](#running-services)
+- [8. Keeping TLS alive on an old OS](#keeping-tls-alive-on-an-old-os)
+- [9. Repositories, trust, and staying offline](#repositories-trust-and-staying-offline)
+- [10. One file, one command: rebuilding a machine](#one-file-one-command-rebuilding-a-machine)
+- [11. aslice and Homebrew](#aslice-and-homebrew)
+- [12. When something goes wrong](#when-something-goes-wrong)
+- [13. Configuration reference](#configuration-reference)
+- [14. Getting help](#getting-help)
+- [Appendix. Command quick reference](#appendix-command-quick-reference)
+
+</details>
 
 <a id="overview"></a>
 
@@ -925,6 +944,7 @@ Historical labels and ordering below are preserved as recorded, including repeat
 
 | Version | Date | Changes |
 |---|---|---|
+| v0.23 | September 2026 | Replace inline navigation with a collapsible Contents list; preserve section labels, links, and order. |
 | v0.22 | September 2026 | Specify dependency-driven security remediation, explicit update and origin decisions, and the applicable farm, maintenance, and evidence contracts. Supersedes ABI-only rebuild and cost-first selection policies where previously stated; runtime and measured acceptance remain pending. |
 | v0.21 | September 2026 | Remove retired comparison references and competitive framing; retain aslice requirements and link their owning specifications. Align affected contract summaries where applicable. |
 | v0.20 | September 2026 | Explain guided recovery, preserved working access, trusted replacement preparation, batch options, explicit waiting, and committed health failures; align whole-machine refusal and rollback guidance. |

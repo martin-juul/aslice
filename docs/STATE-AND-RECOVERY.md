@@ -1,9 +1,23 @@
 # State, artifacts, and recovery
 
-- **Status:** Specification v0.9 — September 2026. These contracts are specified, not implemented or validated on macOS.
+- **Status:** Specification v0.10 — September 2026. These contracts are specified, not implemented or validated on macOS.
 - **Authority:** This document owns artifact identity, privileged ownership, transaction recovery, replay, and retained trust. DESIGN explains the architecture; PACKAGE-FORMAT describes author input. Examples and schemas must agree with these contracts.
 
-Navigation: [1. Compatibility and artifact identity](#compatibility-and-artifact-identity) · [2. ABI and execution requirements](#abi-and-execution-requirements) · [3. Privileged ownership and capability checks](#privileged-ownership-and-capability-checks) · [4. Graft execution boundary](#graft-execution-boundary) · [5. Durable transactions and recovery](#durable-transactions-and-recovery) · [6. Self-update and decommission](#self-update-and-decommission) · [7. Persistent trust and initial bootstrap](#persistent-trust-and-initial-bootstrap) · [8. Plans, locks, archives, and offline use](#plans-locks-archives-and-offline-use) · [9. Certificate trust lifecycle](#certificate-trust-lifecycle) · [10. Acceptance and implementation order](#acceptance-and-implementation-order)
+<details>
+<summary>Contents</summary>
+
+- [1. Compatibility and artifact identity](#compatibility-and-artifact-identity)
+- [2. ABI and execution requirements](#abi-and-execution-requirements)
+- [3. Privileged ownership and capability checks](#privileged-ownership-and-capability-checks)
+- [4. Graft execution boundary](#graft-execution-boundary)
+- [5. Durable transactions and recovery](#durable-transactions-and-recovery)
+- [6. Self-update and decommission](#self-update-and-decommission)
+- [7. Persistent trust and initial bootstrap](#persistent-trust-and-initial-bootstrap)
+- [8. Plans, locks, archives, and offline use](#plans-locks-archives-and-offline-use)
+- [9. Certificate trust lifecycle](#certificate-trust-lifecycle)
+- [10. Acceptance and implementation order](#acceptance-and-implementation-order)
+
+</details>
 
 <a id="compatibility-and-artifact-identity"></a>
 
@@ -595,6 +609,7 @@ decision models do not prove runtime remediation, isolation, or publication dura
 
 | Version | Date | Changes |
 |---|---|---|
+| v0.10 | September 2026 | Replace inline navigation with a collapsible Contents list; preserve section labels, links, and order. |
 | v0.9 | September 2026 | Add security and farm contract versions, authority-preserving reconstruction, and structural/model acceptance boundaries. |
 | v0.8 | September 2026 | Close recovery storage, signed checkpoint, admission, activation, grouped conflict, batch grammar, and command outcome contracts; specify protected-volume pending-reboot and manager-integrity commit boundaries with structural schemas and model cases. Runtime/platform acceptance remains pending. |
 | v0.7 | September 2026 | Specify guided recovery, trusted prefix rebuilding, committed execution catalogs, mixed-orchard transactions, explicit waiting, helper ownership, and post-commit service checks; record owner-approved storage, trust, isolation, activation, and command decisions, superseded rules, UX targets, and pending implementation acceptance. |

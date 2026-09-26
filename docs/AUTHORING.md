@@ -4,14 +4,31 @@
 
 **How to write, test, and ship aslice packages.**
 
-- **Status:** v0.17 — September 2026
+- **Status:** v0.18 — September 2026
 - **Audience:** package authors — people writing formulae for the core or extended orchards, packaging vendor binaries, or running their own orchard. Read [MANUAL.md](MANUAL.md) chapters 1–4 first; this guide assumes the vocabulary (slice, orchard, flavor, generation) and the user's view of the system.
 - **Companions:** [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md) is the authoritative schema — when this guide and the schema disagree, the schema is right. [ORCHARD-POLICY.md](ORCHARD-POLICY.md) is the policy this guide summarizes. [BUILD-INFRA.md](BUILD-INFRA.md) is the farm your PR builds on. [MANUAL.md](MANUAL.md) is what your users read.
 - **Vocabulary:** [NOMENCLATURE.md](NOMENCLATURE.md) — project terms, acronyms, and the Homebrew translation table.
 
 ---
 
-Navigation: [1. Overview](#overview) · [2. Your first package](#your-first-package) · [3. package.toml, section by section](#packagetoml-section-by-section) · [4. build.star: the build script](#buildstar-the-build-script) · [5. Variants and the ABI contract](#variants-and-the-abi-contract) · [6. Tests](#tests) · [7. Keeping it fresh](#keeping-it-fresh) · [8. Vendor binaries](#vendor-binaries) · [9. Special categories](#special-categories) · [10. The merge gate and review](#the-merge-gate-and-review) · [11. Publishing your own orchard and repository](#publishing-your-own-orchard-and-repository) · [12. Maintaining the orchard](#maintaining-the-orchard) · [Appendix. The author's checklist](#appendix-the-authors-checklist)
+<details>
+<summary>Contents</summary>
+
+- [1. Overview](#overview)
+- [2. Your first package](#your-first-package)
+- [3. package.toml, section by section](#packagetoml-section-by-section)
+- [4. build.star: the build script](#buildstar-the-build-script)
+- [5. Variants and the ABI contract](#variants-and-the-abi-contract)
+- [6. Tests](#tests)
+- [7. Keeping it fresh](#keeping-it-fresh)
+- [8. Vendor binaries](#vendor-binaries)
+- [9. Special categories](#special-categories)
+- [10. The merge gate and review](#the-merge-gate-and-review)
+- [11. Publishing your own orchard and repository](#publishing-your-own-orchard-and-repository)
+- [12. Maintaining the orchard](#maintaining-the-orchard)
+- [Appendix. The author's checklist](#appendix-the-authors-checklist)
+
+</details>
 
 <a id="overview"></a>
 
@@ -447,6 +464,7 @@ Or the first three and the ABI check at once: `aslice orchard ci <pkg>` — chap
 
 | Version | Date | Changes |
 |---|---|---|
+| v0.18 | September 2026 | Replace inline navigation with a collapsible Contents list; preserve section labels, links, and order. |
 | v0.17 | September 2026 | Specify dependency-driven security remediation, explicit update and origin decisions, and the applicable farm, maintenance, and evidence contracts. Supersedes ABI-only rebuild and cost-first selection policies where previously stated; runtime and measured acceptance remain pending. |
 | v0.16 | September 2026 | Remove retired comparison references and competitive framing; retain aslice requirements and link their owning specifications. Align affected contract summaries where applicable. |
 | v0.15 | September 2026 | Documentation audit repairs: contract summaries aligned; owner-approved namespace, rollback, GC, naming, prefix, and graft decisions applied where relevant; semantic anchors and explicit citations added. Runtime implementation and platform acceptance remain pending. |

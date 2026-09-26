@@ -2,14 +2,28 @@
 
 > State, identity, privilege, and recovery contracts: [STATE-AND-RECOVERY](STATE-AND-RECOVERY.md). Protected-volume patching: [SYSTEM-VOLUMES](SYSTEM-VOLUMES.md). These specifications do not establish completed implementation or platform validation.
 
-- **Status:** Format draft, v0.21 — September 2026
+- **Status:** Format draft, v0.22 — September 2026
 - **Companion to:** [DESIGN.md](DESIGN.md) — this document owns author input and the recipe API summarized in [DESIGN §6](DESIGN.md#package-format). [STATE-AND-RECOVERY](STATE-AND-RECOVERY.md) owns identity, trust, and recovery; examples and schemas must agree. The toolchain this format's builds run on is specified in [TOOLCHAIN.md](TOOLCHAIN.md).
 - **Scope:** the `package.toml` definition format, `build.star` build API, dependency and version semantics, transitive resolution, and lock files.
 - **Vocabulary:** [NOMENCLATURE.md](NOMENCLATURE.md) — project terms, acronyms, and the Homebrew translation table.
 
 ---
 
-Navigation: [1. Philosophy](#philosophy) · [2. Files of a package](#files-of-a-package) · [3. `package.toml` — full schema](#packagetoml--full-schema) · [4. Versioning](#versioning) · [5. Dependency semantics](#dependency-semantics) · [6. Build instructions](#build-instructions) · [7. Lock files](#lock-files) · [8. Validation and tooling](#validation-and-tooling) · [9. Worked examples](#worked-examples) · [Appendix. Field index](#appendix-field-index)
+<details>
+<summary>Contents</summary>
+
+- [1. Philosophy](#philosophy)
+- [2. Files of a package](#files-of-a-package)
+- [3. `package.toml` — full schema](#packagetoml--full-schema)
+- [4. Versioning](#versioning)
+- [5. Dependency semantics](#dependency-semantics)
+- [6. Build instructions](#build-instructions)
+- [7. Lock files](#lock-files)
+- [8. Validation and tooling](#validation-and-tooling)
+- [9. Worked examples](#worked-examples)
+- [Appendix. Field index](#appendix-field-index)
+
+</details>
 
 <a id="philosophy"></a>
 
@@ -832,6 +846,7 @@ The full form is in §3.11; the shape to remember is **two `[[binary]]` artifact
 
 | Version | Date | Changes |
 |---|---|---|
+| v0.22 | September 2026 | Replace inline navigation with a collapsible Contents list; preserve section labels, links, and order. |
 | v0.21 | September 2026 | Specify dependency-driven security remediation, explicit update and origin decisions, and the applicable farm, maintenance, and evidence contracts. Supersedes ABI-only rebuild and cost-first selection policies where previously stated; runtime and measured acceptance remain pending. |
 | v0.20 | September 2026 | Remove retired comparison references and competitive framing; retain aslice requirements and link their owning specifications. Align affected contract summaries where applicable. |
 | v0.19 | September 2026 | Documentation audit repairs: contract summaries aligned; owner-approved namespace, rollback, GC, naming, prefix, and graft decisions applied where relevant; semantic anchors and explicit citations added. Runtime implementation and platform acceptance remain pending. |

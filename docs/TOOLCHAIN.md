@@ -2,11 +2,27 @@
 
 > State, identity, privilege, and recovery contracts: [STATE-AND-RECOVERY](STATE-AND-RECOVERY.md). Protected-volume patching: [SYSTEM-VOLUMES](SYSTEM-VOLUMES.md). These specifications do not establish completed implementation or platform validation.
 
-- **Status:** Design draft, v0.7 — September 2026
+- **Status:** Design draft, v0.8 — September 2026
 - **Companion to:** [DESIGN.md](DESIGN.md), [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md), [BUILD-INFRA.md](BUILD-INFRA.md), [GENESIS.md](runbooks/GENESIS.md). This document is the authoritative specification for the toolchain; where it and another document disagree, the disagreement is a bug in one of them.
 - **Vocabulary:** [NOMENCLATURE.md](NOMENCLATURE.md).
 
-Navigation: [1. What the toolchain is](#what-the-toolchain-is) · [2. Why self-hosted](#why-self-hosted) · [3. Components](#components) · [4. The SDK strategy](#the-sdk-strategy) · [5. Linkage rules](#linkage-rules) · [6. Flavors and the `-march` floor](#flavors-and-the--march-floor) · [7. Identity: `toolchain_id`](#identity-toolchain_id) · [8. How a build consumes the toolchain](#how-a-build-consumes-the-toolchain) · [9. Installing it yourself](#installing-it-yourself) · [10. Genesis](#genesis) · [11. Bumps](#bumps) · [12. Boundaries](#boundaries)
+<details>
+<summary>Contents</summary>
+
+- [1. What the toolchain is](#what-the-toolchain-is)
+- [2. Why self-hosted](#why-self-hosted)
+- [3. Components](#components)
+- [4. The SDK strategy](#the-sdk-strategy)
+- [5. Linkage rules](#linkage-rules)
+- [6. Flavors and the `-march` floor](#flavors-and-the--march-floor)
+- [7. Identity: `toolchain_id`](#identity-toolchain_id)
+- [8. How a build consumes the toolchain](#how-a-build-consumes-the-toolchain)
+- [9. Installing it yourself](#installing-it-yourself)
+- [10. Genesis](#genesis)
+- [11. Bumps](#bumps)
+- [12. Boundaries](#boundaries)
+
+</details>
 
 <a id="what-the-toolchain-is"></a>
 
@@ -158,6 +174,7 @@ The known roadmap item is `aslice-toolchain` v2: LLD-first linking and ccache in
 
 | Version | Date | Changes |
 |---|---|---|
+| v0.8 | September 2026 | Replace inline navigation with a collapsible Contents list; preserve section labels, links, and order. |
 | v0.7 | September 2026 | Documentation audit repairs: contract summaries aligned; owner-approved namespace, rollback, GC, naming, prefix, and graft decisions applied where relevant; semantic anchors and explicit citations added. Runtime implementation and platform acceptance remain pending. |
 | v0.6 | September 2026 | Consolidate revision notes into a collapsible history table; no specification changes. |
 | v0.5 | September 2026 | resolve compatibility-key and build-flag conflicts against STATE-AND-RECOVERY §1–§2: full hexadecimal keys, complete identity inputs, separate artifact identity, and conditional substitution. No runtime implementation is claimed. |
