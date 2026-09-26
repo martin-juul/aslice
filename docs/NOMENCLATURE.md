@@ -2,7 +2,7 @@
 
 > State, identity, privilege, and recovery contracts: [STATE-AND-RECOVERY](STATE-AND-RECOVERY.md). Protected-volume patching: [SYSTEM-VOLUMES](SYSTEM-VOLUMES.md). These specifications do not establish completed implementation or platform validation.
 
-- **Status:** Reference v0.16 — September 2026
+- **Status:** Reference v0.17 — September 2026
 - **Companions:** [DESIGN.md](DESIGN.md), [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md), [AUTHORING.md](AUTHORING.md), [BUILD-INFRA.md](BUILD-INFRA.md), [ORCHARD-POLICY.md](ORCHARD-POLICY.md), [REPOSITORIES.md](REPOSITORIES.md), [MANUAL.md](MANUAL.md), [SETUP.md](SETUP.md), [TOOLCHAIN.md](TOOLCHAIN.md)
 - **Audience:** every reader. When a document uses a word you do not know, it is defined here — or should be.
 
@@ -229,34 +229,34 @@ The words we made up, or made ours.
 
 ## 6. Acronyms
 
-| Term | Meaning |
-|---|---|
-| ABI | application binary interface |
-| CA | certificate authority |
-| CI | continuous integration |
-| CLI | command-line interface |
-| CPE | platform identifiers |
-| CVE | vulnerability identifiers |
-| DAG | directed acyclic graph; the shape of dependency relations |
-| EBNF | extended Backus–Naur form; PACKAGE-FORMAT grammar notation |
-| EOL | end of life |
-| HTTP/2 | the fetch transport |
-| ISO-8601 | the date format used for timestamps |
-| JSONL | JSON lines, one record per line |
-| LRU | least recently used |
-| OSV | the Open Source Vulnerabilities database |
-| PUP | potentially unwanted program |
-| SBOM | software bill of materials |
-| SLSA | supply-chain integrity framework |
-| SPDX | the license-identifier standard |
-| SQLite | the embedded database |
-| TLS | transport layer security |
-| TOML | the config format formulas and setup files use |
-| TTY | terminal |
-| UTC | the timezone used for timestamps |
-| VM | virtual machine |
-| WAL | write-ahead log mode |
-| XDG | the freedesktop directory specification, borrowed for paths |
+| Term | Expansion | Meaning |
+|---|---|---|
+| ABI | application binary interface | application binary interface |
+| CA | certificate authority | certificate authority |
+| CI | continuous integration | continuous integration |
+| CLI | command-line interface | command-line interface |
+| CPE | Common Platform Enumeration | platform identifiers |
+| CVE | Common Vulnerabilities and Exposures | vulnerability identifiers |
+| DAG | directed acyclic graph | directed acyclic graph; the shape of dependency relations |
+| EBNF | extended Backus–Naur form | extended Backus–Naur form; PACKAGE-FORMAT grammar notation |
+| EOL | end of life | end of life |
+| HTTP/2 | Hypertext Transfer Protocol, version 2 | the fetch transport |
+| ISO-8601 | ISO 8601 date and time standard (a standard identifier) | the date format used for timestamps |
+| JSONL | JavaScript Object Notation Lines | JSON lines, one record per line |
+| LRU | least recently used | least recently used |
+| OSV | Open Source Vulnerabilities | the Open Source Vulnerabilities database |
+| PUP | potentially unwanted program | potentially unwanted program |
+| SBOM | software bill of materials | software bill of materials |
+| SLSA | Supply-chain Levels for Software Artifacts | supply-chain integrity framework |
+| SPDX | System Package Data Exchange (formerly Software Package Data Exchange) | the license-identifier standard |
+| SQLite | SQLite (a product name; SQL means Structured Query Language) | the embedded database |
+| TLS | Transport Layer Security | transport layer security |
+| TOML | Tom's Obvious, Minimal Language | the config format formulas and setup files use |
+| TTY | teletype | terminal |
+| UTC | Coordinated Universal Time | the timezone used for timestamps |
+| VM | virtual machine | virtual machine |
+| WAL | write-ahead log | write-ahead log mode |
+| XDG | Cross-Desktop Group | the freedesktop directory specification, borrowed for paths |
 
 <a id="the-homebrew-translation-table"></a>
 
@@ -306,6 +306,7 @@ Historical labels and ordering below are preserved as recorded, including repeat
 
 | Version | Date | Changes |
 |---|---|---|
+| v0.17 | September 2026 | Add full expansions to the acronym table while preserving existing meanings. |
 | v0.16 | September 2026 | Remove retired comparison references and competitive framing; retain aslice requirements and link their owning specifications. Align affected contract summaries where applicable. |
 | v0.15 | September 2026 | Clarify state DB as one of six SQLite roles with separate durable records and disposable cache. |
 | v0.14 | September 2026 | Point documentation checker guidance to CONTRIBUTING after removing standalone workflow reports. |
