@@ -7,11 +7,23 @@
 - Retrieved: 2026-09-26 UTC
 - Capture type: complete original source text
 - Rights: Copyright and redistribution conditions retained in the original roff comments.
-- Used by: [Slice format](../SLICE-FORMAT.md), compression and archive encoding.
+- Used by:
+  - [SLICE-FORMAT §1. Byte layout](../SLICE-FORMAT.md#1-byte-layout): A slice uses a constrained pax tar stream within one Zstandard frame.
+  - [SLICE-FORMAT §3. Verification and extraction](../SLICE-FORMAT.md#3-verification-and-extraction): Extraction rejects types and path behavior allowed by general-purpose tar.
 
 ## Captured material
 
 The complete original follows, including format definitions, exceptions, and notices.
+
+## Decision-relevant context
+
+Source locator: General Format; POSIX ustar Archives; Pax Interchange Format; relevant extension sections in retained tar(5) roff.
+
+A tar stream consists of 512-byte records. A member header carries path, mode, ownership, size, time, type, link target, and checksum; member data is padded to a record boundary. Two zero records mark the end. The header checksum covers header bytes with the checksum field treated as spaces; it is not cryptographic content authentication.
+
+Ustar divides long paths between name and prefix fields. Pax extended headers carry length-prefixed key/value records that can replace values such as path, linkpath, and size. The decimal length counts the whole record, including its own digits, separating space, and final newline, so changing a value can change both length and digit count. Global and per-member extended headers have different scope.
+
+The complete manual also describes device nodes, hardlinks, sparse encodings, and vendor extensions. Those encodings explain why simply invoking a permissive tar extractor is insufficient: a valid general archive can still be an invalid slice. Long-path handling must use the same effective path for authorization, collision checks, and extraction.
 
 ## Applicability and limits
 
@@ -19,11 +31,18 @@ This is a format reference, not evidence that the aslice extractor works. The pr
 
 ## Project interpretation
 
-SLICE-FORMAT specifies member order, accepted types, resource limits, and authentication. Those are project requirements. Implementations must test both the encoding and the additional restrictions.
+The project accepts only the explicitly listed per-entry pax needs and payload kinds. The manifest and signed archive digest supply integrity; tar checksums merely detect limited header corruption. Implementations must test both the encoding and the project's normalization, traversal refusals, and resource restrictions.
+
+## Omissions and evidence gaps
+
+The complete v3.8.2 roff source and embedded redistribution notices are retained. This is not the source of the extractor implementation or evidence that legacy system tar behaves identically.
 
 ## Preservation
 
 Exact original: [LIBARCHIVE_TAR_FORMAT.source.txt](LIBARCHIVE_TAR_FORMAT.source.txt). SHA-256: `9e477ebe3f4502ece6af78fd7a88a14e04f8155cf6db40479cf9797324558e34`. Download URL is the original source above. The fenced copy below is decoded as UTF-8 for printing; the companion file preserves the downloaded bytes. Preserve both with SHA256SUMS.
+
+
+Review: 2026-09-26 UTC. Original source re-read against the cited local sections; added locators, conditions, and explicit gaps. The previously retained source bytes were re-fetched and matched exactly; embedded originals and notices are unchanged.
 
 ## Full captured source
 

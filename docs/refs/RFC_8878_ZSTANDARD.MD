@@ -7,23 +7,42 @@
 - Retrieved: 2026-09-26 UTC
 - Capture type: complete original source text
 - Rights: IETF Trust notice and applicable license references retained in the original.
-- Used by: [Slice format](../SLICE-FORMAT.md), compression and archive encoding.
+- Used by:
+  - [SLICE-FORMAT §1. Byte layout](../SLICE-FORMAT.md#1-byte-layout): The project permits one Zstandard frame, not all streams allowed by the format.
+  - [SLICE-FORMAT §3. Verification and extraction](../SLICE-FORMAT.md#3-verification-and-extraction): Decoder resource limits are independent of declared archive sizes.
 
 ## Captured material
 
 The complete original follows, including format definitions, exceptions, and notices.
 
+## Decision-relevant context
+
+Source locator: RFC 8878 §3.1 frames; §3.1.1.1 frame header; §3.1.1.2 blocks; §3.1.2 skippable frames; §5 dictionary format; §6 use of dictionaries; §8 security considerations.
+
+A frame starts with the Zstandard magic and header. Flags govern the window description, optional content size, dictionary identifier, and optional checksum. Blocks have a last-block bit and distinguish raw, run-length, and compressed payloads; the reserved block type is invalid. The header's resource declarations are inputs to bounds checking, not permission to allocate arbitrary memory.
+
+The format permits concatenated frames and skippable frames, and compression can rely on a dictionary identified separately from the frame data. These general-format capabilities do not override the slice contract's one-frame restriction or introduce an implicit dictionary distribution mechanism. The optional content checksum is derived from decoded content and is not a cryptographic authentication mechanism.
+
+The full RFC retains bit layouts, literal and sequence coding, entropy decoding, dictionary format, and security considerations. A small compressed representation may demand substantial output or working memory. Bound the decoder window, total expansion, processing time, and subsequent tar entry counts before untrusted data can exhaust resources.
+
 ## Applicability and limits
 
-This is a format reference, not evidence that the aslice extractor works. The project selects a restricted subset; support for a feature upstream does not authorize it in a slice. The tar manual is preserved as readable roff source, including its license comments. RFC errata and later revisions are not incorporated into this fixed edition.
+This is a format reference, not evidence that the aslice extractor works. The project selects a restricted subset; support for a feature upstream does not authorize it in a slice. RFC errata and later revisions are not incorporated into this fixed edition.
 
 ## Project interpretation
 
-SLICE-FORMAT specifies member order, accepted types, resource limits, and authentication. Those are project requirements. Implementations must test both the encoding and the additional restrictions.
+Verify the complete archive digest and signature before decoding, then enforce the independent slice limits. Passing Zstandard decoding does not validate tar paths or manifest membership. Implementations must test the encoding and additional slice restrictions using real compressed fixtures beyond the structural JSON tests.
+
+## Omissions and evidence gaps
+
+The complete RFC is preserved. Later errata and a specific decoder implementation are not included. The previous wrapper's tar-roff sentence was a copy error; roff applies to the separate libarchive asset, not this RFC.
 
 ## Preservation
 
 Exact original: [RFC_8878_ZSTANDARD.source.txt](RFC_8878_ZSTANDARD.source.txt). SHA-256: `8ee6be03534113f5689cda75b9539a02e0704a2506d420814223e506420aeea4`. Download URL is the original source above. The fenced copy below is decoded as UTF-8 for printing; the companion file preserves the downloaded bytes. Preserve both with SHA256SUMS.
+
+
+Review: 2026-09-26 UTC. Original source re-read against the cited local sections; added locators, conditions, and explicit gaps. The previously retained source bytes were re-fetched and matched exactly; embedded originals and notices are unchanged.
 
 ## Full captured source
 

@@ -4,15 +4,27 @@
 
 - Original source: https://www.ietf.org/archive/id/draft-bhutton-json-schema-01.txt
 - Author/publisher: JSON Schema specification authors
-- Source version/date: 2020-12, published 2022-06-16
+- Source version/date: 2020-12 dialect; draft header dated 2022-06-10 (earlier wrapper recorded 2022-06-16)
 - Retrieved: 2026-09-26 (UTC date; web and HTTP capture)
 - Capture type: complete upstream text with attribution and license
 - Rights: Original notices and redistribution terms retained in the full source.
-- Used by: schematics/json; tests/check_contracts.py
+- Used by:
+  - [README — The three schema languages](../../schematics/README.md#the-three-schema-languages): JSON schematics use the 2020-12 dialect and local schema resources.
+  - [README — Authority and precedence](../../schematics/README.md#authority-and-precedence): Structural schemas do not replace prose semantics.
 
 ## Captured material
 
 The full fixed draft below preserves the schema language used by the JSON schematics.
+
+## Decision-relevant context
+
+Source locator: Retained draft: §4 definitions, §8 core vocabulary, §9 loading schemas, §10 applicators, §11 unevaluated locations, §12 output.
+
+The core draft defines the instance model, boolean/object schemas, schema resources, and reference resolution. `$schema` selects a dialect; `$id` establishes resource identity and a base URI. `$ref` applies the referenced schema and does not by itself prohibit other keywords alongside it. Resource identity is not an instruction to fetch untrusted network content: §9 separates loading and associating resources from their evaluation.
+
+Applicators such as `allOf`, `anyOf`, `oneOf`, and `if`/`then`/`else` combine subschema results. `properties` evaluates named members; it does not require their presence. `additionalProperties` applies to names not covered in that schema object, whereas `unevaluatedProperties` depends on successful evaluation annotations across applicable subschemas. Confusing these mechanisms can accidentally reopen or over-close composed objects.
+
+For offline use, load the project's schema resources into a local registry before validating fixtures. A missing resource is a resolution problem, not a successful validation. The retained output section supplies validity/error-location concepts; the validation companion supplies type, numeric, string, and presence assertions.
 
 ## Applicability and limits
 
@@ -20,13 +32,20 @@ This fixes the 2020-12 dialect; it does not silently adopt future drafts.
 
 ## Project interpretation
 
-The source supports the facts above. Project policy and acceptance gates remain in the linked specification; they are not attributed to the source. No successful aslice runtime test is implied by archiving this reference.
+The local registry and fixed dialect make structural checks reproducible without retrieving schemas. Cryptographic authorization, payload inspection, and relationships among separately validated files remain semantic gates. A schema passing its own meta-schema only establishes schema shape.
+
+## Omissions and evidence gaps
+
+The complete fixed draft is retained without omissions. Referenced external standards and later errata are not automatically included. The header says June 10, 2022; the previous wrapper said published June 16. That discrepancy is recorded rather than altering the source.
 
 ## Preservation
 
 This UTF-8 Markdown record is readable without a browser, script, account, or network. Preserve it with the repository and `SHA256SUMS`; retain superseded records when replacing a source version. Original URLs identify provenance, not a runtime dependency.
 
 Exact source bytes: [JSON_SCHEMA_2020_12_CORE.source.txt](JSON_SCHEMA_2020_12_CORE.source.txt). Retrieved URL: https://www.ietf.org/archive/id/draft-bhutton-json-schema-01.txt. SHA-256: `03834e2a60caff313476df9913dac2ccf9a34aad569df570f8ab80db7bd6d24a`.
+
+
+Review: 2026-09-26 UTC. Original source re-read against the cited local sections; added locators, conditions, and explicit gaps. The previously retained source bytes were re-fetched and matched exactly; embedded originals and notices are unchanged.
 
 ## Full captured source
 

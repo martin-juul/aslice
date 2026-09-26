@@ -8,11 +8,23 @@
 - Retrieved: 2026-09-26 (UTC date; web and HTTP capture)
 - Capture type: complete upstream text with attribution and license
 - Rights: IETF Trust legal provisions and copyright notice retained in the complete RFC; redistribution of the unmodified RFC with its notices.
-- Used by: STATE-AND-RECOVERY §1; artifact identity
+- Used by:
+  - [STATE-AND-RECOVERY §1. Compatibility and artifact identity](../STATE-AND-RECOVERY.md#1-compatibility-and-artifact-identity): Canonical manifest bytes define artifact identity; set ordering is an additional project rule.
+  - [SLICE-FORMAT §2. Content identity and signatures](../SLICE-FORMAT.md#2-content-identity-and-signatures): Manifest identity differs from the digest of compressed archive bytes.
 
 ## Captured material
 
 The full RFC below preserves the canonical JSON algorithm, Unicode and numeric serialization rules, test vectors, and interoperability restrictions. Artifact identity uses this algorithm; TUF uses its separately specified encoding.
+
+## Decision-relevant context
+
+Source locator: RFC 8785 §3.1 creation of input data; §3.2 canonicalization; §3.2.2 primitive serialization; §3.2.3 sorting; §3.2.4 UTF-8; Appendix B numbers.
+
+JCS accepts I-JSON-compatible input: object names are unique, strings preserve Unicode data, and numbers are representable as IEEE 754 double precision. It emits no unnecessary whitespace, uses the specified ECMAScript primitive serialization, recursively sorts object property names by UTF-16 code units, and encodes the result in UTF-8. Sorting uses unescaped names; locale collation and UTF-8 byte ordering are not substitutes. Array order remains unchanged, though objects inside arrays are canonicalized.
+
+Unicode normalization is not applied. Invalid Unicode such as lone surrogates and non-finite numeric values cause failure. Numeric serialization may round a parsed value to its double representation; Appendix B provides boundary cases, and the RFC recommends strings where exact larger values are needed. Therefore a parser that first loses information cannot recover the original numeric intent by canonicalizing later.
+
+The project's safe-integer range and sorted, duplicate-free arrays representing sets are extra restrictions. For example, JCS preserves `[2,1]` as that array order; it does not turn it into a sorted set. Producers must apply the manifest's semantic ordering before canonicalization and hashing.
 
 ## Applicability and limits
 
@@ -20,13 +32,20 @@ Informational RFC. Hashing ordinary pretty-printed JSON is not equivalent to can
 
 ## Project interpretation
 
-The source supports the facts above. Project policy and acceptance gates remain in the linked specification; they are not attributed to the source. No successful aslice runtime test is implied by archiving this reference.
+Canonicalization fixes a byte representation after data-model validation. It neither authenticates the data nor defines TUF metadata encoding. Test number, Unicode, duplicate-key, and ordering boundaries against the retained vectors before claiming stable artifact identities.
+
+## Omissions and evidence gaps
+
+The complete Informational RFC and notices are retained. Referenced ECMAScript/I-JSON editions and later errata are not independently archived; the RFC alone is not a parser implementation.
 
 ## Preservation
 
 This UTF-8 Markdown record is readable without a browser, script, account, or network. Preserve it with the repository and `SHA256SUMS`; retain superseded records when replacing a source version. Original URLs identify provenance, not a runtime dependency.
 
 Exact source bytes: [RFC_8785_JSON_CANONICALIZATION_SCHEME.source.txt](RFC_8785_JSON_CANONICALIZATION_SCHEME.source.txt). Retrieved URL: https://www.rfc-editor.org/rfc/rfc8785.txt. SHA-256: `63d52294eb0e3f0014174288186d388b4ddbf2c67d1ce8af1d9726eb0c3ab240`.
+
+
+Review: 2026-09-26 UTC. Original source re-read against the cited local sections; added locators, conditions, and explicit gaps. The previously retained source bytes were re-fetched and matched exactly; embedded originals and notices are unchanged.
 
 ## Full captured source
 

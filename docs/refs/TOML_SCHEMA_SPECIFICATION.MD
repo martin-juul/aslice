@@ -8,11 +8,26 @@
 - Retrieved: 2026-09-26 (UTC date; web and HTTP capture)
 - Capture type: complete upstream text with attribution and license
 - Rights: MIT; retain [TOML_SCHEMA_LICENSE.txt](TOML_SCHEMA_LICENSE.txt).
-- Used by: schematics/README; TOML schemas; contract checks
+- Used by:
+  - [README — The three schema languages](../../schematics/README.md#the-three-schema-languages): The .tosd language describes TOML document structure.
+  - [README — Authority and precedence](../../schematics/README.md#authority-and-precedence): Fixed children and dynamic collections have different closure behavior.
+  - [PACKAGE-FORMAT §8. Validation and tooling](../PACKAGE-FORMAT.md#8-validation-and-tooling): Formula validation requires more than parsing .tosd syntax.
 
 ## Captured material
 
 The full language specification below preserves schema loading, primitive/container types, table closure, named types, defaults, conditions, and validation rules. Use the retained revision when interpreting the project's .tosd files.
+
+## Decision-relevant context
+
+Source locator: Schema Structure Reference; Metadata Table; Schema Definitions; Tables; Collection of Elements for Dynamic Keys; Effective Closure Set; Evaluation Phases; Diagnostics.
+
+A schema describes elements, named types, selectors, constraints, and annotations. Schema loading validates that description before it can validate a document; missing references, illegal structure, or reference cycles are not ordinary instance errors. The retained language defines reference resolution, consuming/non-consuming edges, and branch evaluation in detail.
+
+Presence and value checks differ: an optional slot can be absent, while a present value still has to satisfy its constraints. Defaults annotate expected values; validation does not itself mutate an input document. Named definitions and conjunctive composition contribute effective constraints, whose closure and child-set rules require more than a shallow dictionary merge.
+
+Tables with determinate fixed children and collections with dynamic keys have distinct rules. A table with no fixed children is open under the retained specification; it cannot be used as evidence that unknown names are rejected. Dynamic collections validate each key/value under their declared rules. Alternative branches commit or discard results according to the evaluation contract rather than accumulating every branch error indiscriminately.
+
+For offline implementation, use the retained phase, diagnostic, and composition rules together. Checking that the schema file parses as TOML only tests its serialization; it neither loads the schema language nor validates a package document.
 
 ## Applicability and limits
 
@@ -20,13 +35,20 @@ This is TOML Schema, not the TOML syntax specification. Schema validation does n
 
 ## Project interpretation
 
-The source supports the facts above. Project policy and acceptance gates remain in the linked specification; they are not attributed to the source. No successful aslice runtime test is implied by archiving this reference.
+Use the captured revision to assess .tosd semantics, with separate schema-load and instance-validation tests. Cross-file authorization and runtime safety still need project checks. Do not report the current Python TOML parser checks as a TOML Schema validator.
+
+## Omissions and evidence gaps
+
+The complete main-branch specification and MIT license are retained. Its exact commit ID was not recorded; the content digest fixes this edition. No conforming validator or execution transcript is supplied.
 
 ## Preservation
 
 This UTF-8 Markdown record is readable without a browser, script, account, or network. Preserve it with the repository and `SHA256SUMS`; retain superseded records when replacing a source version. Original URLs identify provenance, not a runtime dependency.
 
 Exact source bytes: [TOML_SCHEMA_SPECIFICATION.source.txt](TOML_SCHEMA_SPECIFICATION.source.txt). Retrieved URL: https://raw.githubusercontent.com/brunoborges/toml-schema/main/SPEC.md. SHA-256: `7fbcf00e655fd612f68c8a478367f2d217f25e49765e901afef004ce5369f7b7`.
+
+
+Review: 2026-09-26 UTC. Original source re-read against the cited local sections; added locators, conditions, and explicit gaps. The previously retained source bytes were re-fetched and matched exactly; embedded originals and notices are unchanged.
 
 ## Full captured source
 

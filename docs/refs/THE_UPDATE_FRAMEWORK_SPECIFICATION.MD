@@ -4,15 +4,31 @@
 
 - Original source: https://github.com/theupdateframework/specification/blob/master/tuf-spec.md
 - Author/publisher: The Update Framework Working Group
-- Source version/date: master snapshot retrieved 2026-09-26; version is retained in the source
+- Source version/date: 1.0.36, source date 2026-08-05; master snapshot retrieved 2026-09-26, content hash retained below
 - Retrieved: 2026-09-26 (UTC date; web and HTTP capture)
 - Capture type: complete upstream text with attribution and license
 - Rights: Community Specification License 1.0; see [TUF_LICENSE.txt](TUF_LICENSE.txt). Attribution: The Update Framework Working Group, captured specification version and source below.
-- Used by: REPOSITORIES, KEY-RUNBOOK, STATE-AND-RECOVERY §7–§8; TUF schemas
+- Used by:
+  - [DESIGN §10.2 Signatures and repository integrity (TUF)](../DESIGN.md#102-signatures-and-repository-integrity-tuf): Role separation and verified metadata constrain rollback, freeze, and mix-and-match attacks.
+  - [KEY-RUNBOOK §3.1 Planned root update or rotation](../KEY-RUNBOOK.md#31-planned-root-update-or-rotation): Root updates require sequential versions and old/new threshold authorization.
+  - [STATE-AND-RECOVERY §7. Persistent trust and initial bootstrap](../STATE-AND-RECOVERY.md#7-persistent-trust-and-initial-bootstrap): Clients persist trust and version state rather than trusting a mirror anew each time.
+  - [STATE-AND-RECOVERY §8. Plans, locks, archives, and offline use](../STATE-AND-RECOVERY.md#8-plans-locks-archives-and-offline-use): Offline/archive policy cannot silently relax normal freshness checks.
 
 ## Captured material
 
 The complete specification below preserves metadata formats, canonicalization, role thresholds, delegation, consistent snapshots, sequential root rotation, expiry checks, rollback checks, and the bounded client update workflow. The retained source is the implementation reference, including normative exceptions.
+
+## Decision-relevant context
+
+Source locator: Roles and PKI; Document formats; Detailed client workflow; Consistent snapshots, in the retained specification.
+
+Root metadata authorizes keys and thresholds for roles. Targets binds authorized target paths to lengths and hashes; snapshot binds metadata versions; timestamp provides short-lived freshness for snapshot. A signature is evaluated against the authorized role and threshold, not accepted merely because its key appears somewhere. The same key cannot count repeatedly toward a threshold.
+
+The client starts with trusted root metadata, processes successor roots sequentially, and verifies a new root against both the old and new root thresholds. Intermediate expired roots can participate in that update path; expiry of the final trusted root is checked according to the workflow. This is different from accepting an arbitrary latest root obtained from a mirror.
+
+The workflow fixes an update-start time, checks expiry and monotonically trusted versions, verifies metadata lengths/hashes where required, and bounds downloads and delegation traversal. A newly signed timestamp does not make an expired snapshot or targets file valid. Snapshot prevents inconsistent combinations of target metadata; consistent snapshots distinguish versioned metadata and hash-prefixed target retrieval from logical target names. Targets delegation restricts which paths a delegated role may authorize and how search proceeds.
+
+The wire specification, including its signature encoding and canonicalization requirements, is retained below. Do not replace it with RFC 8785 merely because artifact manifests use JCS. POUF documents specify implementation choices left open by TUF; the project must make those choices explicit rather than assume two JSON encodings coincide.
 
 ## Applicability and limits
 
@@ -20,13 +36,20 @@ The protocol authenticates targets and freshness; it does not prove package safe
 
 ## Project interpretation
 
-The source supports the facts above. Project policy and acceptance gates remain in the linked specification; they are not attributed to the source. No successful aslice runtime test is implied by archiving this reference.
+Key placement on Pis, 1-of-1 launch thresholds, expiry periods, unattended renewals, and retained offline receipts are project policies. The source explains which TUF checks those policies must preserve; it does not validate the services, machine isolation, or compromise-recovery drills.
+
+## Omissions and evidence gaps
+
+The complete specification and Community Specification License remain intact. The retained master snapshot is identified by content hash, not a recovered commit ID. Linked TAPs/POUF documents, conformance tests, and cryptographic implementation assets are not all archived.
 
 ## Preservation
 
 This UTF-8 Markdown record is readable without a browser, script, account, or network. Preserve it with the repository and `SHA256SUMS`; retain superseded records when replacing a source version. Original URLs identify provenance, not a runtime dependency.
 
 Exact source bytes: [THE_UPDATE_FRAMEWORK_SPECIFICATION.source.txt](THE_UPDATE_FRAMEWORK_SPECIFICATION.source.txt). Retrieved URL: https://raw.githubusercontent.com/theupdateframework/specification/master/tuf-spec.md. SHA-256: `d36ada5b8e894edc62239eaac4f4d7c54a5f2aad18a3b658b7d5128f43052170`.
+
+
+Review: 2026-09-26 UTC. Original source re-read against the cited local sections; added locators, conditions, and explicit gaps. The previously retained source bytes were re-fetched and matched exactly; embedded originals and notices are unchanged.
 
 ## Full captured source
 

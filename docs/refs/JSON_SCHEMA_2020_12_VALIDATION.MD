@@ -4,15 +4,27 @@
 
 - Original source: https://www.ietf.org/archive/id/draft-bhutton-json-schema-validation-01.txt
 - Author/publisher: JSON Schema specification authors
-- Source version/date: 2020-12, published 2022-06-16
+- Source version/date: 2020-12 dialect; draft header dated 2022-06-10 (earlier wrapper recorded 2022-06-16)
 - Retrieved: 2026-09-26 (UTC date; web and HTTP capture)
 - Capture type: complete upstream text with attribution and license
 - Rights: Original notices and redistribution terms retained in the full source.
-- Used by: schematics/json; tests/check_contracts.py
+- Used by:
+  - [README — Authority and precedence](../../schematics/README.md#authority-and-precedence): Required fields, closed structures, and conditional assertions are structural gates.
+  - [SLICE-FORMAT §4. Fixtures and evolution](../SLICE-FORMAT.md#4-fixtures-and-evolution): Fixtures exercise schema constraints without proving extractor security.
 
 ## Captured material
 
 The full fixed draft below preserves the schema language used by the JSON schematics.
+
+## Decision-relevant context
+
+Source locator: Retained draft: §6 validation assertions, §7 format vocabularies, §8 string-encoded content vocabulary, §9 metadata annotations, §10 security considerations.
+
+Assertions constrain the instance without changing it. `type`, `enum`, and `const` constrain values; numeric bounds, lengths, patterns, array limits, and object property counts constrain their domains. `required` lists properties that must be present; a property schema by itself does not require presence. `dependentRequired` applies presence requirements when the triggering member exists. Conditional selection belongs to the core applicator vocabulary.
+
+For example, `properties` can describe the shape of a manifest digest while `required` makes that digest mandatory. Neither verifies the digest against file bytes. A string matching a date-time shape is not a freshness decision.
+
+`format` has separate annotation and assertion vocabularies; a validator need not enforce every format merely because a schema names it. `default` is an annotation, not a command to insert missing values. Likewise content annotations describe embedded media without requiring unsafe decoding as part of ordinary validation. Test the selected validator's configured behavior explicitly.
 
 ## Applicability and limits
 
@@ -20,13 +32,20 @@ This fixes the 2020-12 dialect; it does not silently adopt future drafts.
 
 ## Project interpretation
 
-The source supports the facts above. Project policy and acceptance gates remain in the linked specification; they are not attributed to the source. No successful aslice runtime test is implied by archiving this reference.
+Fixture success covers the assertions the checker actually enables. Document semantic gates separately, especially digest binding, expiry, authorization, and filesystem constraints. TOML parsing in the same test script does not amount to TOML Schema validation.
+
+## Omissions and evidence gaps
+
+The complete draft, examples, and notices remain intact. No validator conformance suite or implementation guarantee is included. As with core, the source header is June 10, 2022, despite the earlier wrapper's June 16 publication metadata.
 
 ## Preservation
 
 This UTF-8 Markdown record is readable without a browser, script, account, or network. Preserve it with the repository and `SHA256SUMS`; retain superseded records when replacing a source version. Original URLs identify provenance, not a runtime dependency.
 
 Exact source bytes: [JSON_SCHEMA_2020_12_VALIDATION.source.txt](JSON_SCHEMA_2020_12_VALIDATION.source.txt). Retrieved URL: https://www.ietf.org/archive/id/draft-bhutton-json-schema-validation-01.txt. SHA-256: `1f8832490b4b8a5876b9f571afce4051a5ccbae2811220d70f8e86c3c08da414`.
+
+
+Review: 2026-09-26 UTC. Original source re-read against the cited local sections; added locators, conditions, and explicit gaps. The previously retained source bytes were re-fetched and matched exactly; embedded originals and notices are unchanged.
 
 ## Full captured source
 

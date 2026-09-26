@@ -1,9 +1,6 @@
 # Default: let Git decide, normalize to LF in the repo
 * text=auto
 
-# Archived source hashes refer to exact working-tree bytes on every platform.
-docs/refs/** -text
-
 # C++ sources: always LF in the repo, native on checkout
 *.cpp text
 *.cc  text
@@ -36,3 +33,6 @@ docs/refs/** -text
 *.a    binary
 *.so   binary
 *.dylib binary
+
+# Keep this after extension rules: archived hashes cover exact bytes everywhere.
+docs/refs/** -text

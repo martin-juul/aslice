@@ -8,11 +8,24 @@
 - Retrieved: 2026-09-26 (UTC date; web and HTTP capture)
 - Capture type: complete upstream text with attribution and license
 - Rights: MIT; [TOML_LANGUAGE_LICENSE.txt](TOML_LANGUAGE_LICENSE.txt).
-- Used by: All TOML examples and schematics
+- Used by:
+  - [PACKAGE-FORMAT §3. `package.toml` — full schema](../PACKAGE-FORMAT.md#3-packagetoml--full-schema): Package tables and arrays of tables use TOML syntax before project schema validation.
+  - [PACKAGE-FORMAT §7. Lock files](../PACKAGE-FORMAT.md#7-lock-files): Lock-file TOML syntax does not itself define exact-reproduction semantics.
+  - [README — The three schema languages](../../schematics/README.md#the-three-schema-languages): TOML documents and TOML Schema documents are separate contracts.
 
 ## Captured material
 
 Complete TOML syntax specification, including table scope, arrays of tables, dates, and strings.
+
+## Decision-relevant context
+
+Source locator: Keys; String; Integer; Float; dates/times; Array; Table; Inline Table; Array of Tables, in the full v1.0.0 source.
+
+TOML is UTF-8 and case-sensitive. A key has a value; duplicate definitions are invalid. Dotted keys create nested tables, while quoted keys can contain punctuation that would otherwise separate path components. `[table]` changes the current table and `[[table]]` appends an element to an array of tables; subsequent child tables attach to the most recently defined element. Inline tables are self-contained and cannot later be extended outside their braces.
+
+Basic strings process escapes; literal strings do not. Multiline string forms have their own newline and delimiter rules. Arrays preserve order and can contain mixed value types under the language grammar; a schema can narrow those types. Comments and formatting are not semantic values.
+
+Integers support the specified signed 64-bit range; floats include infinities and NaNs, and date/time values are distinct TOML types. A project field can forbid such values even though the language accepts them. Parsing a document successfully establishes none of its repository trust, dependency, or authorization rules.
 
 ## Applicability and limits
 
@@ -20,13 +33,20 @@ TOML syntax does not establish the aslice semantic contract.
 
 ## Project interpretation
 
-The source supports the facts above. Project policy and acceptance gates remain in the linked specification; they are not attributed to the source. No successful aslice runtime test is implied by archiving this reference.
+Apply syntax parsing before field and cross-file validation. Keep TOML syntax version, TOML Schema language version, and package-format version distinct. A parser round trip can discard comments or change presentation and is not byte preservation for a signed recipe bundle.
+
+## Omissions and evidence gaps
+
+The entire v1.0.0 specification and MIT license are retained. No later TOML version or parser conformance is implied; project semantic examples remain governed by their own sections.
 
 ## Preservation
 
 This UTF-8 Markdown record is readable without a browser, script, account, or network. Preserve it with the repository and `SHA256SUMS`; retain superseded records when replacing a source version. Original URLs identify provenance, not a runtime dependency.
 
 Exact source bytes: [TOML_1_0_SPECIFICATION.source.txt](TOML_1_0_SPECIFICATION.source.txt). Retrieved URL: https://raw.githubusercontent.com/toml-lang/toml/1.0.0/toml.md. SHA-256: `db2ee7bd0bd4145cf9621313f0cfaa42977bb17da7d176b09a1b866f2b8b5ffa`.
+
+
+Review: 2026-09-26 UTC. Original source re-read against the cited local sections; added locators, conditions, and explicit gaps. The previously retained source bytes were re-fetched and matched exactly; embedded originals and notices are unchanged.
 
 ## Full captured source
 
