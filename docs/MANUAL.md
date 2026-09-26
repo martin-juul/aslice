@@ -4,7 +4,7 @@
 
 **The user guide for aslice — a package manager for Intel macOS.**
 
-- **Status:** v0.18 — September 2026
+- **Status:** v0.19 — September 2026
 - **Project home:** [aslice.sh](https://aslice.sh) — homepage, documentation (aslice.sh/docs), and the public dashboard (aslice.sh/dashboard); the installer is served from get.aslice.sh (§2).
 - **Audience:** people who install and run software with aslice; that is most of what follows. If you *write* packages, read chapters 1–4 and then move to [AUTHORING.md](AUTHORING.md). If you want to know *why* things are the way they are, the rationale lives in [DESIGN.md](DESIGN.md).
 - **Companions:** the man pages in [man/](../man/) (also available as `aslice help <command>`), [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md), [ORCHARD-POLICY.md](ORCHARD-POLICY.md), [REPOSITORIES.md](REPOSITORIES.md), [GENESIS.md](runbooks/GENESIS.md), [TOOLCHAIN.md](TOOLCHAIN.md).
@@ -759,6 +759,7 @@ aslice's configuration file is `etc/aslice.toml` inside the prefix (`~/.aslice/e
 
 | Key | Values | Default | Meaning |
 |---|---|---|---|
+| `db.lock_timeout` | nonnegative integer with `ms`, `s`, or `m` | `"30s"` | Cumulative foreground owner/SQLite lock wait; `--lock-timeout DURATION` overrides it, `0s` disables waiting. |
 | `flavor` | `v1`, `v2`, `v3` | detected | CPU flavor ceiling. Lower it when preparing an install for an older machine. |
 | `ca.source` | a configured bundle source | `mozilla` | Where `ca-certificates` bundles come from (§8.1). |
 | `mirrors` | list of URLs | project defaults | Extra full-tree mirrors for a repository, tried in order. |
@@ -786,6 +787,24 @@ confirmation. `--role` selects another owner boundary; it grants no permissions.
 `aslice recover` reconstructs missing projections from retained records and resolves
 interrupted operations. Cache rebuilding preserves trust. See
 [aslice-db(1)](../man/aslice-db.1.md) for refusal conditions and output contracts.
+If another command holds a lock, foreground commands wait up to 30 seconds in
+total, with a waiting message after one second and updates every five seconds.
+Use `--lock-timeout 0s` to try without waiting. Cancellation waits for a safe
+stopping point; a committed operation stays committed even if reconciliation is
+pending. `needs-attention` means recovery must finish before another mutation.
+The phase outcomes are specified in
+[DATABASE §10.1](DATABASE.md#101-contention-and-safe-stopping).
+
+Normal use also attempts maintenance with a 100 ms work budget after successful
+mutations and during service idle time; storage synchronization can take longer.
+It adds no background client service or housekeeping elevation prompt. A busy
+cache is bypassed only with verified inputs. `aslice db maintain --dry-run` shows
+eligible database cleanup; omit `--dry-run` to run it. Deleted pages remain reusable
+inside SQLite. To shrink the database file, explicitly run `aslice db compact`
+after reviewing its space estimate with `--dry-run`. The old database is retained
+for recovery. `aslice db check` shows maintenance status and reclaimable-space
+estimates. These database operations do not replace store GC or delete payloads.
+
 Compact choices and operation history are retained indefinitely; the log rotation
 bounds above apply to verbose logs.
 
@@ -812,6 +831,7 @@ bounds above apply to verbose logs.
 | `search` / `info` / `flavors` / `why` / `leaves` | Find packages and inspect them |
 | `history` / `rollback` / `switch-generation` | Travel through generations |
 | `gc` / `clean` / `store verify` | Reclaim store, reclaim cache, tripwire store integrity |
+| `db maintain` / `db compact` | Run eligible database maintenance or explicitly reclaim database-file space; both support `--dry-run` (§13) |
 | `use` / `default` / `versions` / `which` | Runtime stream selection and introspection |
 | `service list/status/start/stop/restart/run` | launchd service lifecycle |
 | `ca-update` (+ `--keychain`, `--crypto`, `--apple-certs`) | Heal TLS: bundle, keychain, crypto stack, Apple's roots |
@@ -838,6 +858,7 @@ Historical labels and ordering below are preserved as recorded, including repeat
 
 | Version | Date | Changes |
 |---|---|---|
+| v0.19 | September 2026 | Document configurable lock waits, safe cancellation, automatic database maintenance, and explicit compaction. |
 | v0.18 | September 2026 | Add database inspection, coordinated backup/restore, reconstruction, role selection, and durable-history guidance; update the client layout. |
 | v0.15 | September 2026 | Consolidate revision notes into a collapsible history table; no specification changes. |
 | v0.14 | September 2026 | resolve install-failure and custom-build summaries against STATE-AND-RECOVERY §1–§2, §5 and SYSTEM-VOLUMES: staged preparation, journal recovery, exact artifact bindings, ABI evidence, dependent tests, CPU/OS checks, and unsupported/unknown flag handling. |

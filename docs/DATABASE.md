@@ -1,6 +1,6 @@
 # SQLite storage and disaster recovery
 
-- **Status:** Specification v0.1 — September 2026. The SQL and model tests are executable; database commands, services, migrations, and hardware recovery are not implemented.
+- **Status:** Specification v0.2 — September 2026. The SQL and model tests are executable; database commands, services, migrations, and hardware recovery are not implemented.
 - **Authority:** This document owns SQLite schemas, connection policy, reconstruction records, and database maintenance. [STATE-AND-RECOVERY](STATE-AND-RECOVERY.md) owns artifact identity, trust, privilege, and the transaction state machine. [KEY-RUNBOOK](runbooks/KEY-RUNBOOK.md) owns signing authority and compromise response.
 
 ## 1. Ownership and authority
@@ -71,7 +71,7 @@ an installation: the owner must insert `database_identity` before activation.
 
 ### 1.2 Identity and reconstruction
 
-All six schemas have `user_version = 1`. Their `application_id` values, in table
+All six schemas have `user_version = 2`. Their `application_id` values, in table
 order above, are 1095977985 through 1095977990. `database_identity` binds the role,
 schema version, immutable 32-lowercase-hex instance identifier, and stable owner
 identity. For clients the instance is the prefix identity; protected state has a
@@ -108,11 +108,12 @@ rename. Artifact identities remain `sha256:` plus 64 lowercase hex digits;
 [STATE-AND-RECOVERY §1](STATE-AND-RECOVERY.md#compatibility-and-artifact-identity).
 These schemas add no fields to public manifests, indexes, locks, or TUF metadata.
 
-Every role contains four common tables:
+Every role contains five common tables:
 
 | Table | Purpose and lifecycle |
 |---|---|
 | `database_identity` | Provisioning writes one row; every connection checks it against configuration, application ID, and supported schema before using projections |
+| `maintenance_tasks` | Disposable per-task attempt/success/outcome bookkeeping; reconstruction marks every task due; excluded from logical digests and replay |
 | `objects` | Verified digest, byte length, and descriptive kind for external immutable objects; importer inserts after hashing; inspection and reference validation read |
 | `scopes` | Repository/environment pairs admitted by the owner; serves as the parent for scoped foreign keys, never a trust grant |
 | `replay_head` | Last fully applied record sequence/digest; replay updates it in the same SQL transaction as the projection; cache leaves it at zero |
@@ -187,6 +188,7 @@ FROM installed ORDER BY profile, repository, name;
 ```mermaid
 erDiagram
   scopes ||--o{ snapshots : scopes
+  snapshots ||--o| current_snapshots : selects
   snapshots ||--o{ packages : indexes
   solve_cache ||--o{ solve_inputs : binds
   snapshots ||--o{ solve_inputs : supplies
@@ -195,11 +197,13 @@ erDiagram
 
 | Tables | Readers, writers, transaction boundary, and retention |
 |---|---|
-| `snapshots`, `packages` | Refresh imports a verified snapshot, receipts, and searchable package/recipe references together. Search/info and solver read. Evict a complete snapshot with dependent solves in one transaction |
+| `snapshots`, `packages` | Refresh imports a verified snapshot, receipts, and searchable package/recipe references together. Search/info and solver read. Cleanup removes eligible dependent rows in bounded transactions before removing the snapshot (§10.2) |
+| `current_snapshots` | Authenticated refresh selects one current snapshot per repository/environment in the import transaction. Cleanup protects this reference and active work |
 | `solve_cache`, `solve_inputs` | Solver stores the exact input and result object references together. The input digest binds all snapshots, recipes, installed bindings, requests/holds, OS/CPU, policy, configuration, and solver version. Recheck inputs and trust before reuse; a snapshot hash alone is insufficient |
 | `trust_projections` | Authenticated trust reconciliation replaces descriptive projections. Repo inspection reads them; capability checks use authoritative `trust/` instead. Deletion conveys no revocation or grant |
 
-All rows may be evicted. No cached verdict permits stale metadata, stale policy, or
+All cache rows are disposable; routine cleanup protects current snapshots and
+active work under §10.2. No cached verdict permits stale metadata, stale policy, or
 offline use without the retained verification receipts required by
 [STATE-AND-RECOVERY §8](STATE-AND-RECOVERY.md#plans-locks-archives-and-offline-use).
 Search uses the indexed name column; FTS is not a schema dependency.
@@ -417,6 +421,9 @@ candidate records consumption; replay never releases its versions. Quarantine
 holds are similarly retained until an explicit authorized release record. Missing
 gate evidence remains pending.
 
+Contention and cancellation follow [§10.1](#101-contention-and-safe-stopping),
+including committed operations whose SQL projection remains incomplete.
+
 ### 9.2 Replay and checkpoints
 
 Replay verifies identity, format, sequence, predecessor, checksum, byte length, and
@@ -448,7 +455,7 @@ fixed mainline. See the [offline SQLite account](refs/SQLITE_STORAGE_AND_RECOVER
 
 Minimum schema features are STRICT tables (3.37.0), foreign keys, recursive CTEs,
 partial indexes, and the online backup API. Production readers must use the pinned
-fixed build as well as understand role/schema 1; accepting STRICT syntax alone is
+fixed build as well as understand role/schema 2; accepting STRICT syntax alone is
 not sufficient. Schema-test Python may use another SQLite build and reports its
 version; that is not a production qualification. Older managers may open only
 their retained compatible database copy. Unknown application IDs, schema versions,
@@ -464,11 +471,12 @@ are a refusal. Durability still depends on the storage stack. The
 [PRAGMA reference](https://sqlite.org/pragma.html#pragma_synchronous) explains the
 FULL/NORMAL distinction; defaults are not a project configuration policy.
 
-Use short `BEGIN IMMEDIATE` write transactions after acquiring domain locks. Set a
-5-second busy deadline with bounded backoff; expiry reports `db_busy` and retains
-operation evidence. Replan on a stale base; never repeat external effects merely
-because SQL returned busy. Surface disk-full and I/O errors, stop mutations/GC,
-preserve sidecars and journals, and determine the durable phase through recovery.
+Use short `BEGIN IMMEDIATE` write transactions after acquiring domain locks. Use the
+shared lock-wait allowance as specified in §10.1; expiry reports `db_busy` and
+resolves the durable phase before releasing ownership. Replan on a stale base;
+never repeat external effects merely because SQL returned busy. Surface disk-full
+and I/O errors, stop mutations/GC, preserve sidecars and journals, and determine
+the durable phase through recovery.
 
 Autocheckpoint at 1,000 pages; attempt PASSIVE checkpoint after a batch and on idle.
 Inspect WAL growth and busy readers. Owner maintenance can request RESTART/TRUNCATE
@@ -490,6 +498,162 @@ is an additional check, not the authorization policy. Use the
 [authorizer API](https://sqlite.org/c3ref/set_authorizer.html); runtime enforcement
 and adversarial tests remain required.
 
+### 10.1 Contention and safe stopping
+
+Foreground commands use `db.lock_timeout = "30s"`; the common
+`--lock-timeout DURATION` option overrides it for one invocation. Accept a
+nonnegative integer followed by `ms`, `s`, or `m`; reject other forms and overflow.
+`0s` tries once without waiting. One operation controller counts cumulative
+lock-wait time across prefix, system, service-owner, and SQLite waits. Useful work
+does not consume this allowance, and entering another layer does not reset it.
+Use monotonic elapsed time and cancellable backoff starting at 10 ms, doubling to
+a 250 ms cap and clipped to the remaining allowance. Preserve prefix-then-system
+ordering. After one second of cumulative waiting, print a stderr waiting message;
+update every five seconds thereafter with role, operation, elapsed wait, and known
+owner identity. Say `unknown` when the owner cannot be established; a PID alone
+does not establish authority. JSON output remains one object, with progress on stderr.
+
+Owner-lock contention and SQLite `BUSY` consume the same allowance. SQLite may
+return busy without invoking its busy handler, so the operation controller handles
+every result; a connection-local timeout cannot implement this contract. Enable
+extended result codes. For `BUSY_SNAPSHOT`, end the stale read transaction and
+revalidate/replan before any effects; after effects begin, enter recovery instead.
+For internal `LOCKED` conflicts, finalize conflicting statements or end the local
+transaction and diagnose the connection error; do not sleep and retry blindly.
+Disable shared-cache connections. Finalize statements and end read transactions
+promptly. Runtime shims fail promptly when required state is unavailable and do
+not inherit foreground mutation waits. See the
+[SQLite contention evidence](refs/SQLITE_STORAGE_AND_RECOVERY.MD#contention-and-maintenance).
+
+Normal commands bypass a busy disposable cache when authenticated inputs are
+available: verify receipts, freshness, policy, and complete solver inputs as usual,
+work in memory, and skip cache writes. Without those inputs, report unavailable
+verified data; contention never authorizes stale or unverified use. Explicit cache
+inspection or maintenance reports contention rather than substituting another
+data source.
+
+Timeout and cancellation are resolved by durable phase, not by the last SQL call:
+
+| Durable phase | Timeout or cancellation outcome |
+|---|---|
+| Before preparation or external changes | End SQL work, release locks, report no managed-state change |
+| Prepared, no live effects | Resolve prepared intent as aborted/rolled back before releasing ownership |
+| External effects begun, no durable commit | Stop forward execution; enter fingerprint-checked recovery; never replay external effects because SQL was busy |
+| Durable commit exists, projection incomplete | Preserve the commit decision and reconcile forward; report committed with recovery pending if reconciliation cannot finish |
+| Complete, optional maintenance busy | Preserve foreground success and defer maintenance |
+
+Recovery receives one separate, bounded 30-second cumulative lock-wait allowance,
+including resolution of prepared intent; it is not renewed by retries or repeated
+cancellation. Cancellation requests a safe stopping point, not abandonment of
+effects. If recovery cannot finish, retain journals, backups, and GC roots, report
+`needs-attention`, and block subsequent mutations. A committed operation cannot
+be described as rolled back merely because cancellation arrived late.
+
+Contention with no unresolved recovery exits 4; recovery-required outcomes exit 1;
+safely completed cancellation exits 130. Optional maintenance after completed work
+preserves exit 0. Diagnostics in `data` expose `phase` (`unprepared`, `prepared`,
+`effects`, `committed`, or `complete`), `committed` (boolean), `recovery_required`
+(boolean), and `retry_safe` (boolean). Retry is safe only after resolution and base
+revalidation; committed work must not be resubmitted as a fresh mutation.
+
+### 10.2 Automatic maintenance and cleanup
+
+Run maintenance after successful mutations and in existing service idle loops.
+Add no client daemon or launchd job, and never request elevation solely for
+housekeeping. Attempt owner and SQL locks without waiting, yield to foreground
+work, and share a 100 ms work budget across tasks. Check a monotonic deadline
+between tasks and batches and use an SQL progress handler to interrupt work.
+This limits scheduling and interruptible SQL, not the wall-clock duration of
+storage synchronization. An interrupted batch rolls back; completed batches remain.
+Optional maintenance failures do not undo command success; report corruption or
+I/O failures separately and block later mutations when database health is uncertain.
+
+Attempt cleanup hourly, optimization daily, and `PRAGMA quick_check` weekly when
+due. Keep PASSIVE checkpoint attempts after batches and on idle; readers that
+prevent completion leave checkpoint work deferred. Rotate due tasks by oldest
+attempt (null first, then task name) so a cleanup backlog cannot starve another
+task. A deferred or interrupted task remains due; each invocation tries it at most
+once. Use bounded `PRAGMA optimize` with the pinned build's analysis limit and the
+same progress deadline. Full integrity and external-reference checks belong to
+`db check`; a quick check is not proof of reference or trust validity.
+
+`maintenance_tasks` records UTC epoch seconds for last attempt and last success,
+outcome, and deferred reason. Success advances only after the whole task completes;
+a partial checkpoint or cleanup backlog is deferred. Bookkeeping is disposable,
+excluded from logical-state digests and authoritative replay. Reconstruction seeds
+all tasks due. If locks prevent writing an attempt, retain that observation in
+memory and report it; flush it on the next writable opportunity, without waiting
+solely to record a deferral. A backward clock jump clears future bookkeeping times
+and makes tasks due rather than suppressing them indefinitely. These local records
+are not telemetry.
+
+Cleanup transactions delete at most 100 rows total, including dependent rows.
+Large snapshot projections are removed in bounded child batches while owner
+coordination protects current snapshots and active work; parent rows survive
+until all references are gone. No cascading delete may evade the batch bound.
+Before removing children, set the solve or snapshot's `cleanup_pending` marker
+under exclusive owner coordination. Marked entries cannot be selected as current,
+reused by solves, or exposed by search, even after interruption. The search view
+excludes marked snapshots; owner code enforces the other selection rules. Complete
+authenticated reimport may clear the marker atomically. This keeps a partially
+removed projection from appearing complete between batches.
+Cache `inserted_at` and `accessed_at` are UTC epoch seconds; initialize them on
+authenticated insertion and coalesce access updates during writable operations.
+Inspection never writes access times. In-memory active-work pins protect the
+owner's readers even when timestamps have not been flushed. Other processes hold
+shared owner coordination while consuming cache rows; cleanup requires exclusive
+coordination and defers if those readers remain. Revalidate eligibility under the
+lock. Access timestamps never move backward; retain future timestamps after a
+clock correction until their age can be established conservatively.
+
+| Role | Eligible cleanup and retained material |
+|---|---|
+| Client cache | Remove unused solves and superseded snapshot projections when last access is at least 30 days old (30 × 86,400 seconds). Protect `current_snapshots`, active work, and snapshots still referenced by retained solves. Expiry is a verification rule, not cleanup authority |
+| Client/system state | Remove obsolete projections only after governing GC, decommission, or recovery has authorized removal. Expiry alone does not release process or protected references; compact history and recovery receipts remain |
+| Coordinator | Lease expiry belongs to scheduler recovery. Completed jobs, attempts, quarantine decisions, and evidence do not become disposable through age; archival requires retained records and the existing authorized boundary |
+| Publisher/release signer | Preserve reservations, version floors, candidate bindings, signing outcomes, and publication evidence indefinitely. Stale candidates do not authorize erasing history |
+| All roles | Remove object-registry rows only after checking every SQL and retained external reference. Housekeeping deletes no external payloads, trust records, compact history, or recovery evidence |
+
+### 10.3 Manual maintenance, compaction, and schema 2
+
+`aslice db maintain [--dry-run]` runs eligible cleanup, optimization, lightweight
+checks, and checkpoint work for the selected role. It uses the foreground lock
+allowance and cancellable bounded batches, without the automatic 100 ms total
+budget. It reports remaining/deferred work rather than claiming completion.
+`--dry-run` inspects and reports eligibility and work estimates without writes,
+including bookkeeping. It grants no authority to remove protected references.
+
+`auto_vacuum=NONE` is explicit in every schema. Cleanup removes eligible rows;
+deleted pages remain reusable inside the file. Checkpointing transfers WAL pages,
+optimization updates planner information, and compaction reclaims database-file
+space. None substitutes for another. Only `aslice db compact [--dry-run]` requests
+full compaction; automatic maintenance never vacuums.
+
+Compaction uses the versioned-copy mechanism below. Under owner coordination,
+capture a consistent backup, vacuum the staging copy with no open statements or
+transaction, validate logical equivalence, identity, replay head, integrity,
+foreign keys, and external references, then journal activation. Keep the owner
+boundary through activation; drain/reopen readers against the selected version.
+Preserve the original database and known-good recovery entry point. Before work,
+report snapshot size, vacuum workspace, retained-original size, and free-space
+requirements per filesystem. Reserve space for the snapshot plus up to twice its
+size for vacuum workspace, in addition to the retained original and measured
+sidecars/journal margin; refuse insufficient space. `--dry-run` reports the estimate
+without staging or activation. Failure before activation leaves the active file
+intact; interruption during activation enters existing journal recovery. No
+filename or modification time decides which copy is active. See the
+[VACUUM evidence](refs/SQLITE_STORAGE_AND_RECOVERY.MD#contention-and-maintenance).
+
+All six internal schemas advance from 1 to 2 without changing application IDs or
+public formats. Migrate through a validated copy, never by editing the active file.
+Rebuild `database_identity` with its version-2 constraint, preserve instance/owner
+and all domain rows, and add seeded maintenance tasks. Cache lifecycle timestamps
+start at migration time (not fabricated historical access); rebuild current-snapshot
+references from authenticated current inputs, refusing activation if these cannot
+be established. Unknown cache rows may instead be discarded and reimported after
+verification. Compare logical state excluding maintenance bookkeeping and cache
+lifecycle fields; validate every retained reference and both version markers.
+
 ```mermaid
 sequenceDiagram
   participant S as Known-good supervisor
@@ -498,7 +662,7 @@ sequenceDiagram
   participant J as Recovery journal
   S->>O: Lock and capture coordinated boundary
   O->>N: SQLite backup API snapshot
-  S->>N: Migrate, validate, run new-manager health checks
+  S->>N: Migrate or compact, validate, run manager health checks
   S->>J: Prepare activation with old and new identities
   S->>N: Activate database and manager pair
   S->>J: Reconcile and commit
@@ -598,8 +762,14 @@ flowchart TD
   F -- no --> G[Needs attention; authority recovery if required]
   E --> H{Fingerprints and before-images sufficient?}
   H -- no --> G
-  H -- yes --> I[Reconcile journals and validate]
-  I --> J[Preview, confirm restore, journal activation]
+  H -- yes --> I[Inspect journals and validate evidence]
+  I --> K{Durable commit exists?}
+  K -- yes --> L[Reconcile forward; retain commit]
+  K -- no --> M[Fingerprint-checked reversal]
+  L --> J[Preview, confirm restore, journal activation]
+  M --> J
+  L -- recovery wait exhausted --> G
+  M -- recovery wait exhausted --> G
 ```
 
 Reconstruction through `recover` follows the same validation gates as restore.
@@ -643,7 +813,9 @@ an untrusted caller cannot select a different owner's database.
 | `aslice db list` | List all configured roles visible to this caller, including absent/blocked status; never create files. With `--role`, filter to it |
 | `aslice db schema` | Show shipped role DDL/schema identity; `--live` reads the selected validated schema through fixed inspection |
 | `aslice db query SQL` | Execute one bounded read-only statement on the selected role's consistent inspection snapshot; no interactive SQL shell |
-| `aslice db check` | Fixed identity/schema/integrity/FK/reference/continuity/semantic checks; report missing participants and stale projections; never repair |
+| `aslice db check` | Fixed identity/schema/integrity/FK/reference/continuity/semantic checks; report missing participants, stale projections, maintenance status/deferred reasons, freelist pages, and estimated reclaimable bytes (`freelist_count × page_size`, not guaranteed savings); never repair |
+| `aslice db maintain [--dry-run]` | Eligible bounded cleanup, optimization, lightweight checks, and checkpoints; dry-run reports without writes |
+| `aslice db compact [--dry-run]` | Explicit validated-copy compaction; report space estimate before work, retain original and recovery path |
 | `aslice db backup DEST` | Owner performs coordinated capture into a new destination; emit manifest digest, boundary heads, completeness, missing participants, and byte counts |
 | `aslice db restore SET --dry-run` | Validate and preview without activation; emit a digest of the complete proposed action |
 | `aslice db restore SET --confirm DIGEST` | Authorize that exact preview and invoke recovery/activation; interactive omission prompts with the same preview, noninteractive omission refuses |
@@ -668,7 +840,8 @@ failed check or partial backup as success.
 
 Exit codes: 0 success, 1 check failure/needs-attention/I/O failure, 2 usage or unsafe
 query/unsupported schema, 3 authorization/confirmation refusal, 4 busy or changed
-base. Stable error codes include `db_busy`, `db_identity_mismatch`,
+base without unresolved recovery; 130 safely completed cancellation. Recovery-required
+outcomes use 1 even after timeout or cancellation. Stable error codes include `db_busy`, `db_identity_mismatch`,
 `db_schema_unsupported`, `db_query_denied`, `db_query_limit`, `db_corrupt`,
 `db_records_incomplete`, `db_stale_backup`, `db_evidence_missing`,
 `db_external_conflict`, `db_confirmation_required`, and `db_io_error`.
@@ -679,7 +852,12 @@ Run `python -m unittest discover -s tests -p test_database.py`. The suite create
 temporary databases from all six companions, checks valid fixtures and rejected
 identities/relations/reservations, exercises views and representative queries, and
 models record replay, lease expiry, duplicate results, stale restore, and migration
-copies. Model helpers live only in tests; they are not database runtime services.
+copies. Multi-connection tests exercise writer contention, stale snapshots, local
+statement conflicts, and incomplete checkpoints with active readers. Deterministic
+models cover cumulative wait/cancellation budgets, durable-phase outcomes, cache
+bypass verification, fair maintenance scheduling, cleanup bounds and retention,
+schema-1-to-2 copies, and compaction with interruption and space refusal. Model
+helpers live only in tests; they are not database runtime services.
 
 Before shipping, implement and test the domain decoders, connection authorizer,
 service fencing adapter, backup coordinator, restore supervisor, and actual CLI.
@@ -697,6 +875,7 @@ do not satisfy these platform and security acceptance gates.
 
 | Version | Date | Changes |
 |---|---|---|
+| v0.2 | September 2026 | Specify cumulative contention waits, phase-aware cancellation, automatic maintenance, cleanup retention, explicit compaction, and schema-2 copy migration; extend executable policy models. |
 | v0.1 | September 2026 | Specify six SQLite roles, executable schemas, durable reconstruction, inspection, coordinated backups, migration, and disaster recovery. Runtime and hardware acceptance remain pending. |
 
 </details>

@@ -1,7 +1,8 @@
--- aslice system-state, schema 1. Execute only in a new, owner-controlled file.
+-- aslice system-state, schema 2. Execute only in a new, owner-controlled file.
 -- Connection policy and semantic validation: ../DATABASE.md.
 PRAGMA application_id = 1095977987;
-PRAGMA user_version = 1;
+PRAGMA user_version = 2;
+PRAGMA auto_vacuum = NONE;
 PRAGMA foreign_keys = ON;
 PRAGMA journal_mode = WAL;
 PRAGMA synchronous = FULL;
@@ -12,8 +13,19 @@ CREATE TABLE database_identity (
   role TEXT NOT NULL CHECK(role = 'system-state'),
   instance_id TEXT NOT NULL CHECK(length(instance_id) = 32 AND length(CAST(instance_id AS BLOB)) = 32 AND instance_id NOT GLOB '*[^0-9a-f]*'),
   owner_id TEXT NOT NULL CHECK(length(owner_id) > 0),
-  schema_version INTEGER NOT NULL CHECK(schema_version = 1)
+  schema_version INTEGER NOT NULL CHECK(schema_version = 2)
 ) STRICT;
+
+CREATE TABLE maintenance_tasks (
+  task TEXT PRIMARY KEY CHECK(task IN ('cleanup','optimize','quick_check','checkpoint')),
+  last_attempt INTEGER CHECK(last_attempt >= 0),
+  last_success INTEGER CHECK(last_success >= 0),
+  outcome TEXT NOT NULL CHECK(outcome IN ('due','running','ok','deferred','interrupted','error')),
+  deferred_reason TEXT,
+  CHECK(last_success IS NULL OR (last_attempt IS NOT NULL AND last_success <= last_attempt))
+) STRICT;
+INSERT INTO maintenance_tasks(task,outcome) VALUES
+  ('cleanup','due'),('optimize','due'),('quick_check','due'),('checkpoint','due');
 
 CREATE TABLE objects (
   digest TEXT PRIMARY KEY CHECK(length(digest) = 71 AND length(CAST(digest AS BLOB)) = 71 AND substr(digest,1,7) = 'sha256:' AND substr(digest,8) NOT GLOB '*[^0-9a-f]*'),

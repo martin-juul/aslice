@@ -54,7 +54,7 @@ Each source has one primary entry. Related records link across subjects; origina
 - [JSON Schema 2020 12 Validation](JSON_SCHEMA_2020_12_VALIDATION.MD) — Complete fixed draft: assertions, presence, formats, and annotations.
 - [libarchive tar format manual](LIBARCHIVE_TAR_FORMAT.MD) — Complete tar(5): records, pax overrides, checksums, and extensions.
 - [RFC 8785 JSON Canonicalization Scheme](RFC_8785_JSON_CANONICALIZATION_SCHEME.MD) — Complete JCS algorithm, Unicode/numeric rules, sorting, and vectors.
-- [SQLite storage, compatibility, and recovery](SQLITE_STORAGE_AND_RECOVERY.MD) — Official WAL fixes, synchronization, backup, salvage, schema compatibility, and query controls.
+- [SQLite storage, compatibility, and recovery](SQLITE_STORAGE_AND_RECOVERY.MD) — Official WAL fixes, synchronization, backup, salvage, schema compatibility, query controls, contention, optimization, and compaction.
 - [TOML 1 0 Specification](TOML_1_0_SPECIFICATION.MD) — Complete language syntax, distinct from project semantics.
 - [TOML Schema Specification](TOML_SCHEMA_SPECIFICATION.MD) — Complete schema language, effective constraints, closure, and evaluation.
 - [Zstandard Compression and the application/zstd Media Type](RFC_8878_ZSTANDARD.MD) — Complete compression format, frames, dictionaries, and resource considerations.

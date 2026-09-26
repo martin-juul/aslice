@@ -58,7 +58,7 @@ aslice collects no telemetry or analytics of any kind — there is no opt-out be
 :   Report known vulnerabilities in the installed set; show a package's build provenance.
 
 **db**
-:   Inspect schemas and read-only queries, check records, and perform owner-authorized backup/restore. See [aslice-db(1)](aslice-db.1.md).
+:   Inspect schemas and read-only queries, check records, maintain or compact databases, and perform owner-authorized backup/restore. See [aslice-db(1)](aslice-db.1.md).
 
 **doctor**, **log**
 :   Run the health battery; query the local operation log. See aslice-doctor(1).
@@ -85,6 +85,9 @@ aslice collects no telemetry or analytics of any kind — there is no opt-out be
 :   Run a command in a temporary profile view; run a package's smoke tests; query upstream for newer releases; get/set configuration; print the man page for a command.
 
 # GLOBAL OPTIONS
+
+**--lock-timeout** *duration*
+:   Override `db.lock_timeout` (default `30s`) for cumulative foreground owner/SQL lock waits. Accept a nonnegative integer with `ms`, `s`, or `m`; `0s` tries without waiting. Progress and safe cancellation follow [DATABASE §10.1](../docs/DATABASE.md#101-contention-and-safe-stopping).
 
 **-v**, **-vv**
 :   Raise verbosity (debug, then trace). Affects what is printed, not what is logged.
@@ -122,7 +125,7 @@ aslice collects no telemetry or analytics of any kind — there is no opt-out be
 
 # EXIT STATUS
 
-**0** success; **1** general error; **2** plan refused (trust, policy, or consent gate). aslice-doctor(1) and [aslice-db(1)](aslice-db.1.md) define their own exit codes.
+**0** success; **1** general error or recovery required; **4** contention without unresolved recovery; **130** safely completed cancellation; **2** plan refused (trust, policy, or consent gate). aslice-doctor(1) and [aslice-db(1)](aslice-db.1.md) define their own exit codes.
 
 **recover**, **decommission**
 :   Resume durable recovery, or inventory and remove managed external effects before deleting the prefix. `decommission --dry-run` inventories without changes; pending restoration preserves recovery tools ([STATE-AND-RECOVERY §6](../docs/STATE-AND-RECOVERY.md#self-update-and-decommission)).

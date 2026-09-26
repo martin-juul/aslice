@@ -1,6 +1,6 @@
 # State, artifacts, and recovery
 
-- **Status:** Specification v0.5 — September 2026. These contracts are specified, not implemented or validated on macOS.
+- **Status:** Specification v0.6 — September 2026. These contracts are specified, not implemented or validated on macOS.
 - **Authority:** This document owns artifact identity, privileged ownership, transaction recovery, replay, and retained trust. DESIGN explains the architecture; PACKAGE-FORMAT describes author input. Examples and schemas must agree with these contracts.
 
 Navigation: [1. Compatibility and artifact identity](#compatibility-and-artifact-identity) · [2. ABI and execution requirements](#abi-and-execution-requirements) · [3. Privileged ownership and capability checks](#privileged-ownership-and-capability-checks) · [4. Graft execution boundary](#graft-execution-boundary) · [5. Durable transactions and recovery](#durable-transactions-and-recovery) · [6. Self-update and decommission](#self-update-and-decommission) · [7. Persistent trust and initial bootstrap](#persistent-trust-and-initial-bootstrap) · [8. Plans, locks, archives, and offline use](#plans-locks-archives-and-offline-use) · [9. Certificate trust lifecycle](#certificate-trust-lifecycle) · [10. Acceptance and implementation order](#acceptance-and-implementation-order)
@@ -62,6 +62,8 @@ Approval binds repository identity, package version, script digests, and the com
 ## 5. Durable transactions and recovery
 
 [DATABASE](DATABASE.md) owns the six SQLite projections, durable choice/history records, backup sets, and database reconstruction. Compact records are retained indefinitely, including changes that create no package generation; verbose logs and resolved backups keep their existing retention policies.
+
+Lock waits and cancellation follow [DATABASE §10.1](DATABASE.md#101-contention-and-safe-stopping): one configurable 30-second foreground allowance spans owner and SQL locks, with one separate 30-second recovery allowance. A timeout before effects resolves prepared intent; after effects it enters fingerprint-checked recovery. A durable commit is preserved even if projection reconciliation remains pending. Unresolved recovery retains evidence and blocks mutations; cancellation requests a safe stopping point.
 
 One process holds the prefix mutation lock before changing state; it rechecks the planned base generation after acquiring it. Privileged operations additionally take the system-root lock, always after the prefix lock. GC follows the same order. Cross-prefix privileged operations serialize at the system lock. Locks are OS-managed and released on process death; durable journals survive that release.
 
@@ -147,6 +149,7 @@ The two owned Macs do not establish complete guest coverage or independent v3 re
 
 | Version | Date | Changes |
 |---|---|---|
+| v0.6 | September 2026 | Cross-link cumulative lock waits, phase-aware stopping, and bounded recovery without weakening commit or fingerprint rules. |
 | v0.5 | September 2026 | Integrate separate SQLite roles, indefinite compact choice/history records, coordinated backups, and copy-migration compatibility; preserve the existing external-effect and trust recovery contracts. |
 | v0.3 | September 2026 | Consolidate revision notes into a collapsible history table; no specification changes. |
 | v0.2 | September 2026 | prose rewrite of the rollback transaction explanation; no content changes. |

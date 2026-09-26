@@ -101,10 +101,50 @@ Implementers must account for null callback arguments and preserve authorization
 through statement recompilation. An application accepting SQL needs this explicit
 policy rather than checking the first word of a statement.
 
+### Contention and maintenance
+
+Additional official sources retrieved successfully through the web reader on
+2026-09-26 UTC: [busy handler](https://sqlite.org/c3ref/busy_handler.html),
+[result codes](https://sqlite.org/rescode.html),
+[shared cache](https://sqlite.org/sharedcache.html), and
+[VACUUM](https://sqlite.org/lang_vacuum.html). The PRAGMA page was revisited at
+`optimize`, `auto_vacuum`, and `quick_check`. Immutable revisions are unknown.
+This extends the earlier seven-page account to eleven distinct pages; it retains
+the earlier fix and durability evidence. All material below is paraphrased.
+
+The busy-handler API can return BUSY without calling the callback to avoid
+deadlock. Only one handler exists per connection; setting busy_timeout replaces
+it. The callback must not modify or close its invoking connection or statement.
+Result-code entries BUSY, BUSY_SNAPSHOT (517), and LOCKED distinguish contention
+with another connection, a WAL read snapshot invalidated before promotion to a
+writer, and conflicts within a connection or shared cache. Waiting cannot refresh
+a stale snapshot. The shared-cache introduction discourages that mode; aslice
+disables it and handles wait policy above SQLite.
+
+PRAGMA `optimize` guidance recommends running it before closing short-lived
+connections, periodically for long-lived connections, and after schema changes.
+Recent builds temporarily bound ANALYZE work; this does not establish a hard
+storage latency guarantee. `quick_check` omits some checks performed by full
+integrity checking. With `auto_vacuum=NONE`, deletion leaves reusable file pages.
+
+VACUUM sections 2–3 describe rebuilding the database to reclaim space, failure
+with open transactions/statements, and a possible need for up to twice the
+database size in additional free space. Implicit rowids can change, so logical
+equivalence must use declared keys. VACUUM INTO produces a compact snapshot;
+interruption can leave its output incomplete. Neither command supplies aslice's
+owner coordination, reference validation, or journaled activation.
+
+The 30-second cumulative wait, 100 ms maintenance budget, hourly/daily/weekly
+schedule, retention rules, and explicit-only compaction are project policy in
+[DATABASE §10.1](../DATABASE.md#101-contention-and-safe-stopping),
+[DATABASE §10.2](../DATABASE.md#102-automatic-maintenance-and-cleanup), and
+[DATABASE §10.3](../DATABASE.md#103-manual-maintenance-compaction-and-schema-2).
+No source asserts that these timings guarantee recovery or hard real-time I/O.
+
 ## Applicability and limits
 
 These are SQLite mechanisms, not macOS 10.11–12, HFS+/APFS, Pi, or aslice acceptance
-results. The project uses schema version 1 and selects a fixed mainline baseline
+results. The original account covered schema version 1; the project now uses version 2 and selects a fixed mainline baseline
 of 3.51.3; a production artifact must additionally pin source bytes, source ID,
 compiler options, VFS, and build provenance. No installed SQLite binary is supplied
 by this record.
@@ -131,5 +171,6 @@ gates. Live pages cannot prove their content at an earlier date.
 
 This is a new dated account, with no previous edition replaced and no source assets
 transformed. Its exact bytes are covered by SHA256SUMS. Catalog and inventory
-coverage identify it as a technical account, not a complete original. Future
+coverage identify it as a technical account, not a complete original. The 2026-09-26 maintenance extension preserves that evidence and adds four official
+pages plus further PRAGMA locators, without new source assets. Future
 changes must retain relied-upon fix/version evidence and record comparison dates.
