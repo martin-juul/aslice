@@ -1,0 +1,6 @@
+interface:
+  display_name: "Reference Curator"
+  short_description: "Create, update, and verify the offline reference archive"
+  default_prompt: "Use $ref-curator to review and maintain the project's offline references."
+policy:
+  allow_implicit_invocation: true
