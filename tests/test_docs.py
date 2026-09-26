@@ -2,9 +2,17 @@
 from pathlib import Path
 import tempfile
 import unittest
-from check_docs import check
+from unittest.mock import patch
+from check_docs import check, inventory
 
 class DocumentationChecks(unittest.TestCase):
+    def test_inventory_ignores_unstaged_deletions(self):
+        with tempfile.TemporaryDirectory(prefix='aslice-doc-test-') as tmp:
+            root=Path(tmp)
+            (root/'kept.md').write_text('# Kept\n',encoding='utf-8')
+            with patch('check_docs.subprocess.check_output',return_value='kept.md\ndeleted.md\n'):
+                self.assertEqual([root/'kept.md'],inventory(root))
+
     def run_case(self, files):
         with tempfile.TemporaryDirectory(prefix='aslice-doc-test-') as tmp:
             root=Path(tmp)

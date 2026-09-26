@@ -1,4 +1,4 @@
-"""Offline CommonMark/GFM link and citation checks; see docs/DOCUMENTATION-CHECKS.md."""
+"""Offline CommonMark/GFM link and citation checks; see CONTRIBUTING.md."""
 from __future__ import annotations
 import argparse
 import os
@@ -31,7 +31,7 @@ def slug(title):
 
 def inventory(root):
     names = subprocess.check_output(['git', 'ls-files', '--cached', '--others', '--exclude-standard'],cwd=root,text=True).splitlines()
-    return sorted({root / n for n in names if n.lower().endswith('.md') and not n.startswith(('.agents/', '.codex/'))})
+    return sorted({root / n for n in names if n.lower().endswith('.md') and not n.startswith(('.agents/', '.codex/')) and (root / n).is_file()})
 
 def historical(path, heading):
     # Named, bounded records; links remain checked even when citations are historical.
@@ -133,7 +133,6 @@ def local_target(doc,url,line=1):
 def check(root, paths=None):
     root=Path(root).resolve(); docs={p.resolve():Document(p.resolve(),root) for p in (paths or inventory(root))}
     for doc in docs.values():
-        dated=doc.path.name in ('DOCUMENTATION-AUDIT.md','DOCUMENTATION-AUDIT-COVERAGE.md')
         for line,t,history in doc.inline:
             children=t.children or []; depth=0
             for i,c in enumerate(children):
@@ -145,7 +144,7 @@ def check(root, paths=None):
                 elif c.type=='image':label=c.content;url=c.attrGet('src') or ''
                 elif c.type=='link_close':depth-=1;continue
                 else:
-                    if c.type=='text' and depth==0 and not history and not dated:
+                    if c.type=='text' and depth==0 and not history:
                         for m in CITATION.finditer(c.content):
                             if m['doc']:doc.add(line,'unlinked-citation',f'Link cross-document citation: {m[0]}')
                             elif doc.path.parent.name!='refs' and m['num'] not in doc.sections:doc.add(line,'citation-owner',f'No local section {m[0]}; name and link its owner')
@@ -159,7 +158,7 @@ def check(root, paths=None):
                 dest=docs.get(path)
                 if dest is None:dest=Document(path,root)
                 if fragment and fragment not in dest.ids:doc.add(line,'fragment',f'Unknown fragment: {url}');continue
-                if history or dated:continue
+                if history:continue
                 refs=list(CITATION.finditer(label))
                 if refs:
                     if len(refs)>1 or re.search(r'§\d[\d.]*\s*[–—-]\s*§?\d',label):doc.add(line,'citation-range','Link each section separately')

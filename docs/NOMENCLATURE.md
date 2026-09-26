@@ -2,7 +2,7 @@
 
 > State, identity, privilege, and recovery contracts: [STATE-AND-RECOVERY](STATE-AND-RECOVERY.md). Protected-volume patching: [SYSTEM-VOLUMES](SYSTEM-VOLUMES.md). These specifications do not establish completed implementation or platform validation.
 
-- **Status:** Reference v0.13 — September 2026
+- **Status:** Reference v0.14 — September 2026
 - **Companions:** [DESIGN.md](DESIGN.md), [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md), [AUTHORING.md](AUTHORING.md), [BUILD-INFRA.md](BUILD-INFRA.md), [ORCHARD-POLICY.md](ORCHARD-POLICY.md), [REPOSITORIES.md](REPOSITORIES.md), [MANUAL.md](MANUAL.md), [SETUP.md](SETUP.md), [HOMEBREW-REVIEW.md](HOMEBREW-REVIEW.md), [TOOLCHAIN.md](TOOLCHAIN.md)
 - **Audience:** every reader. When a document uses a word you do not know, it is defined here — or should be.
 
@@ -293,7 +293,7 @@ Active cross-document citations are relative Markdown links whose labels name th
 
 Cited sections have explicit semantic anchors independent of numbering and heading wording. Keep existing headings and generated destinations; link separate destinations separately rather than pointing a range at its first section. Historical citations, literal examples, captured originals, and Pandoc command references retain their original syntax. Archive wrappers still follow the active citation rule.
 
-Long documents with at least ten second-level sections include compact section navigation. Use tables for compact mappings, paragraphs or subsections for extended explanations, and language labels on code fences. Preserve Pandoc title blocks and definition lists. The offline checker and its exception boundaries are documented in [DOCUMENTATION-CHECKS](DOCUMENTATION-CHECKS.md).
+Long documents with at least ten second-level sections include compact section navigation. Use tables for compact mappings, paragraphs or subsections for extended explanations, and language labels on code fences. Preserve Pandoc title blocks and definition lists. The offline checker and its exception boundaries are documented in [CONTRIBUTING](../CONTRIBUTING.md#documentation-checks).
 
 ---
 
@@ -306,6 +306,7 @@ Historical labels and ordering below are preserved as recorded, including repeat
 
 | Version | Date | Changes |
 |---|---|---|
+| v0.14 | September 2026 | Point documentation checker guidance to CONTRIBUTING after removing standalone workflow reports. |
 | v0.12 | September 2026 | Consolidate revision notes into a collapsible history table; no specification changes. |
 | v0.10 | September 2026 | signing host, publisher, and quarantine follow automatic publication with a dedicated networked release Pi; the root remains offline. The manual-release design is superseded (KEY-RUNBOOK §2.1). |
 | v0.9 | September 2026 | **Superseded design record:** initial signing used a single owner and two offline Pis with manual release batches. |

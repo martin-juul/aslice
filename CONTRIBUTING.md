@@ -97,6 +97,41 @@ history, add a dated entry. Software release versions are separate. Documents
 without revision records need no History section. Archived sources, provenance
 records, and narrative discussions of history are outside this convention.
 
+### Documentation checks
+
+Install the dependencies and run the offline checks from the repository root:
+
+```sh
+python -m pip install -r tests/requirements.txt
+python tests/check_docs.py
+python -m unittest discover -s tests -p test_docs.py
+python tests/check_contracts.py
+python .agents/skills/ref-curator/scripts/refs.py verify --root .
+git diff --check
+```
+
+`check_docs.py --json` emits machine-readable findings. Errors fail the gate;
+style warnings remain visible. The checker validates local paths with exact case,
+heading fragments, explicit anchors, citation labels, reference-style links,
+fences, and table structure. It supports CommonMark, GFM tables, and Pandoc-style
+definition lists. External URL availability and factual correctness require
+separate review.
+
+History sections, HOMEBREW-REVIEW's section 8 preserved proposals, and
+REPOSITORIES' section 9 historical amendment record retain their citations;
+their links remain checked. Code and inline literals are not prose. Archive
+originals beginning at the Full captured source heading retain upstream syntax;
+wrappers remain checked, with bare source-section locators referring to the
+captured edition. New checker exceptions need a documented reason and a focused
+regression case.
+
+Before accepting structural changes, inspect rendered glossary, dense-table,
+long-specification, and man-page examples. Check wrapping, heading destinations,
+literal placeholders, and definition lists, using Pandoc man output where
+applicable. Compare histories, requirements, and code examples against the
+pre-edit files. Archive changes also require byte-for-byte preservation checks
+of original captures and notices before regenerating checksums.
+
 ## Conduct
 
 There is no code of conduct document, and there won't be one. People are expected to be decent to each other without a policy forcing it.
@@ -118,6 +153,7 @@ Original contributions are licensed under [Apache-2.0](LICENSE), the project's l
 
 | Date | Changes |
 |---|---|
+| September 2026 | Move documentation checker instructions here and remove standalone audit, coverage, checks, and remediation reports from the project documentation. |
 | September 2026 | Consolidate revision notes into a collapsible history table and document the history convention; historical wording is unchanged. |
 | September 2026 | grafts: the zero-install-time-code ground rule gains its declared exception (owner decision) — vendor installer scripts as declared, user-approved, farm-rehearsed grafts (DESIGN §12.15); the rule bullet updated, the merge-gate summary gains the rehearsal gate, and the porting table's `post_install` row gains the graft path. |
 | September 2026 | editorial pass: prose revised for directness; `min_os` honesty renamed `min_os` accuracy for consistency with AUTHORING.md; documentation style section added. No rule changes. |
