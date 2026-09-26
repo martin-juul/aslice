@@ -20,11 +20,11 @@ aslice-machine — declarative whole-machine setup: apply, export, import
 
 A setup file declares: packages (the wishlist: names, `@version` constraints, `+variants`, `repo:` namespaces), profile-wide runtime selections, services to enable, the login shell, `defaults` preferences (user and system domains), aslice's own configuration, graft pre-approvals (the `[grafts]` allow-list, SETUP.md §2.8), and additional repositories. The file is data, never code — there are no hooks and nothing is evaluated.
 
-Saved plans and lock files are not this command: they name exact state and replay through top-level `aslice apply` (aslice-apply(1)). The surface splits by document kind — a plan passed to **machine apply**, or a setup file passed to top-level **apply**, is refused with a pointer to the right spelling.
+Saved plans and lock files name exact state and replay through top-level `aslice apply` (aslice-apply(1)). A plan passed to **machine apply**, or a setup file passed to top-level **apply**, is refused with a pointer to the command for that document kind.
 
 **export** writes the current machine as a setup file on stdout: leaf packages, runtime selections, enabled services, a non-default login shell, configured repositories, recorded graft approvals (as `[grafts].allow`), and non-default configuration. Preferences are captured only for domains named with **--defaults** / **--system-defaults** — there is no baseline to diff a whole preferences folder against, and application domains can contain account- or machine-specific values. Review before sharing.
 
-**import --from-brewfile** translates a Homebrew Brewfile into a setup file on stdout: `brew` entries become packages, `tap` entries become comments, `cask`/`mas`/`vscode` entries are skipped with a printed list. A starting point for hand-tuning, not a fidelity guarantee.
+**import --from-brewfile** translates a Homebrew Brewfile into a setup file on stdout: `brew` entries become packages, `tap` entries become comments, `cask`/`mas`/`vscode` entries are skipped with a printed list. Review and adjust the result; the translation does not guarantee fidelity.
 
 # APPLY SEMANTICS
 

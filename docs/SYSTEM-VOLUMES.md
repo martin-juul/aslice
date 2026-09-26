@@ -1,6 +1,6 @@
 # Protected system-volume patches
 
-- **Status:** Specification v0.1 — September 2026. Support is designed for Intel macOS 10.11–12; each OS build/filesystem/security configuration remains blocked from release until the acceptance matrix passes.
+- **Status:** Specification v0.2 — September 2026. Support is designed for Intel macOS 10.11–12; each OS build/filesystem/security configuration remains blocked from release until the acceptance matrix passes.
 - **Authority:** This document owns the protected-volume backend for DESIGN §12.11. [State and recovery](STATE-AND-RECOVERY.md) owns authorization, protected storage, and the operation journal.
 
 ## 1. Three backends
@@ -45,4 +45,6 @@ An Apple OS update changes the baseline. Compare the OS build, volume/snapshot i
 
 Record one successful patch, reboot, finalize, rollback, and restore drill for each claimed OS build, filesystem, and security/hardware configuration, including supported T2 configurations. Also exercise: wrong volume selection, locked Data volume, insufficient space, failed remount, failed snapshot creation/selection, interruption at each journal boundary, failed boot, missing previous snapshot, and an intervening Apple OS update. Verify refusal of early-boot consumers and forbidden paths, and demonstrate decommission after restoring a protected-volume patch.
 
-Until an adapter passes these gates, the client reports that exact configuration as unsupported before mutation. This is a runtime acceptance gate on the designed feature, not an assertion that the procedure has already been tested.
+Until an adapter passes these gates, the client reports that exact configuration as unsupported before mutation. The gates define the runtime evidence needed to support the configuration; this specification does not establish that the procedure has passed them.
+
+*History: v0.2 (September 2026) — prose rewrite of the adapter acceptance explanation; no content changes.*

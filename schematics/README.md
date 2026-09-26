@@ -1,12 +1,12 @@
 # aslice Schematics — Machine-Readable File Schemas
 
-- **Status:** v0.1 — September 2026
+- **Status:** v0.2 — September 2026
 - **Scope:** schemas for the public formats listed below; internal journal/service records require implementation specifications before those features ship, kept beside the prose specifications that define those formats.
 - **Vocabulary:** [../docs/NOMENCLATURE.md](../docs/NOMENCLATURE.md).
 
 ## What this directory is
 
-The public formats below pair prose contracts with structural schemas. Internal transaction journals, privileged authorization messages, certificate-policy inventories, and recovery-kit formats remain implementation gates under STATE-AND-RECOVERY; this directory does not claim those formats are complete. The prose owns the semantics; the schematic owns the structure. The pairing rule, per format:
+Each public format below has a prose contract defining its semantics and a structural schema describing its shape. Internal transaction journals, privileged authorization messages, certificate-policy inventories, and recovery-kit formats still need implementation specifications under STATE-AND-RECOVERY; this directory does not establish their completeness. The table pairs each format with its schema and prose contract:
 
 | File | Format | Schematic | Prose specification |
 |---|---|---|---|
@@ -115,7 +115,7 @@ A target module's entry point must match its signature exactly: same positional 
 },
 ```
 
-A member access not present in the surface — `ctx.network()`, say — is a validation error. That is the sandbox story made checkable: the schema *is* the capability list (PACKAGE-FORMAT §6.3), so an attempt to reach beyond it fails statically, before the sandbox ever has to.
+A member access not present in the surface — `ctx.network()`, say — is a validation error. The schema expresses the capability list (PACKAGE-FORMAT §6.3), allowing the validator to reject access outside that list before runtime sandbox enforcement.
 
 ### Type descriptors
 
@@ -137,3 +137,5 @@ Data flow, argument *values*, sandbox policy (enforced at runtime by the sandbox
 ## Versioning
 
 Each schematic versions with the prose specification it tracks, and its metadata names that specification's version at time of writing. The directory's own version (top of this file) bumps when any schematic changes.
+
+*History: v0.2 (September 2026) — prose rewrite of the schema directory introduction and host-member validation explanation; no content changes.*

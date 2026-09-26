@@ -14,7 +14,7 @@ aslice-gc, aslice-clean, aslice-store — reclaim disk and verify the store
 
 # DESCRIPTION
 
-Two spaces fill up; two commands empty them.
+Installed package trees occupy the store; downloaded and intermediate files occupy the cache. Each has its own cleanup command.
 
 **gc** owns the *store* — the immutable package trees your generations reference, which is what makes rollback possible. It removes store paths unreachable from any retained generation (the last 5 are kept by default). A store path referenced by a running process's generation is never collected.
 

@@ -12,13 +12,13 @@ aslice-apply — execute a saved plan; replay a lock file
 
 # DESCRIPTION
 
-**apply** executes a declarative document that already names exact state, detected by content: a saved **plan** (JSON, from `aslice plan`) is executed step for step; a **lock file** (`lock_version = 1`, PACKAGE-FORMAT §7) is replayed exactly — the recorded package set becomes a new generation. An `https://` argument is fetched, hash-printed, and shown before any consent is asked. With no argument there is no default document — apply prints its usage.
+**apply** detects the document kind from its content and executes the exact state it records. A saved **plan** (JSON, from `aslice plan`) is executed step for step. A **lock file** (`lock_version = 1`, PACKAGE-FORMAT §7) is replayed exactly — the recorded package set becomes a new generation. An `https://` argument is fetched, hash-printed, and shown before any consent is asked. With no argument there is no default document — apply prints its usage.
 
-The third document kind belongs elsewhere: a whole-machine **setup file** (`schema = 1`, SETUP.md) is refused here with a pointer to `aslice machine apply` (aslice-machine(1)), which is also the spelling that has a default document (`./aslice-machine.toml`). The surface splits by document kind: exact state replays top-level, the machine wishlist converges under `aslice machine`.
+A whole-machine **setup file** (`schema = 1`, SETUP.md) is refused here with a pointer to `aslice machine apply` (aslice-machine(1)). That command resolves a machine wishlist and uses `./aslice-machine.toml` as its default document. Exact-state replay belongs to the top-level command; wishlist convergence belongs under `aslice machine`.
 
 # APPLY SEMANTICS
 
-The document is shown and confirmed before execution. Before execution, exact artifact records, repository identities, machine requirements, and the expected base generation are revalidated. A stale plan is refused. Packages are staged before activation; external writes and profile changes follow the durable journal. Failure after live changes invokes recovery and may require conflict resolution or reboot. Package rollback does not restore application data (STATE-AND-RECOVERY §5, §8).
+Before execution, the document is shown and confirmed, and its exact artifact records, repository identities, machine requirements, and expected base generation are revalidated. A stale plan is refused. Packages are staged before activation; external writes and profile changes follow the durable journal. Failure after live changes invokes recovery and may require conflict resolution or reboot. Package rollback does not restore application data (STATE-AND-RECOVERY §5, §8).
 
 **--dry-run** prints the complete plan and changes nothing.
 

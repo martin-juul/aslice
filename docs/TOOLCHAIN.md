@@ -2,7 +2,7 @@
 
 > State, identity, privilege, and recovery contracts: [STATE-AND-RECOVERY](STATE-AND-RECOVERY.md). Protected-volume patching: [SYSTEM-VOLUMES](SYSTEM-VOLUMES.md). These specifications do not establish completed implementation or platform validation.
 
-- **Status:** Design draft, v0.3 — September 2026
+- **Status:** Design draft, v0.4 — September 2026
 - **Companion to:** [DESIGN.md](DESIGN.md) v1.22 (§4 platform floor, §7.2 build identity), [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md) v0.16 (§6 build environment), [BUILD-INFRA.md](BUILD-INFRA.md) v0.16 (farm consumption), [GENESIS.md](GENESIS.md) v0.7 (the from-nothing runbook). This document is the authoritative specification for the toolchain; where it and another document disagree, the disagreement is a bug in one of them.
 - **Vocabulary:** [NOMENCLATURE.md](NOMENCLATURE.md).
 
@@ -16,7 +16,7 @@ It is also just a package. `aslice-toolchain` lives in the core orchard, and `as
 
 ## 2. Why self-hosted
 
-Self-hosting is usually a convenience. On this platform it is load-bearing (DESIGN §4.3):
+The supported platform requires a self-hosted toolchain (DESIGN §4.3):
 
 - **Hosted toolchains cannot reach the floor.** Xcode 15-era toolchains refuse deployment targets below ~10.13, and hosted Intel runners never ship anything older. The platform floor is 10.11, so the toolchain that targets it cannot be Apple's current one.
 - **The C++ runtime is the real constraint.** Clang's target floor is far older than libc++'s: `-mmacosx-version-min=10.11` is still accepted, but 10.11's system libc++ predates half of C++17. The toolchain therefore ships a modern libc++ and statically links it into everything it produces (§5).
@@ -35,7 +35,7 @@ The platform is frozen, which is what makes this affordable: the toolchain is bu
 | CMake / Ninja / pkgconf | Build tooling | The harness's `ctx.cmake` / `ctx.make` / `ctx.meson` helpers wrap these with correct defaults (PACKAGE-FORMAT §6.3) |
 | Compiler wrappers | Contract enforcement | What `CC`/`CXX` point at in a build; inject the flavor floor, the deployment target, and prefix-mapping (§6) |
 
-Exact component versions live in the toolchain slice's manifest, together with the per-OS workaround register (§4). The manifest is the inventory of record; this table is the shape.
+The table identifies the components and their roles. Exact versions and the per-OS workaround register live in the toolchain slice's manifest (§4), which is the authoritative inventory.
 
 ## 4. The SDK strategy
 
@@ -103,7 +103,7 @@ The toolchain is born twice (GENESIS §1, step 2):
 1. **stage0** — proposed on the owned 2013 Mac Pro running Monterey, with compatible Apple host Clang and Command Line Tools, against the oldest archived SDK. Apple lists Monterey as this model's [newest compatible OS](refs/MAC_PRO_2013_COMPATIBLE_OPERATING_SYSTEM.MD). Validate the chosen compiler sources, CLT, SDK, and build tools together before accepting this baseline; record their exact versions and results. A bootstrap failure requires revisiting the toolchain recipe, not assuming a newer host OS is available.
 2. **stage1** — stage0 rebuilds the toolchain with itself. stage1 is the toolchain anyone ever uses; stage0 exists so that "who compiled the compiler?" has a documented answer.
 
-Both stages are archived as slices *and* in the repository tree, in the never-lose set (GENESIS §3). Re-standup after total loss consumes the archived stage0 — no Apple host rebuild is needed, which is precisely why it is archived — and the manager rebuilt with stage1 is compared against the archived unsigned canonical reference; the served signed/notarized binary is verified separately (STATE-AND-RECOVERY §10) (GENESIS §4). The ceremony, the inventory rows, and the drill are GENESIS.md's; this section is only the what.
+Both stages are archived as slices *and* in the repository tree, in the never-lose set (GENESIS §3). Recovery after total loss uses the archived stage0, avoiding an Apple host rebuild. The manager rebuilt with stage1 is compared against the archived unsigned canonical reference; the served signed/notarized binary is verified separately (STATE-AND-RECOVERY §10) (GENESIS §4). GENESIS.md specifies the ceremony, inventory rows, and drill; this section identifies only the toolchain stages and their recovery roles.
 
 ## 11. Bumps
 
@@ -129,3 +129,5 @@ The known roadmap item is `aslice-toolchain` v2: LLD-first linking and ccache in
 *History: v0.2 (September 2026) — owned-hardware bootstrap with proposed Monterey baseline subject to toolchain validation; capability requirements and pending VM coverage made explicit; companion versions refreshed.*
 
 *History: September 2026 — corpus review corrections: artifact identity, protected execution, durable recovery, trust persistence, replay, platform limits, and examples aligned with STATE-AND-RECOVERY and SYSTEM-VOLUMES. These are specification changes; runtime acceptance remains pending.*
+
+*History: v0.4 (September 2026) — prose rewrite of the self-hosting rationale, component inventory, and recovery explanation; no content changes.*

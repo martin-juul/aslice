@@ -13,7 +13,7 @@ Pages are Markdown in pandoc's man-page dialect: a three-line `%` title block, t
 pandoc -s -t man man/aslice-install.1.md -o share/man/man1/aslice-install.1
 ```
 
-The aslice build does this for every `*.1.md` here and installs the results into the prefix's `share/man/man1/`, which `aslice shellenv` puts on `MANPATH`. No other tooling is involved — the source stays readable as plain Markdown on the web and in editors.
+The aslice build runs this command for every `*.1.md` here and installs the results into the prefix's `share/man/man1/`. `aslice shellenv` adds that directory to `MANPATH`. No other tooling is involved, and the source remains readable as plain Markdown on the web and in editors.
 
 ## Writing style
 

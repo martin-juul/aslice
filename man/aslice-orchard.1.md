@@ -30,7 +30,7 @@ The orchard group is the maintainer's CLI: everything between authoring one form
 
 **dependents** prints reverse dependencies from the orchard graph (`[depends]`, `[extension]`, `[ride]`), marking which link the package's ABI — the rebuild candidates on a provider bump — and which merely exec it. The farm's dependent-rebuild cascade runs the same query server-side, so what breaks on a bump is known before the PR, not after the merge.
 
-**port** translates a simple Homebrew Ruby formula into a TOML+Starlark draft for human review. The name is honest: only the simple majority translate mechanically; the rest are ports. `aslice machine import --from-brewfile` (aslice-machine(1)) is the user-side verb — migrating a machine; **port** is the author-side one.
+**port** translates a simple Homebrew Ruby formula into a TOML+Starlark draft for human review. Only the simple majority translate mechanically; the rest need manual porting. Use `aslice machine import --from-brewfile` (aslice-machine(1)) to migrate a machine, and **port** to prepare a formula.
 
 # LIMITS
 

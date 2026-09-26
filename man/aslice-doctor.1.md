@@ -28,7 +28,7 @@ A clean machine prints one line: `aslice: your installation is healthy (N checks
 :   Suppress informational findings; warnings and failures remain.
 
 **--deep**
-:   Re-hash every file in the store, not just the sample and the flagged.
+:   Re-hash every file in the store, beyond the sampled and flagged files checked by default.
 
 **--offline**
 :   Skip network access; report cached-index age instead of repository reachability.

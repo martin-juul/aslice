@@ -17,7 +17,7 @@ aslice-service — manage launchd services declared by packages
 
 Packages describe their services declaratively in the manifest; aslice generates the launchd job and manages it over launchctl's modern interface. Job labels are namespaced (`org.aslice.<pkg>`), and user jobs resolve through their profile. Root jobs execute only a helper-verified root-owned dependency closure under `/Library/Application Support/aslice/system`; their executables, libraries, configuration, and launch definitions cannot come from a user-writable profile. Changed declarations regenerate the managed job.
 
-**status** reports launchd's truth — pid, state, last exit status, keepalive — not a pidfile. **run** executes the service in the foreground, unregistered, for debugging.
+**status** queries launchd for the pid, state, last exit status, and keepalive setting rather than reading a pidfile. **run** executes the service in the foreground, unregistered, for debugging.
 
 User-domain services run as the invoking user, need no sudo, and any repository may declare them. `domain = "system"` root daemons are bootstrapped by the privileged `aslice-system` helper with per-operation consent and unsuppressible logging, and only official, verified, or local repositories (REPOSITORIES.md §3) may serve them.
 

@@ -1,6 +1,6 @@
 # State, artifacts, and recovery
 
-- **Status:** Specification v0.1 — September 2026. These contracts are specified, not implemented or validated on macOS.
+- **Status:** Specification v0.2 — September 2026. These contracts are specified, not implemented or validated on macOS.
 - **Authority:** This document owns artifact identity, privileged ownership, transaction recovery, replay, and retained trust. DESIGN explains the architecture; PACKAGE-FORMAT describes author input. Examples and schemas must agree with these contracts.
 
 ## 1. Compatibility and artifact identity
@@ -57,7 +57,7 @@ The state machine is `prepared → applying → activated → committed`, with `
 
 On restart, mutations and GC stop until recovery completes. If no durable commit exists, recovery examines the actual pointers and operation fingerprints and restores the before-state, idempotently, in reverse order. A committed transaction reconciles its after-state. Before either forward or inverse writes, compare the current object with the recorded expected fingerprint. Concurrent external edits, missing backups, or inaccessible privileged state produce `needs-attention` with exact paths and remedies; they are never overwritten silently. Disk-full failures retain the journal and backups. Generations and affected artifacts remain GC roots until resolution.
 
-Rollback is a new journaled transaction, not erasure of history. Moving across several generations computes the target managed state and checks conflicts. Service plists and protected closures are restored together with the package generation; changed declarations require regenerated plists. Preferences and login-shell settings use recorded before-values, with external-edit conflicts surfaced.
+Rollback records a new transaction in the journal, preserving the history of earlier transactions. When rollback spans several generations, it computes the target managed state and checks for conflicts. Service plists and protected closures are restored together with the package generation; changed declarations require regenerated plists. Preferences and login-shell settings use recorded before-values, and intervening external edits are reported as conflicts.
 
 Package rollback does not restore application databases, userbases, or remote systems. Before a service upgrade that can migrate persistent data, require a declared backward-compatibility contract or a tested backup/restore procedure and explicit authorization; otherwise refuse automated upgrade of the running service. A pid check is only process liveness. Service-specific readiness and data compatibility determine whether automatic rollback is permitted. Unattended service failure returns failure and retains evidence unless the caller explicitly selected a valid rollback procedure.
 
@@ -113,3 +113,5 @@ Status vocabulary is **specified**, **implemented**, **tested** (named matrix an
 6. Compare independent builds before nondeterministic Apple signing/notarization and variable provenance. Record the unsigned canonical payload digest and exact normalization recipe in signed evidence; then sign/package once and freeze the served artifact inventory. Recovery compares the unsigned rebuild with that archived unsigned reference and separately verifies the archived served signatures. Never demand equality between a fresh unsigned executable and an archived notarized binary.
 
 The two owned Macs do not establish complete guest coverage or independent v3 rebuild capacity. Keep missing gates pending. Privileged features cannot ship until their enforcement and recovery gates pass, even if ordinary user-space packages ship earlier.
+
+*History: v0.2 (September 2026) — prose rewrite of the rollback transaction explanation; no content changes.*

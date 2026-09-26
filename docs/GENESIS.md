@@ -29,7 +29,7 @@ The initial inputs are Apple's compatible Command Line Tools, archived SDKs, thi
 | 8 | **Farm stand-up** — coordinator and publisher VM on Mac Pro, laptop agent on demand; measure resources and CPU/guest capabilities, validate OS matrix in batches per BUILD-INFRA §8, quarantine gates live; `clamav` per its genesis protocol, then the backlog sweep | validated capacity and coverage records; pending work for unavailable combinations | BUILD-INFRA §5–§8, §7.5 |
 | 9 | **Acceptance** — complete KEY-RUNBOOK §7's signing, expiry, tamper-rejection, recovery, and test-repository migration drills; a wiped 10.11 VM installs from snapshot #1. Retain receipts before public launch | a living project | §5 |
 
-The order is load-bearing, and it deserves to be stated as a litany: keys before metadata, toolchain before manager, manager before orchard, orchard before repository, repository before installer — all of it before the first user.
+Each stage supplies the next: keys before metadata, toolchain before manager, manager before orchard, orchard before repository, repository before installer — all of it before the first user.
 
 ## 2. The genesis inventory
 
@@ -71,7 +71,7 @@ Everything the project cannot regenerate must exist in **at least two independen
 
 GitHub gone, farm flooded, domain lapsed: this is the scenario in which §1 must run from the archive alone.
 
-1. Recover the never-lose set and separately stored secrets. Restore root and release keys onto clean Pis, keeping root recovery offline and enabling the release signer’s restricted network only after verification, compare public fingerprints with independently retained trusted records, and verify archived signatures and latest signing state. If root authority is suspect or unavailable, stop this in-band recovery path and use KEY-RUNBOOK §6.
+1. Recover the never-lose set and separately stored secrets. Restore root and release keys onto clean Pis. Compare public fingerprints with independently retained trusted records, and verify archived signatures and the latest signing state. Keep root recovery offline; enable the release signer's restricted network only after verification. If root authority is suspect or unavailable, stop this in-band recovery path and use KEY-RUNBOOK §6.
 2. Rebuild the publisher, generate a new timestamp key if the old one is unavailable or suspect, and authorize it through an offline root update before publication. Re-run §1 steps 2–7, **skipping nothing**. The stage0 toolchain comes from the archive — no Apple host rebuild is needed, which is precisely why stage0 is archived. aslice is rebuilt from source with stage1 and compared against the archived unsigned canonical reference; the served signed/notarized binary is verified separately (STATE-AND-RECOVERY §10). The orchard is *re-linked* from the archived tree rather than rebuilt, for the slices and sources are all in `blobs/sha256/`.
 3. Re-publish the tree on new infrastructure — any static host, a `file://` directory, a GHCR org; the tree does not care (DESIGN §9.6). Preserve the trusted root chain and publish sequential root updates for changed keys or renewal; clients authenticate each transition under both old and new root thresholds. New mirrors are added to `sources.toml` as a TUF update.
 4. Renew targets and snapshot automatically from the last approved content and refresh timestamps daily as needed; no expired metadata is silently accepted. Verify recovery with existing and fresh clients, including the restored signing state and replacement publisher, per KEY-RUNBOOK §7.
@@ -92,3 +92,5 @@ Once a year, on a clean machine, using **only** the never-lose set, rehearse §1
 *History: v0.9 (September 2026) — owner merge becomes the final human release approval, with automatic signing on a dedicated networked Pi and serialized atomic publication. Automatic targets/snapshot renewal replaces manual renewal; the root remains offline. The manual-release design above is superseded. Services and acceptance drills remain implementation work (KEY-RUNBOOK §2.1, §7); schemas and client signature formats are unchanged.*
 
 *History: September 2026 — corpus review corrections: artifact identity, protected execution, durable recovery, trust persistence, replay, platform limits, and examples aligned with STATE-AND-RECOVERY and SYSTEM-VOLUMES. These are specification changes; runtime acceptance remains pending.*
+
+*History: v0.10 (September 2026) — prose rewrite of bootstrap ordering and recovery verification; no content changes.*

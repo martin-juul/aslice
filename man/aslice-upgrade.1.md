@@ -17,7 +17,7 @@ aslice-upgrade, aslice-outdated — update installed packages
 
 Rules upgrade never breaks on its own:
 
-- Pinned packages (`aslice pin`) are skipped, and said so.
+- Pinned packages (`aslice pin`) are skipped and reported as pinned.
 - Runtime streams stay in their lane: `upgrade php` moves within the selected stream (8.4 patches), never across (8.5). New streams are a separate `install php@8.5`.
 - Major aslice self-upgrades print the changelog and ask first.
 

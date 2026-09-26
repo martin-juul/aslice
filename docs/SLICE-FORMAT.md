@@ -1,6 +1,6 @@
 # Slice container format
 
-- **Status:** Specification v0.1 — September 2026. Packing and extraction implementations remain acceptance work.
+- **Status:** Specification v0.2 — September 2026. Packing and extraction implementations remain acceptance work.
 - **Schematic:** [slice.schema.json](../schematics/json/slice.schema.json) validates the container descriptor; [artifact-manifest.schema.json](../schematics/json/artifact-manifest.schema.json) validates its manifest.
 
 ## 1. Byte layout
@@ -18,7 +18,7 @@ payload/<entry>        entries listed by manifest.files, sorted by path
 
 Only per-entry pax headers needed for UTF-8 paths, link paths, or size are allowed. Global headers, alternate names with conflicting meanings, arbitrary xattrs, and implementation-specific extraction directives are refused. Header uid/gid are zero, user/group names empty, timestamps zero; the manifest determines normalized payload modes. The packer fixes its zstd parameters and records the packer revision in detached provenance. A different compression result may have the same artifact identity but a different archive digest.
 
-`slice.json` follows the container schematic. Its manifest digest equals the signed index's `artifact_id`, and its length is checked against both the actual bytes and the index's `manifest_size`. `payload_entries` counts the manifest inventory, excluding the `payload/` root and metadata headers. `payload_bytes` is the sum of regular-file sizes. These fields are bounded declarations, not permission to allocate unchecked memory. An implementation may impose lower configured limits and must explain a refusal before extraction.
+`slice.json` follows the container schematic. Its manifest digest equals the signed index's `artifact_id`, and its length is checked against both the actual bytes and the index's `manifest_size`. `payload_entries` counts the manifest inventory, excluding the `payload/` root and metadata headers. `payload_bytes` is the sum of regular-file sizes. These fields declare resource usage within fixed bounds; they do not justify unchecked memory allocation. An implementation may impose lower configured limits and must explain a refusal before extraction.
 
 ## 2. Content identity and signatures
 
@@ -45,3 +45,5 @@ Schema validation alone establishes none of the cryptographic, filesystem, or re
 `slice_version` and `manifest_version` are independent integer format versions. Unknown versions fail before payload extraction. Breaking wire changes require a new version and migration/export guidance; retaining a filename or compatibility key does not authorize reinterpretation of old bytes.
 
 Run the structural checks with `python -m unittest discover -s tests -p test_slice_contract.py` after installing `tests/requirements.txt`. These checks use illustrative fixtures; they do not validate archive bytes or prove extractor safety.
+
+*History: v0.2 (September 2026) — prose rewrite of the container resource-limit explanation; no content changes.*

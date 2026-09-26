@@ -2,13 +2,13 @@
 
 > State, identity, privilege, and recovery contracts: [STATE-AND-RECOVERY](STATE-AND-RECOVERY.md). Protected-volume patching: [SYSTEM-VOLUMES](SYSTEM-VOLUMES.md). These specifications do not establish completed implementation or platform validation.
 
-- **Status:** Design draft, v0.12 — September 2026 (v0.2: editorial pass — prose revised for directness; no schema or semantic changes. v0.3: second editorial pass — sentence-level revision for readability; no schema or semantic changes. v0.4: prose rewrite throughout — chapters reworded in the project's technical-writing voice; no schema or semantic changes. v0.5: review pass — the trust-stickiness reference retargeted to REPOSITORIES.md §4; companion refreshed to DESIGN v1.14; no schema or semantic changes. v0.6: NOMENCLATURE.md vocabulary reference added to the header; companion refreshed to DESIGN v1.15; no schema or semantic changes. v0.7: companion refreshed to DESIGN v1.16; no schema or semantic changes. v0.8: companion refreshed to DESIGN v1.17; no schema or semantic changes. v0.9: the file is renamed `aslice-machine.toml` — a reserved, self-describing name that other tools can recognize — and the command surface splits by document kind: `aslice machine apply` / `export` / `import --from-brewfile` for the machine file, while top-level `aslice apply` keeps plans and lock files (owner decision, September 2026); no schema changes. v0.10: grafts — §2.8 introduces the `[grafts]` allow-list (pnpm-style pre-approval of declared installer scripts; signed manifests only), §2.1's schema overview gains the table, §3.4 gains the graft consent gate, §4.1's export captures recorded approvals, §7's attack-surface accounting gains the fourth bound, §3.2's ordering note gains the elevated-graft case, and §9's reference gains `--accept-grafts`; companion refreshed to DESIGN v1.19; model in DESIGN §12.15. v0.11: prose review pass — an intensifier removed (§1) and the Brewfile comparison stated precisely (§7); gems kept deliberately ('what the list waives is the question, not the evidence', 'the price of admission', 'there is nothing else to buy'); companion refreshed to DESIGN v1.20; no schema or semantic changes)
+- **Status:** Design draft, v0.13 — September 2026 (v0.2: editorial pass — prose revised for directness; no schema or semantic changes. v0.3: second editorial pass — sentence-level revision for readability; no schema or semantic changes. v0.4: prose rewrite throughout — chapters reworded in the project's technical-writing voice; no schema or semantic changes. v0.5: review pass — the trust-stickiness reference retargeted to REPOSITORIES.md §4; companion refreshed to DESIGN v1.14; no schema or semantic changes. v0.6: NOMENCLATURE.md vocabulary reference added to the header; companion refreshed to DESIGN v1.15; no schema or semantic changes. v0.7: companion refreshed to DESIGN v1.16; no schema or semantic changes. v0.8: companion refreshed to DESIGN v1.17; no schema or semantic changes. v0.9: the file is renamed `aslice-machine.toml` — a reserved, self-describing name that other tools can recognize — and the command surface splits by document kind: `aslice machine apply` / `export` / `import --from-brewfile` for the machine file, while top-level `aslice apply` keeps plans and lock files (owner decision, September 2026); no schema changes. v0.10: grafts — §2.8 introduces the `[grafts]` allow-list (pnpm-style pre-approval of declared installer scripts; signed manifests only), §2.1's schema overview gains the table, §3.4 gains the graft consent gate, §4.1's export captures recorded approvals, §7's attack-surface accounting gains the fourth bound, §3.2's ordering note gains the elevated-graft case, and §9's reference gains `--accept-grafts`; companion refreshed to DESIGN v1.19; model in DESIGN §12.15. v0.11: prose review pass — an intensifier removed (§1) and the Brewfile comparison stated precisely (§7); gems kept deliberately ('what the list waives is the question, not the evidence', 'the price of admission', 'there is nothing else to buy'); companion refreshed to DESIGN v1.20; no schema or semantic changes)
 - **Companion to:** DESIGN.md v1.22 §12.13 (architecture and rationale), MANUAL.md §10 (user guide), aslice-machine(1) (command reference). This document is the schema and semantics specification.
 - **Vocabulary:** [NOMENCLATURE.md](NOMENCLATURE.md) — project terms, acronyms, and the Homebrew translation table.
 
 ## 1. The scenario
 
-Start with the situation the feature exists for. A Mac comes back from system recovery with nothing on it, and getting from *blank* to *ready to work* costs an afternoon of archaeology: install the package manager, recall which packages actually mattered, redo the Dock, redo Finder, change the shell, re-add that one repository, re-enable the services, dig up the runtime versions the projects expect. None of this knowledge is lost, exactly — it lives in the previous machine, in shell history nobody saved, in muscle memory. It is not written down anywhere.
+A Mac comes back from system recovery with nothing on it. Getting from *blank* to *ready to work* takes an afternoon of reconstructing the old setup: install the package manager, recall the packages, restore the Dock and Finder preferences, change the shell, add the repositories, enable the services, and find the runtime versions the projects expect. The old machine and its unsaved shell history held those choices; the rest depended on memory.
 
 `aslice-machine.toml` is where that knowledge gets written down — one declarative file:
 
@@ -28,7 +28,7 @@ aslice machine export --defaults com.apple.dock,com.apple.finder > aslice-machin
 
 ## 2. The file
 
-`aslice-machine.toml` is TOML, the same data language as `package.toml`, `aslice.toml`, `sources.toml`, and the lock file. The property that matters most is what it is not: **data, never code**. No hooks, no script blocks, no evaluated expressions. For contrast, Homebrew's Brewfile is a Ruby DSL executed by `brew bundle` — anything Ruby can do, a Brewfile can do. The setup file can execute nothing (§7), which is precisely why you can read one before you run it.
+`aslice-machine.toml` uses TOML, like `package.toml`, `aslice.toml`, `sources.toml`, and the lock file. It is **data, never code**: no hooks, script blocks, or evaluated expressions. Homebrew's Brewfile is a Ruby DSL executed by `brew bundle`, so it can do anything Ruby can do. The setup file can execute nothing (§7); you can inspect its declarations before applying them.
 
 ### 2.1 Schema overview
 
@@ -215,7 +215,7 @@ If a step fails, the plan aborts at that point. The steps that completed stand �
 - **Configuration** — `[aslice]` keys whose values differ from defaults.
 - **Graft approvals** — exported as `[grafts].allow` (§2.8): the packages whose grafts you approved interactively, so a rebuilt machine replays the same decisions. Approvals of unsigned manifests are never recorded (DESIGN §12.15), so there is nothing to export — every export of the list is, by construction, a list of signed-manifest packages.
 
-The output is deterministic — sorted, stable formatting — so two exports diff cleanly. The file is meant for version control, and diffability is the price of admission.
+Export sorts its output and uses stable formatting, so two exports diff cleanly in version control.
 
 ### 4.2 `--defaults`: on demand, never automatic
 
@@ -232,7 +232,7 @@ Named domains are read with `defaults read` and emitted as `[defaults.user."…"
 
 ### 4.3 What it cannot capture
 
-This is the section where "export my setup" tools usually overpromise. The honest list:
+The following parts of a setup are outside export's scope:
 
 - Application state outside `defaults` (`~/Library/Application Support`, containers, keychains) is invisible to this feature.
 - Dotfiles are out of scope entirely (§8).
@@ -298,3 +298,5 @@ Plans and lock files keep the top-level verb: `aslice apply plan.json` executes 
 Exit status: **0** applied (or nothing to do); **1** error (schema, resolution, execution); **2** refused at a consent or trust gate. The plan is always printed before execution, and security events are logged unsuppressibly per DESIGN §12.5.
 
 *History: September 2026 — corpus review corrections: artifact identity, protected execution, durable recovery, trust persistence, replay, platform limits, and examples aligned with STATE-AND-RECOVERY and SYSTEM-VOLUMES. These are specification changes; runtime acceptance remains pending.*
+
+*History: v0.13 (September 2026) — prose rewrite of the setup scenario, TOML format, and export explanation; no content changes.*
