@@ -1,6 +1,6 @@
 # State, artifacts, and recovery
 
-- **Status:** Specification v0.6 — September 2026. These contracts are specified, not implemented or validated on macOS.
+- **Status:** Specification v0.7 — September 2026. These contracts are specified, not implemented or validated on macOS.
 - **Authority:** This document owns artifact identity, privileged ownership, transaction recovery, replay, and retained trust. DESIGN explains the architecture; PACKAGE-FORMAT describes author input. Examples and schemas must agree with these contracts.
 
 Navigation: [1. Compatibility and artifact identity](#compatibility-and-artifact-identity) · [2. ABI and execution requirements](#abi-and-execution-requirements) · [3. Privileged ownership and capability checks](#privileged-ownership-and-capability-checks) · [4. Graft execution boundary](#graft-execution-boundary) · [5. Durable transactions and recovery](#durable-transactions-and-recovery) · [6. Self-update and decommission](#self-update-and-decommission) · [7. Persistent trust and initial bootstrap](#persistent-trust-and-initial-bootstrap) · [8. Plans, locks, archives, and offline use](#plans-locks-archives-and-offline-use) · [9. Certificate trust lifecycle](#certificate-trust-lifecycle) · [10. Acceptance and implementation order](#acceptance-and-implementation-order)
@@ -63,17 +63,155 @@ Approval binds repository identity, package version, script digests, and the com
 
 [DATABASE](DATABASE.md) owns the six SQLite projections, durable choice/history records, backup sets, and database reconstruction. Compact records are retained indefinitely, including changes that create no package generation; verbose logs and resolved backups keep their existing retention policies.
 
-Lock waits and cancellation follow [DATABASE §10.1](DATABASE.md#101-contention-and-safe-stopping): one configurable 30-second foreground allowance spans owner and SQL locks, with one separate 30-second recovery allowance. A timeout before effects resolves prepared intent; after effects it enters fingerprint-checked recovery. A durable commit is preserved even if projection reconciliation remains pending. Unresolved recovery retains evidence and blocks mutations; cancellation requests a safe stopping point.
+Lock waits and cancellation follow [DATABASE §10.1](DATABASE.md#101-contention-and-safe-stopping). Busy interactive commands show owner information and offer wait or exit; waiting is cancellable. Unattended commands wait only when explicitly requested. An authorized wait uses one configurable 30-second foreground allowance across owner and SQL locks, with one separate 30-second recovery allowance. Revalidate state, trust, and the proposed operation after waiting or recovery; a materially changed plan requires fresh confirmation. Unresolved recovery retains evidence and blocks conflicting mutations and GC, while working packages and external system-repair tools remain accessible.
 
-One process holds the prefix mutation lock before changing state; it rechecks the planned base generation after acquiring it. Privileged operations additionally take the system-root lock, always after the prefix lock. GC follows the same order. Cross-prefix privileged operations serialize at the system lock. Locks are OS-managed and released on process death; durable journals survive that release.
+One operation holds effective prefix mutation ownership from preparation through post-commit health checks; it rechecks the planned base generation after acquiring ownership. Privileged operations additionally take the system-root lock, always after the prefix lock. GC follows the same order. Cross-prefix privileged operations serialize at the system lock. OS locks may release on process death, but surviving helpers retain effective ownership until they stop writing. Parent death, a reused PID, or cancellation never licenses a second writer. Recovery must establish helper quiescence before inverse writes or manual repair.
 
 Each transaction records its identifier, base and proposed generation digests, exact artifact set, authorization, ordered operations, before/after fingerprints, backups, and progress. Privileged journals and backups live in the protected root. Before-images preserve file kind, bytes, mode, owner, ACLs, xattrs, and symlink targets where supported; unsupported metadata is a preflight refusal. Files, journal records, and affected directory entries are flushed before the next durable phase. HFS+ and APFS power-loss behavior must be validated, including the selected `fsync`/`F_FULLFSYNC` strategy; rename atomicity alone is not durability.
 
-The state machine is `prepared → applying → activated → committed`, with `recovering`, `rolled-back`, and `needs-attention` outcomes. Preparation authenticates and stages everything, takes durable backups, validates expected state, and persists the complete intent before live changes. Applying quiesces services and performs journaled external operations. Activation switches the profile and protected pointers, then records the new generation in SQLite. Commit follows reconciliation and health checks. There is no atomic primitive spanning SQLite, both pointers, and external state; the journal supplies recovery.
+The state machine is `prepared → applying → activated → committed`, with `recovering`, `rolled-back`, and `needs-attention` outcomes. Preparation authenticates and stages everything, takes durable backups, validates expected state, and persists the complete intent before live changes. Applying quiesces services and performs journaled external operations. Activation switches the profile and protected pointers, then records the new generation in SQLite. Commit follows reconciliation and precedes service health checks. Checks default to 60 seconds per service; overrides must be positive and finite. Failure or timeout returns nonzero and explicitly reports that installation committed, naming failed or unverified services. A later eligible rollback is a new transaction. Artifact validation, manager compatibility checks, and required protected-volume finalization remain pre-commit gates. There is no atomic primitive spanning SQLite, both pointers, and external state; the journal supplies recovery.
 
-On restart, mutations and GC stop until recovery completes. If no durable commit exists, recovery examines the actual pointers and operation fingerprints and restores the before-state, idempotently, in reverse order. A committed transaction reconciles its after-state. Before either forward or inverse writes, compare the current object with the recorded expected fingerprint. Concurrent external edits, missing backups, or inaccessible privileged state produce `needs-attention` with exact paths and remedies; they are never overwritten silently. Disk-full failures retain the journal and backups. Generations and affected artifacts remain GC roots until resolution.
+On restart, conflicting mutations and GC stop until recovery resolves their requirements; replacement preparation follows §5.1. If no durable commit exists, recovery examines the actual pointers and operation fingerprints and restores the before-state, idempotently, in reverse order. A committed transaction reconciles its after-state. Before either forward or inverse writes, compare the current object with the recorded expected fingerprint. Concurrent external edits, missing backups, or inaccessible privileged state produce `needs-attention` with exact paths and remedies; they are never overwritten silently. Disk-full failures retain the journal and backups. Generations and affected artifacts remain GC roots until resolution.
 
-Machine apply is one managed-state transaction: a failed step rolls back the entire apply. Trust establishment is a separate explicit prerequisite and is never reset by package rollback ([SETUP §3.2](SETUP.md#the-plan-and-the-order-of-operations)).
+Space-separated package requests, including mixed-orchard requests, form one managed-state transaction. Every non-core package retains its qualified namespace. A pre-commit failure rolls back the entire managed-state batch, including machine apply. Package-specific options identify their target, for example `--variant ffmpeg:+x265`; reject ambiguous batch options and unknown targets. Stateful `--for` scoping is superseded. Show effective variants, flags, runtime bindings, and build choices per package before authorization. Trust establishment is a separate explicit prerequisite and is never reset by package rollback ([SETUP §3.2](SETUP.md#the-plan-and-the-order-of-operations)).
+
+The initiating user or an authenticated administrator may request stopping an operation. Before commit, stop helpers safely and attempt fingerprint-checked rollback. After commit, stop checks safely and report committed installation with incomplete verification; cancellation does not erase the commit. Unresolved rollback retains the mutation gate and recovery evidence. Stopping authority does not grant permission for new privileged effects.
+
+### 5.1 Guided recovery and trusted prefix rebuilding
+
+After a crash, interactive commands offer **recover and continue** in one interaction. Unattended recovery and continuation require explicit authorization; ordinary install consent alone is insufficient. Once authorized, resume interrupted recovery automatically when durable evidence and actual state agree. Previous interruption alone is not a reason to ask again. Revalidate the original request before continuing and ask again only for actual conflicts, new authority, or material plan changes.
+
+Recovery inventories affected files, services, registrations, permissions, and transaction progress automatically. It reconciles unambiguous state from verified evidence and groups unresolved choices by repository, package, or service. Each group shows the conflict, recommended action, consequences, and expandable path-level evidence. Offer restoration of recorded state, retention of validated current state, or manual repair where applicable; explain why an unavailable choice is unsafe. Preserve displaced content and durably record accepted deviations. Resume saved progress across exits and reboots, rechecking fingerprints before using an earlier choice.
+
+Manual repair first waits for all helpers to stop writing and establishes a persistent gate against conflicting aslice mutations and GC. External repair tools remain usable. Re-entry inventories the repaired state, validates it against the chosen resolution, and records any accepted deviation before clearing the gate. Neither an exit nor a reboot clears it implicitly.
+
+A known-good recovery executable and independent recovery records must exist outside the active prefix, using a private user directory under `~/Library/Application Support/aslice/` and a separate root-owned directory under `/Library/Application Support/aslice/` for privileged evidence. Neither location may resolve inside the active prefix. Retain trust evidence, transaction receipts, choice/history records, manifests, and required backups; provide a verified export for recovery after disk loss. An outside-prefix copy on the same disk is not protection against disk failure, and user-owned copies are not protection against compromise of that account. These records recover evidence, not missing artifact bytes. The ordered durable protocol is specified in [DATABASE §9.3](DATABASE.md#93-independent-records-and-durable-copy-updates); §10.2 records remaining engineering review.
+
+Use per-prefix directories keyed by stable prefix identity under each Application
+Support root. Directories and the retained owner-executable recovery binary use
+0700; record files use 0600, with equivalent ACL restrictions. Privileged storage
+and executable ancestors must not be unprivileged-writable. Keep compact history
+indefinitely and retain backups and displaced content while unresolved or referenced.
+Exports include a verified inventory and all required recovery files, identifying
+missing components explicitly; preserve protected ownership boundaries on import.
+Exact child names and durable update mechanics remain subject to architect review.
+
+Rebuilding separates recovered package selections from authority to execute bytes. Independently verify each rebuild artifact and its dependency closure under the retained or explicitly re-established repository trust. If evidence is insufficient, guide repository-level trust re-establishment with an actionable independent verification method. Irretrievably lost history requires an independently authenticated recovery bundle establishing current trust and safe version floors; affected rebuild artifacts remain blocked without it. Disclose lost security history and its consequences. A fingerprint acknowledgement alone is insufficient; do not silently accept replacement keys, recreate TOFU, or reset anti-rollback state. An unresolved authority gap blocks the affected artifacts, not recovery inspection or unrelated verified packages.
+
+The guided trust step identifies the affected repository and missing evidence,
+directs the user to obtain its recovery bundle on an independently trusted machine,
+and explains how to authenticate the bundle through an established independent
+channel, following §7's bootstrap verification discipline. Show the authenticated
+repository/environment, authority, version-floor evidence, and lost-history report
+before authorizing re-establishment. The bundle must justify safe floors against
+all surviving checkpoints and receipts; a current root key or fresh metadata alone
+does not reconstruct forgotten rollback history. If its authority or floors cannot
+be established, explain the missing evidence and keep that repository blocked.
+Bundle issuance, format, and the concrete verification procedure require architect
+review before this workflow can ship (§10.2).
+
+Prepare a replacement beside the original, preserving the original prefix and recovery evidence. Present missing artifacts, independently verified replacements, and proposed omissions together in one reviewed salvage plan. Names recovered from a damaged database express intent only. Any substitution or omission changes the plan and must be reviewed; it is not exact replay. Record decisions and unresolved external effects durably.
+
+Permit isolated execution of verified, unaffected dependency closures from the replacement while unrelated repairs remain pending. Validate exact dependencies, CPU/OS requirements, absolute paths, loader/plugin paths, and external configuration; unresolved dependencies or access to damaged state disqualify that closure. Do not activate the replacement's normal profile or affected privileged integration until their requirements are satisfied. Isolated execution retains its own GC roots and must not overwrite or implicitly redirect the original prefix. Activation requires a reviewed, revalidated plan covering relocation and external integrations, with the original retained.
+
+Recovery ends with an accurate outcome: **repaired**, **usable with listed unresolved repairs**, or **replacement prepared but activation blocked**. List usable closures, remaining conflicts, blocked activation requirements, saved progress, and the next action. Partial usability is not a claim of completed repair.
+
+Recovery copies retain append-only history and independently recorded progress.
+Accept disagreement automatically only when authenticated evidence proves a valid
+continuation; preserve both copies and block the affected repair otherwise. A newer
+timestamp or a majority of matching copies is not proof. The durable protocol must
+detect incomplete multi-copy updates and may not declare a transition safely retained
+before its required evidence is durable.
+
+Activation keeps the replacement at its verified path and changes only reviewed
+entry points and registrations. Preserve the original prefix. A package requiring
+the old absolute path blocks its activation until rebuilt or safely relocated and
+revalidated under §1. Isolated execution requires a complete validated closure whose
+paths and configuration avoid the damaged prefix; refuse a closure that cannot meet
+that condition. No rename of the original is an implicit part of activation.
+
+### 5.2 Working-package access and shims
+
+Recovery gates mutations; it does not impose blanket runtime denial. Existing working packages remain accessible when their selected artifacts and complete dependencies are established as unaffected. Shims keep the session → project → default resolution order. If the required selection or closure cannot be established, fail promptly with the specific reason and recovery remedy. Do not choose another stream, repository, generation, or replacement merely because the selected state is unavailable. Isolated replacement execution is an explicit choice under §5.1, not shim fallback. The committed execution catalog below supplies the validated read path during projection damage.
+
+A separately retained, immutable execution catalog records the committed profile
+identity, generation and decision head, runtime defaults, installed streams, exact
+artifact bindings, materialization receipts, runtime/extension configuration, and
+complete dependency closures. It lives in the independent recovery set and is
+bound by digest to its durable commit decision. Keep the previous catalog until no
+recovery or execution root needs it. The catalog is a read projection of verified
+committed evidence; its presence or checksum alone grants no trust. Protected
+execution continues to require the helper's independently verified protected copy.
+
+Before live changes, publish and flush an operation gate identifying every affected
+selection, closure, and shared configuration resource. Dependency consumers belong
+to the affected set. If the set cannot be bounded from verified evidence, block
+dispatch only for the scope whose safety cannot be established and explain why.
+Unrelated catalog entries remain eligible. The gate survives parent death and
+reboot; only validated reconciliation of the recorded decision can clear it.
+
+A shim reads the committed catalog and gate epoch, resolves session → project →
+default exactly as usual, and validates the chosen entry's commit evidence,
+materialized bytes, dependencies, CPU/OS requirements, and configuration. It takes
+a short execution-admission lease, rechecks that the catalog and gate epoch have
+not changed, and registers its closure as a retained execution root before exec.
+Writers serialize gate publication against those admission leases; no new affected
+execution may slip between validation and gate publication. Long-running programs
+retain their artifact roots under §2; a short admission lease is not a lifetime
+mutation lock. Unknown or changed evidence fails the selected invocation promptly.
+Do not use an old default or another stream because the selected entry is blocked.
+
+Build the next catalog from the verified after-state, bind it in the commit decision,
+and publish its pointer only after commit. An interrupted publication reconciles
+against that decision, never against modification times. Clear a gate only when
+the selected catalog and affected actual state agree. Changes to defaults and other
+choice-only state follow the same discipline. SQLite damage alone therefore need
+not block execution; damage to the required catalog, gate, or closure evidence does.
+The ordered copy protocol is specified in
+[DATABASE §9.3](DATABASE.md#93-independent-records-and-durable-copy-updates).
+
+### 5.3 Command surface
+
+The following spellings are approved specification, not implemented commands.
+
+| Command or option | Contract |
+|---|---|
+| `--wait` | Explicitly authorize cancellable lock waiting; `--lock-timeout DURATION` sets the cumulative allowance, default 30 seconds. Configuration alone does not authorize unattended waiting |
+| `aslice operation status` | Report owner, operation identity, durable phase, helper activity, waiting, verification, and recovery state without mutation |
+| `aslice operation stop` | Request safe stopping of the current operation; authorize the initiating user or an authenticated administrator and bind the request to the displayed operation identity |
+| `aslice recover --continue` | Explicitly authorize recovery and continuation of the retained interrupted request; refuse if that request cannot be established. Interactive recover-and-continue offers the same action. Reconfirm material changes; unattended drift refuses |
+| `aslice recover --manual` | Quiesce helpers, persist the mutation gate, and present grouped manual-repair guidance; re-entry validates actual state |
+| `aslice recover --salvage` | Prepare and review a replacement plan beside the original; it does not authorize normal activation |
+| `aslice recover --activate` | Review and revalidate activation of the prepared replacement at its verified path and required integrations; preserve the original |
+| `aslice exec --replacement PATH -- PACKAGE COMMAND...` | Explicitly run the named package's validated isolated closure from that replacement; require the verified plan and unaffected complete closure, not merely a caller-supplied directory |
+| `--health-timeout DURATION` | Override the 60-second per-service timeout with a positive finite integer duration in `ms`, `s`, or `m`; reject zero, overflow, and unbounded values |
+| `--variant PACKAGE:+NAME`, `--variant PACKAGE:-NAME` | Target a declared feature variant; qualified non-core package names remain intact |
+| `--cflags 'PACKAGE:FLAGS'`, `--ldflags 'PACKAGE:FLAGS'` | Target compiler/linker flags; quote whitespace. Single-package unqualified forms remain valid |
+
+Resolve option targets against the exact requested package identifiers, separating
+the target from its value after the complete identifier (for example
+`audiolab:convolver:+feature`). Reject conflicting duplicate assignments and any
+ambiguous target. Other package-specific options must likewise identify their
+target in batches; their remaining grammar requires review before implementation.
+Recovery flags select distinct actions; do not infer activation from salvage or
+grant privileged consent from `--continue`. Existing protected-effect and graft
+authorization remains required. Unattended salvage/activation must bind explicit
+authorization to the reviewed plan; its exact confirmation transport remains pending.
+
+Grouped conflicts recommend recorded-state restoration by default when supported
+by verified evidence. Keeping current state is offered only after validation; a
+recommendation cannot bypass a fingerprint conflict or erase displaced content.
+Bind saved choices to their evidence and re-open only groups invalidated by changed
+state. Manual repair remains available when neither automatic option is valid.
+
+Recovery JSON uses stable outcome values `repaired`, `usable_with_unresolved_repairs`,
+and `replacement_prepared_activation_blocked`, plus `committed`,
+`verification_complete`, `activation_allowed`, and `unresolved_repairs`. The first
+three flags are booleans; `unresolved_repairs` lists grouped reasons, affected
+packages/services/paths, and next actions. Retain DATABASE's `recovery_required`
+and `retry_safe` diagnostics. Never infer complete verification or activation
+eligibility from partial usability. Full object schemas and exit mappings for the
+new command family remain implementation blockers in §10.2.
 
 Rollback records a new transaction in the journal, preserving the history of earlier transactions. When rollback spans several generations, it computes the target managed state and checks for conflicts. Service plists and protected closures are restored together with the package generation; changed declarations require regenerated plists. Preferences and login-shell settings use recorded before-values, and intervening external edits are reported as conflicts.
 
@@ -142,6 +280,66 @@ Status vocabulary is **specified**, **implemented**, **tested** (named matrix an
 
 The two owned Macs do not establish complete guest coverage or independent v3 rebuild capacity. Keep missing gates pending. Privileged features cannot ship until their enforcement and recovery gates pass, even if ordinary user-space packages ship earlier.
 
+### 10.1 Guided workflow acceptance
+
+These scores are provisional design targets, not usability-test results.
+
+| Workflow | Target | Required experience |
+|---|---|---|
+| Concurrent shells | 8/10 | Visible wait or exit choice, owner information, cancellable waiting, no repeated retry commands |
+| Recovery after one crash | 9/10 | One recover-and-continue interaction when the plan remains valid |
+| Interrupted recovery and conflicts | 8/10 | Resume saved progress; ask only actionable questions |
+| Customized batch | 8/10 | Every package-specific option identifies its package; display effective settings |
+| Damaged-prefix rebuild | 8/10 | Automatic evidence recovery, grouped choices, and preserved working access |
+
+Pending runtime acceptance scenarios:
+
+| Scenario | Required observation |
+|---|---|
+| Concurrent shells and surviving helpers | A second mutation cannot start from preparation through checks, including after parent death while a helper still writes; unattended contention does not wait without authorization |
+| Waiting and cancellation | Waiting is cancellable, changed plans are revalidated and reconfirmed; only the initiator or authenticated administrator can stop another operation; pre-commit rollback and post-commit incomplete verification are distinct |
+| Mixed-orchard batch and health failure | A pre-commit failure reverses the whole managed-state batch; ambiguous options refuse; post-commit service failure or the default 60-second timeout returns nonzero and reports committed installation |
+| Repeated interruptions | Crash recovery resumes after exits and reboots without repeated acknowledgements when evidence agrees; changed fingerprints invalidate only affected choices |
+| Grouped conflicts | Many file conflicts form repository/package/service groups with recommendations and expandable details; accepted deviations and displaced content survive interruption |
+| Manual repair | Helpers stop before external repair; the mutation gate survives exit/reboot; repair tools and unaffected packages remain usable; validation precedes clearing the gate |
+| Lost trust and conflicting copies | Corrupt, missing, stale, or disagreeing recovery records never silently reset trust or version floors; preserve both copies, disclose lost history, and guide independent verification |
+| Working packages and shims | Unrelated recovery does not deny a validated selected closure; missing selection fails without stream, repository, or generation fallback |
+| Execution catalog and gate races | Corrupt SQLite while retaining catalog evidence; unaffected selections still dispatch. Interrupt catalog publication and race exec against gate publication; no tentative selection or affected closure escapes admission checks, and execution roots survive |
+| Recovery-copy protocol | Interrupt each intent, receipt, decision, mirror, head, and participant-acknowledgement flush. Repair verified lagging copies; retain a durable commit after mirror failure; refuse conflicting decisions or unknown commit evidence; never repeat privileged effects solely because an acknowledgement was lost |
+| Isolated replacement execution | An unaffected verified closure runs while unrelated repairs remain pending; bad absolute paths, dependencies, plugins, or external configuration block that closure; no implicit activation or privileged registration |
+| Reviewed activation | A single salvage plan lists missing bytes, verified replacements, and omissions; revalidated activation preserves the original and reports unresolved integration accurately |
+| Disk exhaustion and evidence corruption | Retain journals, before-images, and useful diagnostics without claiming completion; free-space repair remains possible |
+| Power loss | Inject loss at every durable transition, including recovery progress, copy updates, commit, and activation, on HFS+ and APFS; actual state and independently retained evidence govern resumption |
+
+Record unexplained fingerprints, repeated acknowledgements, hundreds of per-file
+prompts, or restrictions preventing manual repair as design issues requiring
+revision. Run existing documentation, citation, contract, and database-model checks,
+but never report them as proof of runtime recovery or hardware durability.
+
+### 10.2 Engineering decisions before implementation
+
+Bring the following concrete designs to the owner for decisions and architect
+review before implementing them. The behavioral requirements above are approved;
+the table distinguishes approved mechanisms from remaining implementation review.
+
+| Design | Required decision and review material |
+|---|---|
+| Independent recovery storage | Per-prefix Application Support directories, 0700 directories/executable, 0600 records, indefinite compact history, referenced backup retention, verified exports, and ordered history with protected receipts are approved. DATABASE's independent-record protocol defines durable ordering and disagreement handling. Review exact child names, flush adapters, record formats, and export validation mechanics |
+| Irretrievably lost security history | An independently authenticated recovery bundle establishing current trust and safe version floors is required. Specify its format, independent authentication method, issuance, and verification procedure; disclose what cannot be recovered |
+| Replacement isolation and runtime reads | Complete verified closures avoiding the damaged prefix and the committed execution catalog in §5.2 are approved. Review enforcement for absolute paths, loader/plugin paths, external configuration, catalog validation, and execution-admission leases; preserve shim precedence without inventing fallback |
+| Activation and relocation | Activation at the verified replacement path with original preservation is approved. Specify entry-point switching, relocation validation, protected integration, and interruption recovery |
+| Guided conflict presentation | Repository/package/service groups, recorded-state recommendations, validated current-state acceptance, and evidence-bound saved choices are approved. Specify concrete validation and presentation rules with large-conflict examples |
+| Commands and machine outcomes | §5.3 records approved spellings, outcomes, and fields. Complete remaining batch-option grammar, operation identity binding, unattended plan confirmation, complete output schemas, and exit mappings; distinguish usability, incomplete verification, and activation eligibility |
+
+This revision supersedes commit-after-service-health-checks, automatic unattended
+waiting, stateful `--for` batch scoping, and blanket shim denial solely because an
+unrelated recovery is pending. Existing single-package option forms remain valid
+when unambiguous; additional package-targeted spellings follow §5.3.
+The shim audit found the broad denial in [DATABASE §9.1](DATABASE.md#91-commit-boundaries)
+and its deletion summary in [DATABASE §1.2](DATABASE.md#12-identity-and-reconstruction);
+those now defer to §5.2 here. DESIGN's session/project/default precedence
+is retained. Existing runtime/model code has not been changed to implement this design.
+
 ## History
 
 <details>
@@ -149,6 +347,7 @@ The two owned Macs do not establish complete guest coverage or independent v3 re
 
 | Version | Date | Changes |
 |---|---|---|
+| v0.7 | September 2026 | Specify guided recovery, trusted prefix rebuilding, committed execution catalogs, mixed-orchard transactions, explicit waiting, helper ownership, and post-commit service checks; record owner-approved storage, trust, isolation, activation, and command decisions, superseded rules, UX targets, and pending implementation acceptance. |
 | v0.6 | September 2026 | Cross-link cumulative lock waits, phase-aware stopping, and bounded recovery without weakening commit or fingerprint rules. |
 | v0.5 | September 2026 | Integrate separate SQLite roles, indefinite compact choice/history records, coordinated backups, and copy-migration compatibility; preserve the existing external-effect and trust recovery contracts. |
 | v0.3 | September 2026 | Consolidate revision notes into a collapsible history table; no specification changes. |

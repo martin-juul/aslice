@@ -89,14 +89,18 @@ ATTACH/DETACH, PRAGMAs, transaction control, extension loading, and file/network
 functions. Execution is limited to 5 seconds, 10,000 rows, and 16 MiB of output;
 exceeding a limit returns failure and discards partial rows.
 
-Lock waiting is separate from query execution. The common `--lock-timeout DURATION`
+Busy interactive commands show owner information and offer wait or exit.
+Unattended commands wait only with **--wait**; a configured timeout
+alone does not authorize waiting. Lock waiting is separate from query execution. The common `--lock-timeout DURATION`
 option overrides `db.lock_timeout = "30s"`; use a nonnegative integer with `ms`, `s`,
 or `m`, including `0s` for no waiting. Count cumulative owner and SQL lock waits;
 useful work does not consume the allowance. Progress starts after one second and
 updates every five seconds with role, operation, elapsed wait, and owner (or unknown).
 Cancellation requests safe resolution, with one separate 30-second recovery wait
 allowance. Committed work reconciles forward; unresolved recovery retains journals,
-backups, and roots and blocks subsequent mutations. See
+backups, and roots and blocks conflicting mutations while unaffected working
+packages and external repair tools remain usable. After waiting or recovery,
+revalidate the plan and reconfirm material changes. See
 [DATABASE §10.1](../docs/DATABASE.md#101-contention-and-safe-stopping).
 Normal commands can bypass a busy cache using authenticated inputs in memory and
 skip cache writes; explicit cache inspection/maintenance reports contention.

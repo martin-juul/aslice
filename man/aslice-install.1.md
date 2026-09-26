@@ -18,6 +18,18 @@ Installs packages, binary-first: resolves the request against the index, selects
 
 *package* may be a bare name (`ffmpeg`), a version constraint (`ffmpeg@v6`), a namespaced name (`audiolab:convolver`), or a runtime stream (`php@8.4` — installing a stream never changes the selected one; see aslice-use(1)).
 
+Space-separated packages, including mixed-orchard requests, form one transaction.
+Pre-commit failure rolls back the complete managed-state batch. Display effective
+settings per package before authorization; package-specific batch options identify
+their target rather than using stateful **--for** scoping. Busy interactive commands
+offer wait or exit, and unattended waiting requires an explicit request.
+
+Commit precedes service health checks. Checks default to 60 seconds per service,
+with positive finite overrides. Failure returns nonzero and reports committed
+installation. The initiator or an authenticated administrator may request stopping:
+before commit attempt rollback; after commit stop checks safely and report incomplete
+verification. Effective mutation ownership lasts through checks and surviving helper writes.
+
 **reinstall** performs a fresh link of the same version, repairing damaged profile entries.
 
 # OPTIONS
@@ -25,11 +37,17 @@ Installs packages, binary-first: resolves the request against the index, selects
 **--build-from-source**
 :   Compile locally instead of using a slice. Dependencies still resolve to binaries where possible.
 
-**--variant** ±*name*
-:   Enable or disable a declared feature variant. Interface-changing variants (`abi = true`) produce a distinct build identity; others trigger a local build with the same compatibility key and a distinct artifact identity. aslice reports whether a prebuilt slice exists for the combination before compiling.
+**--variant** *package*:±*name*
+:   Enable or disable a declared feature variant for the identified package. An unqualified variant remains valid for a single package; ambiguous batch options and unknown targets are refused. Interface-changing variants (`abi = true`) produce a distinct build identity; others trigger a local build with the same compatibility key and a distinct artifact identity. aslice reports whether a prebuilt slice exists for the combination before compiling.
 
 **--cflags**="…", **--ldflags**="…", **--lto**, **--debug**
 :   Compiler and linker flags for a local build of the named package only. Exact flags enter the artifact manifest. ABI-neutral choices may share a compatibility key; different outputs retain distinct artifact identities. Substitution still requires compatible CPU/OS requirements, ABI evidence, and dependent tests. Unsupported ABI-changing flags are rejected unless represented by a declared ABI variant; unknown effects require an isolated build and explicit dependency validation ([STATE-AND-RECOVERY §1](../docs/STATE-AND-RECOVERY.md#compatibility-and-artifact-identity) and [STATE-AND-RECOVERY §2](../docs/STATE-AND-RECOVERY.md#abi-and-execution-requirements)).
+
+**--cflags** *package*:"…", **--ldflags** *package*:"…"
+:   Package-targeted batch forms, for example `--cflags 'ffmpeg:-O3'`. Targets must identify an exact requested package, including its namespace for non-core packages. Reject ambiguous targets and conflicting duplicate assignments. Remaining batch forms for source-build, runtime, extension, LTO, and debug options require grammar review; unqualified forms cannot silently apply to multiple packages.
+
+**--health-timeout** *duration*
+:   Per-service health timeout after commit, default `60s`. Accept a positive finite integer with `ms`, `s`, or `m`; reject zero and overflow. Failure or timeout reports committed installation and returns nonzero.
 
 **--runtime** *name@stream*
 :   For runtime extensions: bind to the given stream instead of the currently selected one.
@@ -56,7 +74,8 @@ Installs packages, binary-first: resolves the request against the index, selects
 
 ```sh
 aslice install ffmpeg
-aslice install ffmpeg --variant +x265 --cflags="-O3 -march=native"
+aslice install ffmpeg --variant ffmpeg:+x265 --cflags="-O3 -march=native"
+aslice install ffmpeg audiolab:convolver --variant ffmpeg:+x265 --cflags 'ffmpeg:-O3'
 aslice install php@8.4 --with-extensions-from 8.3
 aslice install foo --accept-system-changes
 aslice install convolver --accept-grafts

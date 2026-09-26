@@ -26,11 +26,22 @@ Packages with running services are stopped, swapped, and restarted as part of th
 
 # OPTIONS
 
+**--health-timeout** *duration*
+:   Set the per-service post-commit health timeout, default `60s`; require a positive finite integer with `ms`, `s`, or `m` and reject overflow.
+
 **--rollback-on-service-failure**
 :   Explicit unattended rollback on service readiness failure, permitted only when the persistent-data compatibility contract or authorized tested backup/restore procedure makes rollback valid. Without this flag, an unattended failure returns failure and retains evidence; it does not silently roll back. Interactive failures offer only eligible recovery choices ([STATE-AND-RECOVERY §5](../docs/STATE-AND-RECOVERY.md#durable-transactions-and-recovery)).
 
 **--dry-run**, **--json**
 :   Print the plan without changing anything; machine-readable output.
+
+# COMMIT AND VERIFICATION
+
+Installation commits before service health checks. Hold effective prefix mutation
+ownership through checks, defaulting to 60 seconds per service with positive finite
+overrides. A failed or timed-out check returns nonzero and explicitly reports
+committed installation. Any eligible rollback is a new transaction. A stop request
+after commit stops checks safely and reports incomplete verification.
 
 # SEE ALSO
 

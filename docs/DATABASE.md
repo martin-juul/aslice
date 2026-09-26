@@ -1,6 +1,6 @@
 # SQLite storage and disaster recovery
 
-- **Status:** Specification v0.2 — September 2026. The SQL and model tests are executable; database commands, services, migrations, and hardware recovery are not implemented.
+- **Status:** Specification v0.3 — September 2026. The SQL and model tests are executable; database commands, services, migrations, and hardware recovery are not implemented.
 - **Authority:** This document owns SQLite schemas, connection policy, reconstruction records, and database maintenance. [STATE-AND-RECOVERY](STATE-AND-RECOVERY.md) owns artifact identity, trust, privilege, and the transaction state machine. [KEY-RUNBOOK](runbooks/KEY-RUNBOOK.md) owns signing authority and compromise response.
 
 ## 1. Ownership and authority
@@ -43,7 +43,7 @@ directories, even on a shared machine. A database path is never a network share.
 
 | CLI role / SQL companion | Active location | Owner and access | Creation trigger |
 |---|---|---|---|
-| `client-state` / [schema](sqlite/client-state.sql) | `<prefix>/db/state.sqlite` | Prefix owner writes; that owner's manager, shims, and inspection read | Explicit prefix initialization |
+| `client-state` / [schema](sqlite/client-state.sql) | `<prefix>/db/state.sqlite` | Prefix owner writes; that owner's manager and inspection read; committed execution catalog supplies shim dispatch | Explicit prefix initialization |
 | `client-cache` / [schema](sqlite/client-cache.sql) | `<prefix>/cache/db/cache.sqlite` | Prefix owner; fetcher and solver read/write | First authenticated refresh or solve |
 | `system-state` / [schema](sqlite/system-state.sql) | `<system>/db/state.sqlite` | Root helper writes; authorized helper inspection reads | First authorized protected operation |
 | `coordinator` / [schema](sqlite/coordinator.sql) | `<coordinator>/db/coordinator.sqlite` | Coordinator service account writes; authorized operator reads | Farm initialization |
@@ -82,7 +82,7 @@ in the restore journal. Copying a database never creates a new prefix identity.
 
 | Role | Reconstruction sources | Consequence of deletion |
 |---|---|---|
-| Client state | Prefix initialization record, compact choices/history, generation manifests, exact artifact manifests and materialization receipts, unresolved journals | Stop mutations and GC; shims report unavailable state until recovery establishes selections |
+| Client state | Prefix initialization record, compact choices/history, generation manifests, exact artifact manifests and materialization receipts, unresolved journals | Stop conflicting mutations and GC; retain access to established unaffected selections and closures; unavailable required selection state fails promptly without fallback |
 | Client cache | Currently authenticated index/recipe objects and separate trust receipts; fresh solver work | Rebuild on demand; retained trust and user choices are unchanged |
 | System state | Protected initialization record, independently verified closure manifests, prefix registrations, effect journals, before-images, service declarations and receipts | Stop protected mutations and GC; preserve closures and reconcile actual effects |
 | Coordinator | Archived orchard commits, signed plans/jobs, enrollment/capability evidence, attempts/results, quarantine and gate records | Stop dispatch; rebuild, expire old leases, then admit reconnecting agents |
@@ -160,9 +160,9 @@ there is no inferred cross-environment fallback. Manifests, rather than matching
 | Tables | Readers, writers, transaction boundary, and retention |
 |---|---|
 | `artifacts`, `bindings` | Store import verifies and inserts artifact identity, origin, full package-record reference, materialization receipt, and bindings together. Install/solver/why/leaves/GC read them; the external package record retains flags, variants, recipe, and compatibility requirements. Retain while reachable, including dependencies; delete only through journaled GC after checking every owner |
-| `profiles`, `generations`, `members`, `active_generations` | Install, uninstall, upgrade, rollback, and machine apply project manifests and activation in one transaction after pointer operations. History, list, shims, and GC read. Retain generation rows while policy retains their manifests; pruning records the removal |
+| `profiles`, `generations`, `members`, `active_generations` | Install, uninstall, upgrade, rollback, and machine apply project manifests and activation in one transaction after pointer operations. History, list, and GC read; shims use the corresponding committed execution catalog. Retain generation rows while policy retains their manifests; pruning records the removal |
 | `requests`, `holds` | Install/mark/uninstall and one-argument pin/unpin write durable choices even without a generation change. Autoremove/upgrade read. Clearing a choice requires an explicit record; dependencies remain distinguishable from requested roots |
-| `runtime_defaults`, `profile_priorities` | Default and `profile prefer` journal changes together with their projections. Shims read defaults; generation construction reads the preferred qualified provider for each colliding name. A missing provider cannot silently win a collision. Session `use` and project pins remain outside this database |
+| `runtime_defaults`, `profile_priorities` | Default and `profile prefer` journal changes together with their projections and the committed execution catalog. Shims read committed defaults from that catalog; generation construction reads the preferred qualified provider for each colliding name. A missing provider cannot silently win a collision. Session `use` and project pins remain outside this database |
 | `history` | Every completed mutation or attention outcome inserts operation ID, command, time, outcome, before/after state digests, and terminal record. History/log read. Compact rows and their records remain indefinitely; verbose log retention is unchanged |
 | `gc_roots` | Transactions, protected-reference synchronization, launch registrations, execution views, process leases, and backups register roots. GC reads the recursive `retained_artifacts` view and independently checks protected roots. Expiry alone never establishes process death; uncertain liveness retains the root |
 
@@ -348,6 +348,12 @@ FROM version_high_water ORDER BY repository, environment, metadata_role;
 Each durable role has an owner-controlled `records/` stream beside `db/`; existing
 transaction journals and `trust/` remain authoritative in their own locations.
 Records describe logical state transitions, never raw SQL. The cache has no stream.
+An independent recovery set outside the active prefix retains reconstruction
+records, trust evidence, transaction receipts, and manifests, with protected copies
+for privileged evidence and an export for disk-loss recovery. Application Support
+directories are the approved location; §9.3 defines the ordered multi-copy protocol.
+The adjacent stream alone cannot satisfy prefix-loss recovery.
+See [STATE-AND-RECOVERY §5.1](STATE-AND-RECOVERY.md#51-guided-recovery-and-trusted-prefix-rebuilding).
 Protect streams with the same ownership boundary as their database and retain
 compact history indefinitely. Checkpoints accelerate replay; they do not authorize
 discarding compact records.
@@ -394,9 +400,10 @@ sequenceDiagram
   W->>J: Prepared intent and verified before-images, flush
   W->>F: Apply under expected fingerprints, activate pointers
   W->>D: BEGIN IMMEDIATE, project tentative after-state, COMMIT
-  W->>F: Reconcile and health-check
+  W->>F: Reconcile managed state
   W->>J: Committed terminal record, flush
   W->>D: History and replay head in one transaction
+  W->>F: Bounded service health checks, retain mutation ownership
 ```
 
 Preserve prefix-then-system lock ordering for operations touching both owners.
@@ -409,8 +416,14 @@ the same prepared/terminal discipline without generation or pointer changes.
 Before returning success, both terminal record and final SQL projection must be
 durable. SQL may temporarily lead or lag the record stream; every opener checks for
 an unresolved journal or head mismatch before exposing shim/installed state.
-Read-only diagnostic commands may report the mismatch but cannot treat it as a
-committed selection. If the terminal commit is absent, recovery reverses effects
+Do not expose tentative state as committed. A mismatch blocks affected selections,
+not every runtime: established unaffected selections and verified closures remain
+usable under [STATE-AND-RECOVERY §5.2](STATE-AND-RECOVERY.md#52-working-package-access-and-shims).
+Keep session/project/default precedence and fail promptly if required state is
+unavailable; no implicit fallback is introduced. The separately retained committed
+execution catalog and affected-selection gates supply that read path independently
+of SQLite; §9.3 orders its durable publication. Diagnostic reads report mismatches.
+If the terminal commit is absent, recovery reverses effects
 and tentative choices under the existing fingerprint rules; committed operations
 reconcile their after-state. SQL rollback alone does not undo filesystem changes.
 
@@ -442,6 +455,73 @@ owner's independently retained backup inventory; a checkpoint supplied by an
 untrusted database is not evidence. Verify its prefix records and replay its suffix.
 Unknown or conflicting high-water provenance forbids signer/publisher resumption.
 No replay reconstructs a TOFU decision or lowers retained trust versions.
+
+### 9.3 Independent records and durable copy updates
+
+The outside-prefix owner-controlled stream is the transaction decision history;
+the adjacent prefix stream is a mirror, and SQLite is a projection. A transaction
+has one operation ID, one ordered history, and one terminal decision. Protected
+participants keep their own root-controlled receipts bound to that ID and history;
+a user record cannot confer protected authority. Prefix initialization binds the
+recovery location and owner identity. Independently retained checkpoints and export
+inventories establish known heads; a stream's self-reported head alone cannot prove
+that history was not truncated or rewritten.
+
+Each finalized record uses the temporary-file, flush, no-replacement rename, and
+directory-flush sequence in §9. A head advances only after its referenced records
+and required objects are durable. Validate finalized tails as well as heads after
+interruption. Apply the following order under effective mutation ownership:
+
+1. Allocate the operation and sequence from the validated outside-prefix history.
+   Inventory the actual base and required participants. Persist complete intent,
+   authorization references, before-images, object inventory, and the affected
+   execution-catalog gate outside the prefix. Persist required privileged evidence
+   under the protected owner and obtain its bound preparation receipt. Mirror
+   preparation into the prefix. No live write precedes these required flushes.
+2. Apply each journaled effect under its expected fingerprint. Persist completion
+   receipts before advancing progress. The protected helper independently verifies
+   authorization and actual state and writes its own receipt before acknowledging
+   a privileged step. A lost acknowledgement is resolved by querying that receipt
+   and inspecting state; it does not authorize repeating an external effect blindly.
+3. Reconcile pointers and effects, record the tentative projection, and prepare the
+   next execution catalog. Require durable receipts from every participating owner
+   showing the verified after-state and prepared commit boundary. These receipts
+   are not a terminal commit by themselves. Flush the single commit decision in the
+   outside-prefix history, binding all participant receipts, state and catalog digests.
+   This is the commit point; a crash before it invokes pre-commit reversal, and a
+   crash after it preserves the commit. Unknown or inaccessible decision evidence
+   permits neither guessing rollback nor declaring success.
+4. Mirror the decision into the prefix, acknowledge it in protected records through
+   the helper, and reconcile the final projection/head and catalog selection. The
+   helper accepts only a decision matching its own authorized intent and receipts;
+   user-supplied state never substitutes for protected evidence. Clear affected
+   catalog gates only after their state agrees. Do not report full completion until
+   required mirrors, participant acknowledgements, and projections are durable.
+   Mirror failure after the commit point reports committed with recovery pending.
+5. Run bounded service checks while retaining mutation ownership. Append check
+   outcomes and saved recovery choices without changing the commit decision. Report
+   health failure or incomplete verification explicitly. Release ownership only
+   after helpers stop writing and the operation reaches a safe stopping point.
+
+An unambiguous verified contiguous suffix repairs a lagging copy automatically.
+Compare owner/instance, sequence, predecessor, operation, object digests, known
+independent heads, and protected counterpart receipts. Never choose by timestamp,
+filename ordering, or copy majority. A gap, incompatible terminal decisions, missing
+required evidence, or an unexplained newer head preserves both copies and blocks
+the affected repair. If the outside-prefix copy is lost, a surviving mirror is
+usable only after those same independent checks establish the decision history.
+Without them, use guided evidence recovery; do not promote a surviving file merely
+because it is readable.
+
+Exports capture the same coordinated boundary as §11, including the committed
+execution catalog, unresolved gates and choices, required before-images, and
+protected components. Finalize the verified inventory last. A partial export lists
+missing participants and is not a complete recovery set. Local redundancy does not
+establish resistance to disk loss or compromise of the owner account.
+
+These are specified ordering requirements. Per-filesystem flush adapters, binary
+record/receipt decoders, and crash-injection evidence must pass the release gates
+before the protocol can be described as implemented or durable on hardware.
 
 ## 10. SQLite connection and migration policy
 
@@ -500,7 +580,16 @@ and adversarial tests remain required.
 
 ### 10.1 Contention and safe stopping
 
-Foreground commands use `db.lock_timeout = "30s"`; the common
+Busy interactive commands display the known owner and offer wait or exit.
+Unattended commands wait only with `--wait`; otherwise they return
+contention promptly. A configured timeout alone does not authorize waiting.
+After waiting or recovery, revalidate the base, trust, and plan; materially changed
+operations require fresh confirmation. Prefix ownership spans preparation through
+post-commit service checks, including surviving helpers until they stop writing.
+The approved waiting/stopping command surface and remaining protocol work are in
+[STATE-AND-RECOVERY §10.2](STATE-AND-RECOVERY.md#102-engineering-decisions-before-implementation).
+
+Authorized foreground waits use `db.lock_timeout = "30s"`; the common
 `--lock-timeout DURATION` option overrides it for one invocation. Accept a
 nonnegative integer followed by `ms`, `s`, or `m`; reject other forms and overflow.
 `0s` tries once without waiting. One operation controller counts cumulative
@@ -540,13 +629,17 @@ Timeout and cancellation are resolved by durable phase, not by the last SQL call
 | Prepared, no live effects | Resolve prepared intent as aborted/rolled back before releasing ownership |
 | External effects begun, no durable commit | Stop forward execution; enter fingerprint-checked recovery; never replay external effects because SQL was busy |
 | Durable commit exists, projection incomplete | Preserve the commit decision and reconcile forward; report committed with recovery pending if reconciliation cannot finish |
+| Durable commit exists, service checks running | Stop checks safely; report committed installation and incomplete verification, never an unchanged or rolled-back install |
 | Complete, optional maintenance busy | Preserve foreground success and defer maintenance |
 
 Recovery receives one separate, bounded 30-second cumulative lock-wait allowance,
 including resolution of prepared intent; it is not renewed by retries or repeated
 cancellation. Cancellation requests a safe stopping point, not abandonment of
-effects. If recovery cannot finish, retain journals, backups, and GC roots, report
-`needs-attention`, and block subsequent mutations. A committed operation cannot
+effects. The initiating user or an authenticated administrator may request stopping;
+the controller must quiesce helpers before rollback or manual repair. If recovery
+cannot finish, retain journals, backups, and GC roots, report `needs-attention`, and
+block conflicting mutations. Working packages and external repair tools remain
+available. A committed operation cannot
 be described as rolled back merely because cancellation arrived late.
 
 Contention with no unresolved recovery exits 4; recovery-required outcomes exit 1;
@@ -738,7 +831,8 @@ separate runbook.
    confirmation authorizes exactly that preview. Reacquire locks and revalidate
    its base; any change invalidates the confirmation.
 6. Journal activation of the validated database/manager pair and any reconciled
-   effects, run health checks, then commit. Keep the prior pair until recovery
+   effects, reconcile, and commit before service health checks. Manager/database
+   validation remains a pre-commit gate. Keep the prior pair until recovery
    policy permits retirement. After interruption, `aslice recover` resumes from
    the journal and inspects pointers; it never guesses from the newest filename.
 7. Verify clients/services, GC roots, farm pending gates, and current publication
@@ -777,9 +871,28 @@ Automatic crash reconciliation uses already-authorized transaction intent. Expli
 backup restore requires the confirmation in §11.2; neither path weakens consent
 for protected effects or trust rebootstrap.
 
+Interactive recovery offers recover and continue once; unattended use requires
+explicit authorization. Resume saved recovery progress automatically when durable
+evidence and actual state agree. Inventory files, services, registrations, permissions,
+and transaction progress before grouping actual conflicts by repository, package,
+or service. Persist recommended choices, validated current-state acceptance,
+displaced-content references, and accepted deviations in recovery records. These
+are additional record/decoder requirements, not implemented SQL schema changes.
+Manual repair waits for helper quiescence and preserves a mutation gate across
+exits and reboots while external repair tools remain usable.
+
+A damaged-prefix rebuild recovers selections separately from executable authority.
+Verify artifacts independently, prepare beside the original, and review missing
+artifacts, verified replacements, and omissions together. Isolated verified closures
+may be usable before normal activation or affected privileged integration is allowed.
+Report repaired, usable with listed unresolved repairs, or replacement prepared but
+activation blocked. The authoritative workflow and unresolved mechanisms are in
+[STATE-AND-RECOVERY §5.1](STATE-AND-RECOVERY.md#51-guided-recovery-and-trusted-prefix-rebuilding)
+and [STATE-AND-RECOVERY §10.2](STATE-AND-RECOVERY.md#102-engineering-decisions-before-implementation).
+
 | Failure | Ordered action and success condition |
 |---|---|
-| Process crash / interrupted SQL | Preserve sidecars; let the compatible owner open/recover WAL; inspect journals before normal reads/mutations; reverse uncommitted external effects or reconcile committed state |
+| Process crash / interrupted SQL | Preserve sidecars; let the compatible owner open/recover WAL; inspect journals before exposing affected state or mutating; preserve unaffected working access; reverse uncommitted external effects or reconcile committed state |
 | Missing/corrupt cache | Close users, preserve suspect cache for diagnosis, create new cache, revalidate inputs against retained trust; no TOFU reset |
 | Missing/corrupt state with intact records | Stage fresh schema, replay initialization and complete stream, verify manifests/objects, reconcile journals, then activate through recovery |
 | Stale backup | Compare independently retained heads; replay complete suffix. Without suffix refuse stale activation, even if SQLite integrity passes |
@@ -792,7 +905,7 @@ for protected effects or trust rebootstrap.
 | Coordinator lost | Restore records/objects, verify plan DAGs and enrollment, expire inherited leases, requeue unresolved jobs, and reconcile duplicate results. Retained quarantine and missing gates prevent promotion |
 | Publisher lost | Fence old workers at the publication adapter, restore coordinated public state, compare active timestamp/snapshot and signer heads, reconcile acknowledgements. Uncertain timestamp state invokes key runbook recovery |
 | Release signer lost | Restore latest independently retained public signing state and separately recover keys under the runbook; compare unpublished reservations and exact bytes. No signing until high-water state is established |
-| Trust lost or suspect | Fail closed for new trust decisions; recover authenticated chains from independent records or explicitly rebootstrap under KEY-RUNBOOK. Installed software is not automatically deleted |
+| Trust lost or suspect | Fail closed for new trust decisions; recover authenticated chains from independent records. Irretrievably lost history requires an independently authenticated recovery bundle establishing current trust and safe version floors; disclose lost history. Installed software is not automatically deleted |
 | Signing-version high-water uncertain | Stop signing/publication; reconcile off-device reservations and counterpart receipts. Key rotation alone does not reconstruct version floors. If continuity cannot be established, use deliberate authority recovery/rebootstrap; never reset to zero |
 
 For timestamp state that is unavailable or untrustworthy, preserve the existing
@@ -859,6 +972,14 @@ bypass verification, fair maintenance scheduling, cleanup bounds and retention,
 schema-1-to-2 copies, and compaction with interruption and space refusal. Model
 helpers live only in tests; they are not database runtime services.
 
+The current models do not implement the guided recovery, explicit waiting,
+helper-ownership, post-commit service-check, or isolated-replacement contracts added
+in this revision. Passing them validates their existing modeled scope only.
+The additional pending runtime scenarios and UX targets are specified in
+[STATE-AND-RECOVERY §10.1](STATE-AND-RECOVERY.md#101-guided-workflow-acceptance),
+including lost trust, disagreeing copies, working access, grouped conflicts, manual
+repair, reviewed activation, repeated interruptions, and durable-transition failures.
+
 Before shipping, implement and test the domain decoders, connection authorizer,
 service fencing adapter, backup coordinator, restore supervisor, and actual CLI.
 Inject failures at every journal/SQL/fsync/pointer/signature/activation boundary;
@@ -875,6 +996,7 @@ do not satisfy these platform and security acceptance gates.
 
 | Version | Date | Changes |
 |---|---|---|
+| v0.3 | September 2026 | Specify ordered independent recovery history with protected receipts and committed execution-catalog publication; align explicit waiting, surviving-helper ownership, post-commit checks, guided recovery, and unaffected shim access. Supersede blanket runtime denial and distinguish existing models from pending runtime acceptance. |
 | v0.2 | September 2026 | Specify cumulative contention waits, phase-aware cancellation, automatic maintenance, cleanup retention, explicit compaction, and schema-2 copy migration; extend executable policy models. |
 | v0.1 | September 2026 | Specify six SQLite roles, executable schemas, durable reconstruction, inspection, coordinated backups, migration, and disaster recovery. Runtime and hardware acceptance remain pending. |
 

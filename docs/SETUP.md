@@ -2,7 +2,7 @@
 
 > State, identity, privilege, and recovery contracts: [STATE-AND-RECOVERY](STATE-AND-RECOVERY.md). Protected-volume patching: [SYSTEM-VOLUMES](SYSTEM-VOLUMES.md). These specifications do not establish completed implementation or platform validation.
 
-- **Status:** Design draft, v0.16 — September 2026
+- **Status:** Design draft, v0.17 — September 2026
 - **Companion to:** [DESIGN §12.13](DESIGN.md#declarative-system-setup-aslice-machinetoml-and-the-aslice-machine-commands) (architecture and rationale), [MANUAL §10](MANUAL.md#one-file-one-command-rebuilding-a-machine), aslice-machine(1) (command reference). This document is the schema and semantics specification.
 - **Vocabulary:** [NOMENCLATURE.md](NOMENCLATURE.md) — project terms, acronyms, and the Homebrew translation table.
 
@@ -184,9 +184,9 @@ Machine apply is one transaction for the complete managed-state change. First va
 
 Before mutation, compute the complete package, configuration, runtime, service, preference, and shell changes; verify recovery prerequisites; show the plan; and collect every required consent. A refusal stops the apply before managed state changes. `--dry-run` performs no writes. Machine-wide serialized operation plans remain deferred until their schema exists; package-plan JSON cannot stand in for them ([STATE-AND-RECOVERY §8](STATE-AND-RECOVERY.md#plans-locks-archives-and-offline-use)).
 
-After confirmation, authenticate and stage all inputs, take the prefix and protected-root locks in their defined order, recheck the planned base state, and persist the journal and before-images. Apply configuration and the resolved package set, runtime selections, services, user/system preferences, and shell changes under that journal. Privileged effects require the helper and their own capability checks wherever they occur, including package system effects and root services. Commit only after reconciliation and required health checks.
+After confirmation, take prefix mutation ownership before preparation, acquire the protected-root lock when required in the defined order, authenticate and stage all inputs, recheck the planned base state, and persist the journal and before-images. Apply configuration and the resolved package set, runtime selections, services, user/system preferences, and shell changes under that journal. Privileged effects require the helper and their own capability checks wherever they occur, including package system effects and root services. Commit after reconciliation, then run bounded service health checks while retaining mutation ownership. Checks default to 60 seconds per service with positive finite overrides; failure reports committed installation and returns nonzero.
 
-Any failure rolls back the whole apply through [STATE-AND-RECOVERY §5](STATE-AND-RECOVERY.md#durable-transactions-and-recovery). Recovery or a required reboot may leave the transaction pending; it must not report a partial apply as success.
+Any pre-commit failure rolls back the whole apply through [STATE-AND-RECOVERY §5](STATE-AND-RECOVERY.md#durable-transactions-and-recovery). Recovery or a required reboot may leave the transaction pending; it must not report a partial apply as success.
 
 <a id="idempotence-convergence-and---prune"></a>
 
@@ -226,7 +226,7 @@ The same record powers `--prune` (§3.3) and `aslice history`. Every setup-appli
 
 ### 3.6 Failure handling
 
-If any step fails, roll back the entire apply, restoring the recorded before-state in reverse journal order. Completed steps do not stand as a successful partial setup. Concurrent external edits, missing backups, or unavailable protected state produce `needs-attention`; retain the journal and recovery tools and report the exact conflict rather than overwriting it. A power loss resumes recovery before any new mutation. Repository trust established separately before planning is retained and is not reset by package rollback ([STATE-AND-RECOVERY §5](STATE-AND-RECOVERY.md#durable-transactions-and-recovery) and [STATE-AND-RECOVERY §7](STATE-AND-RECOVERY.md#persistent-trust-and-initial-bootstrap)).
+If any step fails before commit, roll back the entire apply, restoring the recorded before-state in reverse journal order. Completed steps do not stand as a successful partial setup. After commit, a health failure retains the committed installation and reports incomplete verification; an eligible rollback is a separate transaction. Concurrent external edits, missing backups, or unavailable protected state produce `needs-attention`; retain the journal and recovery tools and report the exact conflict rather than overwriting it. A power loss resumes recovery before any new mutation. Repository trust established separately before planning is retained and is not reset by package rollback ([STATE-AND-RECOVERY §5](STATE-AND-RECOVERY.md#durable-transactions-and-recovery) and [STATE-AND-RECOVERY §7](STATE-AND-RECOVERY.md#persistent-trust-and-initial-bootstrap)).
 
 <a id="aslice-machine-export"></a>
 
@@ -349,6 +349,7 @@ Exit status: **0** applied (or nothing to do); **1** error (schema, resolution, 
 
 | Version | Date | Changes |
 |---|---|---|
+| v0.17 | September 2026 | Hold mutation ownership through preparation and post-commit service checks; distinguish whole-batch pre-commit rollback from committed health failure. |
 | v0.15 | September 2026 | Consolidate revision notes into a collapsible history table; no specification changes. |
 | v0.14 | September 2026 | resolve the default-shell contradiction: distinguish pre-Catalina defaults, Catalina-and-later new accounts, and actual account state; keep shell enrollment separate from account selection. Apple source captured locally. |
 | v0.13 | September 2026 | prose rewrite of the setup scenario, TOML format, and export explanation; no content changes. |

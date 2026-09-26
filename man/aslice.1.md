@@ -86,8 +86,11 @@ aslice collects no telemetry or analytics of any kind — there is no opt-out be
 
 # GLOBAL OPTIONS
 
+**--wait**
+:   Explicitly authorize cancellable waiting for a conflicting operation. Revalidate after waiting; a materially changed plan requires fresh confirmation.
+
 **--lock-timeout** *duration*
-:   Override `db.lock_timeout` (default `30s`) for cumulative foreground owner/SQL lock waits. Accept a nonnegative integer with `ms`, `s`, or `m`; `0s` tries without waiting. Progress and safe cancellation follow [DATABASE §10.1](../docs/DATABASE.md#101-contention-and-safe-stopping).
+:   Override `db.lock_timeout` (default `30s`) for authorized cumulative foreground owner/SQL lock waits. Busy interactive runs offer wait or exit; unattended waiting requires an explicit request. A configured timeout alone does not authorize waiting. Accept a nonnegative integer with `ms`, `s`, or `m`; `0s` tries without waiting. Progress and safe cancellation follow [DATABASE §10.1](../docs/DATABASE.md#101-contention-and-safe-stopping).
 
 **-v**, **-vv**
 :   Raise verbosity (debug, then trace). Affects what is printed, not what is logged.
@@ -128,7 +131,32 @@ aslice collects no telemetry or analytics of any kind — there is no opt-out be
 **0** success; **1** general error or recovery required; **4** contention without unresolved recovery; **130** safely completed cancellation; **2** plan refused (trust, policy, or consent gate). aslice-doctor(1) and [aslice-db(1)](aslice-db.1.md) define their own exit codes.
 
 **recover**, **decommission**
-:   Resume durable recovery, or inventory and remove managed external effects before deleting the prefix. `decommission --dry-run` inventories without changes; pending restoration preserves recovery tools ([STATE-AND-RECOVERY §6](../docs/STATE-AND-RECOVERY.md#self-update-and-decommission)).
+:   Offer guided recover-and-continue, resuming saved progress when evidence agrees; unattended recovery requires explicit authorization. Conflicting mutations are blocked while unaffected verified packages and external repair tools remain accessible. Recovery can prepare a verified replacement beside the preserved original and report partial usability without claiming activation. Decommission inventories and removes managed external effects before deleting the prefix. `decommission --dry-run` inventories without changes; pending restoration preserves recovery tools ([STATE-AND-RECOVERY §6](../docs/STATE-AND-RECOVERY.md#self-update-and-decommission)).
+
+# GUIDED OPERATION AND RECOVERY COMMANDS
+
+These command contracts are specified, not implemented.
+
+`aslice operation status` reports the current owner, operation identity, phase,
+helpers, verification, and recovery state. `aslice operation stop` requests safe
+stopping as the initiating user or an authenticated administrator. Before commit,
+attempt rollback; after commit, stop checks safely and report incomplete verification.
+
+`aslice recover --continue` explicitly authorizes recovery and continuation of the
+retained request. `--manual` quiesces helpers and persists a mutation gate for
+external repair. `--salvage` prepares a replacement beside the original for review;
+`--activate` separately reviews and revalidates activation at its verified path.
+Protected-effect consent still applies; unattended salvage/activation confirmation
+syntax remains pending. These actions never implicitly authorize one another.
+
+`aslice exec --replacement PATH -- PACKAGE COMMAND...` explicitly executes only a
+validated isolated dependency closure from the replacement. It cannot silently
+change normal shim selections or activate privileged integration.
+
+Recovery outcomes distinguish repaired, usable with listed unresolved repairs, and
+replacement prepared but activation blocked. The machine-readable fields and
+remaining engineering work are specified in
+[STATE-AND-RECOVERY §5.3](../docs/STATE-AND-RECOVERY.md#53-command-surface).
 
 # SEE ALSO
 

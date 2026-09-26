@@ -4,7 +4,7 @@
 
 **The user guide for aslice — a package manager for Intel macOS.**
 
-- **Status:** v0.19 — September 2026
+- **Status:** v0.20 — September 2026
 - **Project home:** [aslice.sh](https://aslice.sh) — homepage, documentation (aslice.sh/docs), and the public dashboard (aslice.sh/dashboard); the installer is served from get.aslice.sh (§2).
 - **Audience:** people who install and run software with aslice; that is most of what follows. If you *write* packages, read chapters 1–4 and then move to [AUTHORING.md](AUTHORING.md). If you want to know *why* things are the way they are, the rationale lives in [DESIGN.md](DESIGN.md).
 - **Companions:** the man pages in [man/](../man/) (also available as `aslice help <command>`), [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md), [ORCHARD-POLICY.md](ORCHARD-POLICY.md), [REPOSITORIES.md](REPOSITORIES.md), [GENESIS.md](runbooks/GENESIS.md), [TOOLCHAIN.md](TOOLCHAIN.md).
@@ -192,6 +192,17 @@ $ aslice install ffmpeg
 ffmpeg 7.1 installed. Run `aslice rollback` to return to generation 42.
 ```
 
+You can install a space-separated batch from several orchards in one transaction:
+
+```sh
+aslice install ffmpeg audiolab:convolver --variant ffmpeg:+x265
+```
+
+The plan shows each package's effective settings. Package-specific options must
+identify their package in a batch; ambiguous options refuse before changes.
+A pre-commit failure rolls back the whole managed-state batch. A service health
+failure after commit returns nonzero and says the installation committed.
+
 Useful variations:
 
 ```sh
@@ -286,16 +297,17 @@ You can use aslice happily knowing nothing in this chapter. Read it when you wan
 
 A slice is a zstd-compressed archive containing its container descriptor, canonical manifest, and payload. The manifest binds file hashes, exact dependencies, recipe, flags, CPU requirements, and ABI evidence. Detached signatures authenticate the delivered archive; SBOMs and variable builder provenance are separate authenticated objects bound to the artifact or archive digest ([SLICE-FORMAT §1](SLICE-FORMAT.md#byte-layout) and [SLICE-FORMAT §2](SLICE-FORMAT.md#content-identity-and-signatures); [STATE-AND-RECOVERY §1](STATE-AND-RECOVERY.md#compatibility-and-artifact-identity)). `aslice provenance ffmpeg` shows the associated evidence.
 
-Installing a slice is six steps, and none of them runs code from the package:
+Installing a slice has six stages. Materialization runs no undeclared package code;
+post-commit readiness checks execute declared services:
 
 1. Authenticate repository metadata and verify the complete archive's length, digest, and package signature.
 2. Validate the container descriptor and canonical manifest, then extract into bounded staging.
 3. Verify every staged file against the manifest, apply authorized relocation, and register the immutable artifact.
 4. Check exact dependency bindings, ABI evidence, and CPU/OS requirements for the proposed package set.
 5. Prepare the complete generation, backups, and durable transaction intent before live changes.
-6. Apply journaled operations, switch the profile, record the generation in the state database, and commit after reconciliation and health checks.
+6. Apply journaled operations, switch the profile, record the generation in the state database, and commit after reconciliation, then run service health checks while retaining mutation ownership.
 
-Preparation failures leave the live generation unchanged. After live changes begin, failures require journal recovery; intervening external edits can require attention, and protected-volume restoration may require Recovery and reboot. Package rollback does not restore application data ([STATE-AND-RECOVERY §5](STATE-AND-RECOVERY.md#durable-transactions-and-recovery); [SYSTEM-VOLUMES §4](SYSTEM-VOLUMES.md#activation-rollback-and-os-updates)). None of the six runs package code; a graft-bearing package adds one declared, approved, sandboxed step of its own, covered in §4.5.
+Preparation failures leave the live generation unchanged. Before commit, failures after live changes require journal recovery; intervening external edits can require attention, and protected-volume restoration may require Recovery and reboot. Post-commit health failure reports the committed installation. Package rollback does not restore application data ([STATE-AND-RECOVERY §5](STATE-AND-RECOVERY.md#durable-transactions-and-recovery); [SYSTEM-VOLUMES §4](SYSTEM-VOLUMES.md#activation-rollback-and-os-updates)). A graft-bearing package adds one declared, approved, sandboxed step of its own, covered in §4.5.
 
 <a id="flavors-matching-builds-to-your-cpu"></a>
 
@@ -480,19 +492,19 @@ User-service overrides live in `~/.config/aslice/services/<pkg>.env`. Root servi
 
 ### 7.2 Upgrades and the rollback prompt
 
-An upgrade never replaces the binary out from under a running service. The sequence: build the complete new generation while the service keeps running; stop the affected jobs — and only those, so an ffmpeg upgrade never bounces your database; swap the generation; start the jobs; health-check them.
+An upgrade never replaces the binary out from under a running service. The sequence: build the complete new generation while the service keeps running; stop the affected jobs — and only those, so an ffmpeg upgrade never bounces your database; swap the generation; reconcile and commit; start the jobs and health-check them. Checks default to 60 seconds per service, with positive finite overrides. A failed or timed-out check returns nonzero and explicitly reports committed installation.
 
 If a service fails to start after an upgrade, aslice shows you the failure and asks:
 
 ```text
-error: service nginx failed to start after the upgrade (launchd exit status 78;
+error: installation committed; service nginx failed to start after the upgrade (launchd exit status 78;
 log: /opt/aslice/profiles/default/var/log/nginx/error.log)
 The previous generation (nginx 1.26.2, generation 41) is retained.
 Rollback is available only after service-data compatibility has been verified.
 Roll back and restart the previous version? [y/N]
 ```
 
-Before a service upgrade that can migrate data, require a declared backward-compatibility contract or an authorized tested backup/restore procedure. Otherwise refuse the automated upgrade of the running service. After readiness failure, offer rollback only when that contract permits it. Yes starts a journaled rollback; No retains failure evidence. Non-interactive failures return failure unless `--rollback-on-service-failure` explicitly selects an eligible rollback. Generation rollback does not restore application databases by itself ([STATE-AND-RECOVERY §5](STATE-AND-RECOVERY.md#durable-transactions-and-recovery)). Machine apply differs: failure rolls back its entire managed-state transaction ([SETUP §3.6](SETUP.md#failure-handling)).
+Before a service upgrade that can migrate data, require a declared backward-compatibility contract or an authorized tested backup/restore procedure. Otherwise refuse the automated upgrade of the running service. After readiness failure, offer rollback only when that contract permits it. Yes starts a journaled rollback; No retains failure evidence. Non-interactive failures return failure unless `--rollback-on-service-failure` explicitly selects an eligible rollback. Generation rollback does not restore application databases by itself ([STATE-AND-RECOVERY §5](STATE-AND-RECOVERY.md#durable-transactions-and-recovery)). Machine apply also rolls back its entire managed-state transaction on pre-commit failure; a post-commit health failure reports committed installation ([SETUP §3.6](SETUP.md#failure-handling)).
 
 ---
 
@@ -651,7 +663,7 @@ With no argument, `aslice machine apply` reads `./aslice-machine.toml`. Every ap
 
 Applying is **convergent**: apply the same file twice and the second run reports "0 changes". It is also **additive**: apply never removes something merely because the file doesn't mention it. If you *do* want the file to be the whole truth, `aslice machine apply --prune` retracts what the file previously applied but no longer declares — and nothing else. Your hand-installed packages and hand-set preferences are invisible to prune.
 
-Two kinds of step write to OS territory and are therefore **consent-gated**: system-wide preference domains (`/Library/Preferences`), and enrolling an aslice-provided login shell in `/etc/shells`. Interactively, you are shown what will be written and asked. In a script or a recovery terminal, pass `--accept-system-changes` — the same flag as for system packages (§8.4) — or those steps are refused while everything unprivileged still lands. Graft-bearing packages keep their own approval step (§4.5): a machine file may carry a `[grafts]` allow-list so a known set applies without prompting ([SETUP §2.8](SETUP.md#grafts)); anything not listed asks in the usual way, and `--accept-grafts` is the non-interactive escape.
+Two kinds of step write to OS territory and are therefore **consent-gated**: system-wide preference domains (`/Library/Preferences`), and enrolling an aslice-provided login shell in `/etc/shells`. Interactively, you are shown what will be written and asked. In a script or a recovery terminal, pass `--accept-system-changes` — the same flag as for system packages (§8.4) — or the whole apply is refused before managed state changes. Graft-bearing packages keep their own approval step (§4.5): a machine file may carry a `[grafts]` allow-list so a known set applies without prompting ([SETUP §2.8](SETUP.md#grafts)); anything not listed asks in the usual way, and `--accept-grafts` is the non-interactive escape.
 
 The safety net is the one you already know: before each preference write or shell change, aslice records the old value against the new **generation**, so `aslice rollback` (§5) restores preferences and login shell along with the packages. `aslice history` shows which file applied what, and when.
 
@@ -711,6 +723,46 @@ It reads your Homebrew installation, maps the packages you explicitly installed 
 
 ### 12.1 Start with doctor
 
+After a crash, the guided workflow offers **recover and continue** in one
+interaction. Scripts must authorize recovery explicitly. Recovery inventories
+affected files, services, registrations, permissions, and transaction progress.
+If interrupted again, it resumes saved progress when the evidence still agrees;
+it asks about actual conflicts rather than asking you to acknowledge the crash again.
+
+Conflicts appear in repository, package, or service groups with a recommendation
+and expandable details. You can restore recorded state, keep validated current
+state, or choose manual repair where applicable. Displaced content is preserved.
+Manual repair waits for helpers to stop and keeps a mutation gate across exits and
+reboots, while your external repair tools remain usable. Returning to recovery
+validates the repair before clearing that gate.
+
+If the prefix needs rebuilding, recovery uses independent Application Support
+records outside it and prepares a replacement beside the original. Keep an exported
+recovery set on separate storage for disk loss: an outside-prefix copy on the same
+disk is not enough. Recovery reconstructs your selections, then independently
+verifies the artifacts. Lost security history requires repository-level trust
+re-establishment; acknowledging a fingerprint alone does not authorize a rebuild.
+
+One salvage plan shows missing artifacts, verified replacements, and omissions for
+review. You may explicitly run an isolated verified package closure while unrelated
+repairs remain pending. Its dependencies, paths, and configuration must avoid the
+damaged prefix; normal activation and affected privileged integration stay blocked
+until their requirements are met. Shims do not silently choose another stream or
+switch to the replacement.
+
+The result says **repaired**, **usable with listed unresolved repairs**, or
+**replacement prepared but activation blocked**, with the remaining actions.
+Use `aslice operation status` to inspect the owner and phase, and
+`aslice operation stop` to request safe stopping as the initiator or an authenticated
+administrator. `aslice recover --continue` authorizes recovery and continuation;
+`--manual`, `--salvage`, and `--activate` select manual repair, replacement preparation,
+and separately reviewed activation. Run a validated replacement closure explicitly
+with `aslice exec --replacement PATH -- PACKAGE COMMAND...`.
+These are specified workflows, not implemented recovery commands. The detailed
+contract and command decisions are in
+[STATE-AND-RECOVERY §5.1](STATE-AND-RECOVERY.md#51-guided-recovery-and-trusted-prefix-rebuilding)
+and [STATE-AND-RECOVERY §10.2](STATE-AND-RECOVERY.md#102-engineering-decisions-before-implementation).
+
 ```sh
 aslice doctor
 ```
@@ -759,7 +811,7 @@ aslice's configuration file is `etc/aslice.toml` inside the prefix (`~/.aslice/e
 
 | Key | Values | Default | Meaning |
 |---|---|---|---|
-| `db.lock_timeout` | nonnegative integer with `ms`, `s`, or `m` | `"30s"` | Cumulative foreground owner/SQLite lock wait; `--lock-timeout DURATION` overrides it, `0s` disables waiting. |
+| `db.lock_timeout` | nonnegative integer with `ms`, `s`, or `m` | `"30s"` | Allowance for explicitly authorized foreground owner/SQLite lock waiting; `--lock-timeout DURATION` overrides it, `0s` disables waiting. |
 | `flavor` | `v1`, `v2`, `v3` | detected | CPU flavor ceiling. Lower it when preparing an install for an older machine. |
 | `ca.source` | a configured bundle source | `mozilla` | Where `ca-certificates` bundles come from (§8.1). |
 | `mirrors` | list of URLs | project defaults | Extra full-tree mirrors for a repository, tried in order. |
@@ -787,11 +839,14 @@ confirmation. `--role` selects another owner boundary; it grants no permissions.
 `aslice recover` reconstructs missing projections from retained records and resolves
 interrupted operations. Cache rebuilding preserves trust. See
 [aslice-db(1)](../man/aslice-db.1.md) for refusal conditions and output contracts.
-If another command holds a lock, foreground commands wait up to 30 seconds in
-total, with a waiting message after one second and updates every five seconds.
-Use `--lock-timeout 0s` to try without waiting. Cancellation waits for a safe
+If another command holds a lock, an interactive run shows the owner and offers
+wait or exit. Unattended commands wait only with `--wait`. Authorized
+waits use a cumulative 30-second allowance by default, with progress after one
+second and updates every five seconds. `--lock-timeout` changes that allowance;
+a configured timeout alone does not authorize unattended waiting. Cancellation waits for a safe
 stopping point; a committed operation stays committed even if reconciliation is
-pending. `needs-attention` means recovery must finish before another mutation.
+pending. `needs-attention` blocks conflicting mutations while recovery is pending;
+working packages and external repair tools remain accessible.
 The phase outcomes are specified in
 [DATABASE §10.1](DATABASE.md#101-contention-and-safe-stopping).
 
@@ -858,6 +913,7 @@ Historical labels and ordering below are preserved as recorded, including repeat
 
 | Version | Date | Changes |
 |---|---|---|
+| v0.20 | September 2026 | Explain guided recovery, preserved working access, trusted replacement preparation, batch options, explicit waiting, and committed health failures; align whole-machine refusal and rollback guidance. |
 | v0.19 | September 2026 | Document configurable lock waits, safe cancellation, automatic database maintenance, and explicit compaction. |
 | v0.18 | September 2026 | Add database inspection, coordinated backup/restore, reconstruction, role selection, and durable-history guidance; update the client layout. |
 | v0.15 | September 2026 | Consolidate revision notes into a collapsible history table; no specification changes. |

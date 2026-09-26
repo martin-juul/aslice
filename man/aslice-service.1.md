@@ -33,6 +33,15 @@ An upgrade that touches a running service builds the entire new generation first
 `$XDG_CONFIG_HOME/aslice/services/<pkg>.env`
 :   User-service environment overrides, applied when aslice generates the launchd job. Root-service overrides are separately validated and copied to protected storage by the helper. Never edit generated plists; this file is where overrides belong.
 
+# COMMIT AND VERIFICATION
+
+Installation commits before service health checks. Hold effective prefix mutation
+ownership through checks, defaulting to 60 seconds per service. Use
+**--health-timeout** on the installing/upgrading command for a positive finite
+override. A failed or timed-out check returns nonzero and explicitly reports
+committed installation. Any eligible rollback is a new transaction. A stop request
+after commit stops checks safely and reports incomplete verification.
+
 # SEE ALSO
 
 aslice(1), aslice-upgrade(1), aslice-doctor(1), [MANUAL §7](../docs/MANUAL.md#running-services)

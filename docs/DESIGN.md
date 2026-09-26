@@ -4,7 +4,7 @@
 
 **Name.** *aslice* — an apple slice: a nod to the Macintosh apple and to the shape of the project itself. Binary packages are **slices**; formula repositories are **orchards**; the manager picks slices off the orchard, prebuilt or baked to order. The vocabulary is kept distinct from Homebrew's beer terminology to avoid community confusion and trademark friction. The project name is styled lowercase everywhere, including sentence starts — like the command.
 
-- **Status:** Design draft, v1.29 — September 2026
+- **Status:** Design draft, v1.30 — September 2026
 - **Scope:** macOS 10.11 (El Capitan) through 12 (Monterey), Intel x86_64 only
 - **Implementation:** C++20 core, single self-contained binary
 - **Audience:** Maintainers, founding contributors, and early reviewers
@@ -429,7 +429,7 @@ A profile is the merged symlink forest (bin/, lib/, share/, …) that users put 
 
 ### 8.3 Generations: atomic switching and rollback
 
-Package views switch through an atomic symlink rename. Whole-machine changes additionally use the durable journal and recovery state machine in [STATE-AND-RECOVERY §5](STATE-AND-RECOVERY.md#5-durable-transactions-and-recovery): serialize mutations, persist before-images, apply external changes, activate pointers, reconcile SQLite, then commit. A rename alone is not an atomic transaction across these systems.
+Package views switch through an atomic symlink rename. Whole-machine changes additionally use the durable journal and recovery state machine in [STATE-AND-RECOVERY §5](STATE-AND-RECOVERY.md#5-durable-transactions-and-recovery): serialize mutations, persist before-images, apply external changes, activate pointers, reconcile SQLite, then commit before bounded service health checks. Effective mutation ownership continues through those checks and survives parent death while helpers still write. A rename alone is not an atomic transaction across these systems.
 
 `aslice rollback [generation]` and `switch-generation` execute journaled transitions to retained managed state. External edits stop inverse writes with a conflict; application databases and user data are outside package rollback. Changed service declarations restore their plists too. Protected-volume changes follow [SYSTEM-VOLUMES](SYSTEM-VOLUMES.md) and may require Recovery and a reboot. Recovery and active transactions retain all required artifacts against GC.
 
@@ -631,7 +631,7 @@ The performance goals, and the mechanism that achieves each:
 | **Downloads saturate the pipe** | HTTP/2 multiplexing, 8-way parallel fetches, resumable ranges, zstd `--long` delta-friendly payloads |
 | **Cold full install of a large tree (e.g., `ffmpeg` closure) < 10 s on SSD** | Parallel fetch + pipeline overlap (decompress stream N+1 while linking N) |
 | **Builds: near-zero manager overhead** | The builder's job is to get out of the way: Ninja parallelism, `ccache`-compatible compiler cache in `cache/`, tmpfs-backed build dir when RAM allows |
-| **Shim dispatch < 1 ms** | Multicall binary (no interpreter, no JIT), one prepared-statement DB lookup, `exec` instead of fork — the shim adds no measurable latency to `php -v` in a hot loop (§12.9) |
+| **Shim dispatch < 1 ms** | Multicall binary (no interpreter, no JIT), committed execution catalog and validated admission, `exec` instead of fork. This is a target requiring measurement with closure validation and recovery gates enabled (§12.9) |
 
 The deeper performance win is architectural: **flavor targeting.** A v3 ffmpeg/x264/openssl on a Haswell+ machine is measurably faster than the lowest-common-denominator binaries legacy platforms ship — crypto, codecs, and compression see the largest gains. aslice is likely the only macOS package manager that serves AVX2 binaries as a first-class default rather than an accident.
 
@@ -644,6 +644,18 @@ The deeper performance win is architectural: **flavor targeting.** A v3 ffmpeg/x
 <a id="commands"></a>
 
 ### 12.1 Commands
+
+Space-separated mixed-orchard packages form one transaction; pre-commit failure
+rolls back the managed-state batch. Package-specific options identify their target
+(for example `--variant ffmpeg:+x265`); reject ambiguous batch options and display
+effective settings per package. Stateful `--for` scoping is superseded.
+
+Busy interactive commands offer wait or exit with owner information; unattended
+waiting requires explicit authorization. After waiting or recovery, revalidate and
+obtain confirmation for material changes. The initiating user or an authenticated
+administrator can request stopping: attempt rollback before commit; after commit,
+stop checks safely and report incomplete verification. See
+[STATE-AND-RECOVERY §5](STATE-AND-RECOVERY.md#durable-transactions-and-recovery).
 
 ```sh
 aslice install ffmpeg                  # binary-first; flavor auto-detected
@@ -884,14 +896,14 @@ aslice generates launchd plists. User jobs may resolve through the ordinary prof
 2. `bootout` the affected jobs — and only the affected ones; an ffmpeg upgrade never bounces your postgres.
 3. Swap the generation symlink (atomic, §8.3).
 4. Reconcile plists — only if the declaration changed; the profile indirection means a plain version bump needs no plist edit.
-5. `bootstrap` / `kickstart -k` the jobs and verify they came up (pid present, no immediate crash-exit). A job that won't start is an error carrying launchd's last exit status and the log path — and then aslice **asks the user about rolling back** (below).
+5. Reconcile and commit the installation, then `bootstrap` / `kickstart -k` the jobs and run service-specific readiness checks, defaulting to 60 seconds per service with positive finite overrides. A PID alone proves only liveness. Retain mutation ownership through the checks. A job that won't start is an error carrying launchd's last exit status and the log path — and then aslice **asks the user about rolling back** (below).
 
 **A failed health check asks; it never decides silently.** The failure is shown first — the job's launchd exit status and the log path — then, on an interactive terminal:
 
 ```console
 $ aslice upgrade nginx
 …
-error: service nginx failed to start after the upgrade (launchd exit status 78;
+error: installation committed; service nginx failed to start after the upgrade (launchd exit status 78;
 log: /opt/aslice/profiles/default/var/log/nginx/error.log)
 The previous generation (nginx 1.26.2, generation 41) is retained.
 Rollback requires verified service-data compatibility or an authorized restoration procedure.
@@ -918,9 +930,17 @@ php, nodejs, ruby, and python are not packages in the ordinary sense: users keep
 
 **One formula, release streams.** A runtime is a single formula (`php`) whose orchard publishes several maintained streams (8.3, 8.4, 8.5) in the index simultaneously. `aslice install php@8.4` is an ordinary version-constrained install; the store happily holds 8.3.11, 8.4.13, and 8.5.0 side by side. What installing a stream does *not* do is change which `php` you get — selection is always explicit, never a side effect of installing. (Homebrew conflates the two via `link`; Volta's `volta install` conflates them too. aslice separates install from select because `aslice upgrade` must never move you to a new PHP minor under your feet.)
 
+Recovery does not deny all shim dispatch. A separately retained committed execution
+catalog supplies defaults, installed streams, and exact closures independently of
+SQLite. Durable affected-selection gates precede live writes. Established unaffected
+selections and verified closures remain usable; unavailable required state fails promptly
+without choosing another runtime. Session/project/default precedence below stays
+unchanged. Explicit isolated replacement execution is separate from shim selection
+([STATE-AND-RECOVERY §5.2](STATE-AND-RECOVERY.md#52-working-package-access-and-shims)).
+
 **The shim layer.** PATH gains one directory ahead of the profile: `/opt/aslice/shims` (the installer sets the order; `doctor.coexistence` verifies it).
 
-A shim is a hardlink to the aslice binary dispatched on `argv[0]` — zero per-tool code — created for every name a runtime formula declares in `shims = [...]` (php, phpize, pecl, php-fpm; node, npm, npx; ruby, gem, bundle; python3, pip3, …). Invoked as `php`, the shim resolves a stream (below), looks the store path up in the state DB, and `exec`s the real binary — no fork, no wrapper process, signals and `ps` intact, cold-path cost under a millisecond (§11). Shimmed names are *not* linked into generations; the profile links **versioned aliases** instead (`bin/php8.4`), which services and scripts use when they must name an exact runtime — §12.8's generated plists bind the alias of the stream selected at enable time, so `aslice default php 8.5` never silently changes what a running php-fpm executes, and moving a service between streams is an explicit disable/enable. Resolution, first match wins:
+A shim is a hardlink to the aslice binary dispatched on `argv[0]` — zero per-tool code — created for every name a runtime formula declares in `shims = [...]` (php, phpize, pecl, php-fpm; node, npm, npx; ruby, gem, bundle; python3, pip3, …). Invoked as `php`, the shim resolves a stream (below), validates its exact closure through the committed execution catalog and affected-selection gate, and `exec`s the real binary — no fork, no wrapper process, signals and `ps` intact. The sub-millisecond dispatch target requires measurement with these checks enabled (§11). Shimmed names are *not* linked into generations; the profile links **versioned aliases** instead (`bin/php8.4`), which services and scripts use when they must name an exact runtime — §12.8's generated plists bind the alias of the stream selected at enable time, so `aslice default php 8.5` never silently changes what a running php-fpm executes, and moving a service between streams is an explicit disable/enable. Resolution, first match wins:
 
 1. **Session** — `ASLICE_USE_PHP=8.4` in the environment, set by `aslice use`.
 2. **Project** — the nearest `aslice.toml` walking up from the working directory, written by `aslice pin`.
@@ -940,7 +960,7 @@ nodejs = "22"
 
 Every shell, subshell, CI step, and editor-integrated terminal *inside that tree* now resolves to the pinned stream — Volta's `package.json` behavior, made ecosystem-neutral (one file pins php *and* node in the same repo; no per-ecosystem pin formats). Pins record streams (`8.4`), never exact patches: patch movement within a stream is `aslice upgrade`'s job and must not require editing a committed file. A pin naming a stream that isn't installed behaves like `use` in that situation: interactive offer, non-interactive error, `--install` to override. `aslice which php` traces the full resolution — session? project? default? — down to the store path, so "which php am I actually running, and why" is one command, the same explainability standard as `--explain` for the solver.
 
-**`aslice default` — the fallback.** `aslice default php 8.4` records the profile-wide selection in the state DB; `aslice default php` shows it; bare `aslice default` lists all selections. The default is what cron jobs, services, and shells outside any project tree land on. Installing a second stream never changes it; uninstalling the selected stream refuses until another is selected (`--force` overrides, logged). `aslice versions php` shows the matrix: installed streams, the pinned/default/session selections, and which extensions are installed per stream.
+**`aslice default` — the fallback.** `aslice default php 8.4` journals the profile-wide selection and updates the state DB and committed execution catalog; `aslice default php` shows it; bare `aslice default` lists all selections. The default is what cron jobs, services, and shells outside any project tree land on. Installing a second stream never changes it; uninstalling the selected stream refuses until another is selected (`--force` overrides, logged). `aslice versions php` shows the matrix: installed streams, the pinned/default/session selections, and which extensions are installed per stream.
 
 **Extensions bind to exactly one runtime version.** This is where version managers historically give up — pecl compiles against whichever `phpize` ran first, pip installs into whichever site-packages happens to be writable, and the result only *looks* shared until an ABI breaks. aslice splits the problem by who does the installing:
 
@@ -1110,6 +1130,19 @@ Two-builder reproducibility cross-checks; transparency log; community mirror pro
 
 ## 15. Risks and Open Questions
 
+Guided recovery inventories evidence automatically, resumes saved progress, and
+groups actual conflicts with recommendations. A known-good executable and recovery
+records outside the prefix support rebuilding beside the preserved original.
+Recovered selections do not authorize bytes: verify replacement artifacts and their
+closures independently. Reviewed salvage can leave isolated unaffected packages
+usable while normal activation or privileged integration remains blocked.
+
+[STATE-AND-RECOVERY §10.2](STATE-AND-RECOVERY.md#102-engineering-decisions-before-implementation)
+records engineering decisions for owner and architect review; its
+[UX scorecard and acceptance scenarios](STATE-AND-RECOVERY.md#101-guided-workflow-acceptance)
+are provisional targets and pending runtime work. Outcomes distinguish repaired,
+usable with listed unresolved repairs, and replacement prepared but activation blocked.
+
 | Risk | Severity | Mitigation |
 |---|---|---|
 | GitHub degrades self-hosted macOS runner support or GHCR terms change | High | Mirror-first index design (§9.1); Buildkite/Forgejo runner portability; static-mirror escape hatch means GHCR is replaceable |
@@ -1183,6 +1216,7 @@ Two-builder reproducibility cross-checks; transparency log; community mirror pro
 
 | Version | Date | Changes |
 |---|---|---|
+| v1.30 | September 2026 | Align guided recovery, mixed-orchard transactions, explicit waiting, post-commit service checks, trusted rebuilding, and unaffected runtime access; link pending engineering decisions and acceptance targets. |
 | v1.29 | September 2026 | Integrate six-role SQLite storage, complete solve-cache keys, durable records, and database maintenance commands from DATABASE; runtime implementation remains pending. |
 | v1.27 | September 2026 | Consolidate revision notes into a collapsible history table; no specification changes. |
 | v1.26 | September 2026 | align user-flag and universal-vendor summaries with STATE-AND-RECOVERY §1–§2: conditional ABI/CPU substitution, distinct artifact identity, and the i386 ceiling based on required execution. |

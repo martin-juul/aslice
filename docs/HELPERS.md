@@ -1,6 +1,6 @@
 # aslice Helpers and Background Services
 
-- **Status:** Specification v0.2 — September 2026. This reference describes the client design; it does not establish completed implementation or validation on macOS.
+- **Status:** Specification v0.3 — September 2026. This reference describes the client design; it does not establish completed implementation or validation on macOS.
 - **Authority:** [DESIGN](DESIGN.md) defines the process roles. [STATE-AND-RECOVERY](STATE-AND-RECOVERY.md) owns privileged storage, authorization, transactions, and recovery; [SYSTEM-VOLUMES](SYSTEM-VOLUMES.md) owns protected-volume operations.
 
 <a id="what-runs-and-for-how-long"></a>
@@ -146,8 +146,11 @@ enforcement and recovery acceptance gates:
 
 Privileged operations hold the system-root lock after the prefix lock and record
 durable before/after state in protected journals. A process exiting does not erase
-that state. Unfinished recovery blocks mutations and GC; conflicting external
-edits produce `needs-attention` rather than being overwritten. Package rollback
+that state. Surviving helpers retain effective mutation ownership until they stop
+writing; recovery and manual repair wait for that quiescence. Unfinished recovery
+blocks conflicting mutations and GC while unaffected packages and external repair
+tools remain usable. Conflicting external edits produce `needs-attention` rather
+than being overwritten. Package rollback
 does not restore application databases. See
 [STATE-AND-RECOVERY §5](STATE-AND-RECOVERY.md#5-durable-transactions-and-recovery).
 
@@ -173,9 +176,10 @@ verifies the archives, extracts into bounded staging, verifies and materializes
 the artifacts, then registers them and prepares a generation. `aslice-fetch`,
 `aslice-extract`, and `aslice-link` provide the separated process roles along that
 path. No source build helper is needed for a prebuilt payload. The transaction
-records durable intent before live changes and commits after reconciliation and
-health checks. [MANUAL §4.1](MANUAL.md#41-what-a-slice-is) gives the installation
-sequence. Approved grafts add the isolated execution step described above.
+records durable intent before live changes and commits after reconciliation, then
+runs bounded service health checks while retaining mutation ownership.
+[MANUAL §4.1](MANUAL.md#41-what-a-slice-is) gives the installation sequence.
+Approved grafts add the isolated execution step described above.
 
 A source build adds the harness and `aslice-build`: fetch pinned inputs, unpack,
 patch, configure, build, install into staging, scan, test, and pack. Installing the
