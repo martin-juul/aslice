@@ -1,0 +1,3 @@
+[runtimes]
+php = "8.4"
+python = "3.12"

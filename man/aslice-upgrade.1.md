@@ -13,7 +13,7 @@ aslice-upgrade, aslice-outdated — update installed packages
 
 # DESCRIPTION
 
-**outdated** lists what would change and why, honoring pins. **upgrade** performs it: resolves, fetches, and builds the complete new generation before touching the live one, so a failed download or power cut changes nothing.
+**outdated** lists what would change and why, honoring pins. **upgrade** performs it: resolves, fetches, and builds the complete new generation before touching the live one, so a failed download leaves the live generation unchanged. Power loss during activation or external writes requires journal recovery; conflicts are reported for attention (STATE-AND-RECOVERY §5).
 
 Rules upgrade never breaks on its own:
 

@@ -5,7 +5,7 @@
 # Semantic rules this schema cannot express — checked by `aslice lint` instead:
 #   - type = "binary" forbids [build], build.star, [[patch]], [[source]],
 #     [variants], and build/test dependencies (§3.11).
-#   - i386 content forces max_os <= "10.14", verified against the payload (§3.11).
+#   - Required i386-only execution forces max_os <= "10.14", verified against the payload (§3.11).
 #   - link = false requires link_reason (§3.8).
 #   - [system] requires non-empty kexts or sip_off_required = true (§3.12).
 #   - [extension] loader/module are required exactly when the bound runtime
@@ -229,13 +229,13 @@ description = "Declared vendor installer script with an exhaustive behavior mani
     type = "boolean"
     optional = true
     default = false
-    description = "true only for scripts that genuinely need the network."
+    description = "Reserved; true is refused in v1. Fetch pinned inputs before staging."
 
     [types.graftType.elevated]
     type = "boolean"
     optional = true
     default = false
-    description = "true routes execution through aslice-system as root (DESIGN §10.4)."
+    description = "true requires a protected helper commit of staged changes; never unrestricted live-root script execution."
 
 [types.binaryType]
 type = "table"
@@ -268,7 +268,7 @@ description = "One vendor artifact with its OS/arch tags; the solver picks by ta
     uniqueitems = true
     optional = true
     default = [ "x86_64" ]
-    description = "i386 present forces max_os <= 10.14 — derived from the payload, enforced by lint (§3.11)."
+    description = "Alternative i386 members do not impose an OS ceiling; requires_i386 describes required execution."
 
     [types.binaryType.signer]
     type = "string"
@@ -566,7 +566,8 @@ description = "Vulnerability matching and lifecycle flags (§3.9)."
     description = "true: installs only with --allow-eol; excluded from core (§3.9)."
 
     [elements.audit.eol_date]
-    type = "local-date"
+    type = "string"
+pattern = "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
     optional = true
     description = "Upstream EOL announcement."
 
@@ -689,7 +690,8 @@ optional = true
 description = "The package lifecycle, declared (§3.14; policy ORCHARD-POLICY §8)."
 
     [elements.deprecation.date]
-    type = "local-date"
+    type = "string"
+pattern = "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
     description = "When deprecation starts."
 
     [elements.deprecation.reason]
@@ -702,7 +704,8 @@ description = "The package lifecycle, declared (§3.14; policy ORCHARD-POLICY §
     description = "Mandatory when reason = renamed — lint."
 
     [elements.deprecation.disable_date]
-    type = "local-date"
+    type = "string"
+pattern = "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
     optional = true
     description = "New installs refuse after this without --force-disabled."
 
@@ -765,3 +768,13 @@ description = "Flagged replacement of Apple-provided files (§3.16; mechanism DE
     type = "string"
     minlength = 1
     description = "Mandatory; shown verbatim at every decision point — write it as warning text."
+
+[types.binaryType.cpu_features]
+type = "array"
+itemtype = "string"
+uniqueitems = true
+description = "Required CPU features; verified with vendor evidence and tests, never inferred merely from x86_64."
+
+[types.binaryType.requires_i386]
+type = "boolean"
+description = "Whether required execution has no x86_64 alternative; true imposes max_os <= 10.14."

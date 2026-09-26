@@ -3,11 +3,9 @@
 # directory. Commit it.
 # Prose specification: docs/DESIGN.md §12.9 and man/aslice-use.1.md.
 #
-# DERIVED: the prose fixes the content — one file pinning every runtime in the
-# repository to a stream (8.4), never an exact patch — but not the table header.
-# This schematic fixes it as [pins], the project-layer sibling of the machine
-# file's [runtimes.default] (SETUP §2.3). Where this file and future prose
-# disagree, the disagreement is a bug (schematics/README.md).
+# The prose fixes one file pinning each runtime to a stream (8.4), never
+# an exact patch.
+# The [runtimes] header follows DESIGN §12.9.
 
 [toml-schema]
 version = "1.0.0"
@@ -16,7 +14,7 @@ version = "1.0.0"
 target = "aslice.toml (project tree)"
 prose = "docs/DESIGN.md §12.9; man/aslice-use.1.md"
 prose_version = "1.20"
-derived = "table header unnamed in prose"
+derived = "stream validation also requires runtime-specific release metadata"
 schematics = "0.1"
 
 [types.stream]
@@ -24,7 +22,7 @@ type = "string"
 pattern = "^[0-9][a-zA-Z0-9._-]*$"
 description = "A release stream such as 8.4 — never an exact patch (aslice-use(1))."
 
-[elements.pins]
+[elements.runtimes]
 type = "collection"
 itemtype = "types.stream"
 keypattern = "^[a-z0-9][a-z0-9-]*$"

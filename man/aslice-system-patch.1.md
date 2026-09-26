@@ -14,11 +14,11 @@ aslice-system-patch — inspect and reverse declared replacements of Apple-provi
 
 # DESCRIPTION
 
-Packages in the declared `[system-patch]` category (PACKAGE-FORMAT.md §3.16) replace specific Apple-provided files — frozen tools, configs, and data named by absolute path — where fixing the frozen platform genuinely requires it (DESIGN.md §12.11). The mechanism is backup–symlink–record: the original file is copied byte-exact into a managed backup directory under the prefix, the path is replaced by a symlink into the package's store entry, and the patch is recorded so it can be reversed to the byte.
+Declared `[system-patch]` packages replace narrowly allowed Apple-provided files with explicit consent and a mandatory reason. The helper preserves byte-exact originals and their metadata in protected storage, scoped by OS build and volume UUID. Executable replacements use a root-owned dependency closure; root execution never follows a user-writable profile.
 
-The target list is refused by construction: the kernel, `dyld`, `libSystem`, anything under `/System`, and any dylib or framework in a platform binary's load path are lint-enforced refusals, not review judgment calls. Every patch carries a mandatory `reason`, shown verbatim at every decision point. Installation requires explicit consent — interactive confirmation, or `--accept-system-changes` non-interactively; there is no "always allow" — and a SIP preflight refuses targets that System Integrity Protection still protects rather than failing halfway through.
+The kernel, `dyld`, `libSystem`, `/System`, and platform load-path libraries remain refused targets. SIP-disabled does not imply that a volume is writable. Writable targets use journaled replacement; Catalina uses the Recovery backend; Big Sur and Monterey use the base-volume and boot-snapshot backend. SYSTEM-VOLUMES defines preparation, Recovery application, pending-reboot state, and finalization. Unsupported or untested OS adapters refuse application.
 
-**list** shows every currently patched path and the package responsible. **status** reports one path (or all of them) in detail: original sha256, patch state, and whether an OS update has touched the file since the patch was installed. **restore** puts the byte-exact Apple original back, verified by sha256 against the backup before the symlink is removed.
+**list** shows managed patches. **status** reports hashes, OS/volume baseline, pending reboot, and external drift. **restore** plans the compatible backend's restoration; it may require Recovery and reboot. Missing backups, changed security state, and OS-baseline conflicts stop restoration with a remedy.
 
 # TRUST
 
@@ -26,16 +26,16 @@ Serving `[system-patch]` packages requires the repository `system-patch` capabil
 
 # OS UPDATES
 
-A macOS update can overwrite or remove a patched path, silently ending the patch. aslice never re-patches silently: **status** reports the drift, and `aslice doctor` diagnoses it with its usual remedy line — restore the Apple original with `aslice system-patch restore`, or reinstall the patch with fresh consent. Neither happens on its own.
+An OS update establishes a new baseline. aslice reports drift and never reapplies a patch silently. Reinstallation requires fresh consent and a new baseline backup; restoration never places an older OS original over the newly installed OS file.
 
 # LIMITS
 
-The backup holds bytes, not history: one original per patched path, never overwritten by a later patch of the same path. Rolling back the generation that installed the patch rolls back the patch with it — generations are the unit of undo. Uninstalling a patch package is refused while its symlinks are live; restore first.
+Rollback is a journaled restoration plan. Protected-volume rollback can require Recovery and reboot, and service data is outside its scope. Uninstall is refused until managed patches are restored or a restoration is durably pending with its recovery tools retained. Originals and prior snapshots remain retained while referenced by an installed patch or unresolved operation.
 
 # FILES
 
-**The managed backup directory** (under the prefix)
-:   Holds the byte-exact Apple originals, one per patched path. Never overwritten by a later patch of the same path; never pruned while the patch is installed; verified by sha256 at restore.
+**/Library/Application Support/aslice/system/**
+:   Helper-owned dependency closures, receipts, and versioned backups. Before restoration, the helper verifies hashes, ownership, OS build, and volume identity.
 
 # SEE ALSO
 

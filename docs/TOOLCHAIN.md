@@ -1,6 +1,8 @@
 # aslice Toolchain — One Compiler Bundle, Every Build
 
-- **Status:** Design draft, v0.2 — September 2026
+> State, identity, privilege, and recovery contracts: [STATE-AND-RECOVERY](STATE-AND-RECOVERY.md). Protected-volume patching: [SYSTEM-VOLUMES](SYSTEM-VOLUMES.md). These specifications do not establish completed implementation or platform validation.
+
+- **Status:** Design draft, v0.3 — September 2026
 - **Companion to:** [DESIGN.md](DESIGN.md) v1.22 (§4 platform floor, §7.2 build identity), [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md) v0.16 (§6 build environment), [BUILD-INFRA.md](BUILD-INFRA.md) v0.16 (farm consumption), [GENESIS.md](GENESIS.md) v0.7 (the from-nothing runbook). This document is the authoritative specification for the toolchain; where it and another document disagree, the disagreement is a bug in one of them.
 - **Vocabulary:** [NOMENCLATURE.md](NOMENCLATURE.md).
 
@@ -76,7 +78,7 @@ build_id = base32(sha256(canonical_json({
 
 The ID names the compiler and the floor — `clang-19-10.11` reads as Clang 19 targeting 10.11. Vendor binary packages exclude it: nothing is compiled, so `flavor` and `toolchain_id` drop out and the artifact's sha256 effectively is the input identity (DESIGN §7.2).
 
-Deliberately absent from the identity: optimization level, `-march` beyond the flavor floor, debug info, timestamps, build host. Two builds of one formula with the same ABI variants are the same identity — the farm's `-O2` slice and a user's `-O3 -march=native` build interchange everywhere (DESIGN §7.2).
+Deliberately absent from the identity: optimization level, `-march` beyond the flavor floor, debug info, timestamps, build host. Two builds may share a compatibility key while having different artifact identities. A native build records its exact flags and CPU requirements; substituting it requires ABI evidence and a compatible target machine (STATE-AND-RECOVERY §1–§2).
 
 ## 8. How a build consumes the toolchain
 
@@ -98,10 +100,10 @@ The support boundary is the validated aslice build matrix; coverage is establish
 
 The toolchain is born twice (GENESIS §1, step 2):
 
-1. **stage0** — proposed on the owned 2013 Mac Pro running Monterey, with compatible Apple host Clang and Command Line Tools, against the oldest archived SDK. Apple lists Monterey as this model's [newest compatible OS](https://support.apple.com/en-au/102887). Validate the chosen compiler sources, CLT, SDK, and build tools together before accepting this baseline; record their exact versions and results. A bootstrap failure requires revisiting the toolchain recipe, not assuming a newer host OS is available.
+1. **stage0** — proposed on the owned 2013 Mac Pro running Monterey, with compatible Apple host Clang and Command Line Tools, against the oldest archived SDK. Apple lists Monterey as this model's [newest compatible OS](refs/MAC_PRO_2013_COMPATIBLE_OPERATING_SYSTEM.MD). Validate the chosen compiler sources, CLT, SDK, and build tools together before accepting this baseline; record their exact versions and results. A bootstrap failure requires revisiting the toolchain recipe, not assuming a newer host OS is available.
 2. **stage1** — stage0 rebuilds the toolchain with itself. stage1 is the toolchain anyone ever uses; stage0 exists so that "who compiled the compiler?" has a documented answer.
 
-Both stages are archived as slices *and* in the repository tree, in the never-lose set (GENESIS §3). Re-standup after total loss consumes the archived stage0 — no Apple host rebuild is needed, which is precisely why it is archived — and the manager rebuilt with stage1 is digest-compared against the archived binary (GENESIS §4). The ceremony, the inventory rows, and the drill are GENESIS.md's; this section is only the what.
+Both stages are archived as slices *and* in the repository tree, in the never-lose set (GENESIS §3). Re-standup after total loss consumes the archived stage0 — no Apple host rebuild is needed, which is precisely why it is archived — and the manager rebuilt with stage1 is compared against the archived unsigned canonical reference; the served signed/notarized binary is verified separately (STATE-AND-RECOVERY §10) (GENESIS §4). The ceremony, the inventory rows, and the drill are GENESIS.md's; this section is only the what.
 
 ## 11. Bumps
 
@@ -110,7 +112,7 @@ A bump changes `toolchain_id`, and `toolchain_id` is part of every build identit
 - **Need-driven.** A bump happens for a concrete cause: a security fix in the compiler or linker, or a language or library capability the orchard genuinely needs. There is no fixed schedule, and upstream's release cadence is not a reason by itself.
 - **Batched.** Everything that needs a toolchain change lands in the same bump; the orchard rebuilds once, not monthly.
 - **Announced.** A bump is an event with a changelog entry and a migration note, not a background update.
-- **Archived forever.** Every previous toolchain slice stays in the repository tree, so historical build identities keep resolving: old locks and old snapshots remain installable (snapshot retention: one year whole, monthly forever — GENESIS §3).
+- **Archived forever.** Every previous toolchain slice stays in the repository tree, so historical build identities keep resolving: old locks and old snapshots remain installable (snapshot retention: all published snapshots and referenced hosted objects, with current archive authorization — GENESIS §3).
 
 The known roadmap item is `aslice-toolchain` v2: LLD-first linking and ccache integration (DESIGN §14).
 
@@ -125,3 +127,5 @@ The known roadmap item is `aslice-toolchain` v2: LLD-first linking and ccache in
 *History: v0.1 (September 2026) — initial document, consolidating the toolchain story previously scattered across DESIGN §4.3, GENESIS §1–§4, BUILD-INFRA §2, and PACKAGE-FORMAT §6.3; adds two owner decisions: the toolchain is an ordinary, installable package (§9), and bumps are need-driven, batched, and announced (§11).*
 
 *History: v0.2 (September 2026) — owned-hardware bootstrap with proposed Monterey baseline subject to toolchain validation; capability requirements and pending VM coverage made explicit; companion versions refreshed.*
+
+*History: September 2026 — corpus review corrections: artifact identity, protected execution, durable recovery, trust persistence, replay, platform limits, and examples aligned with STATE-AND-RECOVERY and SYSTEM-VOLUMES. These are specification changes; runtime acceptance remains pending.*

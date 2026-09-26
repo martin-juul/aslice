@@ -15,7 +15,7 @@ aslice-service — manage launchd services declared by packages
 
 # DESCRIPTION
 
-Packages describe their services declaratively in the manifest; aslice generates the launchd job and manages it over launchctl's modern interface. Job labels are namespaced (`org.aslice.<pkg>`), and `ProgramArguments` resolve through the profile, so upgrades and rollbacks never require editing the job.
+Packages describe their services declaratively in the manifest; aslice generates the launchd job and manages it over launchctl's modern interface. Job labels are namespaced (`org.aslice.<pkg>`), and user jobs resolve through their profile. Root jobs execute only a helper-verified root-owned dependency closure under `/Library/Application Support/aslice/system`; their executables, libraries, configuration, and launch definitions cannot come from a user-writable profile. Changed declarations regenerate the managed job.
 
 **status** reports launchd's truth — pid, state, last exit status, keepalive — not a pidfile. **run** executes the service in the foreground, unregistered, for debugging.
 
@@ -23,12 +23,12 @@ User-domain services run as the invoking user, need no sudo, and any repository 
 
 # UPGRADES
 
-An upgrade that touches a running service builds the entire new generation first, stops only the affected jobs, swaps the generation atomically, restarts, and health-checks. If a service fails to start, an interactive run shows the launchd exit status and log path, then asks whether to roll back to the previous generation (default: stay and inspect). Non-interactive runs never prompt and never auto-rollback; they fail with a machine-readable `service_start_failed`. Automation passes **--rollback-on-service-failure** to `aslice upgrade` for the unattended "yes." There is no flag that reports a downed service as success.
+An upgrade that touches a running service builds the entire new generation first, stops only the affected jobs, swaps the generation atomically, restarts, and health-checks. If a service fails to start, an interactive run shows the launchd exit status and log path, then asks whether to roll back to the previous generation (default: stay and inspect). Non-interactive runs never prompt and never auto-rollback; they fail with a machine-readable `service_start_failed`. Automation passes **--rollback-on-service-failure** to `aslice upgrade` for the unattended "yes." There is no flag that reports a downed service as success. An upgrade that may migrate persistent data requires declared backward compatibility or an authorized, tested backup/restore procedure. A package rollback alone cannot undo a database migration.
 
 # FILES
 
 **$XDG_CONFIG_HOME/aslice/services/**<pkg>**.env**
-:   Per-service environment overrides, applied when aslice generates the launchd job. Never edit generated plists; this file is where overrides belong.
+:   User-service environment overrides, applied when aslice generates the launchd job. Root-service overrides are separately validated and copied to protected storage by the helper. Never edit generated plists; this file is where overrides belong.
 
 # SEE ALSO
 

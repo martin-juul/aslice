@@ -1,0 +1,24 @@
+{
+  "repository": "core",
+  "name": "example",
+  "version": "1.0.0",
+  "epoch": 0,
+  "revision": 0,
+  "build_id": "1111111111111111111111111111111111111111111111111111111111111111",
+  "artifact_id": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+  "manifest_size": 100,
+  "blob_digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+  "blob_size": 200,
+  "recipe_digest": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+  "recipe_size": 300,
+  "origin": "slice",
+  "variants": {},
+  "user_flags": {},
+  "cpu_features": [
+    "sse2"
+  ],
+  "requires_i386": false,
+  "min_os": "10.11",
+  "flavor": "v1",
+  "dependencies": []
+}

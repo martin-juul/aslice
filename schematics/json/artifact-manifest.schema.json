@@ -1,0 +1,376 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aslice.sh/schematics/json/artifact-manifest.schema.json",
+  "title": "Canonical artifact manifest",
+  "description": "Normative structure; semantics and authorization: docs/STATE-AND-RECOVERY.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "manifest_version": {
+      "const": 1
+    },
+    "repository": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$"
+    },
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$"
+    },
+    "version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "epoch": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "revision": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "build_id": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "recipe_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "user_flags": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "cpu_features": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9_]+$"
+      },
+      "uniqueItems": true
+    },
+    "requires_i386": {
+      "type": "boolean"
+    },
+    "min_os": {
+      "type": "string",
+      "enum": [
+        "10.11",
+        "10.12",
+        "10.13",
+        "10.14",
+        "10.15",
+        "11",
+        "12"
+      ]
+    },
+    "max_os": {
+      "type": "string",
+      "enum": [
+        "10.11",
+        "10.12",
+        "10.13",
+        "10.14",
+        "10.15",
+        "11",
+        "12"
+      ]
+    },
+    "files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[^\\\\]+$"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "file",
+              "directory",
+              "symlink"
+            ]
+          },
+          "mode": {
+            "type": "string",
+            "pattern": "^0[0-7]{3}$"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "size": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "target": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "path",
+          "kind",
+          "mode"
+        ],
+        "oneOf": [
+          {
+            "properties": {
+              "kind": {
+                "const": "file"
+              }
+            },
+            "required": [
+              "sha256",
+              "size"
+            ],
+            "not": {
+              "required": [
+                "target"
+              ]
+            }
+          },
+          {
+            "properties": {
+              "kind": {
+                "const": "directory"
+              }
+            },
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "sha256"
+                  ]
+                },
+                {
+                  "required": [
+                    "size"
+                  ]
+                },
+                {
+                  "required": [
+                    "target"
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "properties": {
+              "kind": {
+                "const": "symlink"
+              }
+            },
+            "required": [
+              "target"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "sha256"
+                  ]
+                },
+                {
+                  "required": [
+                    "size"
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "dependencies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "repository": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]*$"
+          },
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]*$"
+          },
+          "artifact_id": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          }
+        },
+        "required": [
+          "repository",
+          "name",
+          "artifact_id"
+        ]
+      }
+    },
+    "relocations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[^\\\\]+$"
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "width": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "expected_hex": {
+            "type": "string",
+            "pattern": "^(?:[0-9a-f]{2})+$"
+          },
+          "replacement": {
+            "type": "string",
+            "pattern": "^(self|dependency:[a-z0-9-]+:[a-z0-9-]+)$"
+          }
+        },
+        "required": [
+          "path",
+          "offset",
+          "width",
+          "expected_hex",
+          "replacement"
+        ]
+      }
+    },
+    "abi": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "provides": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "install_name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "arch": {
+                "type": "string",
+                "enum": [
+                  "x86_64",
+                  "i386"
+                ]
+              },
+              "current_version": {
+                "type": "string",
+                "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+              },
+              "compatibility_version": {
+                "type": "string",
+                "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+              },
+              "symbols": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "uniqueItems": true
+              },
+              "evidence": {
+                "type": "string",
+                "enum": [
+                  "c-interface",
+                  "validated-cxx",
+                  "unknown"
+                ]
+              }
+            },
+            "required": [
+              "install_name",
+              "arch",
+              "current_version",
+              "compatibility_version",
+              "symbols",
+              "evidence"
+            ]
+          }
+        },
+        "requires": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "install_name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "arch": {
+                "type": "string",
+                "enum": [
+                  "x86_64",
+                  "i386"
+                ]
+              },
+              "min_compat": {
+                "type": "string",
+                "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+              },
+              "symbols": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "uniqueItems": true
+              }
+            },
+            "required": [
+              "install_name",
+              "arch",
+              "min_compat",
+              "symbols"
+            ]
+          }
+        }
+      },
+      "required": [
+        "provides",
+        "requires"
+      ]
+    }
+  },
+  "required": [
+    "manifest_version",
+    "repository",
+    "name",
+    "version",
+    "epoch",
+    "revision",
+    "build_id",
+    "recipe_digest",
+    "user_flags",
+    "cpu_features",
+    "requires_i386",
+    "min_os",
+    "files",
+    "dependencies",
+    "relocations",
+    "abi"
+  ]
+}

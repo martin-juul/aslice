@@ -25,7 +25,7 @@ Installs packages, binary-first: resolves the request against the index, selects
 :   Compile locally instead of using a slice. Dependencies still resolve to binaries where possible.
 
 **--variant** ±*name*
-:   Enable or disable a declared feature variant. Interface-changing variants (`abi = true`) produce a distinct build identity; others trigger a local build of the same identity. aslice reports whether a prebuilt slice exists for the combination before compiling.
+:   Enable or disable a declared feature variant. Interface-changing variants (`abi = true`) produce a distinct build identity; others trigger a local build with the same compatibility key and a distinct artifact identity. aslice reports whether a prebuilt slice exists for the combination before compiling.
 
 **--cflags**="…", **--ldflags**="…", **--lto**, **--debug**
 :   Optimization flags for a local build of the named package only. Recorded in the manifest for provenance; never part of the build identity, so the result interops with prebuilt packages.

@@ -29,10 +29,17 @@ Every other term the documents use is defined in [NOMENCLATURE.md](docs/NOMENCLA
 
 Design phase. The documents below are the specification as it stands; there is no release to install yet. The project lives at [aslice.sh](https://aslice.sh) — the documentation will be served at [aslice.sh/docs](https://aslice.sh/docs), and the installer will come from [get.aslice.sh](https://get.aslice.sh/install.sh) once a release exists.
 
+## License
+
+Original project material is licensed under [Apache-2.0](LICENSE). Third-party material retains its own license and attribution.
+
 ## Documents
 
 In the order a newcomer should read them:
 
+- [State and recovery](docs/STATE-AND-RECOVERY.md) — artifact identities, privilege boundaries, transactions, replay, and acceptance gates
+- [Slice format](docs/SLICE-FORMAT.md) — archive layout, container and manifest schematics, verification, and extraction limits
+- [Protected system volumes](docs/SYSTEM-VOLUMES.md) — Recovery and boot-snapshot patching across the supported OS range
 - [Design document](docs/DESIGN.md) — architecture, platform matrix, distribution, security model, roadmap
 - [Package format specification](docs/PACKAGE-FORMAT.md) — the `package.toml` schema, dependency semantics, versioning, lock files, the build API
 - [Homebrew comparison & gap review](docs/HOMEBREW-REVIEW.md) — a feature-by-feature review against Homebrew 7.0, what's missing, and the spec amendments it produced

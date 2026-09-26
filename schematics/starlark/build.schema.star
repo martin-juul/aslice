@@ -37,6 +37,7 @@ schema = {
             "kind": "object",
             "members": {
                 "prefix": "string",        # final store path this build will occupy
+                "build_dir": "string",     # writable build directory
                 "staging": "string",       # DESTDIR staging directory
                 "jobs": "int",             # parallelism granted by the scheduler
                 "flavor": "string",        # "v1" / "v2" / "v3"; the -march floor is already in CC/CXX
@@ -82,8 +83,8 @@ schema = {
                     "kind": "function",
                     "params": [
                         {"varargs": True},
-                        {"name": "jobs", "type": "int", "default": 0},
-                        {"name": "destdir", "type": "string", "default": ""},
+                        {"name": "jobs", "type": "int", "default": 0, "keyword_only": True},
+                        {"name": "destdir", "type": "string", "default": "", "keyword_only": True},
                     ],
                     "description": "Tool helper with correct defaults (§6.3).",
                 },

@@ -1,8 +1,10 @@
 # aslice Manual
 
+> State, identity, privilege, and recovery contracts: [STATE-AND-RECOVERY](STATE-AND-RECOVERY.md). Protected-volume patching: [SYSTEM-VOLUMES](SYSTEM-VOLUMES.md). These specifications do not establish completed implementation or platform validation.
+
 **The user guide for aslice — a package manager for Intel macOS.**
 
-- **Status:** v0.12 — September 2026 (v0.2: review corrections — §2.3 covers bash alongside zsh, §2.5 lists the three outside-prefix exceptions to a clean removal instead of claiming none exist, §3's man-page claim is softened to what actually ships, §3.1 documents `link`/`unlink` for `link = false` packages, and §7.1's root-daemon gate includes local repositories. v0.3: new chapter 10 — declarative whole-machine setup with `setup.toml`, `aslice apply`, `aslice export`, and `aslice import --from-brewfile` (SETUP.md); chapters 10–13 renumber to 11–14. v0.4: editorial pass — prose revised for directness throughout; no factual or behavioral changes. v0.5: second editorial pass — sentence-level revision for readability; no factual or behavioral changes. v0.6: prose rewrite throughout — chapters reworded in the project's technical-writing voice; no factual or behavioral changes. v0.7: review pass — the lock-file pointer in §10.2 now cites PACKAGE-FORMAT §7; no factual or behavioral changes. v0.8: NOMENCLATURE.md vocabulary reference added to the header; no factual or behavioral changes. v0.9: §1's honesty sentence gains the pointer-mode mechanics — a vendor binary that cannot be hosted is fetched from the vendor's own server at install; the header gains the project-home line — aslice.sh carries the homepage, documentation, and public dashboard, with the installer served from get.aslice.sh (owner decision, September 2026); no behavioral changes. v0.10: the setup file is renamed `aslice-machine.toml` and its commands move under `aslice machine` (apply / export / import --from-brewfile); top-level `aslice apply` keeps plans and lock files (owner decision, September 2026); no behavioral changes. v0.11: grafts — §1's no-code-at-install claim gains the declared-graft exception, §4 gains §4.5 (the user-facing graft approval flow: the manifest you are shown, the prompt, the allow-list, the unsigned warning, and why rollback still holds), §9.2's no-code-from-repositories sentence and §9.3's signature-scope note gain the graft scope, §10.3's consent gates gain the graft approval step, and the appendix quick reference gains the `graft` row; model in DESIGN v1.19 §12.15; no other behavioral changes. v0.12: TOOLCHAIN.md joins the companions and §2.1's no-Xcode sentence links it; no behavioral changes)
+- **Status:** v0.13 — September 2026 (v0.2: review corrections — §2.3 covers bash alongside zsh, §2.5 lists the three outside-prefix exceptions to a clean removal instead of claiming none exist, §3's man-page claim is softened to what actually ships, §3.1 documents `link`/`unlink` for `link = false` packages, and §7.1's root-daemon gate includes local repositories. v0.3: new chapter 10 — declarative whole-machine setup with `setup.toml`, `aslice apply`, `aslice export`, and `aslice import --from-brewfile` (SETUP.md); chapters 10–13 renumber to 11–14. v0.4: editorial pass — prose revised for directness throughout; no factual or behavioral changes. v0.5: second editorial pass — sentence-level revision for readability; no factual or behavioral changes. v0.6: prose rewrite throughout — chapters reworded in the project's technical-writing voice; no factual or behavioral changes. v0.7: review pass — the lock-file pointer in §10.2 now cites PACKAGE-FORMAT §7; no factual or behavioral changes. v0.8: NOMENCLATURE.md vocabulary reference added to the header; no factual or behavioral changes. v0.9: §1's honesty sentence gains the pointer-mode mechanics — a vendor binary that cannot be hosted is fetched from the vendor's own server at install; the header gains the project-home line — aslice.sh carries the homepage, documentation, and public dashboard, with the installer served from get.aslice.sh (owner decision, September 2026); no behavioral changes. v0.10: the setup file is renamed `aslice-machine.toml` and its commands move under `aslice machine` (apply / export / import --from-brewfile); top-level `aslice apply` keeps plans and lock files (owner decision, September 2026); no behavioral changes. v0.11: grafts — §1's no-code-at-install claim gains the declared-graft exception, §4 gains §4.5 (the user-facing graft approval flow: the manifest you are shown, the prompt, the allow-list, the unsigned warning, and why rollback still holds), §9.2's no-code-from-repositories sentence and §9.3's signature-scope note gain the graft scope, §10.3's consent gates gain the graft approval step, and the appendix quick reference gains the `graft` row; model in DESIGN v1.19 §12.15; no other behavioral changes. v0.12: TOOLCHAIN.md joins the companions and §2.1's no-Xcode sentence links it; no behavioral changes)
 - **Project home:** [aslice.sh](https://aslice.sh) — homepage, documentation (aslice.sh/docs), and the public dashboard (aslice.sh/dashboard); the installer is served from get.aslice.sh (§2).
 - **Audience:** people who install and run software with aslice; that is most of what follows. If you *write* packages, read chapters 1–4 and then move to [AUTHORING.md](AUTHORING.md). If you want to know *why* things are the way they are, the rationale lives in [DESIGN.md](DESIGN.md).
 - **Companions:** the man pages in [man/](../man/) (also available as `aslice help <command>`), [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md), [ORCHARD-POLICY.md](ORCHARD-POLICY.md), [REPOSITORIES.md](REPOSITORIES.md), [GENESIS.md](GENESIS.md), [TOOLCHAIN.md](TOOLCHAIN.md).
@@ -45,7 +47,7 @@ These words appear in every message aslice prints, so they are worth learning on
 
 1. The **store** holds every version of every package you've installed, each in its own directory. Nothing inside it ever changes after registration.
 2. Your **generation** is a directory of symlinks into the store, and it is what your `PATH` actually points at.
-3. Installing or upgrading builds a *new* generation and then swaps one symlink. The old generation is untouched, which is why rollback is instant and a crash mid-install breaks nothing.
+3. Installing or upgrading builds a *new* generation and then swaps one symlink. The old generation remains available. External writes use a durable journal; a crash during activation requires recovery, and rollback can require conflict resolution or reboot.
 4. Packages are **binary by default**. Source builds happen only when you ask for non-default variants or custom compiler flags, and even then the result interoperates with the prebuilt world: compatibility is checked against the libraries' actual interfaces, not their provenance.
 5. Everything aslice fetches — slices, index metadata, the CA bundle, aslice itself — is signed and hash-pinned. A verification failure blocks the operation and is always reported; it cannot be silenced.
 
@@ -75,7 +77,7 @@ sh install.sh
 
 The script fetches two things: the aslice bootstrap binary, and the root of aslice's update metadata. Both are pinned by hash inside the script and cross-checked against a signed checksums file served over a second, independent transport; everything after that first step is verified by aslice's own update framework. It does not ask for your password, with one optional exception — it offers to run `sudo` once, to create `/opt/aslice` and hand it to your user account. Say no if you'd rather not (or don't have admin rights), and it installs to `~/.aslice` instead. The two layouts are fully supported and behave identically; only the path differs.
 
-**If your Mac's TLS is too old for the modern web** — the day-one condition of a frozen OS — the script may be unable to complete an HTTPS handshake at all. This is expected. The installer detects the failure and retries over plain HTTP, fetching *the same hash-pinned files* and verifying them against the same pins and signatures, with a prominent banner announcing the downgrade and why it is safe. What you are trusting is the hashes and signatures; for this download, HTTPS was only ever a privacy layer.
+**If your Mac's TLS cannot fetch the installer**, download the bootstrap kit on a supported machine and transfer it offline. Verify its SHA-256 with `/usr/bin/shasum -a 256` against an independently authenticated published digest before running anything. The verified bootstrap binary checks signatures. HTTP is permitted only for later files whose authentic hashes are already established; it cannot authenticate the first script. See STATE-AND-RECOVERY §7.
 
 ### 2.3 After the install
 
@@ -111,14 +113,16 @@ The update is signed and verified like any package, installed as a new generatio
 
 ### 2.5 Removing aslice
 
-```
-aslice uninstall aslice        # removes the manager's registration
-sudo rm -rf /opt/aslice        # or rm -rf ~/.aslice — this is the whole footprint
+Keep the manager and its backups until managed external effects have been removed:
+
+```sh
+aslice decommission --dry-run
+aslice decommission
 ```
 
-aslice keeps everything inside its prefix — `/opt/aslice/apps/` included — with three declared exceptions, and each should be closed out before removal. If you installed a `[system-patch]` package, restore the Apple originals first: `aslice system-patch list` shows what is patched, and `aslice system-patch restore <path>` puts each byte-exact original back (§8.4). If you installed a `[system]` package (kernel extensions, SIP-disabled development tools), uninstall it first. If you used `ca-update --keychain`, run `aslice ca-update --keychain-remove`: it deletes exactly the certificates aslice imported into the System keychain, each one recorded at import time, and nothing else. Once those are closed out, deleting the prefix removes everything else completely.
+The plan restores the previous login shell, unregisters services, reverses supported grafts and patches, removes managed kexts and owned certificate changes, and lists remaining data and shell-integration lines. Conflicts or a required Recovery/reboot leave cleanup pending; do not delete the prefix. Protected-volume restoration follows [SYSTEM-VOLUMES](SYSTEM-VOLUMES.md).
 
----
+After successful cleanup, decommission prints the exact prefix that can be deleted and any retained user data. It never deletes application databases or ecosystem userbases merely because the manager is removed. See [STATE-AND-RECOVERY §6](STATE-AND-RECOVERY.md#6-self-update-and-decommission).
 
 ## 3. Everyday commands
 
@@ -172,7 +176,7 @@ aslice upgrade                # everything, honoring your pins
 aslice upgrade ffmpeg         # one package (and what depends on it)
 ```
 
-An upgrade builds its complete new generation before touching anything you can see, so a failed download or a power cut leaves your current software untouched. If an upgraded package runs a service, aslice stops the service, swaps, and starts it again; and if the new version won't start, it *asks you* whether to roll back instead of guessing (§7.2).
+An upgrade stages the complete new generation before activation, so a failed download leaves the current software untouched. Power loss during activation or external writes requires journal recovery. If an upgraded package runs a service, aslice stops the service, swaps, and starts it again; and if the new version won't start, it *asks you* whether to roll back instead of guessing (§7.2).
 
 There are three lines `upgrade` never crosses without being told:
 
@@ -385,7 +389,7 @@ aslice service run redis            # foreground, unregistered — for debugging
 
 User-level services run as you, need no sudo, and may come from any repository. Root-level daemons are the privileged exception: they install and run through aslice's audited privileged helper, with explicit per-operation consent, and only official, verified, or local repositories may offer them (§9.2).
 
-Per-service environment overrides live in `~/.config/aslice/services/<pkg>.env` and are applied when aslice generates the launchd job. You never edit the generated plist, and upgrades never clobber your overrides.
+User-service overrides live in `~/.config/aslice/services/<pkg>.env`. Root services use separately validated, helper-owned configuration and a protected executable/library closure; they never execute from a user-writable profile. You never edit the generated plist, and upgrades never clobber your overrides.
 
 ### 7.2 Upgrades and the rollback prompt
 
@@ -410,38 +414,23 @@ The most common day-one failure on 10.11–10.13 is not a missing library — it
 
 ### 8.1 The bundle (the layer everyone wants)
 
-```
-aslice ca-update
-```
-
-The CA certificate bundle is an ordinary aslice package: `ca-certificates`, built from the Mozilla root program (the same trust decisions Debian, Fedora, and Homebrew ship), signed, indexed, and kept fresh by the same update machinery as every other package. Installing or refreshing it is an ordinary, rollback-able transaction. `aslice shellenv` and the shell integration point `curl`, `git`, and `python` at the bundle, so command-line TLS heals completely — modern roots, modern ciphers, TLS 1.3 — regardless of what the OS believes. `aslice ca-update --check` reports staleness without changing anything; `aslice doctor` warns when the bundle falls behind.
-
-If your organization intercepts TLS, `aslice config set ca.source <name>` selects a different bundle source, and `aslice ca-update --from-file ./corp-bundle.pem` installs a local file directly. Every bundle is validated before activation — it must parse completely and contain no already-expired certificates — and a bundle that fails validation is refused.
+`aslice ca-update` updates the signed private CA bundle. `shellenv` points compatible aslice clients at it; certificate refresh does not itself add TLS protocols. `--crypto` separately upgrades aslice's crypto providers. PEM extraction omits some browser trust restrictions and is not equivalent to Firefox's trust policy. `--check` reports age without changing anything. See STATE-AND-RECOVERY §9.
 
 ### 8.2 The System keychain (Safari, Mail, and friends)
 
-The bundle heals command-line tools. Safari, Mail, Calendar, and everything else built on the OS's security framework trust the **System keychain**, which the bundle does not touch. This does:
+`aslice ca-update --keychain` asks the protected helper to apply a signed certificate-policy inventory. The inventory distinguishes roots from intermediates and records purposes, restrictions, and retirement. If an OS cannot represent a required restriction, the import is refused. A raw PEM bundle is not sufficient authority for system trust.
 
-```
-aslice ca-update --keychain
-```
-
-The import is additive: the bundle's missing roots go into the System keychain fingerprint by fingerprint, each import recorded in aslice's database. It asks for admin authorization every time — there is no "always allow." It never removes or distrusts anything already present; expired Apple-shipped roots are reported but left alone. `aslice ca-update --keychain-remove` deletes the recorded set, and nothing else.
-
-**Understand what this fixes.** The import repairs *trust*, not *crypto*. The OS's own TLS stack on 10.11–10.12 predates TLS 1.3, so a site that requires TLS 1.3 stays unreachable in Safari no matter what the keychain holds. The command says so when you run it; the remedy is aslice's curl, or a browser with its own TLS stack.
+Admin authorization is required each time. The helper records entries it owns and retires only those entries when policy changes. `--keychain-remove` removes its recorded imports after checking for external changes; Apple and independently installed user entries remain untouched. This updates trust, not the OS's TLS implementation. It cannot guarantee that an old browser or service protocol will work.
 
 ### 8.3 The crypto stack and Apple's own roots
 
-Two more flags, same machinery:
-
-- `aslice ca-update --crypto` upgrades the crypto-provider packages themselves (OpenSSL and kin) to the newest the index offers; modern roots are no use to a TLS stack from 2015. It cannot touch the OS's own stack, and says so.
-- `aslice ca-update --apple-certs` imports Apple's *own* certificate roots, which the Mozilla program does not carry and which Software Update, the App Store, iCloud, and Developer ID validation all chain to, from a second pinned, signed package. Aging Apple intermediates break things on a frozen OS the same way expired public roots do.
+`aslice ca-update --crypto` upgrades compatible aslice crypto-provider packages without replacing the OS TLS stack. `--apple-certs` applies the separately signed Apple certificate inventory under the same purpose, role, constraint, ownership, and retirement rules. Importing an intermediate never promotes it to a root. Named Apple services require chain validation and per-OS integration tests; certificate import alone is not a repair guarantee.
 
 ### 8.4 Replacing Apple's fossilized tools
 
-Part of the OS's TLS surface is beyond trust stores entirely: the `/usr/bin/openssl` on 10.11 is from the 0.9.8 era and cannot speak modern TLS at all. For that, the core orchard ships `[system-patch]` packages — a declared, consent-gated, fully reversible mechanism that backs up the Apple original byte for byte and replaces it with a symlink into your aslice generation. You opt in per package and per operation. `aslice system-patch list` shows what is currently replaced; `aslice system-patch restore <path>` puts the original back and verifies its hash. This is the most tightly gated category in the system; `man aslice-system-patch`, and DESIGN §12.11, give the full accounting of what it does and does not guarantee.
+Declared `[system-patch]` packages replace narrowly allowed Apple-provided tools or data with explicit per-operation consent. Originals and replacement dependency closures live in protected helper-owned storage, outside a user-writable profile. Backups are identified by OS build and volume baseline.
 
----
+Writable targets use journaled file replacement. Catalina's read-only system volume requires the Recovery workflow; Big Sur and Monterey additionally require preparation and verification of a new boot snapshot. A patch remains pending until reboot verification succeeds. `aslice system-patch restore <path>` selects the appropriate restoration backend and refuses to overwrite a newer OS baseline with an older backup. See [SYSTEM-VOLUMES](SYSTEM-VOLUMES.md) and aslice-system-patch(1) for the consent, backup, security-state, and recovery requirements.
 
 ## 9. Repositories, trust, and staying offline
 
@@ -457,7 +446,7 @@ A **repository** is a static, signed tree: metadata, the package index, formulae
 aslice repo add https://repo.example.org
 ```
 
-Adding a repository pins its signing key's fingerprint on first use, displays the fingerprint, and recommends that you verify it out of band. Any later change to that key blocks the repository and is reported: a key change is the moment a hijack would announce itself, so aslice treats it as one until you explicitly re-pin (`aslice repo re-pin`).
+Adding a repository pins its signing key's fingerprint on first use, displays the fingerprint, and recommends that you verify it out of band. Authenticated TUF root rotation follows the old and new signature thresholds from the retained anchor. An unauthenticated key replacement blocks the repository; explicit re-pinning requires independent verification (STATE-AND-RECOVERY §7).
 
 Every repository carries an enforced trust level — a set of capabilities, not a label:
 
@@ -487,7 +476,7 @@ aslice provenance ffmpeg      # who built this, from what source, with what tool
 
 ### 9.5 Working offline
 
-aslice assumes connectivity will be intermittent; many of its users are audio rigs and lab machines that are offline by policy. Everything already downloaded — cached slices, the index snapshot — works without a network, and cached slices install fine. `aslice doctor --offline` checks health without touching the network and reports the age of your cached index instead of failing on unreachable repositories. A stale index never blocks operations against the cache; it just means that "newest" means "newest as of" the snapshot date, which aslice prints.
+Offline mode reuses cached bytes only with retained receipts proving verification while metadata was valid. It rehashes those bytes, respects known revocations, prints verification time and index age, and makes no freshness claim. New metadata or uncached targets require current TUF authorization; losing trust receipts is a recovery event, not permission to accept expired metadata. Historical installs use a currently authorized archive catalog (STATE-AND-RECOVERY §8).
 
 ---
 
@@ -689,3 +678,5 @@ The prefix layout, for orientation: `store/` (immutable packages), `profiles/gen
 | `system-patch list/status/restore` | Inspect and reverse declared system-file replacements |
 | `graft approvals` / `graft revoke` | Review and withdraw recorded installer-script approvals (§4.5) |
 | `help` | The man page for any command, in your terminal |
+
+*History: September 2026 — corpus review corrections: artifact identity, protected execution, durable recovery, trust persistence, replay, platform limits, and examples aligned with STATE-AND-RECOVERY and SYSTEM-VOLUMES. These are specification changes; runtime acceptance remains pending.*

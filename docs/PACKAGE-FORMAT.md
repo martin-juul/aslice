@@ -1,5 +1,7 @@
 # aslice Package Format
 
+> State, identity, privilege, and recovery contracts: [STATE-AND-RECOVERY](STATE-AND-RECOVERY.md). Protected-volume patching: [SYSTEM-VOLUMES](SYSTEM-VOLUMES.md). These specifications do not establish completed implementation or platform validation.
+
 **Status:** Format draft, v0.16 — September 2026
 **Change log:** v0.2 adds **vendor binary packages** — `type = "binary"`, `[[binary]]` artifacts with per-OS support tags, declarative payload maps, and mandatory signer pinning (§3.11); lock-file `origin` gains `"vendor-direct"` (§7.2). v0.3 opens **32-bit and universal vendor payloads**: `arch` may include `"i386"`, with the 10.14 execution ceiling derived from the artifact itself and enforced at lint and solve time (§3.11). v0.4 adds the **`[system]` declaration** for kernel extensions and SIP-disabled development tools (§3.12; mechanism and warnings in DESIGN §12.7) and replaces the checksummed-plist `[[install.service]]` with the **generated-plist `[service]` table** — the manifest describes the service, aslice writes the launchd plist (§3.8; lifecycle and stop–swap–restart upgrades in DESIGN §12.8). v0.5 adds the **multi-version runtime declarations**: `[runtime]` marks a runtime formula (shim set, ABI epoch, per-version userbase environment injection, extension scan dir), `[extension]` binds a compiled extension slice to a runtime's ABI epoch, and `[ride]` marks an interpreter-target tool that launches under the currently selected runtime (§3.13; mechanism in DESIGN §12.9). v0.6 lands the lifecycle and freshness declarations proposed in HOMEBREW-REVIEW §8 and made normative policy by ORCHARD-POLICY v0.4 §1: **`[deprecation]`** replaces the retired `[package] deprecated` boolean (§3.14), **`[livecheck]`** declares upstream freshness tracking (§3.15), **`[install]`** gains `link`/`link_reason` (the principled keg-only) and the `notes` caveats field (§3.8), the `build.star` ctx API gains **`ctx.replace`** (§6.3), and **`[system-patch]`** declares flagged replacement of Apple-provided files (§3.16; mechanism in DESIGN §12.11). v0.7: review corrections — §3.16's serving rule now matches REPOSITORIES §3 as amended (official/local by default; verified only via the explicit per-repo `allow-system-patch` grant; third-party never), and §3.8 documents `aslice link`/`aslice unlink` for `link = false` packages (DESIGN v1.10 §12.1). v0.8: §7.1 notes that `aslice apply` is now the unified convergence verb — saved plans, lock files, and declarative `setup.toml` documents (SETUP.md; DESIGN v1.11 §12.13). v0.9 is an editorial pass — prose revised for directness; no schema or semantic changes. v0.10 rewrites the prose throughout — every explanatory passage reworded for clarity, pace, and voice; no schema, semantic, or factual changes. v0.11: review pass — stray trailing whitespace removed from the §4.1 grammar block; no schema or semantic changes. v0.12 adds a NOMENCLATURE.md vocabulary reference to the header; no schema or semantic changes. v0.13 drops the variant cap from §3.5 and the lint list (policy moved to need-plus-honest-tags, DESIGN §13.2), softens the §3.11 example's redistribution comment to mechanics only, and adds `takedown` to the §3.14 lifecycle reasons. v0.14 follows the declarative-setup rename in §7.1's cross-reference: the machine file is now `aslice-machine.toml`, applied with `aslice machine apply` (SETUP.md v0.9; DESIGN v1.18 §12.13); lock replay stays top-level `aslice apply aslice.lock` — no schema or semantic changes. v0.15 adds **grafts** — declared vendor installer scripts for binary packages: `[[binary.graft]]` pins each script by hash and carries an exhaustive behavior manifest (`writes`, `kexts`, `daemons`, `network`, `elevated`) that doubles as its execution sandbox policy (§3.11; model and approval flow in DESIGN v1.19 §12.15, user-side declaration in SETUP §2.8). The payload-only default is unchanged: undeclared scripts still never run on any path. v0.16 adds the TOOLCHAIN.md companion reference; no schema changes
 **Companion to:** [DESIGN.md](DESIGN.md) — this document is the authoritative specification for §6 (Package Format). Where they disagree, this document wins. The toolchain this format's builds run on is specified in [TOOLCHAIN.md](TOOLCHAIN.md).
@@ -101,7 +103,7 @@ flavors = ["v2", "v3"]    # omit → all of ["v1", "v2", "v3"]
 - A package that genuinely needs AVX2 — hand-written AVX2 kernels with no dispatch fallback, say — declares `flavors = ["v3"]`. The farm then skips its `v1`/`v2` slices, and v1/v2 machines get a clear solve-time message.
 - The toolchain, not the formula, supplies the flavor's `-march=x86-64-vN` floor (§6.3); formula authors never write `-march` themselves. A user's `-march=native` request layers on top at install time (DESIGN §7.4) and does not affect identity.
 - `min_os` and `flavors` are orthogonal axes, and both enter the build identity (DESIGN §7.2).
-- The field has no meaning for `type = "binary"` — nothing is compiled; the vendor chose the instruction sets — and is rejected there. A vendor binary serves every flavor by construction.
+- `flavors` remains a source-build axis. Vendor artifacts instead require `cpu_features` and `requires_i386`, describing actual execution requirements. Nothing being compiled does not imply compatibility with every CPU (STATE-AND-RECOVERY §2).
 
 ### 3.4 `[[source]]` — where the bits come from
 
@@ -174,12 +176,12 @@ The full dependency semantics are in §5. On `type = "binary"` packages, `build`
 ### 3.7 Interop declarations — provides, conflicts, replaces
 
 ```toml
-[provides]
-blas = "3.11"          # virtual package provided, with version; satisfies `depends: ["blas ^3"]`
-
 conflicts = ["ffmpeg4", "libav"]      # cannot be installed into the same profile
 replaces  = ["ffmpeg4"]               # rename/supersede: upgrades replace the old package atomically
 aliases   = ["ff"]                    # search/install aliases, no semantics
+
+[provides]
+blas = "3.11"          # virtual package provided, with version; satisfies `depends: ["blas ^3"]`
 ```
 
 - `provides` is the interop mechanism for interchangeable implementations: `openblas`, `blis`, and the Accelerate shim all provide `blas`. A dependent names the virtual package; the solver picks a provider, and the default is configurable per profile (`aslice profile prefer blas openblas`).
@@ -219,7 +221,7 @@ zsh  = "share/zsh/site-functions/_ffmpeg"
 
 The plist itself never ships in the formula. aslice **generates** it from `[service]` at enable time, writes it with the label `org.aslice.<name>`, and points `ProgramArguments[0]` through the profile (`/opt/aslice/profiles/default/bin/…`) rather than at a store path — so an upgrade or rollback that swaps store paths leaves the plist untouched. `domain = "system"` jobs run as root; they are installed and removed by `aslice-system`, each operation individually consented to (DESIGN §10.4), and only repositories holding the `system` capability may serve them (REPOSITORIES §3). User agents are unprivileged and ungated. A package declares at most one `[service]`; software with several daemons is packaged as several packages. The full lifecycle — `aslice service list/status/start/stop/restart/run`, and the stop–swap–restart upgrade transaction — is specified in DESIGN §12.8.
 
-`link = false` is the principled form of Homebrew's keg-only (REVIEW §4.5): the package installs into the store, and nothing links into any profile. In core it is the default for versioned lineages (`openssl@3` style) and for anything whose `bin/` names collide with `/usr/bin` or `/bin` (policy: ORCHARD-POLICY §6); `aslice link <pkg>` opts a package into a profile explicitly. Dependents never need the link: dependency resolution works on store paths (`ctx.deps`), so being depended upon while unlinked is a normal state. When `link = false`, lint requires `link_reason`, and `info` and the installer display it — the user is told why the package did not appear in the profile. Finally, `notes` is the caveats field: human-readable, actionable post-install lines ("config lives in …", "run `aslice service start postgresql` to …"), printed at install and shown by `info`. A line that isn't actionable isn't a note (ORCHARD-POLICY §14).
+`link = false` is the principled form of Homebrew's keg-only (REVIEW §4.5): the package installs into the store, and nothing links into any profile. In core it is the default for versioned lineages (`openssl3` style) and for anything whose `bin/` names collide with `/usr/bin` or `/bin` (policy: ORCHARD-POLICY §6); `aslice link <pkg>` opts a package into a profile explicitly. Dependents never need the link: dependency resolution works on store paths (`ctx.deps`), so being depended upon while unlinked is a normal state. When `link = false`, lint requires `link_reason`, and `info` and the installer display it — the user is told why the package did not appear in the profile. Finally, `notes` is the caveats field: human-readable, actionable post-install lines ("config lives in …", "run `aslice service start postgresql` to …"), printed at install and shown by `info`. A line that isn't actionable isn't a note (ORCHARD-POLICY §14).
 
 ### 3.9 `[audit]` — vulnerability matching and lifecycle
 
@@ -302,10 +304,10 @@ Rules:
 - **Signer pinning is mandatory** for signed artifacts, and `notarized` records the notarization expectation (checked on 10.14+, where notarization exists). The verifier hard-fails if the signer changes: silent signer substitution upstream is how binary distribution channels get compromised. An unsigned vendor artifact is allowed in extended with `signer` omitted, and the omission is announced at install (DESIGN §12.2).
 - **`redistribute` is required; there is no default.** `true` means the farm repackages the payload as a hosted slice — atomic, resumable, rollback-able. `false` means every client fetches the vendor URL itself, hash- and signer-pinned, and the index carries the formula but no blob. A mutated or pulled vendor artifact fails at the hash check rather than silently installing something else.
 - **`arch` defaults to `["x86_64"]`.** aslice's own builds are x86_64-only, always (DESIGN §2.2 N6). A vendor payload may additionally declare `"i386"`, alone or universal as `["x86_64", "i386"]`: 32-bit code still executes on 10.11–10.14, and much of the pkg/dmg-only software worth having — audio plugins, lab instruments, frozen pro tools — ships that way.
-- **The 32-bit ceiling is derived, not declared.** macOS 10.15 removed 32-bit execution entirely, so at pack and lint time the verifier parses every Mach-O slice in the payload (lipo-style fat-header parsing). An artifact that contains i386 code **must** declare `max_os = "10.14"` or lower, and the declared bound is checked against what the binaries contain; disagreement is a lint error. On 10.15+ machines the solver refuses with an explicit "requires 32-bit support, removed in macOS 10.15" message.
+- **The 32-bit ceiling follows required execution.** Required i386-only executables/helpers/plugins impose `max_os <= "10.14"`. A fat executable with a usable x86_64 member does not require i386 merely because an alternative member exists. Lint checks the declared entry points and dependency paths and requires evidence for ambiguous plugins (STATE-AND-RECOVERY §2).
 - **Universal payloads install whole.** Thinning a fat binary with `lipo -thin` would invalidate the vendor's code signature, and signer integrity outranks disk savings; the extraction is forbidden, and the store receives the artifact exactly as signed.
 - **Pre-notarization-era artifacts are expected, not merely tolerated.** Software old enough to contain 32-bit code usually predates notarization (10.14+) and sometimes predates Developer ID signing altogether. `notarized = false` — or, in the extended tier, an omitted `signer` — is the normal case for these packages; it is announced at install, never blocked.
-- **Flavor doesn't apply.** The `build_id` of a vendor package excludes `flavor` and `toolchain_id`; one slice serves every flavor. The ABI scan still runs on the payload at pack time, because dependents link against vendor dylibs under the same ABI contract as farm-built libraries (DESIGN §7.3).
+- **Execution requirements still apply.** Vendor compatibility keys omit compiler/flavor fields but bind the vendor digest. Every artifact records CPU features and whether execution requires i386. ABI scanning retains exact dependency bindings when evidence is incomplete (STATE-AND-RECOVERY §2).
 - **OS tags are verified, not trusted.** At pack/repack time, each artifact's declared `min_os`/`max_os` is checked against the bundle's `LSMinimumSystemVersion`, the Mach-O minimum-version load commands, and — where present — the pkg Distribution's `allowed-os-versions`. Disagreement is a lint error.
 - **Version normalization still applies** (§4): a vendor spelling like `3.2 Update 1` normalizes by the usual rules, and the verbatim string is preserved in `upstream_version`.
 
@@ -507,7 +509,7 @@ A library's consumer records *which provider build it linked against* through th
 
 Resolution is PubGrub over the full graph (DESIGN §7.5). Four rules adapt it to aslice:
 
-1. **Single version per profile, by default.** A profile links exactly one build of a given name; the store may hold many, but the profile points at one. Libraries that need side-by-side majors are packaged under separate names — `openssl@3` and, if ever needed, `openssl@4` — which is an orchard naming convention, not a solver exception. The designed exception is multi-version **runtimes** (`[runtime]`, §3.13): the store holds every installed stream, the profile links each stream's versioned aliases (`bin/php8.4`), and the bare name (`php`) multiplexes through the shim layer in place of a profile link (DESIGN §12.9).
+1. **Single version per profile, by default.** A profile links exactly one build of a given name; the store may hold many, but the profile points at one. Libraries that need side-by-side majors are packaged under separate names — `openssl3` and, if ever needed, `openssl@4` — which is an orchard naming convention, not a solver exception. The designed exception is multi-version **runtimes** (`[runtime]`, §3.13): the store holds every installed stream, the profile links each stream's versioned aliases (`bin/php8.4`), and the bare name (`php`) multiplexes through the shim layer in place of a profile link (DESIGN §12.9).
 2. **Version unification.** When `a` needs `dep ^1.2` and `b` needs `dep ^1.4`, the profile gets one `dep` satisfying both (`^1.4`) — or the solve fails, rendering the conflict as a derivation tree (`--explain`).
 3. **Build dependencies float.** Two packages in the same profile may have been built against different `nasm` versions; only runtime identity is unified.
 4. **Cycles** in runtime edges are rejected at lint time. Build-time cycles — rare, but bootstrap compilers need them — require an explicit `bootstrap = true` edge annotation together with a pinned seed slice.
@@ -539,6 +541,8 @@ fetch → verify → unpack → patch → configure → build → install(stagin
 ```
 
 Only `fetch` has network access. `abi-scan` is run by aslice itself and cannot be skipped by a formula: the ABI contract is not optional metadata.
+
+The `pack` phase emits the container defined in [SLICE-FORMAT](SLICE-FORMAT.md), with a [slice descriptor](../schematics/json/slice.schema.json) and [artifact manifest](../schematics/json/artifact-manifest.schema.json). Package signing produces a detached signature over the frozen archive bytes. Any Apple signing that changes payload bytes precedes manifest generation and packing.
 
 For `type = "binary"` packages (§3.11) the pipeline compresses to `fetch → verify (hash + signer) → extract payload → abi-scan → pack → sign`: nothing is compiled, and embedded installer scripts are never executed — declared grafts (§3.11) are extracted and hash-verified, not run by this pipeline; they execute only at farm rehearsal and at client install, each time under their own manifest-derived profile (DESIGN §12.15). Payload extraction runs under the same no-network unpack sandbox profile as source archives (DESIGN §10.5).
 
@@ -595,43 +599,13 @@ Ecosystems whose tools fetch their own dependencies — crates, Go modules, gems
 
 ### 7.2 Format
 
-```toml
-lock_version = 1
-generated_by = "aslice 0.3.0"
-index_snapshot = "sha256:8f3a…"        # the TUF snapshot this lock resolved against
+The machine-readable contract is [lock.tosd](../schematics/toml/lock.tosd), with a complete validation fixture in [lock.toml](../tests/fixtures/lock.toml). A lock records `lock_version`, profile, generated-by version, machine OS/flavor, per-repository identity/environment/index bindings, and exact package records.
 
-[machine]
-os     = "12.7"
-flavor = "v3"
-
-[[package]]
-name     = "ffmpeg"
-version  = "7.1.0"
-revision = 0
-build_id = "2f4a9c1e"
-flavor   = "v3"
-min_os   = "10.11"
-origin   = "slice"                     # slice | local-build | vendor-direct
-variants = { x265 = true, debug = false }
-digest   = "sha256:9be4…"              # slice manifest digest (what was verified)
-
-[[package]]
-name     = "x264"
-version  = "0.164.0"
-revision = 1
-build_id = "77aa10b2"
-flavor   = "v3"
-min_os   = "10.11"
-origin   = "slice"
-variants = {}
-digest   = "sha256:c001…"
-```
-
-Three `origin` values exist. `slice`: prebuilt and hosted. `local-build`: compiled on this machine, with the flags recorded. `vendor-direct`: a `redistribute = false` vendor package whose artifact came from the vendor's own URL; the lock records the artifact hash and pinned signer, so a replay verifies against what was actually installed.
+Each package records its repository, name/version/revision, compatibility `build_id`, immutable `artifact_id`, archive `blob_digest`, authenticated `recipe_digest`, origin, resolved variants, flags, CPU/OS requirements, and exact runtime artifact dependencies. Vendor-direct records additionally bind the vendor URL, digest, and signer when signed. Local artifacts must accompany an exported lock for exact replay elsewhere. `digest` is not overloaded between a manifest and a vendor installer. [STATE-AND-RECOVERY §8](STATE-AND-RECOVERY.md#8-plans-locks-archives-and-offline-use) defines replay and trust checks.
 
 ### 7.3 Portability semantics — exact by default, intent-preserving across flavors
 
-Applied on a machine matching `machine.os` and `machine.flavor`, a lock reproduces **bit-identical build_ids**, verified against the same index snapshot or a newer one that still contains them. Applied on a different flavor or an older OS, aslice re-resolves: versions and variants are kept, build identities are swapped to what the flavor offers, and the report lists what changed. Locks are exact where they can be, and explicit about re-resolution where they cannot.
+Applied on a machine matching `machine.os` and `machine.flavor`, a lock reproduces **identical artifact IDs and verified payloads**, verified against the same index snapshot or a newer one that still contains them. Applied on a different flavor or an older OS, aslice re-resolves: versions and variants are kept, build identities are swapped to what the flavor offers, and the report lists what changed. Locks are exact where they can be, and explicit about re-resolution where they cannot.
 
 For `type = "binary"` packages, cross-OS portability means selecting a different `[[binary]]` artifact to match the target machine's OS (§3.11): the version stays pinned, the artifact adapts, and the report says so. If no artifact matches at all — an i386-only package whose lock is replayed on 10.15+, say — re-resolution fails with the reason spelled out; there is nothing to adapt to, and `--frozen` changes nothing.
 
@@ -734,3 +708,5 @@ The full form is in §3.11; the shape to remember is **two `[[binary]]` artifact
 | `[livecheck]` | `strategy` `url` `regex` `skip_prerelease` `throttle_days` `cooldown_days` |
 | `[system-patch]` | `targets` `sip_off_required` `reason` |
 | lock file | `lock_version`, `generated_by`, `index_snapshot`, `[machine]`, `[[package]]` (incl. `origin` = `slice` \| `local-build` \| `vendor-direct`) |
+
+*History: September 2026 — corpus review corrections: artifact identity, protected execution, durable recovery, trust persistence, replay, platform limits, and examples aligned with STATE-AND-RECOVERY and SYSTEM-VOLUMES. These are specification changes; runtime acceptance remains pending.*

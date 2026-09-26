@@ -1,5 +1,7 @@
 # GENESIS — Standing Up aslice From Nothing
 
+> State, identity, privilege, and recovery contracts: [STATE-AND-RECOVERY](STATE-AND-RECOVERY.md). Protected-volume patching: [SYSTEM-VOLUMES](SYSTEM-VOLUMES.md). These specifications do not establish completed implementation or platform validation.
+
 This document is the from-zero runbook. It records how the entire project — keys, toolchain, manager, orchard, repository, farm — is brought into existence, and how it is brought *back* into existence after a total loss. The motivation is one sentence: a project that can be born only once is a project that dies once. Every chicken-and-egg pair in the system has a documented path here, and when a new one is introduced it receives a row in §2 and a step in §1 **before the change lands** — the same discipline the key runbook observes.
 
 One standing rule governs all of this, inherited from the toolchain genesis, the TUF ceremony, and the scanner genesis (BUILD-INFRA §7.5): **genesis events are documented exceptions with receipts, never silent gaps.**
@@ -63,14 +65,14 @@ Everything the project cannot regenerate must exist in **at least two independen
 5. **The archived SDKs** used by toolchain genesis.
 6. **The Apple installer apps for 10.11–12** plus the VM-image manifest (hashes, build notes per release).
 7. **The vendored-source blob area** — the complete content-addressed source archive; it *is* a repository tree, so its mirrors are automatic.
-8. **Every published installer + checksums file** — the historical first steps, kept so any historical snapshot remains installable (snapshot retention: one year whole, monthly forever).
+8. **Every published installer + checksums file** — the historical first steps, kept so any historical snapshot remains installable (snapshot retention: all published snapshots and referenced hosted objects, with current archive authorization).
 
 ## 4. Re-standup after total loss
 
 GitHub gone, farm flooded, domain lapsed: this is the scenario in which §1 must run from the archive alone.
 
 1. Recover the never-lose set and separately stored secrets. Restore root and release keys onto clean Pis, keeping root recovery offline and enabling the release signer’s restricted network only after verification, compare public fingerprints with independently retained trusted records, and verify archived signatures and latest signing state. If root authority is suspect or unavailable, stop this in-band recovery path and use KEY-RUNBOOK §6.
-2. Rebuild the publisher, generate a new timestamp key if the old one is unavailable or suspect, and authorize it through an offline root update before publication. Re-run §1 steps 2–7, **skipping nothing**. The stage0 toolchain comes from the archive — no Apple host rebuild is needed, which is precisely why stage0 is archived. aslice is rebuilt from source with stage1 and digest-compared against the archived binary. The orchard is *re-linked* from the archived tree rather than rebuilt, for the slices and sources are all in `blobs/sha256/`.
+2. Rebuild the publisher, generate a new timestamp key if the old one is unavailable or suspect, and authorize it through an offline root update before publication. Re-run §1 steps 2–7, **skipping nothing**. The stage0 toolchain comes from the archive — no Apple host rebuild is needed, which is precisely why stage0 is archived. aslice is rebuilt from source with stage1 and compared against the archived unsigned canonical reference; the served signed/notarized binary is verified separately (STATE-AND-RECOVERY §10). The orchard is *re-linked* from the archived tree rather than rebuilt, for the slices and sources are all in `blobs/sha256/`.
 3. Re-publish the tree on new infrastructure — any static host, a `file://` directory, a GHCR org; the tree does not care (DESIGN §9.6). Preserve the trusted root chain and publish sequential root updates for changed keys or renewal; clients authenticate each transition under both old and new root thresholds. New mirrors are added to `sources.toml` as a TUF update.
 4. Renew targets and snapshot automatically from the last approved content and refresh timestamps daily as needed; no expired metadata is silently accepted. Verify recovery with existing and fresh clients, including the restored signing state and replacement publisher, per KEY-RUNBOOK §7.
 5. If the root key and usable backups are gone, or root authority is compromised, use KEY-RUNBOOK §6: explicitly rebootstrap with independently authenticated new pins. The archive makes it a bad week, not a death.
@@ -88,3 +90,5 @@ Once a year, on a clean machine, using **only** the never-lose set, rehearse §1
 *Superseded design record: v0.8 (September 2026) — single-operator offline Pi signing replaces the founding-custodian prerequisite; encrypted backups, signer-tool archives, manual batches, and recovery drills define launch and re-standup. Hardware and signing procedures remain unvalidated until executed.*
 
 *History: v0.9 (September 2026) — owner merge becomes the final human release approval, with automatic signing on a dedicated networked Pi and serialized atomic publication. Automatic targets/snapshot renewal replaces manual renewal; the root remains offline. The manual-release design above is superseded. Services and acceptance drills remain implementation work (KEY-RUNBOOK §2.1, §7); schemas and client signature formats are unchanged.*
+
+*History: September 2026 — corpus review corrections: artifact identity, protected execution, durable recovery, trust persistence, replay, platform limits, and examples aligned with STATE-AND-RECOVERY and SYSTEM-VOLUMES. These are specification changes; runtime acceptance remains pending.*

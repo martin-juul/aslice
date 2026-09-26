@@ -127,7 +127,7 @@
                     "type": "array",
                     "items": {
                       "type": "string",
-                      "pattern": "^[0-9a-f]{64}$"
+                      "pattern": "^[0-9a-f]{1,64}$"
                     },
                     "uniqueItems": true
                   }
@@ -165,7 +165,7 @@
         "type": "string",
         "pattern": "^[0-9a-f]+$"
       },
-      "description": "Digest algorithm → hex digest, e.g. sha256."
+      "description": "Digest algorithm \u2192 hex digest, e.g. sha256."
     },
     "key": {
       "type": "object",

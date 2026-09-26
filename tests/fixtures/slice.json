@@ -1,0 +1,13 @@
+{
+  "slice_version": 1,
+  "archive": "pax",
+  "compression": "zstd",
+  "manifest": {
+    "path": "manifest.json",
+    "artifact_id": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+    "size": 100
+  },
+  "payload": "payload/",
+  "payload_entries": 1,
+  "payload_bytes": 1
+}

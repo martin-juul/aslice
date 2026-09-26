@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aslice.sh/schematics/json/slice.schema.json",
+  "title": "aslice .slice container descriptor",
+  "description": "Schema for slice.json inside a .slice archive. Byte layout and semantic checks: docs/SLICE-FORMAT.md. This descriptor cannot authenticate itself; the archive digest and detached signature are verified before extraction.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["slice_version", "archive", "compression", "manifest", "payload", "payload_entries", "payload_bytes"],
+  "properties": {
+    "slice_version": {"type": "integer", "const": 1},
+    "archive": {"type": "string", "const": "pax"},
+    "compression": {"type": "string", "const": "zstd"},
+    "manifest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "artifact_id", "size"],
+      "properties": {
+        "path": {"type": "string", "const": "manifest.json"},
+        "artifact_id": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+        "size": {"type": "integer", "minimum": 1, "maximum": 16777216}
+      }
+    },
+    "payload": {"type": "string", "const": "payload/"},
+    "payload_entries": {"type": "integer", "minimum": 0, "maximum": 1000000},
+    "payload_bytes": {"type": "integer", "minimum": 0, "maximum": 1099511627776}
+  }
+}

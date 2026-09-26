@@ -18,7 +18,7 @@ The third document kind belongs elsewhere: a whole-machine **setup file** (`sche
 
 # APPLY SEMANTICS
 
-The document is shown and confirmed before execution. Execution is one generation swap: the new generation is built in full, then the profile switches atomically — a failure leaves the current generation untouched, and `aslice rollback` returns to it.
+The document is shown and confirmed before execution. Before execution, exact artifact records, repository identities, machine requirements, and the expected base generation are revalidated. A stale plan is refused. Packages are staged before activation; external writes and profile changes follow the durable journal. Failure after live changes invokes recovery and may require conflict resolution or reboot. Package rollback does not restore application data (STATE-AND-RECOVERY §5, §8).
 
 **--dry-run** prints the complete plan and changes nothing.
 

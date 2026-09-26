@@ -1,6 +1,8 @@
 # aslice Setup — Declarative Whole-Machine Setup with `aslice-machine.toml`
 
-- **Status:** Design draft, v0.11 — September 2026 (v0.2: editorial pass — prose revised for directness; no schema or semantic changes. v0.3: second editorial pass — sentence-level revision for readability; no schema or semantic changes. v0.4: prose rewrite throughout — chapters reworded in the project's technical-writing voice; no schema or semantic changes. v0.5: review pass — the trust-stickiness reference retargeted to REPOSITORIES.md §4; companion refreshed to DESIGN v1.14; no schema or semantic changes. v0.6: NOMENCLATURE.md vocabulary reference added to the header; companion refreshed to DESIGN v1.15; no schema or semantic changes. v0.7: companion refreshed to DESIGN v1.16; no schema or semantic changes. v0.8: companion refreshed to DESIGN v1.17; no schema or semantic changes. v0.9: the file is renamed `aslice-machine.toml` — a reserved, self-describing name that other tools can recognize — and the command surface splits by document kind: `aslice machine apply` / `export` / `import --from-brewfile` for the machine file, while top-level `aslice apply` keeps plans and lock files (owner decision, September 2026); no schema changes. v0.10: grafts — §2.8 introduces the `[grafts]` allow-list (pnpm-style pre-approval of declared installer scripts; signed manifests only), §2.1's schema overview gains the table, §3.4 gains the graft consent gate, §4.1's export captures recorded approvals, §7's attack-surface accounting gains the fourth bound, §3.2's ordering note gains the elevated-graft case, and §9's reference gains `--accept-grafts`; companion refreshed to DESIGN v1.19; model in DESIGN §12.15. v0.11: prose review pass — an intensifier removed (§1) and the Brewfile comparison stated precisely (§7); gems kept deliberately ('what the list waives is the question, not the evidence', 'the price of admission', 'there is nothing else to buy'); companion refreshed to DESIGN v1.20; no schema or semantic changes)
+> State, identity, privilege, and recovery contracts: [STATE-AND-RECOVERY](STATE-AND-RECOVERY.md). Protected-volume patching: [SYSTEM-VOLUMES](SYSTEM-VOLUMES.md). These specifications do not establish completed implementation or platform validation.
+
+- **Status:** Design draft, v0.12 — September 2026 (v0.2: editorial pass — prose revised for directness; no schema or semantic changes. v0.3: second editorial pass — sentence-level revision for readability; no schema or semantic changes. v0.4: prose rewrite throughout — chapters reworded in the project's technical-writing voice; no schema or semantic changes. v0.5: review pass — the trust-stickiness reference retargeted to REPOSITORIES.md §4; companion refreshed to DESIGN v1.14; no schema or semantic changes. v0.6: NOMENCLATURE.md vocabulary reference added to the header; companion refreshed to DESIGN v1.15; no schema or semantic changes. v0.7: companion refreshed to DESIGN v1.16; no schema or semantic changes. v0.8: companion refreshed to DESIGN v1.17; no schema or semantic changes. v0.9: the file is renamed `aslice-machine.toml` — a reserved, self-describing name that other tools can recognize — and the command surface splits by document kind: `aslice machine apply` / `export` / `import --from-brewfile` for the machine file, while top-level `aslice apply` keeps plans and lock files (owner decision, September 2026); no schema changes. v0.10: grafts — §2.8 introduces the `[grafts]` allow-list (pnpm-style pre-approval of declared installer scripts; signed manifests only), §2.1's schema overview gains the table, §3.4 gains the graft consent gate, §4.1's export captures recorded approvals, §7's attack-surface accounting gains the fourth bound, §3.2's ordering note gains the elevated-graft case, and §9's reference gains `--accept-grafts`; companion refreshed to DESIGN v1.19; model in DESIGN §12.15. v0.11: prose review pass — an intensifier removed (§1) and the Brewfile comparison stated precisely (§7); gems kept deliberately ('what the list waives is the question, not the evidence', 'the price of admission', 'there is nothing else to buy'); companion refreshed to DESIGN v1.20; no schema or semantic changes)
 - **Companion to:** DESIGN.md v1.22 §12.13 (architecture and rationale), MANUAL.md §10 (user guide), aslice-machine(1) (command reference). This document is the schema and semantics specification.
 - **Vocabulary:** [NOMENCLATURE.md](NOMENCLATURE.md) — project terms, acronyms, and the Homebrew translation table.
 
@@ -34,6 +36,12 @@ aslice machine export --defaults com.apple.dock,com.apple.finder > aslice-machin
 # aslice-machine.toml — declarative system setup for aslice. Apply: aslice machine apply
 schema = 1                     # required; unknown schema versions are a hard error
 
+packages = [                   # the wishlist: constraints, not exact state
+  "ffmpeg@7",                  #   version constraint (§12.1 syntax)
+  "postgresql +ssl",           #   variants
+  "audiolab:convolver",        #   repository-namespaced (REPOSITORIES.md)
+]
+
 [aslice]                       # optional: aslice's own configuration (MANUAL §13)
 flavor = "v3"                  # any key from the configuration reference is allowed
 
@@ -41,11 +49,6 @@ flavor = "v3"                  # any key from the configuration reference is all
 name = "audiolab"
 url  = "https://repo.example.org"
 
-packages = [                   # the wishlist: constraints, not exact state
-  "ffmpeg@7",                  #   version constraint (§12.1 syntax)
-  "postgresql +ssl",           #   variants
-  "audiolab:convolver",        #   repository-namespaced (REPOSITORIES.md)
-]
 
 [runtimes.default]             # profile-wide runtime stream selections (DESIGN §12.9)
 php    = "8.4"
@@ -190,7 +193,7 @@ The upshot: a file fetched from someone else is safe to *plan* unconditionally. 
 
 ### 3.5 Recorded inverses: preferences ride generations
 
-Package changes are already generation-managed (DESIGN §8.3); setup extends the same discipline to everything else it touches. Before each preference write, shell change, or `/etc/shells` enrollment, the **pre-change value** (or the key's absence) is recorded in the state DB against the new generation. The payoff is in `aslice rollback`: it restores not just the profile symlinks and the lock, but the preferences and the login shell as they were. One operation, whole machine — the same way §12.11's backup discipline makes patch rollback automatic.
+Machine apply uses the durable transaction and conflict rules in STATE-AND-RECOVERY §5. Record exact pre-change values before preferences, shell, and `/etc/shells` changes; journal external operations and reconcile them after interruption. Rollback restores managed state only when expected values still match, and does not undo application-data migrations. Protected-volume changes require the separate Recovery/reboot workflow in SYSTEM-VOLUMES.
 
 The same record powers `--prune` (§3.3) and `aslice history`. Every setup-applied change is attributable: which file, which apply, which generation.
 
@@ -207,7 +210,7 @@ If a step fails, the plan aborts at that point. The steps that completed stand �
 - **Packages** — the leaves (`aslice leaves`: explicitly requested, not dependencies), with `@stream` where a stream selection matters, non-default variants as `+flags`, and non-official origins as `repo:` namespaces. Locally-built packages are included but commented out, with a note explaining why: they cannot be reproduced from a repository, and pretending otherwise is how shared files rot.
 - **Runtime selections** — the profile-wide defaults (§2.3). Session variables and project pins are not machine state, so they are not exported.
 - **Services** — the enabled set.
-- **Login shell** — exported only when it differs from the OS default (`/bin/bash` on every in-scope release). An aslice-managed shell path maps back to its package name; a foreign path (a Homebrew-installed shell, say) is commented out with the raw path and a note.
+- **Login shell** — exported only when it differs from the OS default (`/bin/bash` before Catalina; `/bin/zsh` for new accounts on Catalina and later, with migrated accounts checked from their actual state). An aslice-managed shell path maps back to its package name; a foreign path (a Homebrew-installed shell, say) is commented out with the raw path and a note.
 - **Repositories** — the configured non-official repositories, name + URL. Keys are re-pinned by the applying machine through normal TOFU; exported files carry no key material.
 - **Configuration** — `[aslice]` keys whose values differ from defaults.
 - **Graft approvals** — exported as `[grafts].allow` (§2.8): the packages whose grafts you approved interactively, so a rebuilt machine replays the same decisions. Approvals of unsigned manifests are never recorded (DESIGN §12.15), so there is nothing to export — every export of the list is, by construction, a list of signed-manifest packages.
@@ -293,3 +296,5 @@ aslice machine import --from-brewfile <Brewfile>
 Plans and lock files keep the top-level verb: `aslice apply plan.json` executes a saved plan (DESIGN §12.1) and `aslice apply aslice.lock` replays a locked profile (PACKAGE-FORMAT §7).
 
 Exit status: **0** applied (or nothing to do); **1** error (schema, resolution, execution); **2** refused at a consent or trust gate. The plan is always printed before execution, and security events are logged unsuppressibly per DESIGN §12.5.
+
+*History: September 2026 — corpus review corrections: artifact identity, protected execution, durable recovery, trust persistence, replay, platform limits, and examples aligned with STATE-AND-RECOVERY and SYSTEM-VOLUMES. These are specification changes; runtime acceptance remains pending.*

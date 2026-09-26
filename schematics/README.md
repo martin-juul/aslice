@@ -1,12 +1,12 @@
 # aslice Schematics — Machine-Readable File Schemas
 
 - **Status:** v0.1 — September 2026
-- **Scope:** one schema for every file format aslice reads or writes, kept beside the prose specifications that define those formats.
+- **Scope:** schemas for the public formats listed below; internal journal/service records require implementation specifications before those features ship, kept beside the prose specifications that define those formats.
 - **Vocabulary:** [../docs/NOMENCLATURE.md](../docs/NOMENCLATURE.md).
 
 ## What this directory is
 
-Every file aslice parses — formulas, lock files, machine documents, configuration, plans, index snapshots — has a prose specification in `docs/`, and now a machine-readable schema here. The prose owns the semantics; the schematic owns the structure. The pairing rule, per format:
+The public formats below pair prose contracts with structural schemas. Internal transaction journals, privileged authorization messages, certificate-policy inventories, and recovery-kit formats remain implementation gates under STATE-AND-RECOVERY; this directory does not claim those formats are complete. The prose owns the semantics; the schematic owns the structure. The pairing rule, per format:
 
 | File | Format | Schematic | Prose specification |
 |---|---|---|---|
@@ -18,6 +18,10 @@ Every file aslice parses — formulas, lock files, machine documents, configurat
 | `/opt/aslice/etc/sources.toml` | TOML | [`toml/sources.tosd`](toml/sources.tosd) | REPOSITORIES.md §2 |
 | `repo.toml` | TOML | [`toml/repo.tosd`](toml/repo.tosd) | *proposed — see below* |
 | `plan.json` | JSON | [`json/plan.schema.json`](json/plan.schema.json) | DESIGN.md §12.2 |
+| `.slice` container descriptor (`slice.json`) | JSON inside pax tar + Zstandard | [`json/slice.schema.json`](json/slice.schema.json) | [SLICE-FORMAT.md](../docs/SLICE-FORMAT.md) |
+| canonical artifact manifest | JSON | [`json/artifact-manifest.schema.json`](json/artifact-manifest.schema.json) | STATE-AND-RECOVERY §1–§2 |
+| exact package record | JSON | [`json/package-record.schema.json`](json/package-record.schema.json) | STATE-AND-RECOVERY §8 |
+| archive catalog | JSON | [`json/archive-catalog.schema.json`](json/archive-catalog.schema.json) | STATE-AND-RECOVERY §8 |
 | index snapshot | JSON | [`json/index-snapshot.schema.json`](json/index-snapshot.schema.json) | DESIGN.md §9.6 |
 | TUF metadata | JSON | [`json/tuf/*.schema.json`](json/tuf/) | upstream TUF 1.0 specification |
 | `build.star` | Starlark | [`starlark/build.schema.star`](starlark/build.schema.star) | PACKAGE-FORMAT.md §6.3 |
@@ -25,7 +29,7 @@ Every file aslice parses — formulas, lock files, machine documents, configurat
 
 ## The three schema languages
 
-One rule picks the language: **the schema is written in the file's own family.** TOML files get [TOML Schema](https://tomlschema.org) (`.tosd` — TOML documents describing TOML documents). JSON files get [JSON Schema](https://json-schema.org) draft 2020-12 (JSON describing JSON). Starlark files get **starlarkschema**, defined below — Starlark describing Starlark, built for this project because nothing off the shelf does the job.
+One rule picks the language: **the schema is written in the file's own family.** TOML files get [TOML Schema](../docs/refs/TOML_SCHEMA_SPECIFICATION.MD) (`.tosd` — TOML documents describing TOML documents). JSON files get [JSON Schema core](../docs/refs/JSON_SCHEMA_2020_12_CORE.MD) and [validation](../docs/refs/JSON_SCHEMA_2020_12_VALIDATION.MD), draft 2020-12 (JSON describing JSON). Starlark files get **starlarkschema**, defined below — Starlark describing Starlark, built for this project because nothing off the shelf does the job.
 
 The TUF schematics under `json/tuf/` are local copies derived from the upstream TUF 1.0 specification, shipped so a validator never has to fetch a schema to check repository metadata. Where they and the upstream spec disagree, upstream wins and the copy is a bug — report it.
 
@@ -38,8 +42,8 @@ The prose specifications in `docs/` are authoritative for semantics; the schemat
 Three honesty rules govern the directory:
 
 1. **A schematic never invents a field.** Every key, enum, and pattern traces to a prose specification section, named in the file's own metadata. Where the prose is silent — see *Derived schematics* below — the schematic says so in its metadata and in this README.
-2. **Unknown keys are errors everywhere.** Every TOML schematic here is a closed table at every level, matching the house rule (PACKAGE-FORMAT §3, SETUP §2.1): a file written for a newer aslice fails on an older one, outright, never half-applied. The JSON schematics set `additionalProperties: false` to the same end.
-3. **What a schema cannot say, lint still checks.** Cross-field and cross-file rules — the `type = "binary"` exclusions of PACKAGE-FORMAT §3.11, the derived 32-bit `max_os` ceiling, `[grafts] allow` entries naming packages the machine file installs — are beyond both schema languages' expressiveness (TOML Schema 1.0 has no cross-path rules by design). They remain `aslice lint` semantic checks; the schematics list the important ones in their metadata so nobody mistakes schema-valid for valid.
+2. **Unknown structural keys are errors.** Fixed TOML tables and JSON objects reject unknown fields. Declared collections, such as runtime names, environment variables, and variants, intentionally accept dynamic keys under their item rules. A TOML table with no fixed children is open under the archived language specification; it must not be used to claim closed-table enforcement.
+3. **Structural validation is only one gate.** Cross-file rules, payload-derived CPU/OS requirements, capability authorization, and artifact verification still require semantic checks. Conditional rules expressible in a schema should also be encoded where practical; schema validity alone never establishes a safe installation.
 
 ## Derived schematics
 
@@ -48,7 +52,7 @@ Four schematics cover ground the prose specifies only in part. Each is faithful 
 - **`json/plan.schema.json`** — DESIGN §12.2 establishes the plan/apply split and that plans are JSON; the field layout is derived from the lock-file record (PACKAGE-FORMAT §7.2) plus the consent gates a plan must surface (DESIGN §12.11, §12.15).
 - **`json/index-snapshot.schema.json`** — DESIGN §9.6 fixes the transport (zstd JSON snapshots + diffs) and the per-package tags (versions, build identities, OS bounds, flavors, arch, source hashes); ORCHARD-POLICY §8 adds permanent tombstones; REPOSITORIES §3 adds signed graft manifests. The concrete JSON layout is derived from those statements.
 - **`toml/repo.tosd`** — NOMENCLATURE defines a repository as "a Git repository of formulas with a `repo.toml`", but no prose section enumerates its keys yet. This schematic is the proposed minimal shape: the `namespace` the repository serves (REPOSITORIES §2) plus human-facing metadata. It deliberately contains no trust level — trust is assigned by the client, never claimed by the file (REPOSITORIES §1, axiom 2).
-- **`toml/project.tosd`** — DESIGN §12.9 and aslice-use(1) fix the content (one file pinning every runtime to a stream; streams like `8.4`, never exact patches) but not the table header. This schematic fixes it as `[pins]`, the project-layer sibling of the machine file's `[runtimes.default]`.
+- **`toml/project.tosd`** — DESIGN §12.9 and aslice-use(1) fix the content (one file pinning every runtime to a stream; streams like `8.4`, never exact patches) and the `[runtimes]` table header. This schematic uses `[runtimes]`, the project-layer sibling of the machine file's `[runtimes.default]`.
 
 ## starlarkschema — the Starlark schema format (v1.0.0)
 
@@ -77,7 +81,7 @@ Unknown keys inside `schema` are schema-load errors, as are unknown keys inside 
 `entry_points` maps a function name to a descriptor:
 
 - `"required"` — bool, default False. A required entry point missing from the target module is a validation error.
-- `"params"` — list of parameter descriptors, in order: `{"name": "ctx", "type": "ctx"}`. A parameter may carry `"default"` (any literal) to mark it optional. A descriptor `{"varargs": True}` as the last entry permits arbitrary extra positional arguments (the `ctx.run(argv…)` shape).
+- `"params"` — list of parameter descriptors, in order: `{"name": "ctx", "type": "ctx"}`. A parameter may carry `"default"` (any literal) to mark it optional. A descriptor `{"varargs": True}` permits arbitrary extra positional arguments; any following parameters must carry `"keyword_only": True` (the `ctx.run(argv…)` shape).
 - `"returns"` — a type descriptor; default `"none"`.
 - `"description"` — optional; any descriptor at any level may carry one.
 

@@ -53,3 +53,8 @@ type = "array"
 itemtype = "string"
 minlength = 1
 optional = true
+
+[elements.identity]
+type = "string"
+minlength = 1
+description = "Stable repository identity bound by trusted metadata."

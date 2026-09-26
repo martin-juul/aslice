@@ -1,102 +1,178 @@
-# TOML Schema for aslice.lock — exported machine locks.
-# Prose specification: docs/PACKAGE-FORMAT.md §7 (v0.15). Where this file and the
-# prose disagree, the disagreement is a bug (schematics/README.md).
-#
-# Semantic rules lint/apply keep beyond this schema:
-#   - origin = "vendor-direct" implies the artifact was fetched from the vendor's
-#     URL; the signer pin is verified at replay (§7.2).
-#   - Cross-flavor/older-OS application re-resolves build identities unless
-#     --frozen is passed (§7.3).
-
+# Exact profile lock. Semantics: docs/STATE-AND-RECOVERY.md §8.
 [toml-schema]
 version = "1.0.0"
 
-[toml-schema.meta]
-target = "aslice.lock"
-prose = "docs/PACKAGE-FORMAT.md"
-prose_version = "0.15"
-schematics = "0.1"
-
-[types.flavor]
-type = "string"
-allowedvalues = [ "v1", "v2", "v3" ]
-
-[types.lockPackage]
-type = "table"
-description = "One exactly-resolved package (§7.2)."
-
-    [types.lockPackage.name]
-    type = "string"
-    pattern = "^[a-z0-9][a-z0-9-]*$"
-
-    [types.lockPackage.version]
-    type = "string"
-    minlength = 1
-    description = "Normalized version (PACKAGE-FORMAT §4)."
-
-    [types.lockPackage.revision]
-    type = "integer"
-    min = 0
-
-    [types.lockPackage.build_id]
-    type = "string"
-    pattern = "^[0-9a-f]+$"
-    description = "Build identity (DESIGN §7.2); bit-identical on exact replay."
-
-    [types.lockPackage.flavor]
-    type = "types.flavor"
-
-    [types.lockPackage.min_os]
-    type = "string"
-    allowedvalues = [ "10.11", "10.12", "10.13", "10.14", "10.15", "11", "12" ]
-
-    [types.lockPackage.origin]
-    type = "string"
-    allowedvalues = [ "slice", "local-build", "vendor-direct" ]
-    description = "slice: prebuilt and hosted. local-build: compiled on the machine. vendor-direct: redistribute = false artifact from the vendor's URL (§7.2)."
-
-    [types.lockPackage.variants]
-    type = "collection"
-    itemtype = "boolean"
-    keypattern = "^[a-z0-9][a-z0-9_]*$"
-    description = "The resolved variant assignment."
-
-    [types.lockPackage.digest]
-    type = "string"
-    pattern = "^sha256:[0-9a-f]{64}$"
-    description = "Slice manifest digest — what was verified (§7.2)."
-
-    [types.lockPackage.signer]
-    type = "string"
-    optional = true
-    description = "Pinned vendor signer for origin = vendor-direct, so a replay verifies against what was actually installed (§7.2). Field name derived; the prose fixes the content, not the spelling."
-
 [elements.lock_version]
 type = "integer"
-allowedvalues = [ 1 ]
+allowedvalues = [1]
 
 [elements.generated_by]
 type = "string"
 minlength = 1
-description = "Tool and version that wrote the lock, e.g. aslice 0.3.0."
 
-[elements.index_snapshot]
+[elements.profile]
 type = "string"
-pattern = "^sha256:[0-9a-f]{64}$"
-description = "The TUF snapshot this lock resolved against (§7.2)."
+pattern = "^[a-z0-9][a-z0-9-]*$"
 
 [elements.machine]
 type = "table"
-description = "The machine profile the lock resolved on; replay matches or re-resolves (§7.3)."
 
-    [elements.machine.os]
-    type = "string"
-    pattern = "^(10[.]1[1-5]|11|12)([.][0-9]+)?$"
-    description = "macOS release, e.g. 12.7."
+[elements.machine.os]
+type = "string"
+pattern = "^(10\\.1[1-5]|11|12)(\\.[0-9]+)?$"
 
-    [elements.machine.flavor]
-    type = "types.flavor"
+[elements.machine.flavor]
+type = "string"
+allowedvalues = ["v1", "v2", "v3"]
+
+[elements.repositories]
+type = "array"
+itemtype = "types.repositoriesItem"
+
+[types.repositoriesItem]
+type = "table"
+
+[types.repositoriesItem.namespace]
+type = "string"
+pattern = "^[a-z0-9][a-z0-9-]*$"
+
+[types.repositoriesItem.identity]
+type = "string"
+minlength = 1
+
+[types.repositoriesItem.environment]
+type = "string"
+allowedvalues = ["dev", "staging", "prod"]
+
+[types.repositoriesItem.index_digest]
+type = "string"
+pattern = "^sha256:[0-9a-f]{64}$"
 
 [elements.package]
 type = "array"
-itemtype = "types.lockPackage"
+itemtype = "types.packageItem"
+
+[types.packageItem]
+type = "table"
+
+[types.packageItem.repository]
+type = "string"
+pattern = "^[a-z0-9][a-z0-9-]*$"
+
+[types.packageItem.name]
+type = "string"
+pattern = "^[a-z0-9][a-z0-9-]*$"
+
+[types.packageItem.version]
+type = "string"
+minlength = 1
+
+[types.packageItem.epoch]
+type = "integer"
+min = 0
+max = 9007199254740991
+
+[types.packageItem.revision]
+type = "integer"
+min = 0
+max = 9007199254740991
+
+[types.packageItem.build_id]
+type = "string"
+pattern = "^[0-9a-f]{64}$"
+
+[types.packageItem.artifact_id]
+type = "string"
+pattern = "^sha256:[0-9a-f]{64}$"
+
+[types.packageItem.manifest_size]
+type = "integer"
+min = 0
+max = 9007199254740991
+
+[types.packageItem.blob_digest]
+type = "string"
+pattern = "^sha256:[0-9a-f]{64}$"
+
+[types.packageItem.blob_size]
+type = "integer"
+min = 0
+max = 9007199254740991
+
+[types.packageItem.recipe_digest]
+type = "string"
+pattern = "^sha256:[0-9a-f]{64}$"
+
+[types.packageItem.recipe_size]
+type = "integer"
+min = 0
+max = 9007199254740991
+
+[types.packageItem.origin]
+type = "string"
+allowedvalues = ["slice", "local-build", "vendor-direct"]
+
+[types.packageItem.variants]
+type = "collection"
+itemtype = "boolean"
+
+[types.packageItem.user_flags]
+type = "collection"
+itemtype = "string"
+
+[types.packageItem.cpu_features]
+type = "array"
+itemtype = "string"
+uniqueitems = true
+
+[types.packageItem.requires_i386]
+type = "boolean"
+
+[types.packageItem.min_os]
+type = "string"
+allowedvalues = ["10.11", "10.12", "10.13", "10.14", "10.15", "11", "12"]
+
+[types.packageItem.max_os]
+type = "string"
+optional = true
+allowedvalues = ["10.11", "10.12", "10.13", "10.14", "10.15", "11", "12"]
+
+[types.packageItem.flavor]
+type = "string"
+optional = true
+allowedvalues = ["v1", "v2", "v3"]
+
+[types.packageItem.dependencies]
+type = "array"
+itemtype = "types.dependenciesItem"
+
+[types.dependenciesItem]
+type = "table"
+
+[types.dependenciesItem.repository]
+type = "string"
+pattern = "^[a-z0-9][a-z0-9-]*$"
+
+[types.dependenciesItem.name]
+type = "string"
+pattern = "^[a-z0-9][a-z0-9-]*$"
+
+[types.dependenciesItem.artifact_id]
+type = "string"
+pattern = "^sha256:[0-9a-f]{64}$"
+
+[types.packageItem.vendor]
+type = "table"
+optional = true
+
+[types.packageItem.vendor.url]
+type = "string"
+
+[types.packageItem.vendor.digest]
+type = "string"
+pattern = "^sha256:[0-9a-f]{64}$"
+
+[types.packageItem.vendor.signer]
+type = "string"
+optional = true
+minlength = 1

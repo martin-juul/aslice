@@ -32,7 +32,7 @@ The plan is computed in full and confirmed before execution: validate, repositor
 
 **--prune** opts into retraction: anything recorded as file-managed but no longer declared is removed or restored to its recorded pre-apply value. Prune never touches hand-installed packages or hand-set keys, and never removes repositories — trust decisions are sticky (REPOSITORIES.md §10).
 
-Before every preference write, shell change, or `/etc/shells` enrollment, the pre-change value is recorded against the new generation: `aslice rollback` restores preferences and login shell together with the profile. `aslice history` attributes every applied change to its file hash and generation.
+Before every preference write, shell change, or `/etc/shells` enrollment, the pre-change value is recorded against the new generation: `aslice rollback` plans restoration of preferences and login shell with the profile, checking for intervening external edits before writing. Conflicts require attention; protected-volume changes may require Recovery and reboot. `aslice history` attributes every applied change to its file hash and generation.
 
 # CONSENT GATES
 

@@ -61,3 +61,19 @@ type = "collection"
 itemtype = "types.sourceEntry"
 keypattern = "^[a-z0-9][a-z0-9-]*$"
 minlength = 1
+
+[types.sourceEntry.identity]
+type = "string"
+minlength = 1
+description = "Stable repository identity; changing a URL does not change authority."
+
+[types.sourceEntry.tuf_root_fingerprint]
+type = "string"
+pattern = "^sha256:[0-9a-f]{64}$"
+description = "Initial Ed25519 TUF root anchor. key_fingerprint identifies the package-signing key, not this anchor."
+
+[elements.revoked_keys]
+type = "array"
+itemtype = "string"
+optional = true
+uniqueitems = true

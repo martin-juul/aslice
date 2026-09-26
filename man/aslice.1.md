@@ -12,7 +12,7 @@ aslice — a package manager for Intel macOS (10.11–12, x86_64)
 
 # DESCRIPTION
 
-aslice installs and manages software on Intel Macs running macOS 10.11 through 12. Packages are **slices** — prebuilt, signed binaries — installed from signed, static **repositories** compiled from **orchards** (git repositories of formulae). Installs are binary-first, execute no undeclared package code — a vendor installer script runs only as a declared, approved graft (aslice-graft(1)) — and never require sudo in steady state. Every mutating operation creates a new **generation**; `aslice rollback` returns to any previous one.
+aslice installs and manages software on Intel Macs running macOS 10.11 through 12. Packages are **slices** — prebuilt, signed binaries — installed from signed, static **repositories** compiled from **orchards** (git repositories of formulae). Installs are binary-first, execute no undeclared package code — a vendor installer script runs only as a declared, approved graft (aslice-graft(1)) — and never require sudo in steady state. Package activation creates a new **generation**. `aslice rollback` restores retained managed state through the transaction journal; external conflicts and reboot requirements are reported, and application data needs its own backup procedure.
 
 aslice collects no telemetry or analytics of any kind — there is no opt-out because there is no instrumentation.
 
@@ -34,7 +34,7 @@ aslice collects no telemetry or analytics of any kind — there is no opt-out be
 :   Collect dependencies nothing needs; repair a package's requested/dependency record.
 
 **history**, **rollback**, **switch-generation**
-:   List generations and move between them. Rollback is exact and non-destructive.
+:   List generations and move between them. Rollback verifies retained artifacts and checks external-state conflicts; application databases are outside package rollback.
 
 **gc**, **clean**, **store verify**
 :   Reclaim the store, evict the cache, re-verify store integrity. See aslice-gc(1).

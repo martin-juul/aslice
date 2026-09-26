@@ -1,5 +1,7 @@
 # Signing, Recovery, and Key Rotation Runbook
 
+> State, identity, privilege, and recovery contracts: [STATE-AND-RECOVERY](STATE-AND-RECOVERY.md). Protected-volume patching: [SYSTEM-VOLUMES](SYSTEM-VOLUMES.md). These specifications do not establish completed implementation or platform validation.
+
 This runbook governs every cryptographic key aslice trusts; DESIGN §10.2 calls for it by name. Its purpose is one sentence: the worst day of the project should be a procedure, not an improvisation.
 
 **Status: design, September 2026.** The initial release uses one accountable operator, two existing Raspberry Pis, and encrypted software keys. Hardware validation and the drills below remain launch requirements, not completed work. Independent custodians and hardware tokens are future options, not launch prerequisites.
@@ -109,10 +111,10 @@ Migrate through §3.1: the first multi-party root must satisfy both the current 
 
 Hardware is optional. Evaluate exact model, firmware, application, middleware, Pi support, algorithm, signature format, cost, and backup/recovery behavior with actual sign/verify and recovery trials before adoption:
 
-- [SmartCard-HSM USB token](https://www.cardlogix.com/product/smartcard-hsm-4k-usb-token/): listed RSA/ECDSA algorithms do not establish Ed25519/minisign compatibility. Backup and threshold-authentication features do not themselves implement TUF's multi-signature threshold. Obtain a quote and confirm the supplied version.
-- Existing YubiKey 4 devices: inventory first. [Yubico's PIV documentation](https://developers.yubico.com/PIV/Introduction/YubiKey_and_PIV.html) places PIV Ed25519 support at firmware 5.7+, so these older devices cannot implement the current design through PIV. Other applications require their own compatibility proof.
+- [SmartCard-HSM USB token](refs/SMARTCARD_HSM_ALGORITHMS.MD): listed RSA/ECDSA algorithms do not establish Ed25519/minisign compatibility. Backup and threshold-authentication features do not themselves implement TUF's multi-signature threshold. Obtain a quote and confirm the supplied version.
+- Existing YubiKey 4 devices: inventory first. [Yubico's PIV documentation](refs/YUBIKEY_PIV_ALGORITHMS.MD) places PIV Ed25519 support at firmware 5.7+, so these older devices cannot implement the current design through PIV. Other applications require their own compatibility proof.
 
-Keep Ed25519 and minisign for launch. Changing algorithms requires a separate client-compatibility decision. Root-transition requirements follow the [TUF specification](https://github.com/theupdateframework/specification/blob/master/tuf-spec.md).
+Keep Ed25519 and minisign for launch. Changing algorithms requires a separate client-compatibility decision. Root-transition requirements follow the [TUF specification](refs/THE_UPDATE_FRAMEWORK_SPECIFICATION.MD).
 
 ## 6. Disaster recovery: trust rebootstrap
 
@@ -142,3 +144,5 @@ Repeat backup restoration and planned root rotation annually. Restore and verify
 Users' machines have no project-held per-user keys or accounts. Third-party orchards maintain their own keys under REPOSITORIES §5. Vendor Apple signatures and source-verification keys remain separate from repository signing. An optional hardware security-contact PGP key does not impose a token requirement on launch.
 
 *History: September 2026 — the manual offline-release design is superseded by owner-merge authorization, a dedicated networked release signer, automatic metadata renewal, and serialized atomic publication. The offline 1-of-1 root, encrypted backups, recovery drills, Ed25519/minisign formats, and future multi-party migration remain. Services and hardware drills are not yet implemented or validated.*
+
+*History: September 2026 — corpus review corrections: artifact identity, protected execution, durable recovery, trust persistence, replay, platform limits, and examples aligned with STATE-AND-RECOVERY and SYSTEM-VOLUMES. These are specification changes; runtime acceptance remains pending.*

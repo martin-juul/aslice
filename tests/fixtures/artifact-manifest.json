@@ -1,0 +1,31 @@
+{
+  "manifest_version": 1,
+  "repository": "core",
+  "name": "example",
+  "version": "1.0.0",
+  "epoch": 0,
+  "revision": 0,
+  "build_id": "1111111111111111111111111111111111111111111111111111111111111111",
+  "recipe_digest": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+  "user_flags": {},
+  "cpu_features": [
+    "sse2"
+  ],
+  "requires_i386": false,
+  "min_os": "10.11",
+  "files": [
+    {
+      "path": "bin/example",
+      "kind": "file",
+      "mode": "0755",
+      "sha256": "7777777777777777777777777777777777777777777777777777777777777777",
+      "size": 1
+    }
+  ],
+  "dependencies": [],
+  "relocations": [],
+  "abi": {
+    "provides": [],
+    "requires": []
+  }
+}

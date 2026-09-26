@@ -1,0 +1,14 @@
+{
+  "catalog_version": 1,
+  "repository": "core",
+  "identity": "urn:aslice:repo:core-fixture",
+  "environment": "prod",
+  "objects": [
+    {
+      "digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+      "length": 100,
+      "kind": "manifest",
+      "status": "available"
+    }
+  ]
+}

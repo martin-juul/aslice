@@ -38,7 +38,7 @@ aslice build ./my-formula --keep --shell  # drop into the sandbox at the failed 
 aslice test my-formula                  # tests.star against the installed result
 ```
 
-The build your laptop runs is byte-for-byte the pipeline the farm runs (BUILD-INFRA §1). "Works on my machine" is eliminated by construction — if it passes your sandbox, it passes CI's.
+Local and farm builds use the same pipeline, but host capability and OS coverage still differ. `orchard ci` reports tests deferred to the farm; a local pass alone does not prove the complete matrix.
 
 ### Porting from Homebrew
 
@@ -84,7 +84,7 @@ Maintainer judgment on what's over the line is final. The line is short and obvi
 
 ## License
 
-Contributions are licensed under the project's license. By opening a PR you agree your contribution may be distributed, rebuilt, and served by the farm under those terms.
+Original contributions are licensed under [Apache-2.0](LICENSE), the project's license. Third-party material retains its applicable license and attribution. By submitting a contribution you agree to Apache-2.0's contribution terms.
 
 ---
 

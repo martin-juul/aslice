@@ -17,17 +17,13 @@ aslice-ca-update — refresh CA trust on a frozen OS
 
 # DESCRIPTION
 
-The system trust store on 10.11–10.13 froze years ago; modern roots never arrived and old ones expired. `ca-update` heals TLS in layers, each saying what it can and cannot do.
+Bare **ca-update** refreshes the signed private CA bundle for compatible aslice clients. `shellenv` configures their certificate paths. A root refresh does not itself supply new ciphers or TLS protocols; **--crypto** separately upgrades compatible aslice crypto providers. **--check** reports staleness without changing anything.
 
-Bare **ca-update** refreshes the `ca-certificates` slice — the Mozilla root program's store, shipped as an ordinary signed, generation-managed package — and validates it before activation (parses completely, non-empty, no already-expired certificates). The shell integration points `SSL_CERT_FILE`, `CURL_CA_BUNDLE`, and `GIT_SSL_CAINFO` at it, so aslice's curl, git, and python get modern roots, modern ciphers, and TLS 1.3 regardless of the OS. **--check** reports staleness without changing anything.
+**--keychain** requires a signed certificate-policy inventory, not just a PEM bundle. The protected helper distinguishes roots and intermediates, preserves declared purposes and restrictions, and refuses entries whose constraints the OS cannot represent. It asks for admin authorization each run and records ownership. Policy retirement removes only aslice-owned imports after conflict checks; Apple and independently installed user entries remain untouched. **--keychain-remove** removes the managed imports with the same checks.
 
-**--keychain** imports the bundle's missing roots into the System keychain — additively, by fingerprint, each import recorded in the state database — healing Safari, Mail, and every SecureTransport app. Admin authorization is required every run; there is no "always allow." Apple-shipped and user-added certificates are never removed or distrusted. **--keychain-remove** deletes the recorded set. This fixes *trust*, not *crypto*: on 10.11–10.12 the OS's TLS stack predates TLS 1.3, and sites requiring it stay unreachable in Safari no matter what the keychain holds — the command says so when run.
+**--apple-certs** applies the separately signed Apple certificate inventory under those rules. Each named service needs chain validation and per-OS tests. Certificate import cannot guarantee that an obsolete service protocol works.
 
-**--crypto** upgrades the crypto-provider slices (OpenSSL and kin) to the newest the index offers. It cannot and does not touch the OS's own stack, and says so.
-
-**--apple-certs** imports Apple's own roots — not carried by Mozilla's program — from the pinned `apple-roots` slice, for Software Update, the App Store, iCloud, and Developer ID validation. Same additive, recorded, reversible machinery as **--keychain**.
-
-**--from-file** installs a local bundle whose sha256 is recorded; it never fetches. The bundle source is configurable (`aslice config set ca.source`).
+**--from-file** installs a local private bundle and records its SHA-256 without fetching. It grants no authority to import unrestricted system trust. PEM extraction omits some browser trust restrictions; the private bundle is not a complete reproduction of browser policy. See STATE-AND-RECOVERY §9.
 
 # SEE ALSO
 
