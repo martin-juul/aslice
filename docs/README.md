@@ -42,8 +42,15 @@ to be done.
 | [Toolchain](TOOLCHAIN.md) | The compiler bundle, build integration, bootstrap, and version updates. |
 | [Repositories](REPOSITORIES.md) | Official sources, third-party repositories, trust levels, and signing. |
 | [Orchard policy](ORCHARD-POLICY.md) | Package acceptance, variants, maintenance, review gates, and release policy. |
-| [Genesis](GENESIS.md) | Bringing the project into existence and rebuilding it after a total loss. |
-| [Key runbook](KEY-RUNBOOK.md) | Signing-key setup, rotation, recovery, and drills. |
+
+### Runbooks
+
+See the [runbooks index](runbooks/README.md) for reading guidance and procedure status.
+
+| Document | Purpose |
+|---|---|
+| [Genesis](runbooks/GENESIS.md) | Bringing the project into existence and rebuilding it after a total loss. |
+| [Key runbook](runbooks/KEY-RUNBOOK.md) | Signing-key setup, rotation, recovery, and drills. |
 
 ### Design context
 

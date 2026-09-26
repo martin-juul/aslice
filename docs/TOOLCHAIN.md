@@ -3,7 +3,7 @@
 > State, identity, privilege, and recovery contracts: [STATE-AND-RECOVERY](STATE-AND-RECOVERY.md). Protected-volume patching: [SYSTEM-VOLUMES](SYSTEM-VOLUMES.md). These specifications do not establish completed implementation or platform validation.
 
 - **Status:** Design draft, v0.7 — September 2026
-- **Companion to:** [DESIGN.md](DESIGN.md), [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md), [BUILD-INFRA.md](BUILD-INFRA.md), [GENESIS.md](GENESIS.md). This document is the authoritative specification for the toolchain; where it and another document disagree, the disagreement is a bug in one of them.
+- **Companion to:** [DESIGN.md](DESIGN.md), [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md), [BUILD-INFRA.md](BUILD-INFRA.md), [GENESIS.md](runbooks/GENESIS.md). This document is the authoritative specification for the toolchain; where it and another document disagree, the disagreement is a bug in one of them.
 - **Vocabulary:** [NOMENCLATURE.md](NOMENCLATURE.md).
 
 Navigation: [1. What the toolchain is](#what-the-toolchain-is) · [2. Why self-hosted](#why-self-hosted) · [3. Components](#components) · [4. The SDK strategy](#the-sdk-strategy) · [5. Linkage rules](#linkage-rules) · [6. Flavors and the `-march` floor](#flavors-and-the--march-floor) · [7. Identity: `toolchain_id`](#identity-toolchain_id) · [8. How a build consumes the toolchain](#how-a-build-consumes-the-toolchain) · [9. Installing it yourself](#installing-it-yourself) · [10. Genesis](#genesis) · [11. Bumps](#bumps) · [12. Boundaries](#boundaries)
@@ -56,7 +56,7 @@ The consequences are handled explicitly:
 - **Workarounds are recorded, not remembered.** Where a component or a package needs a per-OS quirk — an availability guard, a missing-symbol shim — the workaround is written down in the toolchain's manifest ([DESIGN §4.3](DESIGN.md#toolchain-floor--self-hosted-from-day-one)), versioned with the toolchain.
 - **Formulae declare their own floor.** A package that cannot cleanly target 10.11 declares `min_os` and moves on ([PACKAGE-FORMAT §3.2](PACKAGE-FORMAT.md#platform-bounds--minimum-os-maximum-os)); the toolchain does not contort itself to drag it down.
 - **Claims require tests.** The farm targets every claimed release, 10.11 through 12, in batches of validated guests ([BUILD-INFRA §8](BUILD-INFRA.md#the-vm-test-matrix)). Required coverage remains pending until host/hypervisor/guest compatibility and actual OS/flavor tests pass; the matrix is not yet evidence of completed validation.
-- **The SDKs are never-lose.** The archived Apple installers and SDKs are genesis inventory — two independent locations, one of them offline ([GENESIS §3](GENESIS.md#the-never-lose-set)). Apple pulls old SDKs; we don't notice.
+- **The SDKs are never-lose.** The archived Apple installers and SDKs are genesis inventory — two independent locations, one of them offline ([GENESIS §3](runbooks/GENESIS.md#the-never-lose-set)). Apple pulls old SDKs; we don't notice.
 
 <a id="linkage-rules"></a>
 
@@ -121,12 +121,12 @@ The support boundary is the validated aslice build matrix; coverage is establish
 
 ## 10. Genesis
 
-The toolchain is born twice ([GENESIS §1](GENESIS.md#the-from-nothing-sequence), step 2):
+The toolchain is born twice ([GENESIS §1](runbooks/GENESIS.md#the-from-nothing-sequence), step 2):
 
 1. **stage0** — proposed on the owned 2013 Mac Pro running Monterey, with compatible Apple host Clang and Command Line Tools, against the oldest archived SDK. Apple lists Monterey as this model's [newest compatible OS](refs/MAC_PRO_2013_COMPATIBLE_OPERATING_SYSTEM.MD). Validate the chosen compiler sources, CLT, SDK, and build tools together before accepting this baseline; record their exact versions and results. A bootstrap failure requires revisiting the toolchain recipe, not assuming a newer host OS is available.
 2. **stage1** — stage0 rebuilds the toolchain with itself. stage1 is the toolchain anyone ever uses; stage0 exists so that "who compiled the compiler?" has a documented answer.
 
-Both stages are archived as slices *and* in the repository tree, in the never-lose set ([GENESIS §3](GENESIS.md#the-never-lose-set)). Recovery after total loss uses the archived stage0, avoiding an Apple host rebuild. The manager rebuilt with stage1 is compared against the archived unsigned canonical reference; the served signed/notarized binary is verified separately ([STATE-AND-RECOVERY §10](STATE-AND-RECOVERY.md#acceptance-and-implementation-order)) ([GENESIS §4](GENESIS.md#re-standup-after-total-loss)). GENESIS.md specifies the ceremony, inventory rows, and drill; this section identifies only the toolchain stages and their recovery roles.
+Both stages are archived as slices *and* in the repository tree, in the never-lose set ([GENESIS §3](runbooks/GENESIS.md#the-never-lose-set)). Recovery after total loss uses the archived stage0, avoiding an Apple host rebuild. The manager rebuilt with stage1 is compared against the archived unsigned canonical reference; the served signed/notarized binary is verified separately ([STATE-AND-RECOVERY §10](STATE-AND-RECOVERY.md#acceptance-and-implementation-order)) ([GENESIS §4](runbooks/GENESIS.md#re-standup-after-total-loss)). GENESIS.md specifies the ceremony, inventory rows, and drill; this section identifies only the toolchain stages and their recovery roles.
 
 <a id="bumps"></a>
 
@@ -137,7 +137,7 @@ A bump changes `toolchain_id`, and `toolchain_id` is part of every build identit
 - **Need-driven.** A bump happens for a concrete cause: a security fix in the compiler or linker, or a language or library capability the orchard genuinely needs. There is no fixed schedule, and upstream's release cadence is not a reason by itself.
 - **Batched.** Everything that needs a toolchain change lands in the same bump; the orchard rebuilds once, not monthly.
 - **Announced.** A bump is an event with a changelog entry and a migration note, not a background update.
-- **Archived forever.** Every previous toolchain slice stays in the repository tree, so historical build identities keep resolving: old locks and old snapshots remain installable (snapshot retention: all published snapshots and referenced hosted objects, with current archive authorization — [GENESIS §3](GENESIS.md#the-never-lose-set)).
+- **Archived forever.** Every previous toolchain slice stays in the repository tree, so historical build identities keep resolving: old locks and old snapshots remain installable (snapshot retention: all published snapshots and referenced hosted objects, with current archive authorization — [GENESIS §3](runbooks/GENESIS.md#the-never-lose-set)).
 
 The known roadmap item is `aslice-toolchain` v2: LLD-first linking and ccache integration ([DESIGN §14](DESIGN.md#roadmap)).
 
@@ -146,7 +146,7 @@ The known roadmap item is `aslice-toolchain` v2: LLD-first linking and ccache in
 ## 12. Boundaries
 
 - **x86_64 only.** No i386 flavor, no 32-bit toolchain work, no multilib ([DESIGN §2.2](DESIGN.md#non-goals), N6). 32-bit *execution* on 10.11–10.14 is a vendor-payload concern, handled by extraction, not compilation ([PACKAGE-FORMAT §3.11](PACKAGE-FORMAT.md#binary--vendor-binaries-pkgdmg-only-software)).
-- **Hosted Xcode and hosted CI are a bonus layer, never load-bearing.** Where hosted runners can reach (~10.13+ deployment targets) they add coverage; the self-hosted toolchain is authoritative ([DESIGN §14](DESIGN.md#roadmap) and [DESIGN §15](DESIGN.md#risks-and-open-questions); [GENESIS §2](GENESIS.md#the-genesis-inventory)).
+- **Hosted Xcode and hosted CI are a bonus layer, never load-bearing.** Where hosted runners can reach (~10.13+ deployment targets) they add coverage; the self-hosted toolchain is authoritative ([DESIGN §14](DESIGN.md#roadmap) and [DESIGN §15](DESIGN.md#risks-and-open-questions); [GENESIS §2](runbooks/GENESIS.md#the-genesis-inventory)).
 - **It targets this platform, period.** macOS 10.11–12 on Intel. It is not a cross-compiler and grows no other targets.
 
 ---

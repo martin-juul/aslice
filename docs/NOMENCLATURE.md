@@ -65,7 +65,7 @@ The words we made up, or made ours.
 
 **agent** — a build host: a real Mac of a known µarch that executes jobs under Seatbelt. *([BUILD-INFRA §5](BUILD-INFRA.md#farm-topology) and [BUILD-INFRA §7.2](BUILD-INFRA.md#agents-are-expendable).)*
 
-**signing host** — the dedicated networked release Pi: automatically verifies publisher-authenticated candidates, owner-merge authorization, gates, and retained signing state, then signs slices, targets, and snapshots with distinct keys; never runs package builds or supplied scripts. A separate offline Pi holds root authority. *([BUILD-INFRA §5](BUILD-INFRA.md#farm-topology) and [BUILD-INFRA §7](BUILD-INFRA.md#trust-owner-merge-authorizes-processing-agents-produce-evidence); [KEY-RUNBOOK §1](KEY-RUNBOOK.md#key-inventory-and-machines).)*
+**signing host** — the dedicated networked release Pi: automatically verifies publisher-authenticated candidates, owner-merge authorization, gates, and retained signing state, then signs slices, targets, and snapshots with distinct keys; never runs package builds or supplied scripts. A separate offline Pi holds root authority. *([BUILD-INFRA §5](BUILD-INFRA.md#farm-topology) and [BUILD-INFRA §7](BUILD-INFRA.md#trust-owner-merge-authorizes-processing-agents-produce-evidence); [KEY-RUNBOOK §1](runbooks/KEY-RUNBOOK.md#key-inventory-and-machines).)*
 
 **publisher** — the restricted VM on the owned Mac Pro that checks gates, automatically delivers authenticated candidates, verifies returned signatures, and serializes atomic publication of complete releases. Holds the timestamp key and publication credentials, but no root or release private keys. *([BUILD-INFRA §5](BUILD-INFRA.md#farm-topology) and [BUILD-INFRA §9](BUILD-INFRA.md#from-result-to-repository).)*
 
@@ -75,9 +75,9 @@ The words we made up, or made ours.
 
 **quarantine** — the untrusted staging area every agent result lands in; nothing is ever served from it, and publication requires the six gates, automatic release signing, and publisher verification. *([BUILD-INFRA §7.1](BUILD-INFRA.md#quarantine).)*
 
-**genesis** — the from-nothing bootstrap: building the toolchain that builds the toolchain, from a golden image upward. *([GENESIS §1](GENESIS.md#the-from-nothing-sequence) and [GENESIS §2](GENESIS.md#the-genesis-inventory); [DESIGN §14](DESIGN.md#roadmap).)*
+**genesis** — the from-nothing bootstrap: building the toolchain that builds the toolchain, from a golden image upward. *([GENESIS §1](runbooks/GENESIS.md#the-from-nothing-sequence) and [GENESIS §2](runbooks/GENESIS.md#the-genesis-inventory); [DESIGN §14](DESIGN.md#roadmap).)*
 
-**vendored sources** — the blob archive of upstream tarballs the project keeps so that dead URLs cannot kill old builds. *([DESIGN §9.6](DESIGN.md#the-repository-system); [GENESIS §3](GENESIS.md#the-never-lose-set).)*
+**vendored sources** — the blob archive of upstream tarballs the project keeps so that dead URLs cannot kill old builds. *([DESIGN §9.6](DESIGN.md#the-repository-system); [GENESIS §3](runbooks/GENESIS.md#the-never-lose-set).)*
 
 **dashboard** — the farm's public web dashboard at aslice.sh/dashboard: build status, freshness, quarantine — farm-side metrics only; there is no user telemetry to show. *([DESIGN §13.4](DESIGN.md#governance); [BUILD-INFRA §10](BUILD-INFRA.md#farm-side-metrics-the-only-kind-there-are); [ORCHARD-POLICY §9](ORCHARD-POLICY.md#freshness-livecheck-and-autobump).)*
 
@@ -131,23 +131,23 @@ The words we made up, or made ours.
 
 **XProtect** — Apple's built-in signature-based malware list; present on all supported systems. *([BUILD-INFRA §7.5](BUILD-INFRA.md#the-malware-signature-gate).)*
 
-**key ceremony** — recorded generation or transition of root authority. Initial setup is owner-operated; witnesses and independent custodians are not launch requirements. *([KEY-RUNBOOK §2](KEY-RUNBOOK.md#initial-root-setup).)*
+**key ceremony** — recorded generation or transition of root authority. Initial setup is owner-operated; witnesses and independent custodians are not launch requirements. *([KEY-RUNBOOK §2](runbooks/KEY-RUNBOOK.md#initial-root-setup).)*
 
-**threshold root** — TUF root metadata requiring signatures from k distinct keys out of n authorized root keys, not a split private key. Initial custody is 1-of-1; independent multi-party custody can follow through authenticated rotation. *([DESIGN §10.2](DESIGN.md#signatures-and-repository-integrity-tuf); [KEY-RUNBOOK §1](KEY-RUNBOOK.md#key-inventory-and-machines).)*
+**threshold root** — TUF root metadata requiring signatures from k distinct keys out of n authorized root keys, not a split private key. Initial custody is 1-of-1; independent multi-party custody can follow through authenticated rotation. *([DESIGN §10.2](DESIGN.md#signatures-and-repository-integrity-tuf); [KEY-RUNBOOK §1](runbooks/KEY-RUNBOOK.md#key-inventory-and-machines).)*
 
-**minisign** — the small Ed25519 signature tool used for human-legible signatures. *([KEY-RUNBOOK §1](KEY-RUNBOOK.md#key-inventory-and-machines); [DESIGN §10.2](DESIGN.md#signatures-and-repository-integrity-tuf).)*
+**minisign** — the small Ed25519 signature tool used for human-legible signatures. *([KEY-RUNBOOK §1](runbooks/KEY-RUNBOOK.md#key-inventory-and-machines); [DESIGN §10.2](DESIGN.md#signatures-and-repository-integrity-tuf).)*
 
-**Ed25519** — the elliptic-curve signature scheme used throughout; small keys, fast verification. *([DESIGN §10.2](DESIGN.md#signatures-and-repository-integrity-tuf); [KEY-RUNBOOK §1](KEY-RUNBOOK.md#key-inventory-and-machines).)*
+**Ed25519** — the elliptic-curve signature scheme used throughout; small keys, fast verification. *([DESIGN §10.2](DESIGN.md#signatures-and-repository-integrity-tuf); [KEY-RUNBOOK §1](runbooks/KEY-RUNBOOK.md#key-inventory-and-machines).)*
 
 **OpenPGP / WKD** — the older signature ecosystem and its Web Key Directory discovery; used where upstreams already speak it. *([REPOSITORIES §5](REPOSITORIES.md#signing-keys-two-schemes-one-verification-pipeline).)*
 
-**revocation / blocking event / re-pin / repo frozen** — the failure vocabulary: a key is revoked, a blocking event halts publishes, users re-pin to successor keys, a compromised repository is frozen. *([KEY-RUNBOOK §4](KEY-RUNBOOK.md#compromise-response); [REPOSITORIES §4](REPOSITORIES.md#adding-a-third-party-repository) and [REPOSITORIES §8](REPOSITORIES.md#failure-and-edge-cases).)*
+**revocation / blocking event / re-pin / repo frozen** — the failure vocabulary: a key is revoked, a blocking event halts publishes, users re-pin to successor keys, a compromised repository is frozen. *([KEY-RUNBOOK §4](runbooks/KEY-RUNBOOK.md#compromise-response); [REPOSITORIES §4](REPOSITORIES.md#adding-a-third-party-repository) and [REPOSITORIES §8](REPOSITORIES.md#failure-and-edge-cases).)*
 
 <a id="building-and-packaging"></a>
 
 ## 4. Building and packaging
 
-**aslice-toolchain / stage0 / stage1** — the self-hosted compiler bundle (Clang, LLD or ld64, a modern libc++, CMake, Ninja, pkgconf) every build uses; stage0 is built by Apple's host Clang against the oldest archived SDK, stage1 rebuilds the toolchain with itself, and both stages are archived forever. *(TOOLCHAIN.md; [DESIGN §4.3](DESIGN.md#toolchain-floor--self-hosted-from-day-one); [GENESIS §1](GENESIS.md#the-from-nothing-sequence) and [GENESIS §3](GENESIS.md#the-never-lose-set).)*
+**aslice-toolchain / stage0 / stage1** — the self-hosted compiler bundle (Clang, LLD or ld64, a modern libc++, CMake, Ninja, pkgconf) every build uses; stage0 is built by Apple's host Clang against the oldest archived SDK, stage1 rebuilds the toolchain with itself, and both stages are archived forever. *(TOOLCHAIN.md; [DESIGN §4.3](DESIGN.md#toolchain-floor--self-hosted-from-day-one); [GENESIS §1](runbooks/GENESIS.md#the-from-nothing-sequence) and [GENESIS §3](runbooks/GENESIS.md#the-never-lose-set).)*
 
 **variant** — a formula's declared feature switch: `+ssl`, `+x265`. Marked `abi = true`, a variant joins the build identity and its flip rebuilds the reverse-dependency cone; `abi = false` stays link-compatible. *([AUTHORING §5](AUTHORING.md#variants-and-the-abi-contract); [PACKAGE-FORMAT §3.5](PACKAGE-FORMAT.md#variants--feature-switches-with-abi-tags); [DESIGN §7.1](DESIGN.md#the-three-kinds-of-build-time-choice).)* *Not to be confused with* flavor.
 
@@ -221,7 +221,7 @@ The words we made up, or made ours.
 
 **APFS / HFS+ / rename(2)** — the two filesystems in range and the atomic-swap syscall generations rely on. *([DESIGN §4.1](DESIGN.md#the-os-axis-collapses--at-1011) and [DESIGN §8.3](DESIGN.md#generations-atomic-switching-and-rollback).)*
 
-**golden image / createinstallmedia / Recovery** — the pristine OS install the farm starts from, Apple's installer-to-USB tool, and the recovery partition. *([GENESIS §2](GENESIS.md#the-genesis-inventory); [BUILD-INFRA §8](BUILD-INFRA.md#the-vm-test-matrix).)*
+**golden image / createinstallmedia / Recovery** — the pristine OS install the farm starts from, Apple's installer-to-USB tool, and the recovery partition. *([GENESIS §2](runbooks/GENESIS.md#the-genesis-inventory); [BUILD-INFRA §8](BUILD-INFRA.md#the-vm-test-matrix).)*
 
 **Developer ID / pkg / dmg / LSMinimumSystemVersion** — Apple's signing program, its installer package and disk-image containers, and the Info.plist floor for what an app will launch on. *([DESIGN §12.4](DESIGN.md#vendor-binaries-pkgdmg-and-gui-apps); [PACKAGE-FORMAT §3.11](PACKAGE-FORMAT.md#binary--vendor-binaries-pkgdmg-only-software); [ORCHARD-POLICY §12](ORCHARD-POLICY.md#vendor-binary-packages-pkgdmg).)*
 

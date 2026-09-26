@@ -12,7 +12,7 @@ Navigation: [Account](#captured-material) | [Source context](#decision-relevant-
 - Rights: Community Specification License 1.0; see [TUF_LICENSE.txt](TUF_LICENSE.txt). Attribution: The Update Framework Working Group, captured specification version and source below.
 - Used by:
   - [DESIGN §10.2 Signatures and repository integrity (TUF)](../DESIGN.md#102-signatures-and-repository-integrity-tuf): Role separation and verified metadata constrain rollback, freeze, and mix-and-match attacks.
-  - [KEY-RUNBOOK §3.1 Planned root update or rotation](../KEY-RUNBOOK.md#31-planned-root-update-or-rotation): Root updates require sequential versions and old/new threshold authorization.
+  - [KEY-RUNBOOK §3.1 Planned root update or rotation](../runbooks/KEY-RUNBOOK.md#31-planned-root-update-or-rotation): Root updates require sequential versions and old/new threshold authorization.
   - [STATE-AND-RECOVERY §7. Persistent trust and initial bootstrap](../STATE-AND-RECOVERY.md#7-persistent-trust-and-initial-bootstrap): Clients persist trust and version state rather than trusting a mirror anew each time.
   - [STATE-AND-RECOVERY §8. Plans, locks, archives, and offline use](../STATE-AND-RECOVERY.md#8-plans-locks-archives-and-offline-use): Offline/archive policy cannot silently relax normal freshness checks.
 

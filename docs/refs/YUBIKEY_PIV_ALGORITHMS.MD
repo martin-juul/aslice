@@ -9,7 +9,7 @@
 - Capture type: technical account of the material used; not a verbatim archive
 - Rights: Technical paraphrase; upstream attribution above. No full-original redistribution permission asserted.
 - Used by:
-  - [KEY-RUNBOOK §5. Future independent custody and hardware](../KEY-RUNBOOK.md#5-future-independent-custody-and-hardware): PIV Ed25519 requires firmware 5.7+, so owned YubiKey 4 devices cannot supply it through PIV.
+  - [KEY-RUNBOOK §5. Future independent custody and hardware](../runbooks/KEY-RUNBOOK.md#5-future-independent-custody-and-hardware): PIV Ed25519 requires firmware 5.7+, so owned YubiKey 4 devices cannot supply it through PIV.
 
 ## Captured material
 

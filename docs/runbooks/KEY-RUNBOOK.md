@@ -1,12 +1,12 @@
 # Signing, Recovery, and Key Rotation Runbook
 
-> State, identity, privilege, and recovery contracts: [STATE-AND-RECOVERY](STATE-AND-RECOVERY.md). Protected-volume patching: [SYSTEM-VOLUMES](SYSTEM-VOLUMES.md). These specifications do not establish completed implementation or platform validation.
+> State, identity, privilege, and recovery contracts: [STATE-AND-RECOVERY](../STATE-AND-RECOVERY.md). Protected-volume patching: [SYSTEM-VOLUMES](../SYSTEM-VOLUMES.md). These specifications do not establish completed implementation or platform validation.
 
-This runbook governs every cryptographic key aslice trusts, as called for in [DESIGN §10.2](DESIGN.md#signatures-and-repository-integrity-tuf). The worst day of the project should be a procedure, not an improvisation.
+This runbook governs every cryptographic key aslice trusts, as called for in [DESIGN §10.2](../DESIGN.md#signatures-and-repository-integrity-tuf). The worst day of the project should be a procedure, not an improvisation.
 
 **Status: design, September 2026.** The initial release uses one accountable operator, two existing Raspberry Pis, and encrypted software keys. Hardware validation and the drills below remain launch requirements, not completed work. Independent custodians and hardware tokens are future options, not launch prerequisites.
 
-*Project terms, acronyms, and the Homebrew translation table: [NOMENCLATURE.md](NOMENCLATURE.md).*
+*Project terms, acronyms, and the Homebrew translation table: [NOMENCLATURE.md](../NOMENCLATURE.md).*
 
 Four rules govern everything below:
 
@@ -70,7 +70,7 @@ One operator can perform this procedure; no witness or additional custodian is r
 
 The owner's merge into the protected environment branch is the final human approval for that environment during single-owner launch, including new core slices: `develop` for dev, `beta` for staging, and `master` for prod. A dev merge does not authorize staging or prod. The existing `aslice repo build / sign / publish` stages exchange a release candidate automatically. This is a design specification: candidate delivery, signer service, publication coordination, and acceptance drills remain implementation work. Client signature formats remain unchanged. Candidate authorization, gate receipts, and signing journals are internal control-plane records, not new fields in the closed TUF or index schemas.
 
-Enforce [ORCHARD-POLICY §18.1](ORCHARD-POLICY.md#181-environments-branching-and-promoted-builds) and [ORCHARD-POLICY §18.2](ORCHARD-POLICY.md#182-release-versioning-and-unchanged-content-enforcement) before signing or activation. Bind authorization to repository identity, environment, exact required branch, release base version, and frozen candidate inventory. Staging requires the dev candidate record; prod requires its successful staging record. Reuse the identical finalized artifacts and their signatures; `repo build` prepares publication metadata and does not rebuild or repack promoted payloads. Byte-changing signing, including Apple signing/notarization, precedes the dev inventory freeze. Scope retained state, queues, version reservations, and authorization to each repository/environment so a dev request cannot activate prod. Publication metadata may change under the policy's explicit bookkeeping allowance, but changed release content is refused with a recorded reason and requires a new base version starting in dev. Stale-candidate reconciliation below may rebuild publication metadata only; it cannot substitute artifacts or updated dependencies under the same base version.
+Enforce [ORCHARD-POLICY §18.1](../ORCHARD-POLICY.md#181-environments-branching-and-promoted-builds) and [ORCHARD-POLICY §18.2](../ORCHARD-POLICY.md#182-release-versioning-and-unchanged-content-enforcement) before signing or activation. Bind authorization to repository identity, environment, exact required branch, release base version, and frozen candidate inventory. Staging requires the dev candidate record; prod requires its successful staging record. Reuse the identical finalized artifacts and their signatures; `repo build` prepares publication metadata and does not rebuild or repack promoted payloads. Byte-changing signing, including Apple signing/notarization, precedes the dev inventory freeze. Scope retained state, queues, version reservations, and authorization to each repository/environment so a dev request cannot activate prod. Publication metadata may change under the policy's explicit bookkeeping allowance, but changed release content is refused with a recorded reason and requires a new base version starting in dev. Stale-candidate reconciliation below may rebuild publication metadata only; it cannot substitute artifacts or updated dependencies under the same base version.
 
 1. **Prepare (`repo build`).** After the owner-authorized merge and all required gates, collect artifact bytes, index and targets metadata (including verified graft manifests), existing signatures for retained slices, source blobs, the exact orchard commit, and authenticated gate receipts bound to that commit, build inputs, and artifact digests. Require lint, build, test, ABI, malware, graft-rehearsal, and independent-rebuild gates wherever policy requires them. Failed or missing gates, including unavailable capacity, leave the affected release pending. Include an authenticated merge record from the configured orchard authority, trusted root chain, prior metadata, proposed versions/expiries, and a path/length/hash inventory. Bind a stable candidate identifier and digest to the currently published snapshot and retained signing-state revision. The first candidate declares an empty repository base and uses the root established in §2.
 2. **Deliver automatically.** The publisher sends the candidate over an authenticated channel to the release Pi. Transport identity alone is not commit authorization: verify the owner-approved merge record against the configured repository, protected branch, owner identity, and exact commit. Trust anchors and gate policy come from retained configuration, never candidate-supplied keys or policy. Treat paths, archives, metadata, and receipts as untrusted; reject path traversal, unexpected files, inconsistent inventories, unauthorized commits, and unverifiable evidence. Never execute candidate-provided scripts or builds.
@@ -129,10 +129,10 @@ Migrate through §3.1: the first multi-party root must satisfy both the current 
 
 Hardware is optional. Evaluate exact model, firmware, application, middleware, Pi support, algorithm, signature format, cost, and backup/recovery behavior with actual sign/verify and recovery trials before adoption:
 
-- [SmartCard-HSM USB token](refs/SMARTCARD_HSM_ALGORITHMS.MD): listed RSA/ECDSA algorithms do not establish Ed25519/minisign compatibility. Backup and threshold-authentication features do not themselves implement TUF's multi-signature threshold. Obtain a quote and confirm the supplied version.
-- Existing YubiKey 4 devices: inventory first. [Yubico's PIV documentation](refs/YUBIKEY_PIV_ALGORITHMS.MD) places PIV Ed25519 support at firmware 5.7+, so these older devices cannot implement the current design through PIV. Other applications require their own compatibility proof.
+- [SmartCard-HSM USB token](../refs/SMARTCARD_HSM_ALGORITHMS.MD): listed RSA/ECDSA algorithms do not establish Ed25519/minisign compatibility. Backup and threshold-authentication features do not themselves implement TUF's multi-signature threshold. Obtain a quote and confirm the supplied version.
+- Existing YubiKey 4 devices: inventory first. [Yubico's PIV documentation](../refs/YUBIKEY_PIV_ALGORITHMS.MD) places PIV Ed25519 support at firmware 5.7+, so these older devices cannot implement the current design through PIV. Other applications require their own compatibility proof.
 
-Keep Ed25519 and minisign for launch. Changing algorithms requires a separate client-compatibility decision. Root-transition requirements follow the [TUF specification](refs/THE_UPDATE_FRAMEWORK_SPECIFICATION.MD).
+Keep Ed25519 and minisign for launch. Changing algorithms requires a separate client-compatibility decision. Root-transition requirements follow the [TUF specification](../refs/THE_UPDATE_FRAMEWORK_SPECIFICATION.MD).
 
 <a id="disaster-recovery-trust-rebootstrap"></a>
 
@@ -165,7 +165,7 @@ Repeat backup restoration and planned root rotation annually. Restore and verify
 
 ## 8. Boundaries
 
-Users' machines have no project-held per-user keys or accounts. Third-party orchards maintain their own keys under [REPOSITORIES §5](REPOSITORIES.md#signing-keys-two-schemes-one-verification-pipeline). Vendor Apple signatures and source-verification keys remain separate from repository signing. An optional hardware security-contact PGP key does not impose a token requirement on launch.
+Users' machines have no project-held per-user keys or accounts. Third-party orchards maintain their own keys under [REPOSITORIES §5](../REPOSITORIES.md#signing-keys-two-schemes-one-verification-pipeline). Vendor Apple signatures and source-verification keys remain separate from repository signing. An optional hardware security-contact PGP key does not impose a token requirement on launch.
 
 ## History
 
@@ -179,5 +179,6 @@ Users' machines have no project-held per-user keys or accounts. Third-party orch
 | September 2026 | corpus review corrections: artifact identity, protected execution, durable recovery, trust persistence, replay, platform limits, and examples aligned with STATE-AND-RECOVERY and SYSTEM-VOLUMES. These are specification changes; runtime acceptance remains pending. |
 | September 2026 | prose rewrite of the introduction and signer-compromise explanation; no procedural changes. |
 | September 2026 | Documentation audit repairs: contract summaries aligned; owner-approved namespace, rollback, GC, naming, prefix, and graft decisions applied where relevant; semantic anchors and explicit citations added. Runtime implementation and platform acceptance remain pending. |
+| September 2026 | Relocate to `docs/runbooks/` and rebase relative links; no procedural changes. |
 
 </details>

@@ -10,6 +10,7 @@ yet exist in the tracked tree.
 | Path | Status | Responsibility |
 |---|---|---|
 | `docs/` | Existing | Durable aslice specifications, guides, policies, and operational documentation. |
+| `docs/runbooks/` | Existing | Standalone operational runbooks for project bring-up, signing, and recovery. See the [runbooks index](docs/runbooks/README.md). |
 | `docs/refs/` | Existing | Supporting source archive, with captured references, provenance, licenses, and checksums. See the [archive guide](docs/refs/README.MD). |
 | `man/` | Existing | Command manuals. See the [manual index](man/README.md). |
 | `schematics/` | Existing | Machine-readable contracts for project formats and build interfaces. See the [schematics guide](schematics/README.md). |
@@ -28,7 +29,8 @@ or external temporary storage for these work records. Record lasting decisions
 in the relevant specification, guide, or policy so readers can find the current
 rules without reconstructing a task's history.
 
-Existing product documentation stays in place. The source archive under
+Place standalone operational runbooks under `docs/runbooks/`. Keep procedures
+embedded in specifications with the contracts they explain. The source archive under
 `docs/refs/` supports that documentation and retains its own preservation rules.
 Writing conventions and checker instructions are maintained in
 [CONTRIBUTING.md](CONTRIBUTING.md#documentation-style).

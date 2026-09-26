@@ -9,7 +9,7 @@
 - Capture type: technical account of the material used; not a verbatim archive
 - Rights: Technical paraphrase; upstream attribution above. No full-original redistribution permission asserted.
 - Used by:
-  - [KEY-RUNBOOK §5. Future independent custody and hardware](../KEY-RUNBOOK.md#5-future-independent-custody-and-hardware): The advertised algorithms do not establish compatibility with Ed25519/minisign or TUF thresholds.
+  - [KEY-RUNBOOK §5. Future independent custody and hardware](../runbooks/KEY-RUNBOOK.md#5-future-independent-custody-and-hardware): The advertised algorithms do not establish compatibility with Ed25519/minisign or TUF thresholds.
 
 ## Captured material
 
