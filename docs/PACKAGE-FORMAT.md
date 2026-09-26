@@ -2,7 +2,7 @@
 
 > State, identity, privilege, and recovery contracts: [STATE-AND-RECOVERY](STATE-AND-RECOVERY.md). Protected-volume patching: [SYSTEM-VOLUMES](SYSTEM-VOLUMES.md). These specifications do not establish completed implementation or platform validation.
 
-- **Status:** Format draft, v0.20 — September 2026
+- **Status:** Format draft, v0.21 — September 2026
 - **Companion to:** [DESIGN.md](DESIGN.md) — this document owns author input and the recipe API summarized in [DESIGN §6](DESIGN.md#package-format). [STATE-AND-RECOVERY](STATE-AND-RECOVERY.md) owns identity, trust, and recovery; examples and schemas must agree. The toolchain this format's builds run on is specified in [TOOLCHAIN.md](TOOLCHAIN.md).
 - **Scope:** the `package.toml` definition format, `build.star` build API, dependency and version semantics, transitive resolution, and lock files.
 - **Vocabulary:** [NOMENCLATURE.md](NOMENCLATURE.md) — project terms, acronyms, and the Homebrew translation table.
@@ -691,17 +691,25 @@ Ecosystems whose tools fetch their own dependencies — crates, Go modules, gems
 
 ### 7.2 Format
 
-The machine-readable contract is [lock.tosd](../schematics/toml/lock.tosd), with a complete validation fixture in [lock.toml](../tests/fixtures/lock.toml). A lock records `lock_version`, profile, generated-by version, machine OS/flavor, per-repository identity/environment/index bindings, and exact package records.
+The machine-readable contract is [lock.tosd](../schematics/toml/lock.tosd), with a complete validation fixture in [lock.toml](../tests/fixtures/lock.toml). A lock records `lock_version`, profile, generated-by version, machine OS/flavor, per-repository identity/environment/index bindings, explicit provider/alias/replacement selections, and exact package records.
 
 Each package records its repository, name/version/revision, compatibility `build_id`, immutable `artifact_id`, archive `blob_digest`, authenticated `recipe_digest`, origin, resolved variants, flags, CPU/OS requirements, and exact runtime artifact dependencies. Vendor-direct records additionally bind the vendor URL, digest, and signer when signed. Local artifacts must accompany an exported lock for exact replay elsewhere. `digest` is not overloaded between a manifest and a vendor installer. [STATE-AND-RECOVERY §8](STATE-AND-RECOVERY.md#8-plans-locks-archives-and-offline-use) defines replay and trust checks.
+
+### Security dependency and selection records
+
+Recipe dependencies describe intended build/runtime/embedded inputs; artifact manifests retain the actual exact bindings. Build evidence records both graphs, component identities, triggering inputs, and rebuild paths under [BUILD-INFRA](BUILD-INFRA.md#the-build-plan). Static libraries, headers, generators, and bundled sources must not disappear merely because the Mach-O scanner finds no dynamic link. An ABI-compatible change still invalidates affected transitive consumers.
+
+Lock version 2 requires a top-level `selections` array. Each entry has `kind` (`provider`, `alias`, `replacement`), `requested`, `selected`, and `repository_identity`: exact requested and selected qualified names plus the selected repository's retained identity. Empty selections use `selections = []`; nonempty entries use `[[selections]]`. Requests and plans retain the same entries. Cross-namespace selections require an explicit user decision and current authorization; aliases and replacement declarations cannot grant authority. Unsupported version-1 locks and plans are rejected for execution and must be regenerated from authenticated records and explicit selections. Conversion never invents consent. See [REPOSITORIES](REPOSITORIES.md#overlapping-packages-across-repositories).
+
+Plan version 2 separates operation policy, source `build_work`, advisory findings, and namespace selections from exact artifact actions. A build-work record binds recipe/input digests, package, reason, and dependency path. Before compilation the plan may contain build work without an `after` artifact; it must not invent an output hash. Verified outputs produce a realization plan with exact artifact records and the same approved inputs; changed inputs or expanded work require a new plan and consent. Exact replay still requires the recorded output bytes. Saved plans never grant source-build consent.
 
 <a id="portability-semantics--exact-by-default-intent-preserving-across-flavors"></a>
 
 ### 7.3 Portability semantics — exact by default, intent-preserving across flavors
 
-Applied on a machine matching `machine.os` and `machine.flavor`, a lock reproduces **identical artifact IDs and verified payloads**, verified against the same index snapshot or a newer one that still contains them. Applied on a different flavor or an older OS, aslice re-resolves: versions and variants are kept, build identities are swapped to what the flavor offers, and the report lists what changed. Locks are exact where they can be, and explicit about re-resolution where they cannot.
+Exact lock replay requires **identical artifact IDs and verified payloads**, authorized by the recorded snapshot or current archive evidence. An incompatible machine or unavailable exact artifact blocks replay. An explicit portability request creates a new plan: retain requested versions and variants, resolve eligible artifacts for the target, and show every changed binding before consent. This is a new resolution, not successful exact replay.
 
-For `type = "binary"` packages, cross-OS portability means selecting a different `[[binary]]` artifact to match the target machine's OS (§3.11): the version stays pinned, the artifact adapts, and the report says so. If no artifact matches at all — an i386-only package whose lock is replayed on 10.15+, say — re-resolution fails with the reason spelled out; there is nothing to adapt to, and `--frozen` changes nothing.
+For `type = "binary"` packages, explicitly requested cross-OS portability may select a different `[[binary]]` artifact to match the target machine's OS (§3.11): the version stays pinned, the artifact adapts, and the report says so. If no artifact matches at all — an i386-only package whose lock is replayed on 10.15+, say — re-resolution fails with the reason spelled out; there is nothing to adapt to, and `--frozen` changes nothing.
 
 `--frozen` refuses re-resolution of any kind: a mismatch is an error, never an adaptation. This is the mode CI should use.
 
@@ -844,5 +852,6 @@ The full form is in §3.11; the shape to remember is **two `[[binary]]` artifact
 | Not recorded | September 2026 | corpus review corrections: artifact identity, protected execution, durable recovery, trust persistence, replay, platform limits, and examples aligned with STATE-AND-RECOVERY and SYSTEM-VOLUMES. These are specification changes; runtime acceptance remains pending. |
 | v0.19 | September 2026 | Documentation audit repairs: contract summaries aligned; owner-approved namespace, rollback, GC, naming, prefix, and graft decisions applied where relevant; semantic anchors and explicit citations added. Runtime implementation and platform acceptance remain pending. |
 | v0.20 | September 2026 | Remove retired comparison references and competitive framing; retain aslice requirements and link their owning specifications. Align affected contract summaries where applicable. |
+| v0.21 | September 2026 | Specify dependency-driven security remediation, explicit update and origin decisions, and the applicable farm, maintenance, and evidence contracts. Supersedes ABI-only rebuild and cost-first selection policies where previously stated; runtime and measured acceptance remain pending. |
 
 </details>

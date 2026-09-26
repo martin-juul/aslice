@@ -1,0 +1,64 @@
+{
+  "format": 1,
+  "repository_identity": "urn:aslice:repo:core-fixture",
+  "environment": "prod",
+  "advisory_id": "ASLICE-2026-001",
+  "cve_ids": [
+    "CVE-2026-12345"
+  ],
+  "issued_at": 100,
+  "expires_at": 200,
+  "affected": [
+    {
+      "package": "core:crypto",
+      "version": "1.0",
+      "epoch": 0,
+      "revision": 0,
+      "artifacts": [
+        "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+      ]
+    }
+  ],
+  "fixed": [
+    {
+      "package": "core:crypto",
+      "version": "1.0",
+      "epoch": 0,
+      "revision": 1,
+      "artifacts": [
+        "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+      ]
+    }
+  ],
+  "platforms": [
+    {
+      "os": "12",
+      "flavor": "v1"
+    }
+  ],
+  "assessments": [
+    {
+      "artifact_id": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+      "component": null,
+      "status": "vulnerable",
+      "evidence": [
+        {
+          "digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+          "size": 100
+        }
+      ],
+      "reason": "Illustrative backport assessment"
+    }
+  ],
+  "remediation": {
+    "action": "rebuild",
+    "explanation": "Rebuild static consumers",
+    "affected_consumers": [
+      "core:client",
+      "lab:consumer"
+    ],
+    "unresolved_consumers": [
+      "lab:consumer"
+    ]
+  }
+}

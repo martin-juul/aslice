@@ -1,5 +1,5 @@
 {
-  "plan_version": 1,
+  "plan_version": 2,
   "generated_by": "fixture",
   "profile": "default",
   "base_generation": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
@@ -43,5 +43,10 @@
         "dependencies": []
       }
     }
-  ]
+  ],
+  "policy": "install",
+  "selections": [],
+  "build_work": [],
+  "security_findings": [],
+  "required_consents": []
 }

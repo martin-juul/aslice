@@ -2,7 +2,7 @@
 
 > State, identity, privilege, and recovery contracts: [STATE-AND-RECOVERY](STATE-AND-RECOVERY.md). Protected-volume patching: [SYSTEM-VOLUMES](SYSTEM-VOLUMES.md). These specifications do not establish completed implementation or platform validation.
 
-- **Status:** Design draft, v1.14 — September 2026
+- **Status:** Design draft, v1.15 — September 2026
 - **Companion to:** [DESIGN.md](DESIGN.md), [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md), [BUILD-INFRA.md](BUILD-INFRA.md), [ORCHARD-POLICY.md](ORCHARD-POLICY.md)
 - **Scope:** the shipped official source list, adding third-party repositories, the inherent trust-level model, and the dual signature scheme (Ed25519 canonical, OpenPGP supported).
 - **Vocabulary:** [NOMENCLATURE.md](NOMENCLATURE.md) — project terms, acronyms, and the Homebrew translation table.
@@ -95,7 +95,7 @@ Some rules hold at every level:
 
 ## 4. Adding a third-party repository
 
-All orchards, including third-party orchards, follow the [shared environment and promotion contract](ORCHARD-POLICY.md#181-environments-branching-and-promoted-builds): dev → `develop`, staging → `beta`, prod → `master`. These branches belong to one repository identity, replicated by its mirrors; environment selection changes the branch pointer, not the repository or mirror URL. Production is the default, and dev/staging require explicit selection with no automatic cross-environment fallback. Each environment has isolated cached metadata and rollback-protection state. Promotion reuses immutable artifacts under the [release-version rules](ORCHARD-POLICY.md#182-release-versioning-and-unchanged-content-enforcement). Third-party publishers use their own authorities; this workflow does not alter trust levels or capabilities. Environment selection and promotion metadata still need implementation and schema design; no new keys are implied in the existing closed schemas.
+All orchards, including third-party orchards, follow the [shared environment and promotion contract](ORCHARD-POLICY.md#181-environments-branching-and-promoted-builds): dev → `develop`, staging → `beta`, prod → `master`. These branches belong to one repository identity, replicated by its mirrors; environment selection changes the branch pointer, not the repository or mirror URL. Production is the default, and dev/staging require explicit selection with no automatic cross-environment fallback. Each environment has isolated cached metadata and rollback-protection state. Promotion reuses immutable artifacts under the [release-version rules](ORCHARD-POLICY.md#182-release-versioning-and-unchanged-content-enforcement). Third-party publishers use their own authorities; this workflow does not alter trust levels or capabilities. Maintenance promotion records follow [ORCHARD-POLICY](ORCHARD-POLICY.md#maintenance-releases); implementation remains pending. TUF metadata itself is unchanged.
 
 ```console
 $ aslice repo add https://repo.example.org/aslice
@@ -113,7 +113,7 @@ identity. Pin it? [y/N]
 
 - The initial TUF anchor and package-signing identity are displayed separately and retained in authoritative trust state, with a read-only DB cache. Sequential TUF root updates satisfying the old and new thresholds need no manual re-pin. An unauthenticated replacement blocks updates; `aslice repo re-pin` requires independent verification ([STATE-AND-RECOVERY §7](STATE-AND-RECOVERY.md#persistent-trust-and-initial-bootstrap)).
 - `aslice repo add --trust local file:///…` is the only way to obtain the `local` level. `official` and `verified` cannot be granted by the CLI at all: `verified` requires the project's countersignature, which arrives through the official source list. That indirection is the point — it is how the project can vouch for a repository without holding anyone's keys.
-- Removal is `aslice repo remove example`. Packages installed from the repo remain in the store — they are content-addressed and generation-pinned — but the namespace stops resolving, and `doctor` offers to reparent surviving leaves to core equivalents where those exist.
+- Removal is `aslice repo remove example`. Packages installed from the repo remain in the store — they are content-addressed and generation-pinned — but the namespace stops resolving. `doctor` may propose an explicit replacement plan; it cannot reparent packages automatically. Namespace reuse by a different repository identity never transfers existing requests, selections, grants, plans, or locks.
 
 <a id="signing-keys-two-schemes-one-verification-pipeline"></a>
 
@@ -191,6 +191,20 @@ Official authoring retains `repo build / sign / publish`: after owner-approved m
 
 `aslice repo audit` re-verifies the signature over *every* target in a repo's current snapshot and reports scheme, key, and coverage. It exists so that an operator can prove "everything is signed" is true today — not at some ceremony in the past.
 
+<a id="authenticated-index-refresh"></a>
+
+### 7.1 Authenticated index refresh
+
+Fetch indexes by immutable SHA-256 address and authenticated byte length. TUF targets authorize the compressed object and a version-1 [index-diff record](../schematics/json/index-diff.schema.json) binding repository/environment, base and result index digests and lengths, and ordered patch objects. Index digest means the exact uncompressed JSON bytes; parse only after reconstruction verifies that identity. The full compressed object's authenticated record also binds expanded digest and length. Reject duplicate JSON keys and unsupported snapshot formats.
+
+Initial client limits are 16 patches, 64 MiB total patch transfer, 256 MiB expanded index, 512 MiB reconstruction memory, and 30 seconds reconstruction time. Enforce each bound during streaming, with checked arithmetic. A bad/missing base, unsupported patch codec, digest/length mismatch, or exceeded limit discards staged reconstruction and falls back once to the full authenticated index, under the same expanded-size/memory bounds. Version 1 uses `byte-splice-v1` payloads described by the [index-patch schema](../schematics/json/index-patch.schema.json). Each payload binds its exact base/result and at most 100,000 ordered operations: `copy` appends a positive-length range from the verified base (checked offset plus length); `insert` appends decoded lowercase hexadecimal bytes. Output is append-only in staging. Reject overflow, out-of-range reads, unknown operations, duplicate JSON keys, excess output, or a chain whose next base differs from the preceding result. Reconstruction budgets include base, patch, and output memory. Patch instructions never name files or execute code. A failed full fetch leaves the previous snapshot active and reports failure.
+
+Stage the new snapshot and every object required by the refresh transaction before activation; verify identity, length, signatures, schema, freshness, and cross-references, then switch the local current-snapshot pointer atomically. Missing objects during mirror publication cannot activate a partial snapshot. Lazy payloads outside the refresh set remain subject to complete transaction preparation before installation.
+
+Try at most three configured mirrors, at most two attempts per mirror, with finite time/byte budgets (30 seconds per attempt by default). All attempts request the same authenticated identities and selected release. Retain and report integrity failures even if another mirror succeeds. A mirror never changes the trust anchor, repository identity, environment, or selected version. If refresh is required for freshness, a retained expired snapshot cannot authorize an update.
+
+An unrelated unavailable repository does not block a transaction whose complete input closure is independently authorized and available. A required unavailable repository blocks that transaction: no silent package omission, repository substitution, or downgrade. Explicit whole-repository refresh still reports each failure. [APT by-hash and PDiff controls](https://github.com/Debian/apt/blob/main/doc/acquire-additional-files.md) motivate stable object retrieval; these bounds and activation semantics are aslice's contract.
+
 <a id="failure-and-edge-cases"></a>
 
 ## 8. Failure and edge cases
@@ -254,6 +268,8 @@ No repository-resolution preference is stored. Plans, locks, request roots, and 
 
 Machine files, recipes, and scripts use the same naming rule. Use `extended:vendorcli` or `audiolab:convolver` explicitly. The previously proposed preference/resolution commands and table are superseded; they are not part of the current interface.
 
+Virtual providers, aliases, and replacements obey the same namespace boundary as concrete package names. A declaration cannot make `other:provider` satisfy a core request implicitly. Cross-namespace selection requires an explicit choice naming the requested identity, selected namespace/name, repository identity, and selection kind (`provider`, `alias`, or `replacement`). Retain that choice in requests, plans, and locks and revalidate its authority on replay. Removing a repository or reusing its namespace cannot transfer a choice to another identity. A same-namespace alias still requires authenticated metadata from that namespace's authority.
+
 <a id="the-state-databases-role"></a>
 
 ## 11. The state database's role
@@ -305,5 +321,6 @@ commands, and disaster recovery; this section summarizes repository interactions
 | Not recorded | September 2026 | corpus review corrections: artifact identity, protected execution, durable recovery, trust persistence, replay, platform limits, and examples aligned with STATE-AND-RECOVERY and SYSTEM-VOLUMES. These are specification changes; runtime acceptance remains pending. |
 | v1.12 | September 2026 | Documentation audit repairs: contract summaries aligned; owner-approved namespace, rollback, GC, naming, prefix, and graft decisions applied where relevant; semantic anchors and explicit citations added. Runtime implementation and platform acceptance remain pending. |
 | v1.14 | September 2026 | Remove retired comparison references and competitive framing; retain aslice requirements and link their owning specifications. Align affected contract summaries where applicable. |
+| v1.15 | September 2026 | Specify dependency-driven security remediation, explicit update and origin decisions, and the applicable farm, maintenance, and evidence contracts. Supersedes ABI-only rebuild and cost-first selection policies where previously stated; runtime and measured acceptance remain pending. |
 
 </details>

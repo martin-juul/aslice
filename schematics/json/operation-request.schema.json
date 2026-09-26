@@ -2,12 +2,12 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://aslice.sh/schematics/json/operation-request.schema.json",
   "title": "Operation request",
-  "description": "Version 1 structural contract. Normative field semantics: docs/STATE-AND-RECOVERY.md section 10.2 and docs/DATABASE.md section 9. Cryptography, canonical encoding, chain continuity, ordering, and filesystem safety require semantic validation.",
+  "description": "Version 1 structural contract. Normative field semantics: docs/STATE-AND-RECOVERY.md section 10.2 and docs/DATABASE.md section 9. Cryptography, canonical encoding, chain continuity, ordering, and filesystem safety require semantic validation. Version 2: explicit source-work consent, namespace selections, and security/restart decisions. Old versions are rejected; regenerate from authenticated inputs, never infer consent. Field semantics: docs/DESIGN.md vulnerability-and-sbom-pipeline and docs/PACKAGE-FORMAT.md Security dependency and selection records.",
   "type": "object",
   "additionalProperties": false,
   "properties": {
     "format": {
-      "const": 1
+      "const": 2
     },
     "action": {
       "enum": [
@@ -16,7 +16,11 @@
         "continue",
         "manual",
         "salvage",
-        "activate"
+        "activate",
+        "upgrade",
+        "apply",
+        "needs-restarting",
+        "install"
       ]
     },
     "operation_id": {
@@ -49,6 +53,60 @@
     },
     "accept_grafts": {
       "type": "boolean"
+    },
+    "allow_source_builds": {
+      "type": "boolean"
+    },
+    "selections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "enum": [
+              "provider",
+              "alias",
+              "replacement"
+            ]
+          },
+          "requested": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]*:[a-z0-9][a-z0-9-]*$"
+          },
+          "selected": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]*:[a-z0-9][a-z0-9-]*$"
+          },
+          "repository_identity": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "kind",
+          "requested",
+          "selected",
+          "repository_identity"
+        ]
+      },
+      "minItems": 0,
+      "uniqueItems": true
+    },
+    "update_policy": {
+      "anyOf": [
+        {
+          "enum": [
+            "upgrade",
+            "security",
+            "security-minimal",
+            "exact-replay"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
     }
   },
   "required": [
@@ -58,7 +116,10 @@
     "plan_digest",
     "dry_run",
     "accept_system_changes",
-    "accept_grafts"
+    "accept_grafts",
+    "allow_source_builds",
+    "selections",
+    "update_policy"
   ],
   "allOf": [
     {

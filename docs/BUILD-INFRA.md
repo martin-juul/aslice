@@ -2,7 +2,7 @@
 
 > State, identity, privilege, and recovery contracts: [STATE-AND-RECOVERY](STATE-AND-RECOVERY.md). Protected-volume patching: [SYSTEM-VOLUMES](SYSTEM-VOLUMES.md). These specifications do not establish completed implementation or platform validation.
 
-- **Status:** Design draft, v0.24 — September 2026
+- **Status:** Design draft, v0.25 — September 2026
 - **Companion to:** [DESIGN.md](DESIGN.md), [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md), [TOOLCHAIN.md](TOOLCHAIN.md)
 - **Scope:** the build harness (`aslice build`), farm orchestration (`aslice farm`), scheduling, worker trust, the VM test matrix, and the pipeline from build result to published repository.
 - **Vocabulary:** [NOMENCLATURE.md](NOMENCLATURE.md) — project terms, acronyms, and the Homebrew translation table.
@@ -40,6 +40,10 @@ All four modes *orchestrate*; none executes package code itself. They always del
 <a id="jobs-are-closed-worlds"></a>
 
 ### 2.1 Jobs are closed worlds
+
+Every farm execution of package-controlled build or test code runs in a disposable VM: official recipes, PRs, autobumps, and third-party orchards have the same boundary. Create an instance from a verified immutable image; mount authenticated inputs read-only; run phase-specific sandbox profiles; export results to untrusted staging; destroy the instance. Keep agent credentials, coordinator control channels, signing keys, timestamp keys, and publication authority outside package execution. The host agent validates guest results before authenticating its receipt.
+
+Record image digest, harness digest, all input identities, worker identity, physical builder identity, and isolation lifecycle evidence in the [build-evidence contract](../schematics/json/build-evidence.schema.json). PR caches are separate from release caches. Reusable compiler outputs require authenticated complete input keys (recipe, sources, toolchain, dependencies, flags, image, and harness) and applicable validation gates; a PR result cannot seed a trusted release cache merely by matching its claimed key. VM isolation and cache admission require macOS integration tests before launch.
 
 A **job** is the complete, self-contained description of one build:
 
@@ -114,7 +118,7 @@ aslice build ffmpeg --keep --shell                 # keep build dir; sandboxed s
 ```
 
 - **Results are first-class installs.** The output enters the store with `origin = local-build`, recorded flags, and the identity rules of [DESIGN §7.2](DESIGN.md#build-identity), interoperating with the prebuilt world through the ABI contract like any slice. `aslice install --build-from-source` and `--variant`/`--cflags` builds are, literally, this command followed by an install step.
-- **Resource manners.** The default is `jobs = cores − 1` (override `ASLICE_BUILD_JOBS`); RAM/disk watermarks refuse builds that would thrash the machine; the build directory lives on tmpfs when RAM allows; ccache is keyed by (toolchain, flags, flavor) under `cache/ccache`. A laptop stays usable while it compiles.
+- **Resource manners.** The default is `jobs = cores − 1` (override `ASLICE_BUILD_JOBS`); RAM/disk watermarks refuse builds that would thrash the machine; the build directory lives on tmpfs when RAM allows; ccache is keyed by complete authenticated recipe, source, dependency, toolchain, flags, flavor, image, and harness inputs under `cache/ccache`. A laptop stays usable while it compiles.
 - **Failure UX.** Structured per-phase logs (`cache/build/<id>/log.jsonl` plus a rendered tail), `--resume-from <phase>`, and `--shell`, which drops you into the exact sandboxed environment at the failed phase. Maintainer iteration never requires re-fetching or re-unpacking.
 - **Cleanup.** Successful build directories are deleted; failures are kept for 7 days (configurable) and swept by `aslice clean`.
 - **No daemons.** Builds are on-demand processes; `farm agent` runs when the user starts it and not before. Nothing auto-launches, nothing phones home, nothing idles in the background.
@@ -134,6 +138,17 @@ aslice build ffmpeg --keep --shell                 # keep build dir; sandboxed s
 
 No new hardware purchase is required by this topology. CPU configuration, RAM, storage, and build/guest concurrency remain unspecified until measured during bring-up. Core 2 Duo smoke testing is optional future coverage, outside the owned inventory. Community Macs may supply reproduction evidence (§7.4); they are not assumed capacity.
 
+### 5.1 Capability inventory and qualification
+
+The [worker-capabilities schema](../schematics/json/worker-capabilities.schema.json) stores signed enrollment evidence separately from observations. A fixture is not enrollment or qualification. Established inventory is limited to these owned machines and intended roles:
+
+| Physical machine | Intended coverage | Qualification still required |
+|---|---|---|
+| 2013 Mac Pro | v1/v2 builds and guests; no v3 execution | Exact CPU/features, OS, hypervisor, guest matrix, RAM, disk, build/test durations and safe concurrency |
+| 2015 MacBook Pro | On-demand v3 and independent v1/v2 checks | Exact CPU/OS-enabled features, guest exposure, RAM, disk, durations and safe concurrency |
+
+Inventory each physical identity, host and guest OS, image/hypervisor versions, cumulative CPU and OS register-state support, RAM/disk budgets, and measured build/test/VM preparation durations. Unknown measurements are null with `pending` qualification; do not enroll them as usable capabilities. Run feature probes and representative builds/tests inside each guest, retain receipts, then qualify only successful combinations. Requalify after CPU, OS, image, hypervisor, or resource-policy changes. Independent rebuilds require distinct qualified physical builders; two guests on one Mac do not count. A second independent v3 builder is missing and remains a release blocker wherever required. Procurement and volunteer enrollment are outside this update.
+
 The coordinator is boring by design: one process on the Mac Pro, a SQLite queue, an orchard checkout. Its state is reconstructed from archived orchard commits, signed plans/results, enrollment and lease history, quarantine decisions, and gate evidence, as specified in [DATABASE](DATABASE.md#6-farm-coordinator). Git and result bytes alone do not preserve those decisions. Agents exchange jobs and results; they never share the coordinator database. The GitHub Actions integration is a thin adapter — a self-hosted runner job that executes `aslice farm agent --once` — so the system of record never depends on Actions semantics ([DESIGN §9.2](DESIGN.md#the-github-ci-problem)).
 
 The **signing host** is a dedicated networked release Pi holding distinct targets, snapshot, and slice-signing keys. A separate offline root Pi holds the 1-of-1 root. Both use encrypted software keys and offline backups; KEY-RUNBOOK governs custody and recovery. The restricted VM on the Mac Pro is the **publisher**: it checks gates, delivers authenticated release candidates automatically, verifies returned signatures, stages complete releases, and activates them atomically. It holds repository credentials and the timestamp key only; build guests receive neither and cannot submit signing requests. The release Pi runs no package builds or supplied scripts. Shared-host compromise can corrupt evidence and publication and expose the timestamp key (§7.2); online signer compromise can authorize malicious releases. Offline root custody permits authority replacement but cannot undo installations or establish content safety. The Pis are existing devices; validate their OS and signing tools before launch. Initial setup and unlocking after signer restart may require the owner; routine releases require no intervention. These services remain implementation work.
@@ -152,29 +167,31 @@ Assignment requires detected CPU features, OS support for those features, valida
 
 When the laptop is unavailable, `v3` work stays queued; eligible `v1`/`v2` jobs continue on the Mac Pro. Unsupported flavors are never assigned or silently substituted. Required OS/flavor tests and independent rebuilds without a capable worker remain pending. Capacity shortages do not narrow a formula's declared support or waive a gate. Resource values in example job manifests (§2.1) are illustrative, not measured capacity or concurrency commitments.
 
-A provider change triggers the **ABI gate** ([ORCHARD-POLICY §10](ORCHARD-POLICY.md#merge-gates-what-ci-must-prove)): the old and new provider slices are scan-diffed, and on regression the dependent revision-bump jobs are generated *into the same plan*. The index snapshot that eventually lands therefore contains the provider and its rebuilt dependents **together**. Publication waits for the complete provider/dependent set.
+A recipe, source, toolchain, build-configuration, or selected dependency change invalidates the affected transitive consumer closure by default. This includes static libraries, headers, generated code, and bundled components, even when no exported ABI changes. Keep recipe edges (declared build/runtime/embedded inputs) separate from actual artifact bindings. Traverse both to find consumers; incomplete binding or component evidence keeps coverage unknown. Each rebuild records its triggering old/new input identities and dependency path and receives a new revision when required by package identity rules.
+
+The ABI gate remains a compatibility check ([ORCHARD-POLICY §10](ORCHARD-POLICY.md#merge-gates-what-ci-must-prove)); a compatible ABI does not exempt a consumer from security remediation. Freeze and publish the complete authorized provider/consumer set atomically. Across orchards, coordinate separately authorized candidates; consumers outside the publisher's authority that cannot be rebuilt stay visibly affected in advisories and reports. Publication must not claim those consumers are fixed. [OBS transitive rebuild scheduling](https://openbuildservice.org/help/manuals/obs-user-guide/cha-obs-build-scheduling-and-dispatching) is an upstream precedent for dependency-driven rebuilding.
 
 <a id="lanes"></a>
 
 ### 6.2 Lanes
 
-Three queues, drained in order but preemptible upward:
+Job kind and dispatch priority are independent. Kind is `build`, `test`, `rebuild`, `vendor`, or `graft`. Priority is `security`, `approved-release`, `freshness`, or `backfill`, in that order. Only authorized security incidents receive security priority. Non-security work continuously ready for 24 hours ages to approved-release priority; order that class FIFO by ready time, then job digest. A dependency becoming unready resets ready time; busy workers do not. Backfill uses the farm value signals in [DESIGN §9.4](DESIGN.md#what-gets-prebuilt), never download counts.
 
-1. **Freshness** — autobump PR gates (the livecheck machinery from [ORCHARD-POLICY §9](ORCHARD-POLICY.md#freshness-livecheck-and-autobump) builds here).
-2. **Trunk** — merged changes heading for the next published snapshot.
-3. **Backfill** — the long tail: extended-orchard packages, missing flavors, old versions that need slices. Prioritized by the [DESIGN §9.4](DESIGN.md#what-gets-prebuilt) value signals (dependency centrality, farm-measured build pain, irreplaceability, community requests) — never by download counts.
+Dispatch only dependency-ready, authorized, non-quarantined jobs to workers whose qualified capabilities and free resources satisfy every requirement. Prefer capable non-v3 workers for v1/v2 work to preserve scarce v3 capacity. Distinguish `waiting-worker` (capable workers busy/offline) from `no-capable-worker` (no qualified worker), and list missing OS tests, independent rebuilds, and every other publication blocker.
+
+Coalesce superseded queued jobs by authenticated input identity and logical matrix slot; retain the supersession record and replacement job. Running jobs finish unless explicitly cancelled. Cancellation terminates the disposable guest, revokes its lease, and retains logs, partial results, and a cancellation receipt; late results cannot satisfy gates. No arbitrary compiler checkpoint/resume is promised. Phase reuse requires verified complete inputs and a new disposable guest.
 
 <a id="leases-not-locks"></a>
 
 ### 6.3 Leases, not locks
 
-An agent leases a job and sends heartbeats to retain the lease. If the lease expires, the job returns to the queue unchanged. Results are keyed by job-manifest hash, so duplicate results are discarded. The system is idempotent, allowing the farm to resume after power is removed and restored.
+An agent leases a job and sends heartbeats to retain the lease. If the lease expires, an unresolved job returns to the queue with the same input identity; cancelled and superseded jobs stay terminal. A late result retains evidence but cannot satisfy a revoked or replacement lease. Results are keyed by job-manifest hash, so duplicate results are discarded. The system is idempotent, allowing the farm to resume after power is removed and restored.
 
 <a id="pr-gates"></a>
 
 ### 6.4 PR gates
 
-An orchard PR runs the plan subset for the formulae it touches: lint → build every declared flavor → smoke-test every OS on the VM matrix → ABI gate if a provider → graft rehearsal if graft-bearing. Rehearsal runs each declared graft in the per-OS VM matrix under instrumentation and diffs observed writes, kext loads, daemon installs, and network access against the declared behavior manifest ([DESIGN §12.15](DESIGN.md#vendor-install-scripts-grafts--declared-approved-monitored-reversible)); a deviation or under-declaration fails the PR, and only an exact match lets the signing host sign the manifest into the index. Merge is blocked until green; automatic signing and subsequent publisher activation happen post-merge (§9).
+An orchard PR runs the changed formulae and their affected transitive consumer plan: lint → build every declared flavor → smoke-test every OS on the VM matrix → ABI gate if a provider → graft rehearsal if graft-bearing. Rehearsal runs each declared graft in the per-OS VM matrix under instrumentation and diffs observed writes, kext loads, daemon installs, and network access against the declared behavior manifest ([DESIGN §12.15](DESIGN.md#vendor-install-scripts-grafts--declared-approved-monitored-reversible)); a deviation or under-declaration fails the PR, and only an exact match lets the signing host sign the manifest into the index. Merge is blocked until green; automatic signing and subsequent publisher activation happen post-merge (§9).
 
 <a id="trust-owner-merge-authorizes-processing-agents-produce-evidence"></a>
 
@@ -199,9 +216,9 @@ Missing required tests or independent rebuilds leave promotion pending; unavaila
 
 ### 7.2 Agents are expendable
 
-An agent holds the coordinator's public key (unsigned or unknown jobs are refused), a per-agent Ed25519 identity for result signing, a dedicated `_aslicefarm` user, and Seatbelt phase profiles. Build guests hold no publication credentials or repository signing keys; their own agent identity keys sign evidence only. A compromised guest can falsify evidence or disrupt jobs; quarantine and independent rebuilds reduce that risk but do not prove arbitrary package code safe. A compromise that reaches the shared Mac Pro host or hypervisor can corrupt gate evidence, staging, and publication and expose the publisher's timestamp key. Root authority remains offline, but forged release evidence can mislead automatic verification; publisher authentication alone does not establish content safety. Treat this as a signing incident under [KEY-RUNBOOK §4](runbooks/KEY-RUNBOOK.md#compromise-response).
+An agent holds the coordinator's public key (unsigned or unknown jobs are refused), a per-agent Ed25519 identity for result signing, a dedicated `_aslicefarm` user, and Seatbelt phase profiles. Build guests hold no agent identity keys, publication credentials, or repository signing keys. The host agent authenticates result envelopes outside package execution; guest claims remain untrusted evidence. A compromised guest can falsify evidence or disrupt jobs; quarantine and independent rebuilds reduce that risk but do not prove arbitrary package code safe. A compromise that reaches the shared Mac Pro host or hypervisor can corrupt gate evidence, staging, and publication and expose the publisher's timestamp key. Root authority remains offline, but forged release evidence can mislead automatic verification; publisher authentication alone does not establish content safety. Treat this as a signing incident under [KEY-RUNBOOK §4](runbooks/KEY-RUNBOOK.md#compromise-response).
 
-Builds of third-party-orchard PRs are hostile-adjacent input by definition, so agents run the whole job inside a fresh VM snapshot, reverted afterwards (§8). Seatbelt alone contains *builds*; PR review should not double as an exploit-bounty program for the farm.
+All package-controlled farm code, including official recipes, PRs, autobumps, and third-party orchards, runs in disposable VMs (§2.1). Seatbelt profiles remain an additional in-guest boundary; recipe approval does not grant host execution.
 
 <a id="reproducibility-classes"></a>
 
@@ -266,7 +283,7 @@ Bring-up must validate the chosen hypervisor version, host OS, each guest's boot
 
 ## 9. From result to repository
 
-The environment and release-version contract is [ORCHARD-POLICY §18.1](ORCHARD-POLICY.md#181-environments-branching-and-promoted-builds) and [ORCHARD-POLICY §18.2](ORCHARD-POLICY.md#182-release-versioning-and-unchanged-content-enforcement), for aslice and every orchard, including third-party orchards. Build the candidate on `develop` (dev), then promote the identical artifact inventory to `beta` (staging) and `master` (prod) in the same repository. The flow below runs for the authorized destination environment; promotion reuses frozen artifacts and authenticated build receipts instead of scheduling new served builds. Destination tests and current security checks still apply. Branch merges that change release content require a new base version and a fresh dev candidate. Environment suffixes belong to external release metadata, never rewritten payloads. Operational configuration is supplied externally.
+The environment and release-version contract is [ORCHARD-POLICY §18.1](ORCHARD-POLICY.md#181-environments-branching-and-promoted-builds) and [ORCHARD-POLICY §18.2](ORCHARD-POLICY.md#182-release-versioning-and-unchanged-content-enforcement), for aslice and every orchard, including third-party orchards. For normal releases, build the candidate on `develop` (dev), then promote the identical artifact inventory to `beta` (staging) and `master` (prod) in the same repository. The flow below runs for the authorized destination environment; promotion reuses frozen artifacts and authenticated build receipts instead of scheduling new served builds. Destination tests and current security checks still apply. Branch merges that change release content require a new base version and a fresh dev candidate. Environment suffixes belong to external release metadata, never rewritten payloads. Operational configuration is supplied externally.
 
 ```text
 owner-approved orchard merge → CI → agent staging (untrusted)
@@ -280,6 +297,8 @@ owner-approved orchard merge → CI → agent staging (untrusted)
 
 [KEY-RUNBOOK §2.1](runbooks/KEY-RUNBOOK.md#automatic-orchard-to-client-publication) specifies candidate contents, authenticated owner-merge authorization, retained signing state, serialized publication, and idempotent retries. Owner merge is the final human approval, including new core slices. Stale candidates must reconcile against current repository and signing state before signing again. The root Pi is not used for routine releases. The publisher refreshes timestamps daily for the valid approved snapshot; targets/snapshot renew automatically below 30 days using the last approved content. Root renewal and top-level key replacement remain offline operations ([KEY-RUNBOOK §1.1](runbooks/KEY-RUNBOOK.md#metadata-validity-and-renewal) and [KEY-RUNBOOK §3](runbooks/KEY-RUNBOOK.md#routine-key-rotation)). Client metadata refresh makes releases discoverable; publication does not force installation. Execute the end-to-end and failure drills in [KEY-RUNBOOK §7](runbooks/KEY-RUNBOOK.md#drills-and-acceptance) before launch.
 
+Isolated security candidates use the [maintenance branch mapping](ORCHARD-POLICY.md#maintenance-releases), identical gates and inventories, and an expected production baseline checked under the activation fence. Maintenance does not require merging unrelated ordinary development.
+
 The index snapshot is published atomically with its dependent rebuilds (§6.1). Those builds are part of the frozen dev candidate and are reused in staging and prod. Missing required flavor builds, tests, rehearsals, or independent rebuilds keep the affected publication set pending; laptop absence never permits a partial provider/dependent update. Retention follows [STATE-AND-RECOVERY §8](STATE-AND-RECOVERY.md#plans-locks-archives-and-offline-use): all published historical snapshots and their referenced hosted objects are retained under a currently authorized archive catalog.
 
 The same publish deposits **every source artifact the build fetched** into the tree's `blobs/sha256/` area: the vendored-source archive ([DESIGN §9.6](DESIGN.md#the-repository-system)). Upstreams delete, reshuffle, and re-roll tarballs constantly. An orchard that vendors its sources never notices, and a from-nothing re-standup never starves ([GENESIS §2](runbooks/GENESIS.md#the-genesis-inventory)).
@@ -288,7 +307,7 @@ The same publish deposits **every source artifact the build fetched** into the t
 
 ## 10. Farm-side metrics (the only kind there are)
 
-No user telemetry exists anywhere in this system ([DESIGN §2.2](DESIGN.md#non-goals) N7). What the farm publishes concerns the **farm**: median days behind upstream (freshness health), build pain per package (feeds [DESIGN §9.4](DESIGN.md#what-gets-prebuilt)), reproducibility coverage percentage, queue depth per lane, per-OS × flavor test pass rates, fleet status. Include signing health: remaining root/targets/snapshot validity, root-renewal alerts at 30 days, automatic targets/snapshot renewal below 30 days, signer availability and renewal failures, and daily timestamp-refresh failures ([KEY-RUNBOOK §1.1](runbooks/KEY-RUNBOOK.md#metadata-validity-and-renewal)). All of it is computed from the farm's own operation and published on the static dashboard at **aslice.sh/dashboard**, the transparency surface of [DESIGN §13.4](DESIGN.md#governance).
+No user telemetry exists anywhere in this system ([DESIGN §2.2](DESIGN.md#non-goals) N7). What the farm publishes concerns the **farm**: median days behind upstream (freshness health), build pain per package (feeds [DESIGN §9.4](DESIGN.md#what-gets-prebuilt)), reproducibility coverage percentage, queue depth per job kind and priority, per-OS × flavor test pass rates, fleet status. Include signing health: remaining root/targets/snapshot validity, root-renewal alerts at 30 days, automatic targets/snapshot renewal below 30 days, signer availability and renewal failures, and daily timestamp-refresh failures ([KEY-RUNBOOK §1.1](runbooks/KEY-RUNBOOK.md#metadata-validity-and-renewal)). All of it is computed from the farm's own operation and published on the static dashboard at **aslice.sh/dashboard**, the transparency surface of [DESIGN §13.4](DESIGN.md#governance).
 
 <a id="failure-modes-planned"></a>
 
@@ -317,7 +336,7 @@ No user telemetry exists anywhere in this system ([DESIGN §2.2](DESIGN.md#non-g
 
 - **Phase 0:** the harness skeleton — `aslice build` local mode with the full sandboxed pipeline; toolchain-as-slice; job/result schemas; `farm plan`. The from-nothing sequence ([GENESIS §1](runbooks/GENESIS.md#the-from-nothing-sequence)) is executed end-to-end and written down as it runs: the project must be able to stand up from nothing, repeatedly, before it has users.
 - **Phase 1:** coordinator + agents + leases; Actions adapter; VM matrix bring-up; PR gates for the core orchard; staging → quarantine → automatic networked signing → atomic publisher pipeline including the §7.5 malware-signature gate, bootstrapped per its genesis protocol, with the `clamav` core package the gate runs on.
-- **Phase 2:** ABI-gate dependent-rebuild cascades; vendor-repackaging lane including graft rehearsal (§6.4); backfill lane with [DESIGN §9.4](DESIGN.md#what-gets-prebuilt) priorities; public dashboard.
+- **Phase 2:** dependency-driven transitive rebuild cascades with ABI compatibility gates; vendor-repackaging lane including graft rehearsal (§6.4); backfill lane with [DESIGN §9.4](DESIGN.md#what-gets-prebuilt) priorities; public dashboard.
 - **Phase 3:** two-machine `v1`/`v2` cross-checks for core; capable independent evidence builders for required `v3` rebuilds; community evidence builders (`enroll`, `--reproduce-only`); transparency log; reproducibility class upgrades as a standing program.
 
 ## History
@@ -350,5 +369,6 @@ No user telemetry exists anywhere in this system ([DESIGN §2.2](DESIGN.md#non-g
 | Not recorded | September 2026 | corpus review corrections: artifact identity, protected execution, durable recovery, trust persistence, replay, platform limits, and examples aligned with STATE-AND-RECOVERY and SYSTEM-VOLUMES. These are specification changes; runtime acceptance remains pending. |
 | v0.22 | September 2026 | Documentation audit repairs: contract summaries aligned; owner-approved namespace, rollback, GC, naming, prefix, and graft decisions applied where relevant; semantic anchors and explicit citations added. Runtime implementation and platform acceptance remain pending. |
 | v0.24 | September 2026 | Remove retired comparison references and competitive framing; retain aslice requirements and link their owning specifications. Align affected contract summaries where applicable. |
+| v0.25 | September 2026 | Specify dependency-driven security remediation, explicit update and origin decisions, and the applicable farm, maintenance, and evidence contracts. Supersedes ABI-only rebuild and cost-first selection policies where previously stated; runtime and measured acceptance remain pending. |
 
 </details>

@@ -12,7 +12,7 @@ aslice-apply — execute a saved plan; replay a lock file
 
 # DESCRIPTION
 
-**apply** detects the document kind from its content and executes the exact state it records. A saved **plan** (JSON, from `aslice plan`) is executed step for step. A **lock file** (`lock_version = 1`, [PACKAGE-FORMAT §7](../docs/PACKAGE-FORMAT.md#lock-files)) is replayed exactly — the recorded package set becomes a new generation. An `https://` argument is fetched, hash-printed, and shown before any consent is asked. With no argument there is no default document — apply prints its usage.
+**apply** detects the document kind from its content and executes the exact state it records. A saved **plan** (JSON, from `aslice plan`) is executed step for step. A **lock file** (`lock_version = 2`, [PACKAGE-FORMAT §7](../docs/PACKAGE-FORMAT.md#lock-files)) is replayed exactly — the recorded package set becomes a new generation. An `https://` argument is fetched, hash-printed, and shown before any consent is asked. With no argument there is no default document — apply prints its usage.
 
 A whole-machine **setup file** (`schema = 1`, SETUP.md) is refused here with a pointer to `aslice machine apply` (aslice-machine(1)). That command resolves a machine wishlist and uses `./aslice-machine.toml` as its default document. Exact-state replay belongs to the top-level command; wishlist convergence belongs under `aslice machine`.
 
@@ -40,6 +40,15 @@ Graft-bearing packages gate the same way: non-interactively the apply is refused
 # NOTES
 
 Plans and the `plan`/`apply` split: [DESIGN §12.1](../docs/DESIGN.md#commands). The lock format: [PACKAGE-FORMAT §7](../docs/PACKAGE-FORMAT.md#lock-files). Whole-machine setup: SETUP.md and aslice-machine(1).
+
+# SOURCE-BUILD CONSENT
+
+The plan discloses source compilation and its dependency reasons. Interactive
+execution asks before compiling; unattended execution requires
+**--allow-source-builds** for newly required builds. Saved plans and locks convey
+no consent. Refusal returns 2 and never silently selects an older cached binary.
+Version-1 plans/locks are rejected; regenerate version 2 from authenticated records
+and explicit provider/replacement selections. Exact replay retains exact artifacts.
 
 # SEE ALSO
 

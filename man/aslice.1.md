@@ -159,6 +159,12 @@ replacement prepared but activation blocked. The machine-readable fields and
 confirmation and exit contracts are specified in
 [STATE-AND-RECOVERY §10.2.5](../docs/STATE-AND-RECOVERY.md#1025-command-requests-and-outcomes).
 
+Security maintenance: `aslice upgrade --security [--minimal]` reports all unresolved
+advisories; `aslice needs-restarting [--json]` reports restart, rebuild, reboot, and
+unknown inspection coverage. See [aslice-upgrade(1)](aslice-upgrade.1.md) and
+[aslice-needs-restarting(1)](aslice-needs-restarting.1.md). Newly required source
+builds need interactive consent or `--allow-source-builds` for unattended execution.
+
 # SEE ALSO
 
 The full user manual: `docs/MANUAL.md` in the aslice source tree. Package authoring: `docs/AUTHORING.md`. Design rationale: `docs/DESIGN.md`.

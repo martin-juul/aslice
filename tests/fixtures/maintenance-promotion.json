@@ -1,0 +1,85 @@
+{
+  "format": 1,
+  "incident_id": "incident-1",
+  "repository_identity": "urn:aslice:repo:core-fixture",
+  "candidate_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+  "production_baseline": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+  "base_version": "1.0.1",
+  "from_environment": "staging",
+  "to_environment": "prod",
+  "from_branch": "maintenance/incident-1/beta",
+  "to_branch": "maintenance/incident-1/master",
+  "input_digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+  "source_inventory": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+  "destination_inventory": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+  "authorization": {
+    "digest": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+    "size": 10
+  },
+  "gates": [
+    {
+      "gate": "lint",
+      "verdict": "pass",
+      "receipt": {
+        "digest": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+        "size": 10
+      }
+    },
+    {
+      "gate": "build",
+      "verdict": "pass",
+      "receipt": {
+        "digest": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+        "size": 10
+      }
+    },
+    {
+      "gate": "test",
+      "verdict": "pass",
+      "receipt": {
+        "digest": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+        "size": 10
+      }
+    },
+    {
+      "gate": "abi",
+      "verdict": "pass",
+      "receipt": {
+        "digest": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+        "size": 10
+      }
+    },
+    {
+      "gate": "malware",
+      "verdict": "pass",
+      "receipt": {
+        "digest": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+        "size": 10
+      }
+    },
+    {
+      "gate": "graft-rehearsal",
+      "verdict": "pass",
+      "receipt": {
+        "digest": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+        "size": 10
+      }
+    },
+    {
+      "gate": "independent-rebuild",
+      "verdict": "pass",
+      "receipt": {
+        "digest": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+        "size": 10
+      }
+    }
+  ],
+  "staging_receipt": {
+    "digest": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+    "size": 10
+  },
+  "forward_integration": {
+    "status": "pending",
+    "commit": null
+  }
+}

@@ -2,7 +2,7 @@
 
 > State, identity, privilege, and recovery contracts: [STATE-AND-RECOVERY](STATE-AND-RECOVERY.md). Protected-volume patching: [SYSTEM-VOLUMES](SYSTEM-VOLUMES.md). These specifications do not establish completed implementation or platform validation.
 
-- **Status:** Design draft, v0.18 — September 2026
+- **Status:** Design draft, v0.19 — September 2026
 - **Companion to:** [DESIGN §12.13](DESIGN.md#declarative-system-setup-aslice-machinetoml-and-the-aslice-machine-commands) (architecture and rationale), [MANUAL §10](MANUAL.md#one-file-one-command-rebuilding-a-machine), aslice-machine(1) (command reference). This document is the schema and semantics specification.
 - **Vocabulary:** [NOMENCLATURE.md](NOMENCLATURE.md) — project terms, acronyms, and the Homebrew translation table.
 
@@ -89,7 +89,7 @@ Unknown top-level keys are a hard error. The reasoning: a file written for a new
 
 Each entry is a name with optional decoration — an `@version` constraint, `+variant`/`-variant` flags, a required `repo:` namespace for every non-core package (including extended) — the same syntax `aslice install` accepts on the command line. Note what the file asks for, though. This is the *constraint* layer, not the *state* layer: it says "ensure ffmpeg 7", and the solver picks the exact build against the current index snapshot. If what you want is a machine reproduced bit-for-bit, that is the **lock file**'s job (`aslice lock export`; [PACKAGE-FORMAT §7](PACKAGE-FORMAT.md#lock-files)). The difference is `package.json` vs. `package-lock.json`, and both flow through the convergence verbs of §3.1.
 
-Resolution follows the ordinary rules: binary-first, flavor auto-detected. One consequence of the wishlist being *reproducible*: a package that exists only as a local build is a plan error unless its repository is reachable. "Rely on something only my old disk had" is refused by construction.
+Resolution follows the ordinary rules: newest eligible version, flavor auto-detected, then binary cost preference. Newly required compilation is disclosed and needs interactive consent or `--allow-source-builds` for unattended execution. One consequence of the wishlist being *reproducible*: a package that exists only as a local build is a plan error unless its repository is reachable. "Rely on something only my old disk had" is refused by construction.
 
 <a id="runtimes"></a>
 
@@ -366,5 +366,6 @@ Exit status: **0** applied (or nothing to do); **1** error (schema, resolution, 
 | Not recorded | September 2026 | corpus review corrections: artifact identity, protected execution, durable recovery, trust persistence, replay, platform limits, and examples aligned with STATE-AND-RECOVERY and SYSTEM-VOLUMES. These are specification changes; runtime acceptance remains pending. |
 | v0.16 | September 2026 | Documentation audit repairs: contract summaries aligned; owner-approved namespace, rollback, GC, naming, prefix, and graft decisions applied where relevant; semantic anchors and explicit citations added. Runtime implementation and platform acceptance remain pending. |
 | v0.18 | September 2026 | Remove retired comparison references and competitive framing; retain aslice requirements and link their owning specifications. Align affected contract summaries where applicable. |
+| v0.19 | September 2026 | Align wishlist resolution with newest-eligible selection and explicit source-build consent. |
 
 </details>

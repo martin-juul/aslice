@@ -1,7 +1,7 @@
--- aslice client-cache, schema 3. Execute only in a new, owner-controlled file.
+-- aslice client-cache, schema 2. Execute only in a new, owner-controlled file.
 -- Connection policy and semantic validation: ../DATABASE.md.
 PRAGMA application_id = 1095977986;
-PRAGMA user_version = 3;
+PRAGMA user_version = 2;
 PRAGMA auto_vacuum = NONE;
 PRAGMA foreign_keys = ON;
 PRAGMA journal_mode = WAL;
@@ -13,7 +13,7 @@ CREATE TABLE database_identity (
   role TEXT NOT NULL CHECK(role = 'client-cache'),
   instance_id TEXT NOT NULL CHECK(length(instance_id) = 32 AND length(CAST(instance_id AS BLOB)) = 32 AND instance_id NOT GLOB '*[^0-9a-f]*'),
   owner_id TEXT NOT NULL CHECK(length(owner_id) > 0),
-  schema_version INTEGER NOT NULL CHECK(schema_version = 3)
+  schema_version INTEGER NOT NULL CHECK(schema_version = 2)
 ) STRICT;
 
 CREATE TABLE maintenance_tasks (
@@ -102,19 +102,5 @@ CREATE VIEW search_packages AS
   SELECT p.repository,p.environment,p.name,p.artifact_id,p.summary FROM packages p
   JOIN snapshots s USING(repository,environment,snapshot_digest)
   WHERE s.cleanup_pending = 0;
-
-CREATE TABLE advisory_assessments (
-  repository TEXT NOT NULL, environment TEXT NOT NULL, snapshot_digest TEXT NOT NULL,
-  repository_identity TEXT NOT NULL CHECK(length(repository_identity)>0),
-  advisory_id TEXT NOT NULL CHECK(length(advisory_id)>0),
-  artifact_id TEXT NOT NULL REFERENCES objects(digest),
-  component TEXT NOT NULL,
-  advisory_digest TEXT NOT NULL REFERENCES objects(digest),
-  expires_at INTEGER NOT NULL CHECK(expires_at>=0),
-  vulnerability TEXT NOT NULL CHECK(vulnerability IN ('vulnerable','fixed','not-affected','unknown')),
-  PRIMARY KEY(repository,environment,snapshot_digest,advisory_id,artifact_id,component),
-  FOREIGN KEY(repository,environment,snapshot_digest) REFERENCES snapshots
-) STRICT;
-CREATE INDEX advisory_lookup ON advisory_assessments(artifact_id,expires_at);
 
 COMMIT;

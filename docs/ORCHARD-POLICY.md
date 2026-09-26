@@ -2,7 +2,7 @@
 
 > State, identity, privilege, and recovery contracts: [STATE-AND-RECOVERY](STATE-AND-RECOVERY.md). Protected-volume patching: [SYSTEM-VOLUMES](SYSTEM-VOLUMES.md). These specifications do not establish completed implementation or platform validation.
 
-- **Status:** Policy v1.17 — September 2026
+- **Status:** Policy v1.18 — September 2026
 - **Companion to:** [DESIGN.md](DESIGN.md), [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md), [BUILD-INFRA.md](BUILD-INFRA.md), [REPOSITORIES.md](REPOSITORIES.md), [TOOLCHAIN.md](TOOLCHAIN.md)
 - **Audience:** orchard maintainers, reviewers, and contributors
 - **Vocabulary:** [NOMENCLATURE.md](NOMENCLATURE.md) — project terms, acronyms, and the Homebrew translation table.
@@ -150,6 +150,8 @@ disable_date = "2027-09-01"    # optional: new installs refuse after this
 
 ---
 
+Security findings use [DESIGN's advisory and remediation contract](DESIGN.md#vulnerability-and-sbom-pipeline). Recipe, source, toolchain, configuration, and selected dependency changes rebuild affected transitive consumers, including static and bundled inputs, under [BUILD-INFRA](BUILD-INFRA.md#the-build-plan). ABI compatibility does not waive this policy; complete authorized provider/consumer sets publish together and cross-orchard gaps stay visible.
+
 <a id="freshness-livecheck-and-autobump"></a>
 
 ## 9. Freshness: livecheck and autobump
@@ -175,7 +177,7 @@ Every orchard change PR clears the same six gates ([ORCHARD-POLICY §10](ORCHARD
 1. **Lint** — schema, this policy (`link_reason`, patch headers, license, description rules), plus the `--new-package` ruleset for additions.
 2. **Matrix build** — sandboxed build on **every declared flavor** at the formula's `min_os`, then smoke-run on **each OS release in `[min_os, 12]`** on the farm VMs. Tests may be flagged flavor/OS-irrelevant (pure data packages), with the flag visible in the PR.
 3. **Smoke test** — `tests.star` passes on at least one OS × flavor for core; the test must exercise the installed artifact, not just `--version` where more is possible.
-4. **ABI gate** — for any PR changing a library's version or revision, CI diffs the ABI scan between the old and the new slice. A `compatibility_version` or symbol-fingerprint regression must be resolved one of two ways: an explicit version/soname bump, or marking and scheduling **dependent rebuilds** — which the farm executes on merge and publishes *in the same index snapshot*, so clients never see the "everything's broken until rebuilds land" window.
+4. **ABI gate** — for any PR changing a library's version or revision, CI diffs the ABI scan between the old and the new slice. Independently, every changed input invalidates affected transitive consumers under [BUILD-INFRA](BUILD-INFRA.md#the-build-plan), including ABI-compatible security fixes. A `compatibility_version` or symbol-fingerprint regression must be resolved one of two ways: an explicit version/soname bump, or marking and scheduling **dependent rebuilds** — which the farm executes on merge and publishes *in the same index snapshot*, so clients never see the "everything's broken until rebuilds land" window.
 5. **Graft rehearsal** — for a `type = "binary"` package declaring grafts ([PACKAGE-FORMAT §3.11](PACKAGE-FORMAT.md#binary--vendor-binaries-pkgdmg-only-software)), the farm rehearses each graft in a per-OS VM on every OS the artifact targets, diffs the observed writes, kext loads, daemon installs, and network access against the declared behavior manifest, and fails the PR on any deviation or under-declaration. Only a rehearsed, verified manifest is signed into the index ([DESIGN §12.15](DESIGN.md#vendor-install-scripts-grafts--declared-approved-monitored-reversible)). A package without grafts skips this gate entirely.
 6. **Post-merge signing** — slice and metadata signing happen automatically only after owner-approved merge and all required gates, on the dedicated networked release Pi; the publisher verifies the returned candidate before atomic publication ([KEY-RUNBOOK §2.1](runbooks/KEY-RUNBOOK.md#automatic-orchard-to-client-publication)). No PR, however trusted, touches keys.
 
@@ -306,7 +308,7 @@ This contract applies to aslice development, the core and extended orchards, and
 | `staging` | `beta` | Validate the exact candidate intended for production. |
 | `prod` | `master` | Serve the candidate that passed staging. |
 
-**One repository identity per project or orchard.** All three branches live in the same Git repository and its mirrors. Environment selection may change the branch pointer only; it must not select a separate repository, fork, or environment-specific mirror URL. Different orchards naturally have different repository identities. Mirrors replicate the same repository, branch names, pinned commits, and immutable objects; selecting a transport mirror does not change the environment. Feature and review branches may exist, but published environments use exactly the names above.
+**One repository identity per project or orchard.** All three branches live in the same Git repository and its mirrors. Environment selection may change the branch pointer only; it must not select a separate repository, fork, or environment-specific mirror URL. Different orchards naturally have different repository identities. Mirrors replicate the same repository, branch names, pinned commits, and immutable objects; selecting a transport mirror does not change the environment. Feature and review branches may exist. Normal releases use these names; isolated security maintenance uses the explicit mapping below.
 
 **Build once, promote twice.** Changes enter `develop`. Freeze a candidate at an exact commit, resolve all inputs to immutable identities, and build the complete artifact set there. Record its source tree, recipes, patches, dependency locks, toolchain and build configuration, artifact inventory (paths, lengths, and SHA-256 digests), and authenticated gate receipts. Include required provider/dependent builds in that set. Finalize any byte-changing signing or packaging before freezing the inventory. Keep the candidate and evidence available by immutable identity even after `develop` advances.
 
@@ -317,6 +319,16 @@ Promote that specific candidate from `develop` to `beta`, then from `beta` to `m
 **Promotion is a checked release operation.** Before activation, verify the repository identity, required source/destination branches, authorized promotion commit, base version, source/input identity, complete artifact inventory, and required gate receipts. Staging validates the selected dev candidate; prod requires the successful staging record for that same candidate. Missing objects or evidence, changed content, an incorrect branch, or a different repository blocks promotion and leaves the destination's previous release active. Retrying an unchanged candidate after a transient outage is allowed; bypassing a failed gate is not.
 
 Keep publication state, caches, locks, metadata version counters, and signing authorization scoped to the repository and environment. Renewing dev metadata cannot publish into prod, and selecting dev cannot overwrite prod's rollback-protection state. Publish each environment atomically through the existing signing flow. TUF metadata and detached promotion attestations may receive new signatures, versions, and expiries; they must reference the same frozen artifact bytes and content digests. This metadata activity is not an artifact rebuild.
+
+<a id="maintenance-releases"></a>
+
+### 18.1.1 Security maintenance releases
+
+Security incidents may use `maintenance/<incident-id>/develop`, `maintenance/<incident-id>/beta`, and `maintenance/<incident-id>/master`, mapped explicitly to dev, staging, and prod in the same repository identity. Incident IDs use lowercase letters, digits, and hyphens. This is an isolated candidate chain with the same environments, owner authorization, signing authorities, immutable artifacts, version rules, and mandatory gates as normal promotion. It creates no emergency bypass. [OBS maintenance incidents](https://openbuildservice.org/help/manuals/obs-user-guide/cha-obs-maintenance-setup) provide an upstream precedent for isolating a fix from unrelated development.
+
+Base the candidate on an exact production release plus the fix and required dependency changes. Record the incident, repository identity, baseline release digest, input and artifact inventory digests, source/destination branches and environments, owner authorization, all required gate receipts, and staging evidence in the [maintenance-promotion contract](../schematics/json/maintenance-promotion.schema.json). Promotion preserves identical source/destination artifact inventories. The destination branch must match the incident and environment exactly, and prod requires staging for that candidate.
+
+Bind authorization and activation to the expected production baseline. Under the publication fence, compare it to current production immediately before activation. A concurrent production change blocks the old candidate: reconcile the fix with the new production content, allocate a new base version, and build and validate a new candidate through dev and staging. Maintenance cannot overwrite unrelated newer production changes. Track forward integration into ordinary `develop` as pending or integrated with an exact commit; publication need not wait for forward integration, but the incident remains open until it is recorded.
 
 <a id="release-versioning-and-unchanged-content-enforcement"></a>
 
@@ -401,5 +413,6 @@ Historical labels and ordering below are preserved as recorded, including repeat
 | Not recorded | September 2026 | corpus review corrections: artifact identity, protected execution, durable recovery, trust persistence, replay, platform limits, and examples aligned with STATE-AND-RECOVERY and SYSTEM-VOLUMES. These are specification changes; runtime acceptance remains pending. |
 | v1.16 | September 2026 | Documentation audit repairs: contract summaries aligned; owner-approved namespace, rollback, GC, naming, prefix, and graft decisions applied where relevant; semantic anchors and explicit citations added. Runtime implementation and platform acceptance remain pending. |
 | v1.17 | September 2026 | Remove retired comparison references and competitive framing; retain aslice requirements and link their owning specifications. Align affected contract summaries where applicable. |
+| v1.18 | September 2026 | Specify dependency-driven security remediation, explicit update and origin decisions, and the applicable farm, maintenance, and evidence contracts. Supersedes ABI-only rebuild and cost-first selection policies where previously stated; runtime and measured acceptance remain pending. |
 
 </details>

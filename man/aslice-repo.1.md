@@ -40,6 +40,13 @@ aslice consumes packages from repositories — static, signed trees of metadata,
 
 **build**, **sign**, **publish** compile an orchard into a repository tree, apply keys, and push to a transport — the same pipeline the project itself runs. See [AUTHORING §11](../docs/AUTHORING.md#publishing-your-own-orchard-and-repository).
 
+Refresh uses immutable authenticated indexes, bounded diffs, and staged activation.
+Mirror retries retain the same repository and selected release; integrity failures
+are reported even after a successful retry. A missing required repository blocks
+the transaction. An unrelated outage does not block independently authorized inputs.
+Virtual providers, aliases, and replacements cannot cross namespaces without
+explicit retained selections; namespace reuse never transfers repository identity.
+
 # SEE ALSO
 
 aslice(1), [MANUAL §9](../docs/MANUAL.md#repositories-trust-and-staying-offline), REPOSITORIES.md

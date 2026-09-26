@@ -80,7 +80,7 @@ class RecoveryContracts(unittest.TestCase):
                 value = fixture(name)
                 validate(name, value)
                 body = value['signed'] if name == 'recovery-checkpoint' else value
-                body['format'] = 2
+                body['format'] += 1
                 with self.assertRaises(ValidationError):
                     validate(name, value)
 

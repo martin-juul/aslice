@@ -1,5 +1,6 @@
 # Structural fixture; illustrative hashes do not identify real packages.
-lock_version = 1
+lock_version = 2
+selections = []
 generated_by = "fixture"
 profile = "default"
 

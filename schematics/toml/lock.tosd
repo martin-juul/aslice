@@ -4,7 +4,7 @@ version = "1.0.0"
 
 [elements.lock_version]
 type = "integer"
-allowedvalues = [1]
+allowedvalues = [2]
 
 [elements.generated_by]
 type = "string"
@@ -175,4 +175,27 @@ pattern = "^sha256:[0-9a-f]{64}$"
 [types.packageItem.vendor.signer]
 type = "string"
 optional = true
+minlength = 1
+
+[elements.selections]
+type = "array"
+itemtype = "types.selection"
+
+[types.selection]
+type = "table"
+
+[types.selection.kind]
+type = "string"
+allowedvalues = ["provider", "alias", "replacement"]
+
+[types.selection.requested]
+type = "string"
+pattern = "^[a-z0-9][a-z0-9-]*:[a-z0-9][a-z0-9-]*$"
+
+[types.selection.selected]
+type = "string"
+pattern = "^[a-z0-9][a-z0-9-]*:[a-z0-9][a-z0-9-]*$"
+
+[types.selection.repository_identity]
+type = "string"
 minlength = 1

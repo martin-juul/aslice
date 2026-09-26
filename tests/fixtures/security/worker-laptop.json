@@ -1,0 +1,13 @@
+{
+  "format": 1,
+  "worker_id": "owned-macbook-pro",
+  "physical_builder_id": "owned-macbook-pro",
+  "model": "2015 MacBook Pro",
+  "enrollment": null,
+  "observed_at": null,
+  "host_os": null,
+  "cpu_features": null,
+  "ram_bytes": null,
+  "disk_bytes": null,
+  "capabilities": []
+}

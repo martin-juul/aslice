@@ -1,0 +1,70 @@
+{
+  "format": 1,
+  "job_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+  "kind": "rebuild",
+  "repository_identity": "urn:aslice:repo:core-fixture",
+  "worker_id": "fixture-worker",
+  "physical_builder_id": "fixture-physical",
+  "image_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+  "harness_digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+  "inputs": [
+    {
+      "digest": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+      "size": 10
+    }
+  ],
+  "recipe_dependencies": [
+    {
+      "consumer": "core:client",
+      "provider": "core:crypto",
+      "kind": "static",
+      "input_digest": "sha256:4444444444444444444444444444444444444444444444444444444444444444"
+    }
+  ],
+  "artifact_bindings": [
+    {
+      "consumer_artifact": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+      "provider_artifact": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+      "kind": "static"
+    }
+  ],
+  "triggers": [
+    {
+      "kind": "dependency",
+      "before": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+      "after": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+      "path": [
+        "core:crypto",
+        "core:client"
+      ]
+    }
+  ],
+  "outputs": [
+    {
+      "digest": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
+      "size": 100
+    }
+  ],
+  "isolation": {
+    "disposable_vm": true,
+    "credentials_outside": true,
+    "instance_id": "fixture-vm",
+    "destroyed": true,
+    "receipt": {
+      "digest": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+      "size": 10
+    }
+  },
+  "cache_domain": "release",
+  "validation_receipts": [
+    {
+      "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "size": 10
+    }
+  ],
+  "outcome": "complete",
+  "log": {
+    "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "size": 20
+  }
+}

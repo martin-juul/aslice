@@ -4,7 +4,7 @@
 
 **Name.** *aslice* — an apple slice: a nod to the Macintosh apple and to the shape of the project itself. Binary packages are **slices**; formula repositories are **orchards**; the manager picks slices off the orchard, prebuilt or baked to order. The vocabulary is kept distinct from Homebrew's beer terminology to avoid community confusion and trademark friction. The project name is styled lowercase everywhere, including sentence starts — like the command.
 
-- **Status:** Design draft, v1.31 — September 2026
+- **Status:** Design draft, v1.32 — September 2026
 - **Scope:** macOS 10.11 (El Capitan) through 12 (Monterey), Intel x86_64 only
 - **Implementation:** C++20 core, single self-contained binary
 - **Audience:** Maintainers, founding contributors, and early reviewers
@@ -73,7 +73,7 @@ Each clause is developed in its own section: the platform axes in §4, the varia
 - **G3 — Precompiled binaries for the common flavors**, hosted on GitHub infrastructure with a mirror-friendly fallback. Default install path is binary and near-instant.
 - **G4 — User-selectable build flags and feature variants** with local compilation — *without* forfeiting interoperability with prebuilt packages (§7).
 - **G5 — Explicit trust and execution boundaries** (§10): declarative package definitions, sandboxed builds, authenticated artifacts, payload-only binary installation by default, and separately authorized protected operations.
-- **G6 — A materially better performance profile** (§11): sub-10 ms CLI startup, parallel solver and downloads, zstd payloads, APFS-aware linking.
+- **G6 — Measured performance targets** (§11): sub-10 ms CLI startup, efficient solving and parallel downloads, zstd payloads, APFS-aware linking. These targets remain unmeasured.
 - **G7 — Atomic, rollback-capable installations** via generations (§8).
 - **G8 — Low maintainer burden.** The platform is frozen by Apple; the design exploits that stability instead of fighting it (§15).
 - **G9 — Vendor-binary coverage.** Software that only exists as a `.pkg`/`.dmg` — vendor CLIs, commercial audio tools, frozen apps — installs through the same store, generations, and lock files as everything else: payload-only by default, and through declared, approved, monitored grafts when its installer scripts are genuinely required (§12.4, §12.15).
@@ -371,7 +371,9 @@ Version and variant resolution uses a PubGrub-style CDCL algorithm:
 
 - **Terms** are (package, version-range, variant-assignment, flavor).
 - **Flavor is a hard constraint** injected from hardware detection — a v3 flavor on a v2 machine is a conflict at solve time with a clear message, never a SIGILL at runtime.
-- **Binary-first preference:** among valid solutions, the solver maximizes use of available slices (objective: minimize local builds, then minimize download size, then maximize versions). `--prefer-source` flips the objective.
+- **Operation policy precedes cost.** Authority, platform/ABI compatibility, holds, runtime streams, and explicit requests constrain every solve. Install selects the newest eligible version satisfying the request; upgrade selects the newest eligible update. A cached older binary cannot displace a newer eligible source-only update. Security update selects the newest eligible fixed version; `--security --minimal` selects the lowest eligible fixed versions whose complete dependency solution satisfies the requested advisories. Necessary dependency changes remain included and explained. Exact replay selects only the recorded artifacts and fails if they cannot be obtained or reproduced exactly. Only after these rules are satisfied do local-build count and download size break ties. `--prefer-source` changes that cost preference, not authority or update policy.
+- **Compilation requires consent.** Plans disclose each source build, its input identities, dependency path, resource estimates (or unknown estimates), and why no eligible binary is selected. Interactive execution asks before compilation; unattended execution requires `--allow-source-builds`. A saved plan describes work but conveys no consent. Refusal never silently selects an older version.
+- **Solver comparison remains pending.** PubGrub remains the specified solver. A libsolv prototype must run identical candidate sets and compare correctness under namespaces, exact bindings, variants, streams, holds, and security/minimal policies; conflict explanations; peak memory; and representative cold/warm solve latency distributions. No algorithm change or performance advantage is established by this specification.
 - **Deterministic and explainable:** every resolution emits a human-readable derivation tree (`aslice install --explain ffmpeg` shows why each version/variant was chosen). Solve results are cached in the disposable SQLite cache keyed by complete input digest ([DATABASE](DATABASE.md#4-disposable-client-cache)); typical repeated solves are sub-millisecond.
 
 The prebuilt variant domain per package is small by policy (§13.2: the farm builds defaults plus demonstrated-demand variants, and everything else compiles locally), which bounds farm work while preserving local build choices.
@@ -452,7 +454,7 @@ Profiles have one structural limitation: a name like `bin/php` can point at only
 
 ### 9.1 Hosting on GitHub — two layers, mirror-friendly
 
-**Layer 1: Package blobs as OCI artifacts on GHCR.** Slices are pushed to `ghcr.io/aslice/<name>` as OCI artifacts (ORAS), giving content-addressed blob storage, dedup across versions via shared layers, resumable/ranged downloads, and free bandwidth within GitHub's generous registry limits. Every tag is additionally anchored to a signed manifest digest.
+**Layer 1: Package blobs as OCI artifacts on GHCR.** Slices are pushed to `ghcr.io/aslice/<name>` as OCI artifacts (ORAS), giving content-addressed blob storage, deduplication of byte-identical blobs (a monolithic changed archive does not automatically share content across versions), resumable/ranged downloads, and free bandwidth within GitHub's generous registry limits. Every tag is additionally anchored to a signed manifest digest.
 
 **Layer 2: The index as static, signed files.** The package index (TUF metadata + zstd JSON snapshots) is published both to a GitHub Release asset stream and to `raw`/Pages endpoints, and — critically — is *trivially mirrorable*: any static HTTP server can host a complete aslice repo. Mirror support is a first-class config (`mirrors = [...]`), not an afterthought, because the long-term health of a legacy-platform project cannot depend on one vendor's continued generosity.
 
@@ -529,6 +531,8 @@ repo.example.org/
 
 ---
 
+Index retrieval, bounded diffs, staged activation, mirror failures, and transaction-scoped repository availability follow [REPOSITORIES](REPOSITORIES.md#authenticated-index-refresh). Cross-namespace virtual providers, aliases, and replacements require retained explicit selection; repository names never transfer authority.
+
 <a id="security-model"></a>
 
 ## 10. Security Model
@@ -584,6 +588,8 @@ Every build phase runs under a Seatbelt (`sandbox-exec`) profile — Seatbelt pr
 | install (to staging) | No network; write to staging dir only |
 | test | No network by default; opt-in `test_network = true` per formula, logged at warn |
 
+Farm package-controlled execution uses disposable VMs in addition to these in-guest profiles, including official recipes, PRs, autobumps, and third-party orchards. Credentials remain outside the guest; [BUILD-INFRA](BUILD-INFRA.md#jobs-are-closed-worlds) defines the isolation and cache boundary. Local source builds retain the same input verification and sandbox requirements; farm isolation is not established by a passing schema.
+
 Vendor-binary payload extraction (`xar` expansion, `hdiutil` attach, cpio unpack) runs under the unpack profile — no network, writes confined to staging. The one phase in which a vendor artifact gets to run anything is the approved graft, which executes under its own manifest-derived profile (§12.15).
 
 Seatbelt is deprecated by Apple on newer releases but frozen-in-place across our entire (frozen) target window; the profile abstraction (`SandboxPolicy` compiled to Seatbelt today) is designed so a future backend can replace it without touching formulae. A build that escapes its profile fails the build and files an automatic audit event.
@@ -593,8 +599,15 @@ Seatbelt is deprecated by Apple on newer releases but frozen-in-place across our
 ### 10.6 Vulnerability and SBOM pipeline
 
 - Every slice has a separate authenticated **SPDX SBOM**, bound to its artifact and archive digests, generated from the build manifest (sources, patches, dependency closure, toolchain). Vendor-binary slices have a payload-only SBOM (file list, hashes, signer) — less deep than a source SBOM, still enough for `audit` to bind CVEs via CPE.
-- `aslice audit` matches the installed set against OSV/GitHub Advisory feeds and reports CVEs with affected-version ranges — locally, offline-capable with a cached feed.
+- `aslice audit` evaluates the active exact dependency closures and embedded components against TUF-authorized orchard advisories. Upstream OSV/GitHub feeds supply assessment evidence, not repository authority or proof that an orchard backport is missing. Retained vulnerable generations are reported separately from active ones. Missing component inventories, absent advisories, expired metadata, and incomplete coverage produce `unknown`, never an inference of safety.
+- Advisory records bind repository identity/environment, advisory and CVE identifiers, affected/fixed package revisions and artifact identities, OS/flavor applicability, evidence, and remediation. Freshness requires both current TUF authorization and an unexpired assessment. Vulnerability status (`vulnerable`, `fixed`, `not-affected`, `unknown`) is separate from remediation (`fix-available`, `held`, `unavailable`). A backport can mark an older revision fixed with evidence; upstream version ordering alone cannot. Cross-orchard consumers retain their own authority and remain visibly affected when no authorized rebuild exists.
+- `aslice upgrade --security` selects fixes for applicable advisories; `--minimal` is valid only with `--security` and chooses the lowest eligible fixed solution. Every held, unavailable, unknown, or otherwise blocked advisory remains in the result with its reason and dependency path. Exit 3 (`incomplete-remediation`) means unresolved findings remain even if some fixes committed. Exit 2 is consent/trust refusal, 1 is execution/invocation error, and 0 requires complete requested remediation and verification. No changes does not imply security success.
+- `aslice needs-restarting [--json]` inspects visible processes and exact mapped artifacts after updates. It reports `restart` for obsolete mapped closures, `consumer-rebuild` for static/embedded vulnerable inputs that restart cannot fix, `reboot` for an evidenced boot-bound effect, and `unknown` for inaccessible processes, races, or unsupported inspection. It never terminates processes. Findings include process/service identity when visible, artifact and advisory bindings, reason, and coverage. Exit 0 means complete inspection with no actions, 3 actions or incomplete coverage, and 1 inspection/invocation failure. These commands and macOS inspection remain to be implemented.
+
+The closed [advisory schema](../schematics/json/advisory.schema.json) defines each field. [DNF security/minimal selection](https://dnf.readthedocs.io/en/stable/command_ref.html), [DNF restart reporting](https://dnf-plugins-core.readthedocs.io/en/latest/needs_restarting.html), and [Zypper security patches](https://doc.opensuse.org/documentation/tumbleweed/zypper/) are upstream precedents; aslice's exact bindings and macOS coverage rules above remain its own contract.
 - Formulae declare upstream security-contact and EOL policy; packages past upstream EOL are surfaced in `audit` and require `--allow-eol` to install.
+
+Security remediation invalidates affected transitive consumers on recipe, source, toolchain, build-configuration, or selected dependency changes. ABI compatibility remains a gate and does not waive remediation. The recipe graph and exact artifact bindings are separate evidence; [BUILD-INFRA](BUILD-INFRA.md#the-build-plan) specifies closure construction and atomic publication.
 
 <a id="what-this-does-not-solve"></a>
 
@@ -613,7 +626,7 @@ Seatbelt is deprecated by Apple on newer releases but frozen-in-place across our
 
 ## 11. Performance Model
 
-The performance goals, and the mechanism that achieves each:
+These are unmeasured performance targets and proposed mechanisms, not established results:
 
 | Goal | Mechanism |
 |---|---|
@@ -621,12 +634,17 @@ The performance goals, and the mechanism that achieves each:
 | **`install` of a cached slice < 300 ms** | Verify (Ed25519: microseconds) → zstd decompress → APFS `clonefile` into store (HFS+ systems fall back to hardlink/copy) → symlink generation swap. No relocation pass on default prefix. |
 | **Index update < 200 ms typical** | Snapshot diffs against a cached snapshot hash — a few KB on a typical day |
 | **Solve < 50 ms typical** | SQLite-backed package index with prepared statements; PubGrub with clause caching; memoized per snapshot |
-| **Downloads saturate the pipe** | HTTP/2 multiplexing, 8-way parallel fetches, resumable ranges, zstd `--long` delta-friendly payloads |
+| **Downloads saturate the pipe** | HTTP/2 multiplexing, bounded parallel fetches and decompression, resumable ranges, Zstandard payloads |
 | **Cold full install of a large tree (e.g., `ffmpeg` closure) < 10 s on SSD** | Parallel fetch + pipeline overlap (decompress stream N+1 while linking N) |
 | **Builds: near-zero manager overhead** | The builder's job is to get out of the way: Ninja parallelism, `ccache`-compatible compiler cache in `cache/`, tmpfs-backed build dir when RAM allows |
 | **Shim dispatch < 1 ms** | Multicall binary (no interpreter, no JIT), committed execution catalog and validated admission, `exec` instead of fork. This is a target requiring measurement with closure validation and recovery gates enabled (§12.9) |
 
-The deeper performance win is architectural: **flavor targeting.** A v3 ffmpeg/x264/openssl on a Haswell+ machine is measurably faster than the lowest-common-denominator binaries legacy platforms ship — crypto, codecs, and compression see the largest gains. aslice is likely the only macOS package manager that serves AVX2 binaries as a first-class default rather than an accident.
+Flavor targeting may improve some workloads, but no advantage is claimed until measured with identical inputs and compatible hardware. OCI storage shares identical blobs only; binary deltas, metadata sharding, and reusable prepared build environments are later experiments. Reusing an environment must still verify all inputs and create disposable execution instances.
+
+Benchmark startup, immutable full/diff index refresh, solving, cached and cold installation, shim dispatch with admission checks, VM preparation, and security rebuild closures. Publish versioned workload manifests with exact inputs: small single-package and large dependency closures; satisfiable/conflicting variant solves; static/header/bundled security changes; cold and warm caches. Record hardware and guest identities, OS, CPU features, RAM, storage/filesystem, network conditions, package counts and compressed/uncompressed sizes, cache state, concurrency, repetitions, failures, peak memory, and median/p95/p99 latency. Include APFS and HFS+ runs and verification costs. Store raw farm measurements and harness versions; collect no user telemetry. Qualification and benchmark execution remain pending.
+
+Transfer and decompression workers share explicit connection, memory, expanded-byte, disk-watermark, and CPU budgets. Start with at most eight transfers and two decompressors, reducing concurrency to fit measured memory/disk budgets; refuse a job whose single-object bound cannot fit. Enforce bounds before allocation and during streaming, cancel safely on overflow, and report the limiting resource. Values are initial limits to validate, not throughput claims.
+
 
 ---
 
@@ -651,7 +669,7 @@ stop checks safely and report incomplete verification. See
 [STATE-AND-RECOVERY §5](STATE-AND-RECOVERY.md#durable-transactions-and-recovery).
 
 ```sh
-aslice install ffmpeg                  # binary-first; flavor auto-detected
+aslice install ffmpeg                  # newest eligible version; flavor auto-detected
 aslice install ffmpeg --build-from-source
 aslice install ffmpeg --variant +x265 --cflags="-O3 -march=native"
 aslice install ffmpeg@v6               # version pinning
@@ -1045,7 +1063,7 @@ Each verb rewrites `[deprecation]` (or removes the formula) and validates what t
 
 **The merge gate, locally.** `aslice orchard ci [pkg…] [--flavors v2,v3] [--all]` runs the six-gate check of §13.4 / [ORCHARD-POLICY §10](ORCHARD-POLICY.md#merge-gates-what-ci-must-prove) on the maintainer's machine, before the farm has to: lint, a sandboxed build per declared flavor at the formula's `min_os` through the BUILD-INFRA harness (one harness, two scales — the laptop run and the farm run are the same pipeline), the `tests.star` smoke test, and the ABI gate diffed against a published index snapshot. The cross-OS smoke-run tier is honestly marked deferred-to-farm — a laptop cannot conjure the 10.11 VM — and so is the graft rehearsal gate (§12.15), which wants the same VMs: locally, a graft's manifest is lint-checked for completeness and the script hash-verified, and the observed-behavior diff runs on the maintainer's own OS release only. With no arguments, `ci` scopes to the packages changed against the upstream branch; `--all` prices the full orchard and says so before starting. The gate passing locally merges nothing — it makes the PR boring.
 
-**Impact queries.** `aslice orchard dependents x264 [--transitive] [--json]` walks the orchard's dependency graph — built from the `[depends]`, `[extension]`, and `[ride]` declarations — and prints reverse dependencies, marking which ones link the package's ABI (rebuild candidates on a provider bump) and which merely exec it. This is the query the farm's dependent-rebuild cascade (§13.4) runs server-side, and the query `orchard ci` runs to scope its ABI gate; giving it to the maintainer means "what breaks if I bump this" is answered before the PR, not after the merge.
+**Impact queries.** `aslice orchard dependents x264 [--transitive] [--json]` walks the orchard's dependency graph — built from the `[depends]`, `[extension]`, and `[ride]` declarations — and prints reverse dependencies, marking build/runtime, static, header, generated, and bundled edges separately from exact artifact bindings. All affected transitive consumers rebuild on changed inputs, even with compatible ABI. This is the query the farm's dependent-rebuild cascade (§13.4) runs server-side, and the query `orchard ci` runs to scope its ABI gate; giving it to the maintainer means "what breaks if I bump this" is answered before the PR, not after the merge.
 
 **The formula importer** of §13.3 ships in this group as `aslice orchard port --from-homebrew <formula>` — named *port*, because §13.3 is honest that only the simple majority of Ruby formulae translate mechanically; the rest are ports, and the command says so. (`aslice machine import --from-brewfile`, §12.13, remains the user-side verb: migrating a machine, not authoring a formula.)
 
@@ -1233,5 +1251,6 @@ Artifact identity, protected execution, exact replay, and transaction recovery a
 | Not recorded | September 2026 | corpus review corrections: artifact identity, protected execution, durable recovery, trust persistence, replay, platform limits, and examples aligned with STATE-AND-RECOVERY and SYSTEM-VOLUMES. These are specification changes; runtime acceptance remains pending. |
 | v1.28 | September 2026 | Documentation audit repairs: contract summaries aligned; owner-approved namespace, rollback, GC, naming, prefix, and graft decisions applied where relevant; semantic anchors and explicit citations added. Runtime implementation and platform acceptance remain pending. |
 | v1.31 | September 2026 | Describe aslice mechanisms without competitive rankings; align artifact bindings, protected restoration, and self-update commit boundaries, and retarget specification citations. |
+| v1.32 | September 2026 | Specify dependency-driven security remediation, explicit update and origin decisions, and the applicable farm, maintenance, and evidence contracts. Supersedes ABI-only rebuild and cost-first selection policies where previously stated; runtime and measured acceptance remain pending. |
 
 </details>

@@ -1,6 +1,6 @@
 # State, artifacts, and recovery
 
-- **Status:** Specification v0.8 — September 2026. These contracts are specified, not implemented or validated on macOS.
+- **Status:** Specification v0.9 — September 2026. These contracts are specified, not implemented or validated on macOS.
 - **Authority:** This document owns artifact identity, privileged ownership, transaction recovery, replay, and retained trust. DESIGN explains the architecture; PACKAGE-FORMAT describes author input. Examples and schemas must agree with these contracts.
 
 Navigation: [1. Compatibility and artifact identity](#compatibility-and-artifact-identity) · [2. ABI and execution requirements](#abi-and-execution-requirements) · [3. Privileged ownership and capability checks](#privileged-ownership-and-capability-checks) · [4. Graft execution boundary](#graft-execution-boundary) · [5. Durable transactions and recovery](#durable-transactions-and-recovery) · [6. Self-update and decommission](#self-update-and-decommission) · [7. Persistent trust and initial bootstrap](#persistent-trust-and-initial-bootstrap) · [8. Plans, locks, archives, and offline use](#plans-locks-archives-and-offline-use) · [9. Certificate trust lifecycle](#certificate-trust-lifecycle) · [10. Acceptance and implementation order](#acceptance-and-implementation-order)
@@ -563,6 +563,31 @@ those now defer to §5.2 here. DESIGN's session/project/default precedence
 is retained. Structural fixtures and decision models exercise the specified contracts;
 runtime enforcement and platform acceptance remain unimplemented.
 
+### Security workflow contract versions
+
+Plans and locks use version 2; operation-request and operation-outcome envelopes
+use format 2. Recovery journals, recovery plans, and nested operation state remain
+format 1. The new request fields are `allow_source_builds`, `selections`, and nullable
+`update_policy`; consent defaults to false only for a newly created request, never
+by converting an old saved record. `install`, `upgrade`, `apply`, and `needs-restarting` join
+the request action vocabulary. Read-only restart inspection has no mutation plan.
+
+Outcomes add `security_findings`, `restart_findings`, `inspection_coverage`, and
+`exit_code`. Findings bind advisory/repository/artifact/component, vulnerability and
+remediation statuses, reason, dependency path, and nullable retained generation.
+Restart findings bind action, nullable process/service/artifact, advisory IDs, and
+reason. Coverage is `not-requested`, `complete`, `partial`, or `unknown`. An
+`incomplete-remediation` outcome uses exit 3 and retains every unresolved finding,
+including after committed updates. Inspection with actions or incomplete coverage
+also uses exit 3; `ok` uses 0, `refused` uses 2, and execution errors use 1.
+
+Reject unsupported versions before effects. Regenerate plans and locks from
+authenticated exact records and explicit selections; require fresh source-build
+consent at execution. No migration may infer repository choices or consent from
+old records. [DATABASE](DATABASE.md#104-security-and-scheduler-projection-version-3)
+defines the separately versioned cache/coordinator reconstruction. Schemas and
+decision models do not prove runtime remediation, isolation, or publication durability.
+
 ## History
 
 <details>
@@ -577,5 +602,6 @@ runtime enforcement and platform acceptance remain unimplemented.
 | v0.2 | September 2026 | prose rewrite of the rollback transaction explanation; no content changes. |
 | v0.4 | September 2026 | Documentation audit repairs: contract summaries aligned; owner-approved namespace, rollback, GC, naming, prefix, and graft decisions applied where relevant; semantic anchors and explicit citations added. Runtime implementation and platform acceptance remain pending. |
 | v0.8 | September 2026 | Close recovery storage, signed checkpoint, admission, activation, grouped conflict, batch grammar, and command outcome contracts; specify protected-volume pending-reboot and manager-integrity commit boundaries with structural schemas and model cases. Runtime/platform acceptance remains pending. |
+| v0.9 | September 2026 | Add security and farm contract versions, authority-preserving reconstruction, and structural/model acceptance boundaries. |
 
 </details>

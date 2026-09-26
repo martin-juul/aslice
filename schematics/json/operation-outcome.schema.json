@@ -2,12 +2,12 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://aslice.sh/schematics/json/operation-outcome.schema.json",
   "title": "Operation outcome",
-  "description": "Version 1 structural contract. Normative field semantics: docs/STATE-AND-RECOVERY.md section 10.2 and docs/DATABASE.md section 9. Cryptography, canonical encoding, chain continuity, ordering, and filesystem safety require semantic validation.",
+  "description": "Version 1 structural contract. Normative field semantics: docs/STATE-AND-RECOVERY.md section 10.2 and docs/DATABASE.md section 9. Cryptography, canonical encoding, chain continuity, ordering, and filesystem safety require semantic validation. Version 2: explicit source-work consent, namespace selections, and security/restart decisions. Old versions are rejected; regenerate from authenticated inputs, never infer consent. Field semantics: docs/DESIGN.md vulnerability-and-sbom-pipeline and docs/PACKAGE-FORMAT.md Security dependency and selection records.",
   "type": "object",
   "additionalProperties": false,
   "properties": {
     "format": {
-      "const": 1
+      "const": 2
     },
     "command": {
       "type": "string",
@@ -46,7 +46,8 @@
         "ok",
         "refused",
         "needs-attention",
-        "error"
+        "error",
+        "incomplete-remediation"
       ]
     },
     "errors": {
@@ -81,7 +82,10 @@
       "uniqueItems": true
     },
     "data": {
-      "type": "object",
+      "type": [
+        "object",
+        "null"
+      ],
       "additionalProperties": false,
       "properties": {
         "format": {
@@ -688,6 +692,180 @@
           }
         }
       ]
+    },
+    "security_findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "advisory_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "repository_identity": {
+            "type": "string",
+            "minLength": 1
+          },
+          "artifact_id": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          },
+          "component": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "vulnerability": {
+            "enum": [
+              "vulnerable",
+              "fixed",
+              "not-affected",
+              "unknown"
+            ]
+          },
+          "remediation": {
+            "enum": [
+              "fix-available",
+              "held",
+              "unavailable"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          },
+          "dependency_path": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z0-9][a-z0-9-]*:[a-z0-9][a-z0-9-]*$"
+            },
+            "minItems": 0,
+            "uniqueItems": true
+          },
+          "retained_generation": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "advisory_id",
+          "repository_identity",
+          "artifact_id",
+          "component",
+          "vulnerability",
+          "remediation",
+          "reason",
+          "dependency_path",
+          "retained_generation"
+        ]
+      },
+      "minItems": 0,
+      "uniqueItems": true
+    },
+    "restart_findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "enum": [
+              "restart",
+              "consumer-rebuild",
+              "reboot",
+              "unknown"
+            ]
+          },
+          "process_id": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "service": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "artifact_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "advisory_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 0,
+            "uniqueItems": true
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "action",
+          "process_id",
+          "service",
+          "artifact_id",
+          "advisory_ids",
+          "reason"
+        ]
+      },
+      "minItems": 0,
+      "uniqueItems": true
+    },
+    "inspection_coverage": {
+      "enum": [
+        "not-requested",
+        "complete",
+        "partial",
+        "unknown"
+      ]
+    },
+    "exit_code": {
+      "enum": [
+        0,
+        1,
+        2,
+        3
+      ]
     }
   },
   "required": [
@@ -697,7 +875,11 @@
     "instance_id",
     "status",
     "errors",
-    "data"
+    "data",
+    "security_findings",
+    "restart_findings",
+    "inspection_coverage",
+    "exit_code"
   ],
   "allOf": [
     {
@@ -719,6 +901,111 @@
         "properties": {
           "errors": {
             "minItems": 1
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "incomplete-remediation"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "exit_code": {
+            "const": 3
+          },
+          "security_findings": {
+            "minItems": 1
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "ok"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "exit_code": {
+            "const": 0
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "refused"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "exit_code": {
+            "const": 2
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "error"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "exit_code": {
+            "const": 1
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "needs-attention"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "exit_code": {
+            "const": 3
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "command": {
+            "const": "needs-restarting"
+          },
+          "status": {
+            "const": "ok"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "inspection_coverage": {
+            "const": "complete"
+          },
+          "restart_findings": {
+            "maxItems": 0
           }
         }
       }

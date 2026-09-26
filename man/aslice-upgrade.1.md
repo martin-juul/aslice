@@ -8,7 +8,7 @@ aslice-upgrade, aslice-outdated — update installed packages
 
 # SYNOPSIS
 
-`aslice upgrade` [*package*…]
+`aslice upgrade` [*package*…] [**--security** [**--minimal**]] [**--allow-source-builds**]
 
 `aslice outdated` [**--json**]
 
@@ -24,7 +24,32 @@ Rules upgrade never breaks on its own:
 
 Packages with running services are stopped, swapped, and restarted as part of the transaction; if a service fails its post-upgrade health check, an interactive run offers to roll back (aslice-service(1)).
 
+Normal upgrades choose the newest eligible version after authority, compatibility,
+holds, stream boundaries, and explicit requests. An older cached binary does not
+displace a newer source-only update. The plan discloses each build and dependency
+reason. Interactive execution asks for source-build consent; unattended execution
+requires **--allow-source-builds**. Saved plans do not transfer consent.
+
+**--security** selects the newest eligible fixes for applicable authenticated
+advisories. **--security --minimal** chooses the lowest eligible fixed versions
+satisfying advisory and dependency constraints. Necessary dependency changes are
+included and explained. **--minimal** alone is an invocation error. Holds and
+platform gaps remain visible; no unresolved advisory is silently omitted.
+
+# EXIT STATUS
+
+**0** complete requested update and verification. **1** execution/invocation error.
+**2** consent or trust refusal. **3** incomplete security remediation, including
+held fixes, unavailable platform fixes, stale or unknown coverage, and cross-orchard
+gaps. A partial committed update may still return 3; JSON reports both facts.
+
 # OPTIONS
+
+**--security**, **--minimal**
+:   Restrict the update objective to advisory fixes; minimal selects the lowest eligible fixed solution and requires security mode.
+
+**--allow-source-builds**
+:   Authorize the disclosed source work for this execution. Required unattended; unrelated consent gates still apply.
 
 **--health-timeout** *duration*
 :   Set the per-service post-commit health timeout, default `60s`; require a positive finite integer with `ms`, `s`, or `m` and reject overflow.

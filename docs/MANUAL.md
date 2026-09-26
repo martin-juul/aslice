@@ -4,7 +4,7 @@
 
 **The user guide for aslice — a package manager for Intel macOS.**
 
-- **Status:** v0.21 — September 2026
+- **Status:** v0.22 — September 2026
 - **Project home:** [aslice.sh](https://aslice.sh) — homepage, documentation (aslice.sh/docs), and the public dashboard (aslice.sh/dashboard); the installer is served from get.aslice.sh (§2).
 - **Audience:** people who install and run software with aslice; that is most of what follows. If you *write* packages, read chapters 1–4 and then move to [AUTHORING.md](AUTHORING.md). If you want to know *why* things are the way they are, the rationale lives in [DESIGN.md](DESIGN.md).
 - **Companions:** the man pages in [man/](../man/) (also available as `aslice help <command>`), [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md), [ORCHARD-POLICY.md](ORCHARD-POLICY.md), [REPOSITORIES.md](REPOSITORIES.md), [GENESIS.md](runbooks/GENESIS.md), [TOOLCHAIN.md](TOOLCHAIN.md).
@@ -181,7 +181,7 @@ aslice info ffmpeg            # versions, variants, dependencies, size, provenan
 aslice install ffmpeg
 ```
 
-`install` is binary-first. It resolves your request against the index, picks the newest version that runs on your OS release and the fastest flavor your CPU executes, downloads the slices, verifies them, and links a new generation. A typical run prints the plan, then the result:
+`install` selects the newest eligible requested version, then prefers a binary for that selection. It resolves your request against the index, picks the newest version that runs on your OS release and the fastest flavor your CPU executes, downloads the slices, verifies them, and links a new generation. A typical run prints the plan, then the result:
 
 ```console
 $ aslice install ffmpeg
@@ -220,9 +220,15 @@ aslice install ffmpeg --variant +x265 --cflags="-O3"       # non-default options
 aslice install ffmpeg --cflags="-O3 -march=native" --lto   # tuned to your machine
 ```
 
-Custom-flag builds can use prebuilt dependencies when their ABI evidence, dependent tests, and CPU/OS requirements permit it (§4.3). A `-march=native` ffmpeg records the selected CPU features; sharing a compatibility key does not make it usable on every machine. Unsupported ABI-changing flags are rejected unless covered by a declared ABI variant, and unknown effects require an isolated build and explicit dependency validation ([STATE-AND-RECOVERY §2](STATE-AND-RECOVERY.md#abi-and-execution-requirements)). A non-default *feature* variant (`--variant`) may or may not have a prebuilt slice; when it doesn't, aslice says so and builds locally. Either way, the plan tells you which before anything downloads.
+Custom-flag builds can use prebuilt dependencies when their ABI evidence, dependent tests, and CPU/OS requirements permit it (§4.3). A `-march=native` ffmpeg records the selected CPU features; sharing a compatibility key does not make it usable on every machine. Unsupported ABI-changing flags are rejected unless covered by a declared ABI variant, and unknown effects require an isolated build and explicit dependency validation ([STATE-AND-RECOVERY §2](STATE-AND-RECOVERY.md#abi-and-execution-requirements)). A non-default *feature* variant (`--variant`) may or may not have a prebuilt slice; when it doesn't, aslice discloses the source work and obtains consent before building locally. Either way, the plan tells you which before anything downloads.
 
 **Shadowed packages and `link`.** A package can be installed into the store without being linked into your profile — the principled keg-only case, declared `link = false` in the formula with a mandatory `link_reason`, usually because the package shadows something macOS ships (OpenSSL, curl). `aslice info` shows the reason. `aslice link openssl3` opts in per profile, `aslice unlink openssl3` backs out, and each flip is a new generation, so `rollback` undoes it like anything else. Packages that declared the dependency build and run against the store copy either way ([PACKAGE-FORMAT §3.8](PACKAGE-FORMAT.md#install--declarative-post-install-behavior), [DESIGN §12.1](DESIGN.md#commands)).
+
+A newer eligible source-only version is not skipped for an older cached binary. The plan shows compilation and its dependency reasons before execution. Interactive runs ask for source-build consent; unattended runs require `--allow-source-builds`, including when applying a saved plan. Unknown build durations are shown as unknown.
+
+`aslice upgrade --security` applies the newest eligible fixes; add `--minimal` for the lowest eligible fixed versions satisfying the advisory and dependency constraints. Holds and runtime streams still apply. Every blocked, held, unavailable, or unknown advisory is reported, and exit 3 means remediation remains incomplete, even after a partial successful update. `aslice audit` includes exact active dependencies and embedded components and lists vulnerable retained generations separately. Stale or absent advisories do not establish safety.
+
+After an update, `aslice needs-restarting [--json]` reports restart, consumer rebuild, reboot, and unknown inspection coverage separately. It does not stop processes. See [aslice-needs-restarting(1)](../man/aslice-needs-restarting.1.md) for outcomes.
 
 <a id="upgrading"></a>
 
@@ -885,7 +891,7 @@ bounds above apply to verbose logs.
 
 | Command | What it does |
 |---|---|
-| `install` / `reinstall` / `link` / `unlink` | Install packages (binary first); repair a damaged profile entry; flip a `link = false` package into/out of a profile (§3.1) |
+| `install` / `reinstall` / `link` / `unlink` | Install the newest eligible packages; repair a damaged profile entry; flip a `link = false` package into/out of a profile (§3.1) |
 | `uninstall` / `autoremove` / `mark` | Remove packages; collect unneeded dependencies; fix request records |
 | `upgrade` / `outdated` | Move everything (or one package) forward; preview what would move |
 | `pin` / `unpin` | Hold a package against upgrades (one argument) — or pin a project to a runtime stream (two, §6) |
@@ -939,5 +945,6 @@ Historical labels and ordering below are preserved as recorded, including repeat
 | v0.16 | September 2026 | Add §1.3 and the helper reference link, explaining temporary helpers, package services, runtime shims, and the future multi-user daemon; no runtime changes. |
 | v0.17 | September 2026 | Documentation audit repairs: contract summaries aligned; owner-approved namespace, rollback, GC, naming, prefix, and graft decisions applied where relevant; semantic anchors and explicit citations added. Runtime implementation and platform acceptance remain pending. |
 | v0.21 | September 2026 | Remove retired comparison references and competitive framing; retain aslice requirements and link their owning specifications. Align affected contract summaries where applicable. |
+| v0.22 | September 2026 | Specify dependency-driven security remediation, explicit update and origin decisions, and the applicable farm, maintenance, and evidence contracts. Supersedes ABI-only rebuild and cost-first selection policies where previously stated; runtime and measured acceptance remain pending. |
 
 </details>

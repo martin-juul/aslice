@@ -10,6 +10,9 @@ import time
 
 ROOT = Path(__file__).resolve().parents[1]
 SCHEMAS = ROOT / 'docs/sqlite'
+V2_SCHEMAS = ROOT / 'tests/fixtures/database-v2'
+VERSIONS = {'coordinator': 3, 'client-cache': 3}
+
 ROLES = ('client-state', 'client-cache', 'system-state', 'coordinator', 'publisher', 'release-signer')
 # Hashes of the reviewed version-1 DDL, ignoring comments/whitespace and the
 # explicit auto_vacuum default. Prevent derived fixtures from silently drifting.
@@ -76,7 +79,7 @@ def populate(db, role):
         insert(db, 'recovery_receipts', 'a' * 32, c, 'committed')
     elif role == 'coordinator':
         insert(db, 'plans', a, 'core', 'prod', 'git-fixture', c)
-        insert(db, 'lanes', 'build')
+        insert(db, 'job_kinds' if db.execute('PRAGMA user_version').fetchone()[0] == 3 else 'lanes', 'build')
         insert(db, 'workers', 'worker', c, 1)
         insert(db, 'worker_capabilities', 'worker', 'v1', c)
         insert(db, 'jobs', b, 'core', 'prod', a, 'build', 'leased')
@@ -118,11 +121,12 @@ class DatabaseSchemas(unittest.TestCase):
             db.close()
         self.temp.cleanup()
 
-    def create(self, role, fixture=True, suffix=''):
+    def create(self, role, fixture=True, suffix='', version=None):
         db = sqlite3.connect(self.directory / (role + suffix + '.sqlite'))
         self.connections.append(db)
-        db.executescript((SCHEMAS / (role + '.sql')).read_text(encoding='utf-8'))
-        insert(db, 'database_identity', 1, role, 'a' * 32, 'owner-fixture', 2)
+        ddl_root = V2_SCHEMAS if version == 2 else SCHEMAS
+        db.executescript((ddl_root / (role + '.sql')).read_text(encoding='utf-8'))
+        insert(db, 'database_identity', 1, role, 'a' * 32, 'owner-fixture', db.execute('PRAGMA user_version').fetchone()[0])
         for repo in ('core', 'other'):
             for env in ('dev', 'staging', 'prod'):
                 insert(db, 'scopes', repo, env)
@@ -147,7 +151,7 @@ class DatabaseSchemas(unittest.TestCase):
             with self.subTest(role=role):
                 db = self.create(role)
                 self.assertEqual(db.execute('PRAGMA application_id').fetchone()[0], 1095977985 + index)
-                self.assertEqual(db.execute('PRAGMA user_version').fetchone()[0], 2)
+                self.assertEqual(db.execute('PRAGMA user_version').fetchone()[0], VERSIONS.get(role, 2))
                 self.assertEqual(db.execute('PRAGMA auto_vacuum').fetchone(), (0,))
                 self.assertEqual(db.execute('PRAGMA journal_mode').fetchone()[0], 'wal')
                 self.assertEqual(db.execute('PRAGMA synchronous').fetchone()[0], 1 if role == 'client-cache' else 2)
@@ -510,7 +514,7 @@ def recover_activation(intent, observed):
 
 def version_one_schema(role):
     """Version-1 fixture DDL: omit precisely the version-2 additive structures."""
-    sql = (SCHEMAS / (role + '.sql')).read_text(encoding='utf-8')
+    sql = (V2_SCHEMAS / (role + '.sql')).read_text(encoding='utf-8')
     sql = re.sub(r',\n  cleanup_pending INTEGER NOT NULL DEFAULT 0 CHECK\(cleanup_pending IN \(0,1\)\)', '', sql)
     sql = re.sub(r'CREATE VIEW search_packages AS.*?;', 'CREATE VIEW search_packages AS SELECT repository,environment,name,artifact_id,summary FROM packages;', sql, flags=re.S)
     sql = re.sub(r'CREATE TABLE maintenance_tasks \(.*?CREATE TABLE objects', 'CREATE TABLE objects', sql, flags=re.S)
@@ -548,7 +552,7 @@ class DatabaseMaintenance(unittest.TestCase):
     def test_version_one_to_two_copy_migration_all_roles(self):
         for role in ROLES:
             with self.subTest(role=role):
-                fixture = self.create(role)
+                fixture = self.create(role, version=2)
                 old = sqlite3.connect(self.directory / (role + '-v1.sqlite'))
                 self.connections.append(old)
                 ddl = version_one_schema(role)
@@ -560,7 +564,7 @@ class DatabaseMaintenance(unittest.TestCase):
                 expected = logical_rows(old)
                 staged = sqlite3.connect(self.directory / (role + '-v2.sqlite'))
                 self.connections.append(staged)
-                staged.executescript((SCHEMAS / (role + '.sql')).read_text(encoding='utf-8'))
+                staged.executescript((V2_SCHEMAS / (role + '.sql')).read_text(encoding='utf-8'))
                 copy_domain_rows(old, staged, now=1000)
                 if role == 'client-cache':
                     # Fixture stands for independently authenticated current inputs.

@@ -1,6 +1,6 @@
 # SQLite storage and disaster recovery
 
-- **Status:** Specification v0.4 — September 2026. The SQL and model tests are executable; database commands, services, migrations, and hardware recovery are not implemented.
+- **Status:** Specification v0.5 — September 2026. The SQL and model tests are executable; database commands, services, migrations, and hardware recovery are not implemented.
 - **Authority:** This document owns SQLite schemas, connection policy, reconstruction records, and database maintenance. [STATE-AND-RECOVERY](STATE-AND-RECOVERY.md) owns artifact identity, trust, privilege, and the transaction state machine. [KEY-RUNBOOK](runbooks/KEY-RUNBOOK.md) owns signing authority and compromise response.
 
 ## 1. Ownership and authority
@@ -71,7 +71,7 @@ an installation: the owner must insert `database_identity` before activation.
 
 ### 1.2 Identity and reconstruction
 
-All six schemas have `user_version = 2`. Their `application_id` values, in table
+The client-cache and coordinator schemas have `user_version = 3`; the other four roles remain at 2. Their `application_id` values, in table
 order above, are 1095977985 through 1095977990. `database_identity` binds the role,
 schema version, immutable 32-lowercase-hex instance identifier, and stable owner
 identity. For clients the instance is the prefix identity; protected state has a
@@ -250,7 +250,7 @@ SELECT label, prefix_id, closure_digest, state FROM managed_services ORDER BY la
 ```mermaid
 erDiagram
   plans ||--o{ jobs : schedules
-  lanes ||--o{ jobs : classifies
+  job_kinds ||--o{ jobs : classifies
   jobs ||--o{ job_dependencies : depends
   jobs ||--o{ job_requirements : requires
   workers ||--o{ worker_capabilities : proves
@@ -263,8 +263,10 @@ erDiagram
 
 | Tables | Readers, writers, transaction boundary, and retention |
 |---|---|
-| `plans`, `jobs`, `job_dependencies`, `job_requirements`, `lanes` | Farm plan inserts a complete authenticated DAG and requirements together. Scheduler reads dependencies and capability requirements; reject cycles and cross-plan edges. Job identity is the existing job-manifest hash |
+| `plans`, `jobs`, `job_dependencies`, `job_requirements`, `job_kinds` | Farm plan inserts a complete authenticated DAG and requirements together. Scheduler reads dependencies and capability requirements; reject cycles and cross-plan edges. Job identity is the existing job-manifest hash |
 | `workers`, `worker_capabilities` | Enrollment and capability verification project identity and evidence. Scheduler reads; agent self-report alone cannot establish a capability. Keep enrollment/revocation and capability history in records |
+| `scheduling`, `worker_inventory` | Project authenticated dispatch priority, continuous ready time, supersession/cancellation evidence, and physical worker identity. Jobs without complete scheduling/capability evidence are blocked. Security priority and independent-builder eligibility are reverified from retained records |
+
 | `attempts` | Dispatch/heartbeat/expiry serialize under the coordinator writer. One active attempt per job; tokens are unique and expiry uses the coordinator's clock. Record attempt and lease before dispatch. After recovery mark every inherited active lease expired before redispatch; never trust restored clock-relative liveness |
 | `results` | Result admission authenticates worker/attempt/job bindings and inserts once per job-manifest hash. Byte-identical duplicates return the retained result. Conflicting duplicates are retained in evidence and quarantined, never overwrite the accepted result. Expired attempts can supply evidence but cannot complete a replacement lease |
 | `quarantine`, `gate_evidence` | Gate processing writes evidence references and append-only quarantine decisions together. Only an authorized release decision clears a hold. Required gates derive from retained policy, so absent rows mean pending. Signed job results alone do not establish a passing gate |
@@ -540,7 +542,7 @@ fixed mainline. See the [offline SQLite account](refs/SQLITE_STORAGE_AND_RECOVER
 
 Minimum schema features are STRICT tables (3.37.0), foreign keys, recursive CTEs,
 partial indexes, and the online backup API. Production readers must use the pinned
-fixed build as well as understand role/schema 2; accepting STRICT syntax alone is
+fixed build as well as understand the current role/schema version; accepting STRICT syntax alone is
 not sufficient. Schema-test Python may use another SQLite build and reports its
 version; that is not a production qualification. Older managers may open only
 their retained compatible database copy. Unknown application IDs, schema versions,
@@ -742,7 +744,7 @@ intact; interruption during activation enters existing journal recovery. No
 filename or modification time decides which copy is active. See the
 [VACUUM evidence](refs/SQLITE_STORAGE_AND_RECOVERY.MD#contention-and-maintenance).
 
-All six internal schemas advance from 1 to 2 without changing application IDs or
+The historical schema-1-to-2 transition advanced all six roles without changing application IDs or
 public formats. Migrate through a validated copy, never by editing the active file.
 Rebuild `database_identity` with its version-2 constraint, preserve instance/owner
 and all domain rows, and add seeded maintenance tasks. Cache lifecycle timestamps
@@ -773,6 +775,39 @@ references, and manager health before journaled activation. No destructive in-pl
 migration is permitted. Failure preserves the old pair. Downgrade after new writes
 requires an explicit compatible replay/conversion path; selecting an old snapshot
 must not erase newer choices, reservations, or trust. Without that path refuse.
+
+### 10.4 Security and scheduler projection version 3
+
+Client-cache version 3 adds `advisory_assessments` keyed by repository/environment,
+snapshot, advisory, artifact, and component (empty component means whole artifact).
+Rows retain repository identity, advisory object digest, expiry, and vulnerability
+status for active-closure queries. Recompute remediation from current holds,
+platform and available candidates; it is not repository authority. Clear dependent
+assessment rows before snapshot eviction. Cache rows cannot authorize an advisory:
+reverify the retained TUF target, freshness, scope, and assessment evidence.
+
+Coordinator version 3 names the former kind table `job_kinds` and the jobs column
+`kind`. The `scheduling` projection independently records priority, continuous ready
+time, authenticated authorization, supersession, and cancellation receipts.
+`worker_inventory` binds enrolled worker IDs to physical builder IDs and retained
+capability evidence. Query these with job requirements, dependencies, attempts and
+gate evidence under [BUILD-INFRA](BUILD-INFRA.md#lanes). Scheduler rows cannot grant
+security priority, qualify hardware, or waive a gate without authenticated evidence.
+
+Reject unsupported role/schema versions before reading domain rows or admitting
+mutation. Do not reinterpret old lanes as priorities. Reconstruct client-cache 3
+from currently authenticated snapshots and advisory targets in a new file.
+Reconstruct coordinator 3 from retained plans, job kinds, authorization, readiness,
+lease history, capability and gate receipts. Missing priority/readiness/physical
+identity evidence keeps jobs blocked pending explicit classification or qualification;
+do not fabricate timestamps, consent, or independent builders. Expire inherited
+leases, reconcile completed and cancelled attempts, then activate the verified copy
+under the existing recovery procedure. Retain the old file as evidence.
+
+The schema-1-to-2 migration above remains a historical regression contract;
+`tests/fixtures/database-v2` freezes its DDL. It is not an automatic 2-to-3 migration.
+The remaining roles need no new persistent tables: promotion and selections are
+retained authenticated records, addressed through their existing object projections.
 
 ## 11. Backup sets and restore
 
@@ -1005,5 +1040,6 @@ do not satisfy these platform and security acceptance gates.
 | v0.2 | September 2026 | Specify cumulative contention waits, phase-aware cancellation, automatic maintenance, cleanup retention, explicit compaction, and schema-2 copy migration; extend executable policy models. |
 | v0.1 | September 2026 | Specify six SQLite roles, executable schemas, durable reconstruction, inspection, coordinated backups, migration, and disaster recovery. Runtime and hardware acceptance remain pending. |
 | v0.4 | September 2026 | Align durable record values, recovery object formats, and protected-volume finalization with the recovery contracts; retain a single durable commit decision and independent participant evidence. |
+| v0.5 | September 2026 | Add security and farm contract versions, authority-preserving reconstruction, and structural/model acceptance boundaries. |
 
 </details>

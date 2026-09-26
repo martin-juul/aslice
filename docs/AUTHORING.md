@@ -4,7 +4,7 @@
 
 **How to write, test, and ship aslice packages.**
 
-- **Status:** v0.16 — September 2026
+- **Status:** v0.17 — September 2026
 - **Audience:** package authors — people writing formulae for the core or extended orchards, packaging vendor binaries, or running their own orchard. Read [MANUAL.md](MANUAL.md) chapters 1–4 first; this guide assumes the vocabulary (slice, orchard, flavor, generation) and the user's view of the system.
 - **Companions:** [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md) is the authoritative schema — when this guide and the schema disagree, the schema is right. [ORCHARD-POLICY.md](ORCHARD-POLICY.md) is the policy this guide summarizes. [BUILD-INFRA.md](BUILD-INFRA.md) is the farm your PR builds on. [MANUAL.md](MANUAL.md) is what your users read.
 - **Vocabulary:** [NOMENCLATURE.md](NOMENCLATURE.md) — project terms, acronyms, and the Homebrew translation table.
@@ -219,6 +219,10 @@ Every variant you declare answers one question: *does flipping this change what 
 
 Mark a variant `abi = true` and it becomes part of the package's build identity: `ffmpeg+x265` and `ffmpeg-x265` are different builds, they coexist in the store, and dependents record which one they linked against. Mark it `false` and flipping it triggers a local build sharing the compatibility key but receiving its own artifact identity. Exact dependency bindings and ABI checks still apply.
 
+Record build-time and embedded dependencies as carefully as runtime links: static archives, headers, generators, and bundled components participate in security rebuilds. Changes to recipe, source, toolchain, configuration, or a selected dependency invalidate affected transitive consumers even when ABI checks pass. [BUILD-INFRA](BUILD-INFRA.md#the-build-plan) owns this rule; author an advisory with exact affected/fixed revisions and evidence for backports under [DESIGN](DESIGN.md#vulnerability-and-sbom-pipeline). Missing tests or independent builders remain publication blockers.
+
+Farm builds and tests run in disposable VMs with separate PR/release caches. Local passing tests do not establish VM isolation or missing platform coverage. Security fixes may use the [maintenance branch procedure](ORCHARD-POLICY.md#maintenance-releases) while unrelated development continues.
+
 <a id="what-the-abi-scan-does-with-this"></a>
 
 ### 5.2 What the ABI scan does with this
@@ -351,7 +355,7 @@ Every orchard PR passes six checks, with no maintainer override:
 1. **Lint** — schema validity plus policy (SPDX license, `min_os` accuracy, dependency rules, variant ABI tags).
 2. **Matrix build** — your package built in the sandbox on every declared flavor, at your declared `min_os`.
 3. **Smoke runs** — your `tests.star` across every release from `min_os` through 12.
-4. **ABI gate** — on version/revision changes to anything others depend on: interface regressions require an explicit version bump or scheduled dependent rebuilds in the same snapshot.
+4. **ABI gate** — separate from the required dependency-driven transitive rebuild closure, on version/revision changes to anything others depend on: interface regressions require an explicit version bump or scheduled dependent rebuilds in the same snapshot.
 5. **Graft rehearsal** — for a binary package declaring grafts (§8): the farm rehearses each graft in a per-OS VM on every OS the artifact targets, diffs the observed writes, kext loads, daemon installs, and network access against your declared behavior manifest, and fails the PR on any deviation or under-declaration. A package without grafts skips this gate entirely.
 6. **Post-merge-only signing** — slices are signed after merge, never before, so a PR can never smuggle a signed artifact around review.
 
@@ -412,7 +416,7 @@ Dates are validated in order, a `renamed` deprecation refuses to ship without a 
 aslice orchard dependents x264 --transitive
 ```
 
-Reverse dependencies, marked by whether they link the package's ABI (rebuild candidates) or merely exec the tool. The farm's dependent-rebuild cascade runs this same query server-side; running it yourself turns gate 4's "scheduled dependent rebuilds" from a surprise into a plan.
+Reverse dependencies include build tools, static libraries, headers, generated code, bundled components, and dynamic links, with edge kinds and exact artifact bindings shown separately. The farm invalidates affected transitive consumers and reports each triggering path, even when the ABI is compatible.
 
 And when the package you want already exists in Homebrew: `aslice orchard port --from-homebrew <formula>` translates the simple Ruby formulae mechanically — named *port* because the rest genuinely are ports. You review the draft, fill in what only a human knows, and chapter 2 takes it from there.
 
@@ -458,5 +462,6 @@ Or the first three and the ABI check at once: `aslice orchard ci <pkg>` — chap
 | Not recorded | September 2026 | corpus review corrections: artifact identity, protected execution, durable recovery, trust persistence, replay, platform limits, and examples aligned with STATE-AND-RECOVERY and SYSTEM-VOLUMES. These are specification changes; runtime acceptance remains pending. |
 | v0.15 | September 2026 | Documentation audit repairs: contract summaries aligned; owner-approved namespace, rollback, GC, naming, prefix, and graft decisions applied where relevant; semantic anchors and explicit citations added. Runtime implementation and platform acceptance remain pending. |
 | v0.16 | September 2026 | Remove retired comparison references and competitive framing; retain aslice requirements and link their owning specifications. Align affected contract summaries where applicable. |
+| v0.17 | September 2026 | Specify dependency-driven security remediation, explicit update and origin decisions, and the applicable farm, maintenance, and evidence contracts. Supersedes ABI-only rebuild and cost-first selection policies where previously stated; runtime and measured acceptance remain pending. |
 
 </details>

@@ -14,7 +14,7 @@ aslice-install — install packages
 
 # DESCRIPTION
 
-Installs packages, binary-first: resolves the request against the index, selects the newest version compatible with this OS release and the fastest flavor this CPU executes, downloads the slices, verifies signatures and hashes, checks library interfaces against the installed set, and links a new generation. No undeclared package code executes at any point — a package whose installer genuinely requires a script declares it as a graft, which runs only after its behavior manifest has been shown and approved (aslice-graft(1)). Preparation failures leave the live generation unchanged. Failures after live changes enter journal recovery; external conflicts may require attention, and protected-volume changes may require Recovery and reboot. Package rollback does not restore application data ([STATE-AND-RECOVERY §5](../docs/STATE-AND-RECOVERY.md#durable-transactions-and-recovery); [SYSTEM-VOLUMES §4](../docs/SYSTEM-VOLUMES.md#activation-rollback-and-os-updates)).
+Installs the newest eligible packages, then prefers binaries for that selection: resolves the request against the index, selects the newest version compatible with this OS release and the fastest flavor this CPU executes, downloads the slices, verifies signatures and hashes, checks library interfaces against the installed set, and links a new generation. No undeclared package code executes at any point — a package whose installer genuinely requires a script declares it as a graft, which runs only after its behavior manifest has been shown and approved (aslice-graft(1)). Preparation failures leave the live generation unchanged. Failures after live changes enter journal recovery; external conflicts may require attention, and protected-volume changes may require Recovery and reboot. Package rollback does not restore application data ([STATE-AND-RECOVERY §5](../docs/STATE-AND-RECOVERY.md#durable-transactions-and-recovery); [SYSTEM-VOLUMES §4](../docs/SYSTEM-VOLUMES.md#activation-rollback-and-os-updates)).
 
 *package* may be a bare name (`ffmpeg`), a version constraint (`ffmpeg@v6`), a namespaced name (`audiolab:convolver`), or a runtime stream (`php@8.4` — installing a stream never changes the selected one; see aslice-use(1)).
 
@@ -80,6 +80,15 @@ aslice install php@8.4 --with-extensions-from 8.3
 aslice install foo --accept-system-changes
 aslice install convolver --accept-grafts
 ```
+
+# SOURCE-BUILD CONSENT
+
+The plan discloses source compilation and its dependency reasons. Interactive
+execution asks before compiling; unattended execution requires
+**--allow-source-builds** for newly required builds. Saved plans and locks convey
+no consent. Refusal returns 2 and never silently selects an older cached binary.
+Version-1 plans/locks are rejected; regenerate version 2 from authenticated records
+and explicit provider/replacement selections. Exact replay retains exact artifacts.
 
 # SEE ALSO
 

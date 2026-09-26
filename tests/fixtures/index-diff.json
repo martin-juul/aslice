@@ -1,0 +1,36 @@
+{
+  "format": 1,
+  "repository_identity": "urn:aslice:repo:core-fixture",
+  "environment": "prod",
+  "base": {
+    "digest": "sha256:5ec4b9b1f7c95a22f15707dcbcc9fc44b08a6267a0437d9d84536c5885de3c54",
+    "size": 9
+  },
+  "result": {
+    "digest": "sha256:0b7c6bd2d9cb71d4eb2a19342dca9d14cf90f7f4b7fc3752239638cbb1b9f616",
+    "size": 9
+  },
+  "patches": [
+    {
+      "codec": "byte-splice-v1",
+      "object": {
+        "digest": "sha256:32db0863325940cc484901625593421417941af93bb0481b7e18c1533a4aca6d",
+        "size": 479
+      },
+      "result": {
+        "digest": "sha256:0b7c6bd2d9cb71d4eb2a19342dca9d14cf90f7f4b7fc3752239638cbb1b9f616",
+        "size": 9
+      }
+    }
+  ],
+  "full": {
+    "object": {
+      "digest": "sha256:f9c95098fd5178ae633c6539810439ffa3905db8d25a609ecdb48a8294bbf895",
+      "size": 29
+    },
+    "expanded": {
+      "digest": "sha256:0b7c6bd2d9cb71d4eb2a19342dca9d14cf90f7f4b7fc3752239638cbb1b9f616",
+      "size": 9
+    }
+  }
+}

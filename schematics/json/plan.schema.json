@@ -2,12 +2,12 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://aslice.sh/schematics/json/plan.schema.json",
   "title": "Exact package operation plan",
-  "description": "Normative structure; semantics and authorization: docs/STATE-AND-RECOVERY.md.",
+  "description": "Normative structure; semantics and authorization: docs/STATE-AND-RECOVERY.md. Version 2: explicit source-work consent, namespace selections, and security/restart decisions. Old versions are rejected; regenerate from authenticated inputs, never infer consent. Field semantics: docs/DESIGN.md vulnerability-and-sbom-pipeline and docs/PACKAGE-FORMAT.md Security dependency and selection records.",
   "type": "object",
   "additionalProperties": false,
   "properties": {
     "plan_version": {
-      "const": 1
+      "const": 2
     },
     "generated_by": {
       "type": "string",
@@ -165,9 +165,215 @@
           "grafts",
           "system-changes",
           "eol",
-          "sip-off"
+          "sip-off",
+          "source-builds"
         ]
       },
+      "uniqueItems": true
+    },
+    "policy": {
+      "enum": [
+        "install",
+        "upgrade",
+        "security",
+        "security-minimal",
+        "exact-replay"
+      ]
+    },
+    "selections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "enum": [
+              "provider",
+              "alias",
+              "replacement"
+            ]
+          },
+          "requested": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]*:[a-z0-9][a-z0-9-]*$"
+          },
+          "selected": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]*:[a-z0-9][a-z0-9-]*$"
+          },
+          "repository_identity": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "kind",
+          "requested",
+          "selected",
+          "repository_identity"
+        ]
+      },
+      "minItems": 0,
+      "uniqueItems": true
+    },
+    "build_work": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "package": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]*:[a-z0-9][a-z0-9-]*$"
+          },
+          "recipe_digest": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          },
+          "inputs": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "digest": {
+                  "type": "string",
+                  "pattern": "^sha256:[0-9a-f]{64}$"
+                },
+                "size": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "digest",
+                "size"
+              ]
+            },
+            "minItems": 1,
+            "uniqueItems": true
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          },
+          "dependency_path": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z0-9][a-z0-9-]*:[a-z0-9][a-z0-9-]*$"
+            },
+            "minItems": 1,
+            "uniqueItems": true
+          },
+          "estimated_seconds": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "package",
+          "recipe_digest",
+          "inputs",
+          "reason",
+          "dependency_path",
+          "estimated_seconds"
+        ]
+      },
+      "minItems": 0,
+      "uniqueItems": true
+    },
+    "security_findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "advisory_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "repository_identity": {
+            "type": "string",
+            "minLength": 1
+          },
+          "artifact_id": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          },
+          "component": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "vulnerability": {
+            "enum": [
+              "vulnerable",
+              "fixed",
+              "not-affected",
+              "unknown"
+            ]
+          },
+          "remediation": {
+            "enum": [
+              "fix-available",
+              "held",
+              "unavailable"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          },
+          "dependency_path": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z0-9][a-z0-9-]*:[a-z0-9][a-z0-9-]*$"
+            },
+            "minItems": 0,
+            "uniqueItems": true
+          },
+          "retained_generation": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "advisory_id",
+          "repository_identity",
+          "artifact_id",
+          "component",
+          "vulnerability",
+          "remediation",
+          "reason",
+          "dependency_path",
+          "retained_generation"
+        ]
+      },
+      "minItems": 0,
       "uniqueItems": true
     }
   },
@@ -178,6 +384,31 @@
     "base_generation",
     "repositories",
     "machine",
-    "actions"
+    "actions",
+    "required_consents",
+    "policy",
+    "selections",
+    "build_work",
+    "security_findings"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "build_work": {
+            "minItems": 1
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "required_consents": {
+            "contains": {
+              "const": "source-builds"
+            }
+          }
+        }
+      }
+    }
   ]
 }

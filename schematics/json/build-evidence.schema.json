@@ -1,0 +1,332 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aslice.sh/schematics/build-evidence.schema.json",
+  "title": "build-evidence",
+  "description": "Authenticated agent evidence; claimed identities and VM lifecycle require independent verification. Cancellation cannot satisfy a publication gate. Semantics: docs/BUILD-INFRA.md jobs-are-closed-worlds and the-build-plan",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "format": {
+      "const": 1
+    },
+    "job_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "kind": {
+      "enum": [
+        "build",
+        "test",
+        "rebuild",
+        "vendor",
+        "graft"
+      ]
+    },
+    "repository_identity": {
+      "type": "string",
+      "minLength": 1
+    },
+    "worker_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "physical_builder_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "image_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "harness_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "inputs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "digest": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          },
+          "size": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "digest",
+          "size"
+        ]
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "recipe_dependencies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "consumer": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]*:[a-z0-9][a-z0-9-]*$"
+          },
+          "provider": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]*:[a-z0-9][a-z0-9-]*$"
+          },
+          "kind": {
+            "enum": [
+              "build",
+              "runtime",
+              "static",
+              "header",
+              "generated",
+              "bundled"
+            ]
+          },
+          "input_digest": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          }
+        },
+        "required": [
+          "consumer",
+          "provider",
+          "kind",
+          "input_digest"
+        ]
+      },
+      "minItems": 0,
+      "uniqueItems": true
+    },
+    "artifact_bindings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "consumer_artifact": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          },
+          "provider_artifact": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          },
+          "kind": {
+            "enum": [
+              "runtime",
+              "static",
+              "header",
+              "generated",
+              "bundled",
+              "build"
+            ]
+          }
+        },
+        "required": [
+          "consumer_artifact",
+          "provider_artifact",
+          "kind"
+        ]
+      },
+      "minItems": 0,
+      "uniqueItems": true
+    },
+    "triggers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "enum": [
+              "recipe",
+              "source",
+              "toolchain",
+              "build-configuration",
+              "dependency"
+            ]
+          },
+          "before": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          },
+          "after": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          },
+          "path": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z0-9][a-z0-9-]*:[a-z0-9][a-z0-9-]*$"
+            },
+            "minItems": 1,
+            "uniqueItems": true
+          }
+        },
+        "required": [
+          "kind",
+          "before",
+          "after",
+          "path"
+        ]
+      },
+      "minItems": 0,
+      "uniqueItems": true
+    },
+    "outputs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "digest": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          },
+          "size": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "digest",
+          "size"
+        ]
+      },
+      "minItems": 0,
+      "uniqueItems": true
+    },
+    "isolation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "disposable_vm": {
+          "const": true
+        },
+        "credentials_outside": {
+          "const": true
+        },
+        "instance_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "destroyed": {
+          "type": "boolean"
+        },
+        "receipt": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "digest": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "size": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "required": [
+            "digest",
+            "size"
+          ]
+        }
+      },
+      "required": [
+        "disposable_vm",
+        "credentials_outside",
+        "instance_id",
+        "destroyed",
+        "receipt"
+      ]
+    },
+    "cache_domain": {
+      "enum": [
+        "pr",
+        "release",
+        "none"
+      ]
+    },
+    "validation_receipts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "digest": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          },
+          "size": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "digest",
+          "size"
+        ]
+      },
+      "minItems": 0,
+      "uniqueItems": true
+    },
+    "outcome": {
+      "enum": [
+        "complete",
+        "failed",
+        "cancelled"
+      ]
+    },
+    "log": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "digest",
+        "size"
+      ]
+    }
+  },
+  "required": [
+    "format",
+    "job_digest",
+    "kind",
+    "repository_identity",
+    "worker_id",
+    "physical_builder_id",
+    "image_digest",
+    "harness_digest",
+    "inputs",
+    "recipe_dependencies",
+    "artifact_bindings",
+    "triggers",
+    "outputs",
+    "isolation",
+    "cache_domain",
+    "validation_receipts",
+    "outcome",
+    "log"
+  ]
+}

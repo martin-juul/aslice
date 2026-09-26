@@ -1,5 +1,5 @@
 {
-  "format": 1,
+  "format": 2,
   "command": "recover --continue",
   "role": "client-state",
   "instance_id": "11111111111111111111111111111111",
@@ -33,5 +33,9 @@
       "Inspect service logs."
     ],
     "plan": null
-  }
+  },
+  "security_findings": [],
+  "restart_findings": [],
+  "inspection_coverage": "not-requested",
+  "exit_code": 1
 }

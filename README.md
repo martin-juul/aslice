@@ -9,8 +9,8 @@ What you get:
 - **Prebuilt binaries, called slices,** for three microarchitecture flavors: `v1` (the SSE2 baseline every 64-bit Intel Mac meets), `v2` (SSE4.2/POPCNT), and `v3` (AVX2). aslice detects your CPU once, at install time, and the resolver picks the best flavor your machine can run. Slices are hosted on GitHub, in a layout any mirror can copy.
 - **Your own build flags, without leaving the binary world.** Variants that change a library's ABI are part of the package identity, so a self-compiled ffmpeg still substitutes correctly into a prebuilt dependency tree; variants that don't change the ABI cost nothing.
 - **Vendor binaries, installed safely.** Software that ships only as a `.pkg` or `.dmg` is installed by extracting the payload, and installer scripts never run silently — where one is genuinely required (audio DSP drivers, pro-video plugins), it ships as a declared *graft*: hash-pinned, approved by you per package after its declared behavior is shown, sandboxed to that declaration, and rehearsed by the build farm in the official orchards. This includes 32-bit and universal binaries on 10.11–10.14, the last macOS releases that execute them.
-- **A security model sized to a platform that gets no more patches.** Formulae are declarative, builds run in a sandbox, the index is TUF-signed, installing a binary executes no undeclared package code, and nothing needs sudo in steady state.
-- **Speed as a design constraint.** One C++20 binary, sub-10 ms startup, parallel solving and downloads, zstd payloads, and atomic generations you can roll back.
+- **A security model sized to a platform that gets no more patches.** Formulae are declarative, farm builds run in disposable VMs with sandboxed phases, the index is TUF-signed, installing a binary executes no undeclared package code, and nothing needs sudo in steady state.
+- **Speed as a design constraint.** One C++20 binary, an unmeasured sub-10 ms startup target, efficient solving and parallel downloads, zstd payloads, and atomic generations you can roll back. [Benchmark workloads](docs/DESIGN.md#performance-model) define how these targets will be measured.
 - **The whole machine in one file.** `aslice-machine.toml` records packages, runtime versions, services, macOS `defaults` preferences, and the login shell. `aslice machine apply` uses that file to take a Mac from fresh out of recovery to ready for work in one command. `aslice machine export` captures an existing setup in the same format for sharing and comparison.
 - **No telemetry.** aslice collects nothing — no metrics, no analytics, no opt-out to go looking for. It is infrastructure, not a product.
 
@@ -49,6 +49,12 @@ Original project material is licensed under [Apache-2.0](LICENSE). Third-party m
 
 ---
 
+Security updates and restart reporting are specified in
+[aslice-upgrade(1)](man/aslice-upgrade.1.md) and
+[aslice-needs-restarting(1)](man/aslice-needs-restarting.1.md). A newer eligible
+source-only update requires disclosed compilation and execution consent. Runtime
+remediation, farm qualification, and benchmarks remain pending.
+
 ## History
 
 <details>
@@ -68,5 +74,6 @@ Original project material is licensed under [Apache-2.0](LICENSE). Third-party m
 | September 2026 | Add the helpers and background services reference to the documentation index; no runtime changes. |
 | September 2026 | Link the repository structure guidelines and planned C++ layout. |
 | September 2026 | Simplify README navigation and add docs/README.md with reading paths, a complete document catalog, and supporting resources. |
+| September 2026 | Specify security-update and restart-reporting interfaces; mark performance targets unmeasured and farm execution disposable. |
 
 </details>

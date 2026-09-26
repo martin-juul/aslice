@@ -1,7 +1,7 @@
--- aslice coordinator, schema 3. Execute only in a new, owner-controlled file.
+-- aslice coordinator, schema 2. Execute only in a new, owner-controlled file.
 -- Connection policy and semantic validation: ../DATABASE.md.
 PRAGMA application_id = 1095977988;
-PRAGMA user_version = 3;
+PRAGMA user_version = 2;
 PRAGMA auto_vacuum = NONE;
 PRAGMA foreign_keys = ON;
 PRAGMA journal_mode = WAL;
@@ -13,7 +13,7 @@ CREATE TABLE database_identity (
   role TEXT NOT NULL CHECK(role = 'coordinator'),
   instance_id TEXT NOT NULL CHECK(length(instance_id) = 32 AND length(CAST(instance_id AS BLOB)) = 32 AND instance_id NOT GLOB '*[^0-9a-f]*'),
   owner_id TEXT NOT NULL CHECK(length(owner_id) > 0),
-  schema_version INTEGER NOT NULL CHECK(schema_version = 3)
+  schema_version INTEGER NOT NULL CHECK(schema_version = 2)
 ) STRICT;
 
 CREATE TABLE maintenance_tasks (
@@ -54,8 +54,8 @@ CREATE TABLE plans (
   UNIQUE(repository,environment,plan_digest), FOREIGN KEY(repository,environment) REFERENCES scopes
 ) STRICT;
 
-CREATE TABLE job_kinds (
-  kind TEXT PRIMARY KEY CHECK(kind IN ('build','test','rebuild','vendor','graft'))
+CREATE TABLE lanes (
+  lane TEXT PRIMARY KEY CHECK(lane IN ('build','test','rebuild','vendor','graft'))
 ) STRICT;
 
 CREATE TABLE workers (
@@ -70,8 +70,8 @@ CREATE TABLE worker_capabilities (
 
 CREATE TABLE jobs (
   job_digest TEXT PRIMARY KEY REFERENCES objects(digest), repository TEXT NOT NULL, environment TEXT NOT NULL,
-  plan_digest TEXT NOT NULL, kind TEXT NOT NULL REFERENCES job_kinds,
-  state TEXT NOT NULL CHECK(state IN ('queued','leased','complete','quarantined','superseded','cancelled')),
+  plan_digest TEXT NOT NULL, lane TEXT NOT NULL REFERENCES lanes,
+  state TEXT NOT NULL CHECK(state IN ('queued','leased','complete','quarantined')),
   UNIQUE(plan_digest,job_digest),
   FOREIGN KEY(repository,environment,plan_digest) REFERENCES plans(repository,environment,plan_digest)
 ) STRICT;
@@ -117,25 +117,9 @@ CREATE TABLE gate_evidence (
 
 CREATE UNIQUE INDEX one_active_attempt ON attempts(job_digest) WHERE state = 'active';
 CREATE INDEX lease_expiry ON attempts(state,expires_at);
-CREATE INDEX jobs_queue ON jobs(state,kind);
+CREATE INDEX jobs_queue ON jobs(state,lane);
 CREATE INDEX dependency_reverse ON job_dependencies(dependency_digest);
 CREATE VIEW lease_status AS SELECT job_digest,attempt,worker_id,expires_at FROM attempts WHERE state = 'active';
 CREATE VIEW pending_gates AS SELECT * FROM gate_evidence WHERE verdict <> 'pass';
-
-CREATE TABLE scheduling (
-  job_digest TEXT PRIMARY KEY REFERENCES jobs,
-  priority TEXT NOT NULL CHECK(priority IN ('security','approved-release','freshness','backfill')),
-  ready_since INTEGER CHECK(ready_since >= 0),
-  authorization_digest TEXT NOT NULL REFERENCES objects(digest),
-  superseded_by TEXT REFERENCES jobs(job_digest),
-  cancellation_receipt TEXT REFERENCES objects(digest),
-  CHECK(superseded_by IS NULL OR superseded_by <> job_digest)
-) STRICT;
-CREATE TABLE worker_inventory (
-  worker_id TEXT PRIMARY KEY REFERENCES workers,
-  physical_builder_id TEXT NOT NULL CHECK(length(physical_builder_id)>0),
-  inventory_digest TEXT NOT NULL REFERENCES objects(digest)
-) STRICT;
-CREATE INDEX dispatch_ready ON scheduling(priority,ready_since,job_digest);
 
 COMMIT;

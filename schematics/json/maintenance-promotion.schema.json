@@ -1,0 +1,271 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aslice.sh/schematics/maintenance-promotion.schema.json",
+  "title": "maintenance-promotion",
+  "description": "Authenticate all receipts against candidate, incident, baseline and applicable gate policy. Not-applicable needs policy evidence and cannot waive a required gate. Compare branches, inventories and current production under the publication fence. Semantics: docs/ORCHARD-POLICY.md maintenance-releases",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "format": {
+      "const": 1
+    },
+    "incident_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$"
+    },
+    "repository_identity": {
+      "type": "string",
+      "minLength": 1
+    },
+    "candidate_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "production_baseline": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "base_version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "from_environment": {
+      "enum": [
+        "dev",
+        "staging"
+      ]
+    },
+    "to_environment": {
+      "enum": [
+        "staging",
+        "prod"
+      ]
+    },
+    "from_branch": {
+      "type": "string",
+      "minLength": 1
+    },
+    "to_branch": {
+      "type": "string",
+      "minLength": 1
+    },
+    "input_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "source_inventory": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "destination_inventory": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "authorization": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "digest",
+        "size"
+      ]
+    },
+    "gates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "gate": {
+            "enum": [
+              "lint",
+              "build",
+              "test",
+              "abi",
+              "malware",
+              "graft-rehearsal",
+              "independent-rebuild"
+            ]
+          },
+          "verdict": {
+            "enum": [
+              "pass",
+              "not-applicable"
+            ]
+          },
+          "receipt": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "digest": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              "size": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              }
+            },
+            "required": [
+              "digest",
+              "size"
+            ]
+          }
+        },
+        "required": [
+          "gate",
+          "verdict",
+          "receipt"
+        ]
+      },
+      "minItems": 7,
+      "uniqueItems": true
+    },
+    "staging_receipt": {
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "digest": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "size": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "required": [
+            "digest",
+            "size"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "forward_integration": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "enum": [
+            "pending",
+            "integrated"
+          ]
+        },
+        "commit": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "status",
+        "commit"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "integrated"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "commit": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "required": [
+    "format",
+    "incident_id",
+    "repository_identity",
+    "candidate_digest",
+    "production_baseline",
+    "base_version",
+    "from_environment",
+    "to_environment",
+    "from_branch",
+    "to_branch",
+    "input_digest",
+    "source_inventory",
+    "destination_inventory",
+    "authorization",
+    "gates",
+    "staging_receipt",
+    "forward_integration"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "to_environment": {
+            "const": "prod"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "from_environment": {
+            "const": "staging"
+          },
+          "staging_receipt": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "digest": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              "size": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              }
+            },
+            "required": [
+              "digest",
+              "size"
+            ]
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "from_environment": {
+            "const": "dev"
+          }
+        }
+      }
+    }
+  ]
+}
