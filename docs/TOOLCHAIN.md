@@ -2,7 +2,7 @@
 
 > State, identity, privilege, and recovery contracts: [STATE-AND-RECOVERY](STATE-AND-RECOVERY.md). Protected-volume patching: [SYSTEM-VOLUMES](SYSTEM-VOLUMES.md). These specifications do not establish completed implementation or platform validation.
 
-- **Status:** Design draft, v0.5 — September 2026
+- **Status:** Design draft, v0.6 — September 2026
 - **Companion to:** [DESIGN.md](DESIGN.md) v1.22 (§4 platform floor, §7.2 build identity), [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md) v0.16 (§6 build environment), [BUILD-INFRA.md](BUILD-INFRA.md) v0.16 (farm consumption), [GENESIS.md](GENESIS.md) v0.7 (the from-nothing runbook). This document is the authoritative specification for the toolchain; where it and another document disagree, the disagreement is a bug in one of them.
 - **Vocabulary:** [NOMENCLATURE.md](NOMENCLATURE.md).
 
@@ -125,12 +125,18 @@ The known roadmap item is `aslice-toolchain` v2: LLD-first linking and ccache in
 
 ---
 
-*History: v0.1 (September 2026) — initial document, consolidating the toolchain story previously scattered across DESIGN §4.3, GENESIS §1–§4, BUILD-INFRA §2, and PACKAGE-FORMAT §6.3; adds two owner decisions: the toolchain is an ordinary, installable package (§9), and bumps are need-driven, batched, and announced (§11).*
+## History
 
-*History: v0.2 (September 2026) — owned-hardware bootstrap with proposed Monterey baseline subject to toolchain validation; capability requirements and pending VM coverage made explicit; companion versions refreshed.*
+<details>
+<summary>Document revision history</summary>
 
-*History: September 2026 — corpus review corrections: artifact identity, protected execution, durable recovery, trust persistence, replay, platform limits, and examples aligned with STATE-AND-RECOVERY and SYSTEM-VOLUMES. These are specification changes; runtime acceptance remains pending.*
+| Version | Date | Changes |
+|---|---|---|
+| v0.6 | September 2026 | Consolidate revision notes into a collapsible history table; no specification changes. |
+| v0.5 | September 2026 | resolve compatibility-key and build-flag conflicts against STATE-AND-RECOVERY §1–§2: full hexadecimal keys, complete identity inputs, separate artifact identity, and conditional substitution. No runtime implementation is claimed. |
+| v0.4 | September 2026 | prose rewrite of the self-hosting rationale, component inventory, and recovery explanation; no content changes. |
+| v0.2 | September 2026 | owned-hardware bootstrap with proposed Monterey baseline subject to toolchain validation; capability requirements and pending VM coverage made explicit; companion versions refreshed. |
+| v0.1 | September 2026 | initial document, consolidating the toolchain story previously scattered across DESIGN §4.3, GENESIS §1–§4, BUILD-INFRA §2, and PACKAGE-FORMAT §6.3; adds two owner decisions: the toolchain is an ordinary, installable package (§9), and bumps are need-driven, batched, and announced (§11). |
+| Not recorded | September 2026 | corpus review corrections: artifact identity, protected execution, durable recovery, trust persistence, replay, platform limits, and examples aligned with STATE-AND-RECOVERY and SYSTEM-VOLUMES. These are specification changes; runtime acceptance remains pending. |
 
-*History: v0.4 (September 2026) — prose rewrite of the self-hosting rationale, component inventory, and recovery explanation; no content changes.*
-
-*History: v0.5 (September 2026) — resolve compatibility-key and build-flag conflicts against STATE-AND-RECOVERY §1–§2: full hexadecimal keys, complete identity inputs, separate artifact identity, and conditional substitution. No runtime implementation is claimed.*
+</details>

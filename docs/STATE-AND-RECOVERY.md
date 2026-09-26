@@ -1,6 +1,6 @@
 # State, artifacts, and recovery
 
-- **Status:** Specification v0.2 — September 2026. These contracts are specified, not implemented or validated on macOS.
+- **Status:** Specification v0.3 — September 2026. These contracts are specified, not implemented or validated on macOS.
 - **Authority:** This document owns artifact identity, privileged ownership, transaction recovery, replay, and retained trust. DESIGN explains the architecture; PACKAGE-FORMAT describes author input. Examples and schemas must agree with these contracts.
 
 ## 1. Compatibility and artifact identity
@@ -114,4 +114,14 @@ Status vocabulary is **specified**, **implemented**, **tested** (named matrix an
 
 The two owned Macs do not establish complete guest coverage or independent v3 rebuild capacity. Keep missing gates pending. Privileged features cannot ship until their enforcement and recovery gates pass, even if ordinary user-space packages ship earlier.
 
-*History: v0.2 (September 2026) — prose rewrite of the rollback transaction explanation; no content changes.*
+## History
+
+<details>
+<summary>Document revision history</summary>
+
+| Version | Date | Changes |
+|---|---|---|
+| v0.3 | September 2026 | Consolidate revision notes into a collapsible history table; no specification changes. |
+| v0.2 | September 2026 | prose rewrite of the rollback transaction explanation; no content changes. |
+
+</details>

@@ -2,7 +2,7 @@
 
 > State, identity, privilege, and recovery contracts: [STATE-AND-RECOVERY](STATE-AND-RECOVERY.md). Protected-volume patching: [SYSTEM-VOLUMES](SYSTEM-VOLUMES.md). These specifications do not establish completed implementation or platform validation.
 
-- **Status:** Design draft, v0.14 — September 2026 (v0.2: editorial pass — prose revised for directness; no schema or semantic changes. v0.3: second editorial pass — sentence-level revision for readability; no schema or semantic changes. v0.4: prose rewrite throughout — chapters reworded in the project's technical-writing voice; no schema or semantic changes. v0.5: review pass — the trust-stickiness reference retargeted to REPOSITORIES.md §4; companion refreshed to DESIGN v1.14; no schema or semantic changes. v0.6: NOMENCLATURE.md vocabulary reference added to the header; companion refreshed to DESIGN v1.15; no schema or semantic changes. v0.7: companion refreshed to DESIGN v1.16; no schema or semantic changes. v0.8: companion refreshed to DESIGN v1.17; no schema or semantic changes. v0.9: the file is renamed `aslice-machine.toml` — a reserved, self-describing name that other tools can recognize — and the command surface splits by document kind: `aslice machine apply` / `export` / `import --from-brewfile` for the machine file, while top-level `aslice apply` keeps plans and lock files (owner decision, September 2026); no schema changes. v0.10: grafts — §2.8 introduces the `[grafts]` allow-list (pnpm-style pre-approval of declared installer scripts; signed manifests only), §2.1's schema overview gains the table, §3.4 gains the graft consent gate, §4.1's export captures recorded approvals, §7's attack-surface accounting gains the fourth bound, §3.2's ordering note gains the elevated-graft case, and §9's reference gains `--accept-grafts`; companion refreshed to DESIGN v1.19; model in DESIGN §12.15. v0.11: prose review pass — an intensifier removed (§1) and the Brewfile comparison stated precisely (§7); gems kept deliberately ('what the list waives is the question, not the evidence', 'the price of admission', 'there is nothing else to buy'); companion refreshed to DESIGN v1.20; no schema or semantic changes)
+- **Status:** Design draft, v0.15 — September 2026
 - **Companion to:** DESIGN.md v1.22 §12.13 (architecture and rationale), MANUAL.md §10 (user guide), aslice-machine(1) (command reference). This document is the schema and semantics specification.
 - **Vocabulary:** [NOMENCLATURE.md](NOMENCLATURE.md) — project terms, acronyms, and the Homebrew translation table.
 
@@ -297,8 +297,26 @@ Plans and lock files keep the top-level verb: `aslice apply plan.json` executes 
 
 Exit status: **0** applied (or nothing to do); **1** error (schema, resolution, execution); **2** refused at a consent or trust gate. The plan is always printed before execution, and security events are logged unsuppressibly per DESIGN §12.5.
 
-*History: September 2026 — corpus review corrections: artifact identity, protected execution, durable recovery, trust persistence, replay, platform limits, and examples aligned with STATE-AND-RECOVERY and SYSTEM-VOLUMES. These are specification changes; runtime acceptance remains pending.*
+## History
 
-*History: v0.13 (September 2026) — prose rewrite of the setup scenario, TOML format, and export explanation; no content changes.*
+<details>
+<summary>Document revision history</summary>
 
-*History: v0.14 (September 2026) — resolve the default-shell contradiction: distinguish pre-Catalina defaults, Catalina-and-later new accounts, and actual account state; keep shell enrollment separate from account selection. Apple source captured locally.*
+| Version | Date | Changes |
+|---|---|---|
+| v0.15 | September 2026 | Consolidate revision notes into a collapsible history table; no specification changes. |
+| v0.14 | September 2026 | resolve the default-shell contradiction: distinguish pre-Catalina defaults, Catalina-and-later new accounts, and actual account state; keep shell enrollment separate from account selection. Apple source captured locally. |
+| v0.13 | September 2026 | prose rewrite of the setup scenario, TOML format, and export explanation; no content changes. |
+| v0.11 | Not recorded | prose review pass — an intensifier removed (§1) and the Brewfile comparison stated precisely (§7); gems kept deliberately ('what the list waives is the question, not the evidence', 'the price of admission', 'there is nothing else to buy'); companion refreshed to DESIGN v1.20; no schema or semantic changes |
+| v0.10 | Not recorded | grafts — §2.8 introduces the `[grafts]` allow-list (pnpm-style pre-approval of declared installer scripts; signed manifests only), §2.1's schema overview gains the table, §3.4 gains the graft consent gate, §4.1's export captures recorded approvals, §7's attack-surface accounting gains the fourth bound, §3.2's ordering note gains the elevated-graft case, and §9's reference gains `--accept-grafts`; companion refreshed to DESIGN v1.19; model in DESIGN §12.15. |
+| v0.9 | Not recorded | the file is renamed `aslice-machine.toml` — a reserved, self-describing name that other tools can recognize — and the command surface splits by document kind: `aslice machine apply` / `export` / `import --from-brewfile` for the machine file, while top-level `aslice apply` keeps plans and lock files (owner decision, September 2026); no schema changes. |
+| v0.8 | Not recorded | companion refreshed to DESIGN v1.17; no schema or semantic changes. |
+| v0.7 | Not recorded | companion refreshed to DESIGN v1.16; no schema or semantic changes. |
+| v0.6 | Not recorded | NOMENCLATURE.md vocabulary reference added to the header; companion refreshed to DESIGN v1.15; no schema or semantic changes. |
+| v0.5 | Not recorded | review pass — the trust-stickiness reference retargeted to REPOSITORIES.md §4; companion refreshed to DESIGN v1.14; no schema or semantic changes. |
+| v0.4 | Not recorded | prose rewrite throughout — chapters reworded in the project's technical-writing voice; no schema or semantic changes. |
+| v0.3 | Not recorded | second editorial pass — sentence-level revision for readability; no schema or semantic changes. |
+| v0.2 | Not recorded | editorial pass — prose revised for directness; no schema or semantic changes. |
+| Not recorded | September 2026 | corpus review corrections: artifact identity, protected execution, durable recovery, trust persistence, replay, platform limits, and examples aligned with STATE-AND-RECOVERY and SYSTEM-VOLUMES. These are specification changes; runtime acceptance remains pending. |
+
+</details>

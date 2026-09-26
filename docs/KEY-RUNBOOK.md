@@ -143,6 +143,16 @@ Repeat backup restoration and planned root rotation annually. Restore and verify
 
 Users' machines have no project-held per-user keys or accounts. Third-party orchards maintain their own keys under REPOSITORIES §5. Vendor Apple signatures and source-verification keys remain separate from repository signing. An optional hardware security-contact PGP key does not impose a token requirement on launch.
 
-*History: September 2026 — the manual offline-release design is superseded by owner-merge authorization, a dedicated networked release signer, automatic metadata renewal, and serialized atomic publication. The offline 1-of-1 root, encrypted backups, recovery drills, Ed25519/minisign formats, and future multi-party migration remain. Services and hardware drills are not yet implemented or validated.*
+## History
 
-*History: September 2026 — corpus review corrections: artifact identity, protected execution, durable recovery, trust persistence, replay, platform limits, and examples aligned with STATE-AND-RECOVERY and SYSTEM-VOLUMES. These are specification changes; runtime acceptance remains pending. September 2026 — prose rewrite of the introduction and signer-compromise explanation; no procedural changes.*
+<details>
+<summary>Document revision history</summary>
+
+| Date | Changes |
+|---|---|
+| September 2026 | Consolidate revision notes into a collapsible history table; no specification changes. |
+| September 2026 | the manual offline-release design is superseded by owner-merge authorization, a dedicated networked release signer, automatic metadata renewal, and serialized atomic publication. The offline 1-of-1 root, encrypted backups, recovery drills, Ed25519/minisign formats, and future multi-party migration remain. Services and hardware drills are not yet implemented or validated. |
+| September 2026 | corpus review corrections: artifact identity, protected execution, durable recovery, trust persistence, replay, platform limits, and examples aligned with STATE-AND-RECOVERY and SYSTEM-VOLUMES. These are specification changes; runtime acceptance remains pending. |
+| September 2026 | prose rewrite of the introduction and signer-compromise explanation; no procedural changes. |
+
+</details>

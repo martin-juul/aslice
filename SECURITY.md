@@ -66,4 +66,19 @@ Key compromise is handled in the open under **[docs/KEY-RUNBOOK.md](docs/KEY-RUN
 
 ---
 
-*History: September 2026 — prose review pass: the opening's seriousness clause rebuilt ('handled with that in mind'); gems kept deliberately ('A reproducer beats a write-up', 'the threat model starts below that line', 'rotation is drilled, not hoped for'); no policy changes. September 2026 — editorial pass: prose revised for directness; no policy changes. September 2026 — prose rewrite throughout: the policy reworded in the project's technical-writing voice; no policy changes. September 2026 — NOMENCLATURE.md vocabulary pointer added; no policy changes. September 2026 — contact moves to security@aslice.sh with the project domain (owner decision); no policy changes. September 2026 — prose rewrite of encrypted reporting and key-incident guidance; no policy changes.*
+## History
+
+<details>
+<summary>Document revision history</summary>
+
+| Date | Changes |
+|---|---|
+| September 2026 | Consolidate revision notes into a collapsible history table; no specification changes. |
+| September 2026 | prose review pass: the opening's seriousness clause rebuilt ('handled with that in mind'); gems kept deliberately ('A reproducer beats a write-up', 'the threat model starts below that line', 'rotation is drilled, not hoped for'); no policy changes. |
+| September 2026 | editorial pass: prose revised for directness; no policy changes. |
+| September 2026 | prose rewrite throughout: the policy reworded in the project's technical-writing voice; no policy changes. |
+| September 2026 | NOMENCLATURE.md vocabulary pointer added; no policy changes. |
+| September 2026 | contact moves to security@aslice.sh with the project domain (owner decision); no policy changes. |
+| September 2026 | prose rewrite of encrypted reporting and key-incident guidance; no policy changes. |
+
+</details>

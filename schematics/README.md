@@ -1,6 +1,6 @@
 # aslice Schematics — Machine-Readable File Schemas
 
-- **Status:** v0.2 — September 2026
+- **Status:** v0.3 — September 2026
 - **Scope:** schemas for the public formats listed below; internal journal/service records require implementation specifications before those features ship, kept beside the prose specifications that define those formats.
 - **Vocabulary:** [../docs/NOMENCLATURE.md](../docs/NOMENCLATURE.md).
 
@@ -138,4 +138,14 @@ Data flow, argument *values*, sandbox policy (enforced at runtime by the sandbox
 
 Each schematic versions with the prose specification it tracks, and its metadata names that specification's version at time of writing. The directory's own version (top of this file) bumps when any schematic changes.
 
-*History: v0.2 (September 2026) — prose rewrite of the schema directory introduction and host-member validation explanation; no content changes.*
+## History
+
+<details>
+<summary>Document revision history</summary>
+
+| Version | Date | Changes |
+|---|---|---|
+| v0.3 | September 2026 | Consolidate revision notes into a collapsible history table; no specification changes. |
+| v0.2 | September 2026 | prose rewrite of the schema directory introduction and host-member validation explanation; no content changes. |
+
+</details>

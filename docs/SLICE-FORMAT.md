@@ -1,6 +1,6 @@
 # Slice container format
 
-- **Status:** Specification v0.2 — September 2026. Packing and extraction implementations remain acceptance work.
+- **Status:** Specification v0.3 — September 2026. Packing and extraction implementations remain acceptance work.
 - **Schematic:** [slice.schema.json](../schematics/json/slice.schema.json) validates the container descriptor; [artifact-manifest.schema.json](../schematics/json/artifact-manifest.schema.json) validates its manifest.
 
 ## 1. Byte layout
@@ -46,4 +46,14 @@ Schema validation alone establishes none of the cryptographic, filesystem, or re
 
 Run the structural checks with `python -m unittest discover -s tests -p test_slice_contract.py` after installing `tests/requirements.txt`. These checks use illustrative fixtures; they do not validate archive bytes or prove extractor safety.
 
-*History: v0.2 (September 2026) — prose rewrite of the container resource-limit explanation; no content changes.*
+## History
+
+<details>
+<summary>Document revision history</summary>
+
+| Version | Date | Changes |
+|---|---|---|
+| v0.3 | September 2026 | Consolidate revision notes into a collapsible history table; no specification changes. |
+| v0.2 | September 2026 | prose rewrite of the container resource-limit explanation; no content changes. |
+
+</details>

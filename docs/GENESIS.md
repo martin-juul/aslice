@@ -1,5 +1,7 @@
 # GENESIS — Standing Up aslice From Nothing
 
+**Document version:** v0.11 — September 2026
+
 > State, identity, privilege, and recovery contracts: [STATE-AND-RECOVERY](STATE-AND-RECOVERY.md). Protected-volume patching: [SYSTEM-VOLUMES](SYSTEM-VOLUMES.md). These specifications do not establish completed implementation or platform validation.
 
 This document is the from-zero runbook. It records how the entire project — keys, toolchain, manager, orchard, repository, farm — is brought into existence, and how it is brought *back* into existence after a total loss. The motivation is one sentence: a project that can be born only once is a project that dies once. Every chicken-and-egg pair in the system has a documented path here, and when a new one is introduced it receives a row in §2 and a step in §1 **before the change lands** — the same discipline the key runbook observes.
@@ -83,14 +85,24 @@ Once a year, on a clean machine, using **only** the never-lose set, rehearse §1
 
 ---
 
-*History: v0.1 (September 2026) — initial runbook, from the genesis audit that followed the §7.5 scanner-genesis discussion: collected the documented genesis paths (toolchain, root ceremony, scanner, bootstrap TLS), filled the gaps it found (installer TLS-dead fallback in DESIGN v1.9 §10.3; vendored-source archive in DESIGN v1.9 §9.6 / BUILD-INFRA v0.6 §3 / REPOSITORIES v0.8 §2; VM-image genesis and the installer-app archive in BUILD-INFRA v0.6 §8), and wrote the never-lose set and the annual re-standup drill down as obligations rather than intentions. v0.2 (September 2026) — editorial pass: prose revised for directness; no procedural changes. v0.3 (September 2026) — prose rewrite throughout: the runbook reworded in the project's technical-writing voice; no procedural changes. v0.4 (September 2026) — NOMENCLATURE.md vocabulary pointer added; no procedural changes. v0.5 (September 2026) — prose review pass: the opening's motivation sentence dropped its hedge ('can be stated in' → 'is'); gems kept deliberately ('a bad week, not a death', 'the checklist that keeps §1 honest', 'documented exceptions with receipts, never silent gaps'); no procedural changes. v0.6 (September 2026) — TOOLCHAIN.md references added to §1 step 2 and the §2 toolchain row; no procedural changes.*
+## History
 
-*History: v0.7 (September 2026) — align bootstrap, signing VM preparation, and farm bring-up with the two owned Macs; proposed Monterey baseline and measured guest coverage replace assumed capacity. Procedures remain unvalidated until executed.*
+<details>
+<summary>Document revision history</summary>
 
-*Superseded design record: v0.8 (September 2026) — single-operator offline Pi signing replaces the founding-custodian prerequisite; encrypted backups, signer-tool archives, manual batches, and recovery drills define launch and re-standup. Hardware and signing procedures remain unvalidated until executed.*
+| Version | Date | Changes |
+|---|---|---|
+| v0.11 | September 2026 | Consolidate revision notes into a collapsible history table; no specification changes. |
+| v0.10 | September 2026 | prose rewrite of bootstrap ordering and recovery verification; no content changes. |
+| v0.9 | September 2026 | owner merge becomes the final human release approval, with automatic signing on a dedicated networked Pi and serialized atomic publication. Automatic targets/snapshot renewal replaces manual renewal; the root remains offline. The manual-release design above is superseded. Services and acceptance drills remain implementation work (KEY-RUNBOOK §2.1, §7); schemas and client signature formats are unchanged. |
+| v0.8 | September 2026 | **Superseded design record:** single-operator offline Pi signing replaces the founding-custodian prerequisite; encrypted backups, signer-tool archives, manual batches, and recovery drills define launch and re-standup. Hardware and signing procedures remain unvalidated until executed. |
+| v0.7 | September 2026 | align bootstrap, signing VM preparation, and farm bring-up with the two owned Macs; proposed Monterey baseline and measured guest coverage replace assumed capacity. Procedures remain unvalidated until executed. |
+| v0.6 | September 2026 | TOOLCHAIN.md references added to §1 step 2 and the §2 toolchain row; no procedural changes. |
+| v0.5 | September 2026 | prose review pass: the opening's motivation sentence dropped its hedge ('can be stated in' → 'is'); gems kept deliberately ('a bad week, not a death', 'the checklist that keeps §1 honest', 'documented exceptions with receipts, never silent gaps'); no procedural changes. |
+| v0.4 | September 2026 | NOMENCLATURE.md vocabulary pointer added; no procedural changes. |
+| v0.3 | September 2026 | prose rewrite throughout: the runbook reworded in the project's technical-writing voice; no procedural changes. |
+| v0.2 | September 2026 | editorial pass: prose revised for directness; no procedural changes. |
+| v0.1 | September 2026 | initial runbook, from the genesis audit that followed the §7.5 scanner-genesis discussion: collected the documented genesis paths (toolchain, root ceremony, scanner, bootstrap TLS), filled the gaps it found (installer TLS-dead fallback in DESIGN v1.9 §10.3; vendored-source archive in DESIGN v1.9 §9.6 / BUILD-INFRA v0.6 §3 / REPOSITORIES v0.8 §2; VM-image genesis and the installer-app archive in BUILD-INFRA v0.6 §8), and wrote the never-lose set and the annual re-standup drill down as obligations rather than intentions. |
+| Not recorded | September 2026 | corpus review corrections: artifact identity, protected execution, durable recovery, trust persistence, replay, platform limits, and examples aligned with STATE-AND-RECOVERY and SYSTEM-VOLUMES. These are specification changes; runtime acceptance remains pending. |
 
-*History: v0.9 (September 2026) — owner merge becomes the final human release approval, with automatic signing on a dedicated networked Pi and serialized atomic publication. Automatic targets/snapshot renewal replaces manual renewal; the root remains offline. The manual-release design above is superseded. Services and acceptance drills remain implementation work (KEY-RUNBOOK §2.1, §7); schemas and client signature formats are unchanged.*
-
-*History: September 2026 — corpus review corrections: artifact identity, protected execution, durable recovery, trust persistence, replay, platform limits, and examples aligned with STATE-AND-RECOVERY and SYSTEM-VOLUMES. These are specification changes; runtime acceptance remains pending.*
-
-*History: v0.10 (September 2026) — prose rewrite of bootstrap ordering and recovery verification; no content changes.*
+</details>

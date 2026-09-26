@@ -72,7 +72,30 @@ The docs ship with the manager, and reviewers hold them to the same bar as formu
 - **Mechanisms, not adjectives.** Don't call a design clean or robust; state the invariant and let the reader form the adjective.
 - **Headers describe.** "The state database's role", not "The state database's role, stated plainly".
 - **Tables and code carry the precision; prose carries the reader.** A normative must/never/may in prose must also hold in the spec it summarizes.
-- **Changelog entries are historical record.** Never edit them retroactively, even to fix the prose.
+- **History wording is immutable.** Never edit historical change descriptions retroactively, even to fix the prose. Preserve links, code, and historical section references; layout and ordering follow the convention below.
+
+Documents with revision records end with one unnumbered `## History` section. Put a
+Markdown table inside one closed `<details>` disclosure, with
+`<summary>Document revision history</summary>` and no `open` attribute. Leave a blank
+line before and after the table. Use `Version | Date | Changes` for versioned
+documents and `Date | Changes` for unversioned documents; do not introduce versions
+for an unversioned document.
+
+Keep one row per historical entry. Remove exact duplicates, but retain distinct
+accounts of the same revision as separate rows. Sort explicit document versions
+numerically, newest first; place a recorded version range by its newest endpoint.
+Put entries without a version after versioned entries. Where chronology cannot be
+established, preserve source order. Keep the recorded date precision and use
+`Not recorded` for missing metadata rather than inferring it from adjacent entries
+or the current status date. Escape table pipes, including pipes in inline code.
+
+Keep current status, version, date, and substantive qualifications at the top;
+move revision notes from headers and scattered footers into History. Preserve
+numbered sections and existing link targets. Increment an existing document
+revision and record each documentation change; for an existing unversioned
+history, add a dated entry. Software release versions are separate. Documents
+without revision records need no History section. Archived sources, provenance
+records, and narrative discussions of history are outside this convention.
 
 ## Conduct
 
@@ -88,4 +111,19 @@ Original contributions are licensed under [Apache-2.0](LICENSE), the project's l
 
 ---
 
-*History: September 2026 — grafts: the zero-install-time-code ground rule gains its declared exception (owner decision) — vendor installer scripts as declared, user-approved, farm-rehearsed grafts (DESIGN §12.15); the rule bullet updated, the merge-gate summary gains the rehearsal gate, and the porting table's `post_install` row gains the graft path. September 2026 — editorial pass: prose revised for directness; `min_os` honesty renamed `min_os` accuracy for consistency with AUTHORING.md; documentation style section added. No rule changes. September 2026 — prose rewrite throughout: reworded in the project's technical-writing voice; no rule changes. September 2026 — NOMENCLATURE.md vocabulary pointer added; no rule changes. September 2026 — variant discipline rule updated: the six-variant cap is retired (ORCHARD-POLICY v1.5); variants are governed by need and honest ABI tags. September 2026 — prose rewrite of the contribution and review introductions; no rule changes.*
+## History
+
+<details>
+<summary>Document revision history</summary>
+
+| Date | Changes |
+|---|---|
+| September 2026 | Consolidate revision notes into a collapsible history table and document the history convention; historical wording is unchanged. |
+| September 2026 | grafts: the zero-install-time-code ground rule gains its declared exception (owner decision) — vendor installer scripts as declared, user-approved, farm-rehearsed grafts (DESIGN §12.15); the rule bullet updated, the merge-gate summary gains the rehearsal gate, and the porting table's `post_install` row gains the graft path. |
+| September 2026 | editorial pass: prose revised for directness; `min_os` honesty renamed `min_os` accuracy for consistency with AUTHORING.md; documentation style section added. No rule changes. |
+| September 2026 | prose rewrite throughout: reworded in the project's technical-writing voice; no rule changes. |
+| September 2026 | NOMENCLATURE.md vocabulary pointer added; no rule changes. |
+| September 2026 | variant discipline rule updated: the six-variant cap is retired (ORCHARD-POLICY v1.5); variants are governed by need and honest ABI tags. |
+| September 2026 | prose rewrite of the contribution and review introductions; no rule changes. |
+
+</details>

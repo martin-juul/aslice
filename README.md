@@ -57,4 +57,21 @@ In the order a newcomer should read them:
 
 ---
 
-*History: September 2026 — prose review pass: the second paragraph's tail straightened (one sentence instead of two; the *how* stays in Scope); gems kept deliberately ('These machines still work', 'infrastructure, not a product', 'on a thumb drive'); no content changes. September 2026 — grafts: vendor installer scripts are admitted as declared, user-approved, farm-rehearsed grafts rather than never running (owner decision); the vendor-binary and security bullets updated. September 2026 — rewritten for readability (second editorial pass); no content changes. September 2026 — NOMENCLATURE.md added to the document list; vocabulary pointer added. September 2026 — project domain (aslice.sh) linked in Status. September 2026 — the declarative-setup file renamed `aslice-machine.toml`, its commands grouped under `aslice machine` (apply / export / import --from-brewfile); top-level `aslice apply` keeps plans and lock files (owner decision). September 2026 — TOOLCHAIN.md added to the document list. September 2026 — prose rewrite of the introduction and machine-setup overview; no content changes.*
+## History
+
+<details>
+<summary>Document revision history</summary>
+
+| Date | Changes |
+|---|---|
+| September 2026 | Consolidate revision notes into a collapsible history table; no specification changes. |
+| September 2026 | prose review pass: the second paragraph's tail straightened (one sentence instead of two; the *how* stays in Scope); gems kept deliberately ('These machines still work', 'infrastructure, not a product', 'on a thumb drive'); no content changes. |
+| September 2026 | grafts: vendor installer scripts are admitted as declared, user-approved, farm-rehearsed grafts rather than never running (owner decision); the vendor-binary and security bullets updated. |
+| September 2026 | rewritten for readability (second editorial pass); no content changes. |
+| September 2026 | NOMENCLATURE.md added to the document list; vocabulary pointer added. |
+| September 2026 | project domain (aslice.sh) linked in Status. |
+| September 2026 | the declarative-setup file renamed `aslice-machine.toml`, its commands grouped under `aslice machine` (apply / export / import --from-brewfile); top-level `aslice apply` keeps plans and lock files (owner decision). |
+| September 2026 | TOOLCHAIN.md added to the document list. |
+| September 2026 | prose rewrite of the introduction and machine-setup overview; no content changes. |
+
+</details>

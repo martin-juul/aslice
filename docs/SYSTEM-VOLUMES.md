@@ -1,6 +1,6 @@
 # Protected system-volume patches
 
-- **Status:** Specification v0.2 — September 2026. Support is designed for Intel macOS 10.11–12; each OS build/filesystem/security configuration remains blocked from release until the acceptance matrix passes.
+- **Status:** Specification v0.3 — September 2026. Support is designed for Intel macOS 10.11–12; each OS build/filesystem/security configuration remains blocked from release until the acceptance matrix passes.
 - **Authority:** This document owns the protected-volume backend for DESIGN §12.11. [State and recovery](STATE-AND-RECOVERY.md) owns authorization, protected storage, and the operation journal.
 
 ## 1. Three backends
@@ -47,4 +47,14 @@ Record one successful patch, reboot, finalize, rollback, and restore drill for e
 
 Until an adapter passes these gates, the client reports that exact configuration as unsupported before mutation. The gates define the runtime evidence needed to support the configuration; this specification does not establish that the procedure has passed them.
 
-*History: v0.2 (September 2026) — prose rewrite of the adapter acceptance explanation; no content changes.*
+## History
+
+<details>
+<summary>Document revision history</summary>
+
+| Version | Date | Changes |
+|---|---|---|
+| v0.3 | September 2026 | Consolidate revision notes into a collapsible history table; no specification changes. |
+| v0.2 | September 2026 | prose rewrite of the adapter acceptance explanation; no content changes. |
+
+</details>
