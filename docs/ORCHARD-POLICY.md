@@ -2,7 +2,7 @@
 
 > State, identity, privilege, and recovery contracts: [STATE-AND-RECOVERY](STATE-AND-RECOVERY.md). Protected-volume patching: [SYSTEM-VOLUMES](SYSTEM-VOLUMES.md). These specifications do not establish completed implementation or platform validation.
 
-- **Status:** Policy v1.19 — September 2026
+- **Status:** Policy v1.20 — September 2026
 - **Companion to:** [DESIGN.md](DESIGN.md), [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md), [BUILD-INFRA.md](BUILD-INFRA.md), [REPOSITORIES.md](REPOSITORIES.md), [TOOLCHAIN.md](TOOLCHAIN.md)
 - **Audience:** orchard maintainers, reviewers, and contributors
 - **Vocabulary:** [NOMENCLATURE.md](NOMENCLATURE.md) — project terms, acronyms, and the Homebrew translation table.
@@ -69,6 +69,8 @@ Two project orchards, two acceptance bars. Third-party orchards set their own pa
 | System software (`[system]`) | Only when the platform genuinely requires it — none at launch (§13) | Allowed with a `[system]` declaration, named maintainer, signed kexts where offered, trust-gated serving (§13) |
 | System patches (`[system-patch]`) | Only when the platform genuinely requires it — the frozen-TLS-CLI patch family is the founding case (§13) | Allowed with a `[system-patch]` declaration, named maintainer, per-target justification, demonstrated byte-exact restore, official/local serving, or verified serving under an explicit per-repo grant (§13) |
 | Security posture | CVE flags are blocking work items for the named maintainer (§16) | CVE flags surface in `audit`; fixed best-effort |
+
+FFmpeg belongs to the extended orchard and is requested as `extended:ffmpeg`.
 
 **Hard rejections — both tiers, no exceptions, no override flags:**
 
@@ -158,7 +160,7 @@ Packages have a life cycle, and the orchard states where each one is in it ([ORC
 [deprecation]
 date         = "2027-03-01"    # when deprecation starts
 reason       = "upstream-eol"  # upstream-eol | security | renamed | unmaintainable | takedown | other
-replacement  = "ffmpeg7"       # optional pointer
+replacement  = "extended:ffmpeg7"       # optional pointer
 disable_date = "2027-09-01"    # optional: new installs refuse after this
 ```
 
@@ -396,6 +398,7 @@ Historical labels and ordering below are preserved as recorded, including repeat
 
 | Version | Date | Changes |
 |---|---|---|
+| v1.20 | September 2026 | Classify FFmpeg as extended and align affected package references and examples. |
 | v1.19 | September 2026 | Replace inline navigation with a collapsible Contents list; preserve section labels, links, and order. |
 | v1.18 | September 2026 | Specify dependency-driven security remediation, explicit update and origin decisions, and the applicable farm, maintenance, and evidence contracts. Supersedes ABI-only rebuild and cost-first selection policies where previously stated; runtime and measured acceptance remain pending. |
 | v1.17 | September 2026 | Remove retired comparison references and competitive framing; retain aslice requirements and link their owning specifications. Align affected contract summaries where applicable. |

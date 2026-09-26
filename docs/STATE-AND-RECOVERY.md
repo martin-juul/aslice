@@ -1,6 +1,6 @@
 # State, artifacts, and recovery
 
-- **Status:** Specification v0.10 — September 2026. These contracts are specified, not implemented or validated on macOS.
+- **Status:** Specification v0.11 — September 2026. These contracts are specified, not implemented or validated on macOS.
 - **Authority:** This document owns artifact identity, privileged ownership, transaction recovery, replay, and retained trust. DESIGN explains the architecture; PACKAGE-FORMAT describes author input. Examples and schemas must agree with these contracts.
 
 <details>
@@ -93,7 +93,7 @@ The state machine is `prepared → applying → activated → committed`, with `
 
 On restart, conflicting mutations and GC stop until recovery resolves their requirements; replacement preparation follows §5.1. A verified `pending-reboot` record is the sole resumable protected-volume exception: explicit `system-patch finalize` revalidates the prepared intent, boot identity, patch tree, and authority before activation and commit; failure keeps restoration pending in Recovery. It never resumes ordinary writes merely because the process restarted. For other operations, if no durable commit exists, recovery examines the actual pointers and operation fingerprints and restores the before-state, idempotently, in reverse order. A committed transaction reconciles its after-state. Before either forward or inverse writes, compare the current object with the recorded expected fingerprint. Concurrent external edits, missing backups, or inaccessible privileged state produce `needs-attention` with exact paths and remedies; they are never overwritten silently. Disk-full failures retain the journal and backups. Generations and affected artifacts remain GC roots until resolution.
 
-Space-separated package requests, including mixed-orchard requests, form one managed-state transaction. Every non-core package retains its qualified namespace. A pre-commit failure rolls back the entire managed-state batch, including machine apply. Package-specific options identify their target, for example `--variant ffmpeg:+x265`; reject ambiguous batch options and unknown targets. Stateful `--for` scoping is superseded. Show effective variants, flags, runtime bindings, and build choices per package before authorization. Trust establishment is a separate explicit prerequisite and is never reset by package rollback ([SETUP §3.2](SETUP.md#the-plan-and-the-order-of-operations)).
+Space-separated package requests, including mixed-orchard requests, form one managed-state transaction. Every non-core package retains its qualified namespace. A pre-commit failure rolls back the entire managed-state batch, including machine apply. Package-specific options identify their target, for example `--variant extended:ffmpeg:+x265`; reject ambiguous batch options and unknown targets. Stateful `--for` scoping is superseded. Show effective variants, flags, runtime bindings, and build choices per package before authorization. Trust establishment is a separate explicit prerequisite and is never reset by package rollback ([SETUP §3.2](SETUP.md#the-plan-and-the-order-of-operations)).
 
 The initiating user or an authenticated administrator may request stopping an operation. Before commit, stop helpers safely and attempt fingerprint-checked rollback. After commit, stop checks safely and report committed installation with incomplete verification; cancellation does not erase the commit. Unresolved rollback retains the mutation gate and recovery evidence. Stopping authority does not grant permission for new privileged effects.
 
@@ -609,6 +609,7 @@ decision models do not prove runtime remediation, isolation, or publication dura
 
 | Version | Date | Changes |
 |---|---|---|
+| v0.11 | September 2026 | Classify FFmpeg as extended and align affected package references and examples. |
 | v0.10 | September 2026 | Replace inline navigation with a collapsible Contents list; preserve section labels, links, and order. |
 | v0.9 | September 2026 | Add security and farm contract versions, authority-preserving reconstruction, and structural/model acceptance boundaries. |
 | v0.8 | September 2026 | Close recovery storage, signed checkpoint, admission, activation, grouped conflict, batch grammar, and command outcome contracts; specify protected-volume pending-reboot and manager-integrity commit boundaries with structural schemas and model cases. Runtime/platform acceptance remains pending. |

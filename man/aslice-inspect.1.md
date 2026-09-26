@@ -61,11 +61,11 @@ remove, or repair packages; repository refresh still authenticates its inputs.
 
 ```sh
 aslice search ffmpeg
-aslice info ffmpeg
-aslice flavors ffmpeg
+aslice info extended:ffmpeg
+aslice flavors extended:ffmpeg
 aslice leaves --user-built
 aslice why x264
-aslice provenance ffmpeg
+aslice provenance extended:ffmpeg
 aslice audit
 ```
 

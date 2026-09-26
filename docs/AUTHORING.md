@@ -4,7 +4,7 @@
 
 **How to write, test, and ship aslice packages.**
 
-- **Status:** v0.18 — September 2026
+- **Status:** v0.19 — September 2026
 - **Audience:** package authors — people writing formulae for the core or extended orchards, packaging vendor binaries, or running their own orchard. Read [MANUAL.md](MANUAL.md) chapters 1–4 first; this guide assumes the vocabulary (slice, orchard, flavor, generation) and the user's view of the system.
 - **Companions:** [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md) is the authoritative schema — when this guide and the schema disagree, the schema is right. [ORCHARD-POLICY.md](ORCHARD-POLICY.md) is the policy this guide summarizes. [BUILD-INFRA.md](BUILD-INFRA.md) is the farm your PR builds on. [MANUAL.md](MANUAL.md) is what your users read.
 - **Vocabulary:** [NOMENCLATURE.md](NOMENCLATURE.md) — project terms, acronyms, and the Homebrew translation table.
@@ -37,7 +37,7 @@
 An aslice package is a directory in an orchard, and an orchard is a git repository of package directories. Each directory holds four files, two of them optional:
 
 ```text
-orchards/core/ffmpeg/
+orchards/extended/ffmpeg/
  ├── package.toml      # metadata, sources, dependencies, variants — pure data
  ├── build.star        # the build script — Starlark, sandboxed
  ├── patches/          # optional, every file checksummed
@@ -272,7 +272,7 @@ def test(ctx):
 
 A good smoke test proves the package *works*, not merely that it exists: encode a second of video, serve a request, round-trip a document. Running the binary with `-version` catches broken linkage and missing dylibs, the most common real failure; a test that exercises the package's actual function catches the next five most common. Core tier requires a working smoke test on at least one OS × one flavor, and CI runs yours across the whole supported range from your `min_os` through 12.
 
-Users can run your tests too, any time: `aslice test ffmpeg` executes them against the installed slice. Write them to be safe on a user's machine — read-only outside a temp directory, no network by default. If a test genuinely needs the network, declare `test_network = true` in the formula, and accept the scrutiny in review.
+Users can run your tests too, any time: `aslice test extended:ffmpeg` executes them against the installed slice. Write them to be safe on a user's machine — read-only outside a temp directory, no network by default. If a test genuinely needs the network, declare `test_network = true` in the formula, and accept the scrutiny in review.
 
 ---
 
@@ -413,19 +413,19 @@ One formula at a time is chapters 2–11. The whole orchard — keeping every fo
 **Lifecycle.** Deprecations and removals are edits to the formula's `[deprecation]` table (§7.2 walks the policy), and the group edits them for you:
 
 ```sh
-aslice orchard deprecate ffmpeg --reason upstream-eol --replacement ffmpeg7 \
+aslice orchard deprecate extended:ffmpeg --reason upstream-eol --replacement extended:ffmpeg7 \
     --date 2027-03-01 --disable-date 2027-09-01
-aslice orchard disable ffmpeg        # installs refuse from today; existing installs untouched
-aslice orchard rename ffmpeg ffmpeg7 # deprecate-as-renamed, scaffold the successor
-aslice orchard tombstone ffmpeg      # the formula leaves HEAD; the index tombstone is forever
-aslice orchard undeprecate ffmpeg    # rescind
+aslice orchard disable extended:ffmpeg        # installs refuse from today; existing installs untouched
+aslice orchard rename extended:ffmpeg extended:ffmpeg7 # deprecate-as-renamed, scaffold the successor
+aslice orchard tombstone extended:ffmpeg      # the formula leaves HEAD; the index tombstone is forever
+aslice orchard undeprecate extended:ffmpeg    # rescind
 ```
 
 Dates are validated in order, a `renamed` deprecation refuses to ship without a resolving `replacement`, and a tombstone refuses a name that still has dependents. The security fast path — straight to disabled, by owner approval during single-owner launch — is `deprecate --reason security --disable-date <today>`: the approval is recorded in the PR, and the command keeps the mechanics honest.
 
 **Health.** `aslice orchard doctor` is the orchard-side counterpart of the machine doctor: lint clean across the tree, every core formula carrying `tests.star` and a working `[livecheck]`, deprecation chains coherent, patches documented, maintainers named — each finding with a stable check ID and the remedy spelled out, `--json` for scripts. `aslice orchard lint` is the tree-wide version of the per-formula lint you already run. `aslice orchard freshness` runs every livecheck and ranks packages by days-behind-upstream, worst first — the number the farm dashboard publishes ([ORCHARD-POLICY §9](ORCHARD-POLICY.md#freshness-livecheck-and-autobump)), so you see the dashboard's input, not its summary.
 
-**The gate, before the farm.** `aslice orchard ci ffmpeg` runs the locally executable checks from chapter 10: lint, a sandboxed build per declared flavor at `min_os` where the host is capable, the smoke test, the ABI diff against the published index, and graft rehearsal on your OS. It reports required coverage that the host cannot execute as deferred to the farm. A successful local run neither merges the PR nor waives farm gates, including cross-OS tests and required independent rebuilds. Signing remains post-merge. Run it bare on a PR branch to scope to the changed formulae; `--all` is the whole orchard and warns you what that costs.
+**The gate, before the farm.** `aslice orchard ci extended:ffmpeg` runs the locally executable checks from chapter 10: lint, a sandboxed build per declared flavor at `min_os` where the host is capable, the smoke test, the ABI diff against the published index, and graft rehearsal on your OS. It reports required coverage that the host cannot execute as deferred to the farm. A successful local run neither merges the PR nor waives farm gates, including cross-OS tests and required independent rebuilds. Signing remains post-merge. Run it bare on a PR branch to scope to the changed formulae; `--all` is the whole orchard and warns you what that costs.
 
 **Blast radius.** Before bumping a library, ask what breaks:
 
@@ -464,6 +464,7 @@ Or the first three and the ABI check at once: `aslice orchard ci <pkg>` — chap
 
 | Version | Date | Changes |
 |---|---|---|
+| v0.19 | September 2026 | Classify FFmpeg as extended and align affected package references and examples. |
 | v0.18 | September 2026 | Replace inline navigation with a collapsible Contents list; preserve section labels, links, and order. |
 | v0.17 | September 2026 | Specify dependency-driven security remediation, explicit update and origin decisions, and the applicable farm, maintenance, and evidence contracts. Supersedes ABI-only rebuild and cost-first selection policies where previously stated; runtime and measured acceptance remain pending. |
 | v0.16 | September 2026 | Remove retired comparison references and competitive framing; retain aslice requirements and link their owning specifications. Align affected contract summaries where applicable. |

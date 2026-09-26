@@ -2,7 +2,7 @@
 
 > State, identity, privilege, and recovery contracts: [STATE-AND-RECOVERY](STATE-AND-RECOVERY.md). Protected-volume patching: [SYSTEM-VOLUMES](SYSTEM-VOLUMES.md). These specifications do not establish completed implementation or platform validation.
 
-- **Status:** Design draft, v0.26 — September 2026
+- **Status:** Design draft, v0.27 — September 2026
 - **Companion to:** [DESIGN.md](DESIGN.md), [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md), [TOOLCHAIN.md](TOOLCHAIN.md)
 - **Scope:** the build harness (`aslice build`), farm orchestration (`aslice farm`), scheduling, worker trust, the VM test matrix, and the pipeline from build result to published repository.
 - **Vocabulary:** [NOMENCLATURE.md](NOMENCLATURE.md) — project terms, acronyms, and the Homebrew translation table.
@@ -66,7 +66,7 @@ A **job** is the complete, self-contained description of one build:
 ```json
 {
   "job_version": 1,
-  "orchard":   { "repo": "aslice/orchard-core", "commit": "c3f7…" },
+  "orchard":   { "repo": "aslice/orchard-extended", "commit": "c3f7…" },
   "package":   { "name": "ffmpeg", "version": "7.1.0", "revision": 0,
                  "variants": { "x265": true }, "flavor": "v3", "min_os": "10.11" },
   "toolchain": { "build_id": "7c19…", "digest": "sha256:…", "url": "…" },
@@ -125,12 +125,12 @@ For `type = "binary"` formulae, the same command runs the compressed pipeline (f
 ## 4. User mode: `aslice build`
 
 ```sh
-aslice build ffmpeg                                # resolve like install, but always compile
-aslice build ./orchards/core/ffmpeg                # build a formula directory (maintainer loop)
-aslice build ffmpeg --variant +x265 --cflags="-O3 -march=native"
-aslice build --reproduce ffmpeg 7.1.0 v3 2f4a9c1e  # rebuild a published slice, compare digests
-aslice build ffmpeg --offline                      # air-gapped; pre-fetched sources only
-aslice build ffmpeg --keep --shell                 # keep build dir; sandboxed shell at the failed phase
+aslice build extended:ffmpeg                                # resolve like install, but always compile
+aslice build ./orchards/extended/ffmpeg                # build a formula directory (maintainer loop)
+aslice build extended:ffmpeg --variant +x265 --cflags="-O3 -march=native"
+aslice build --reproduce extended:ffmpeg 7.1.0 v3 2f4a9c1e  # rebuild a published slice, compare digests
+aslice build extended:ffmpeg --offline                      # air-gapped; pre-fetched sources only
+aslice build extended:ffmpeg --keep --shell                 # keep build dir; sandboxed shell at the failed phase
 ```
 
 - **Results are first-class installs.** The output enters the store with `origin = local-build`, recorded flags, and the identity rules of [DESIGN §7.2](DESIGN.md#build-identity), interoperating with the prebuilt world through the ABI contract like any slice. `aslice install --build-from-source` and `--variant`/`--cflags` builds are, literally, this command followed by an install step.
@@ -370,6 +370,7 @@ No user telemetry exists anywhere in this system ([DESIGN §2.2](DESIGN.md#non-g
 
 | Version | Date | Changes |
 |---|---|---|
+| v0.27 | September 2026 | Classify FFmpeg as extended and align affected package references and examples. |
 | v0.26 | September 2026 | Replace inline navigation with a collapsible Contents list; preserve section labels, links, and order. |
 | v0.25 | September 2026 | Specify dependency-driven security remediation, explicit update and origin decisions, and the applicable farm, maintenance, and evidence contracts. Supersedes ABI-only rebuild and cost-first selection policies where previously stated; runtime and measured acceptance remain pending. |
 | v0.24 | September 2026 | Remove retired comparison references and competitive framing; retain aslice requirements and link their owning specifications. Align affected contract summaries where applicable. |

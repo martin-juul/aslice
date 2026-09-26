@@ -72,8 +72,8 @@ aslice switch-generation 41
 aslice link openssl3
 aslice unlink openssl3
 aslice profile prefer blas openblas
-aslice exec ffmpeg -- ffprobe in.mov
-aslice exec --replacement "$replacement_path" -- ffmpeg ffprobe in.mov
+aslice exec extended:ffmpeg -- ffprobe in.mov
+aslice exec --replacement "$replacement_path" -- extended:ffmpeg ffprobe in.mov
 ```
 
 # EXIT STATUS

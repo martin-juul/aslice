@@ -4,7 +4,7 @@
 
 **Name.** *aslice* — an apple slice: a nod to the Macintosh apple and to the shape of the project itself. Binary packages are **slices**; formula repositories are **orchards**; the manager picks slices off the orchard, prebuilt or baked to order. The vocabulary is kept distinct from Homebrew's beer terminology to avoid community confusion and trademark friction. The project name is styled lowercase everywhere, including sentence starts — like the command.
 
-- **Status:** Design draft, v1.34 — September 2026
+- **Status:** Design draft, v1.35 — September 2026
 - **Scope:** macOS 10.11 (El Capitan) through 12 (Monterey), Intel x86_64 only
 - **Implementation:** C++20 core, single self-contained binary
 - **Audience:** Maintainers, founding contributors, and early reviewers
@@ -248,7 +248,7 @@ The user-facing case for C++ is startup time, single-binary deployment across 10
 An aslice package is a directory in an orchard — a git repo of formula directories (what Homebrew calls a *tap*):
 
 ```text
-orchards/core/ffmpeg/
+orchards/extended/ffmpeg/
  ├── package.toml      # metadata, sources, dependencies, variants
  ├── build.star        # Starlark build script (sandboxed, no IO escape)
  ├── patches/          # optional, checksummed
@@ -325,7 +325,7 @@ Key properties:
 A binary package — a **slice** — is one Zstandard frame containing a POSIX pax tar archive:
 
 ```text
-ffmpeg-7.1-0+core.v3.2f4a9c1e.slice
+ffmpeg-7.1-0+extended.v3.2f4a9c1e.slice
  ├── slice.json        # container version, manifest digest/length, payload totals
  ├── manifest.json     # identity, ABI contract, file hashes, dependency bindings
  └── payload/          # normalized file tree
@@ -376,7 +376,7 @@ This model permits tested combinations of local and prebuilt artifacts without c
 ### 7.4 User flags
 
 ```sh
-aslice install ffmpeg --variant +x265 --cflags="-O3 -march=native" --lto
+aslice install extended:ffmpeg --variant +x265 --cflags="-O3 -march=native" --lto
 ```
 
 - `--cflags`/`--ldflags`/`--lto`/`--debug` → local source build of **that package only**; dependencies still resolve to binaries when their contracts are satisfied. Exact flags are recorded in the artifact manifest. ABI-neutral choices may share a compatibility key (§7.2); distinct outputs retain distinct artifact identities. Unsupported ABI-changing flags require a declared ABI variant or are rejected. Unknown effects require an isolated build and explicit dependency validation. Substitution still checks CPU/OS requirements, ABI evidence, and dependent tests ([STATE-AND-RECOVERY §2](STATE-AND-RECOVERY.md#abi-and-execution-requirements)).
@@ -395,7 +395,7 @@ Version and variant resolution uses a PubGrub-style CDCL algorithm:
 - **Operation policy precedes cost.** Authority, platform/ABI compatibility, holds, runtime streams, and explicit requests constrain every solve. Install selects the newest eligible version satisfying the request; upgrade selects the newest eligible update. A cached older binary cannot displace a newer eligible source-only update. Security update selects the newest eligible fixed version; `--security --minimal` selects the lowest eligible fixed versions whose complete dependency solution satisfies the requested advisories. Necessary dependency changes remain included and explained. Exact replay selects only the recorded artifacts and fails if they cannot be obtained or reproduced exactly. Only after these rules are satisfied do local-build count and download size break ties. `--prefer-source` changes that cost preference, not authority or update policy.
 - **Compilation requires consent.** Plans disclose each source build, its input identities, dependency path, resource estimates (or unknown estimates), and why no eligible binary is selected. Interactive execution asks before compilation; unattended execution requires `--allow-source-builds`. A saved plan describes work but conveys no consent. Refusal never silently selects an older version.
 - **Solver comparison remains pending.** PubGrub remains the specified solver. A libsolv prototype must run identical candidate sets and compare correctness under namespaces, exact bindings, variants, streams, holds, and security/minimal policies; conflict explanations; peak memory; and representative cold/warm solve latency distributions. No algorithm change or performance advantage is established by this specification.
-- **Deterministic and explainable:** every resolution emits a human-readable derivation tree (`aslice install --explain ffmpeg` shows why each version/variant was chosen). Solve results are cached in the disposable SQLite cache keyed by complete input digest ([DATABASE](DATABASE.md#4-disposable-client-cache)); typical repeated solves are sub-millisecond.
+- **Deterministic and explainable:** every resolution emits a human-readable derivation tree (`aslice install --explain extended:ffmpeg` shows why each version/variant was chosen). Solve results are cached in the disposable SQLite cache keyed by complete input digest ([DATABASE](DATABASE.md#4-disposable-client-cache)); typical repeated solves are sub-millisecond.
 
 The prebuilt variant domain per package is small by policy (§13.2: the farm builds defaults plus demonstrated-demand variants, and everything else compiles locally), which bounds farm work while preserving local build choices.
 
@@ -512,8 +512,8 @@ The signing host is a dedicated networked release Pi; a separate offline Pi hold
 
 ### 9.4 What gets prebuilt
 
-- **Core orchard (~300 packages):** all three flavors where the formula's `min_os` allows (§4.1), default variants — the shell/git/curl/python/openssl/ffmpeg stratum.
-- **Extended orchard (~2,000 packages):** all flavors compatible with each formula's `min_os` floor, default variants, built on a rolling cadence.
+- **Core orchard (~300 packages):** all three flavors where the formula's `min_os` allows (§4.1), default variants — the shell/git/curl/python/openssl stratum.
+- **Extended orchard (~2,000 packages), including FFmpeg:** all flavors compatible with each formula's `min_os` floor, default variants, built on a rolling cadence.
 - **Popular non-default variants and prebuild priorities:** chosen by *value to a stranded platform*, never by volume. Download counts are explicitly rejected as a signal: on a deprecated-OS ecosystem, an obscure library fetched once a month may be irreplaceable — nobody else ships it for these machines — while a popular tool has alternatives everywhere. The prioritization inputs are all knowable without watching a single user:
   - **Dependency centrality** — how much of the orchard's build graph a package unblocks, computed from the graph itself.
   - **Build pain** — farm-measured compile time and patch/failure rate: the hours a prebuilt slice saves each of its users, however few they are.
@@ -525,7 +525,7 @@ The signing host is a dedicated networked release Pi; a separate offline Pi hold
 
 ### 9.5 Build provenance
 
-Every slice has a separate authenticated SLSA-style provenance attestation binding its artifact and archive digests: builder identity, source hash, formula commit, toolchain, build environment, and reproducibility evidence. Variable provenance is not part of the canonical identity manifest ([STATE-AND-RECOVERY §1](STATE-AND-RECOVERY.md#compatibility-and-artifact-identity); [SLICE-FORMAT §2](SLICE-FORMAT.md#content-identity-and-signatures)). `aslice provenance ffmpeg` shows it. Independent rebuild comparisons use the unsigned/normalized evidence contract in [STATE-AND-RECOVERY §10](STATE-AND-RECOVERY.md#acceptance-and-implementation-order); served byte-changing signatures precede final artifact identity. Verified reproducibility evidence supports the `reproducible: true` index badge.
+Every slice has a separate authenticated SLSA-style provenance attestation binding its artifact and archive digests: builder identity, source hash, formula commit, toolchain, build environment, and reproducibility evidence. Variable provenance is not part of the canonical identity manifest ([STATE-AND-RECOVERY §1](STATE-AND-RECOVERY.md#compatibility-and-artifact-identity); [SLICE-FORMAT §2](SLICE-FORMAT.md#content-identity-and-signatures)). `aslice provenance extended:ffmpeg` shows it. Independent rebuild comparisons use the unsigned/normalized evidence contract in [STATE-AND-RECOVERY §10](STATE-AND-RECOVERY.md#acceptance-and-implementation-order); served byte-changing signatures precede final artifact identity. Verified reproducibility evidence supports the `reproducible: true` index badge.
 
 For vendor-binary slices (§12.4) the provenance section instead records: the vendor artifact URL and sha256, the pinned signer identity and notarization state at pack time, the repackaging tool version, and whether the payload is hosted or vendor-fetched.
 
@@ -679,7 +679,7 @@ Transfer and decompression workers share explicit connection, memory, expanded-b
 
 Space-separated mixed-orchard packages form one transaction; pre-commit failure
 rolls back the managed-state batch. Package-specific options identify their target
-(for example `--variant ffmpeg:+x265`); reject ambiguous batch options and display
+(for example `--variant extended:ffmpeg:+x265`); reject ambiguous batch options and display
 effective settings per package. Stateful `--for` scoping is superseded.
 
 Busy interactive commands offer wait or exit with owner information; unattended
@@ -856,22 +856,22 @@ only where its command contract says so.
 Representative choices retain their distinct meanings:
 
 ```sh
-aslice install ffmpeg                  # newest eligible version; flavor auto-detected
-aslice install ffmpeg --build-from-source
-aslice install ffmpeg --variant +x265 --cflags="-O3 -march=native"
-aslice install ffmpeg@v6               # version constraint
+aslice install extended:ffmpeg                  # newest eligible version; flavor auto-detected
+aslice install extended:ffmpeg --build-from-source
+aslice install extended:ffmpeg --variant +x265 --cflags="-O3 -march=native"
+aslice install extended:ffmpeg@v6               # version constraint
 aslice install audiolab:convolver      # explicit repository namespace
 aslice install php@8.4                 # coexisting runtime stream; does not select it
 aslice install php-redis               # extension bound to the selected runtime
 aslice install composer                # tool that rides the selected runtime
 aslice pin openssl                     # one argument: package upgrade hold
 aslice pin php 8.4                     # two arguments: project runtime selection
-aslice upgrade ffmpeg --rollback-on-service-failure
+aslice upgrade extended:ffmpeg --rollback-on-service-failure
 aslice upgrade --security
 aslice upgrade --security --minimal --allow-source-builds
 aslice install foo --accept-system-changes
 aslice install protools-hd --accept-grafts
-aslice plan install ffmpeg > plan.json
+aslice plan install extended:ffmpeg > plan.json
 aslice lock export > aslice.lock
 aslice profile prefer blas openblas
 aslice config set flavor v2
@@ -885,7 +885,7 @@ aslice init zsh
 - **Binary is the default, source is a flag.** A user who never passes `--variant` or `--cflags` never sees a compiler.
 - **Every decision is explainable.** `--explain` on any command shows the solver's derivation; `--dry-run` shows the exact plan: which slices, which local builds, which generation change.
 - **Announce, don't bury.** EOL packages, unsigned orchards, deprecated variants, fallback-to-source events, and unsigned or non-notarized vendor binaries are always announced in the output. `doctor` reports what the machine can and cannot do rather than pretending uniformity.
-- **Scriptable:** `--json` on everything; stable exit-code contract; machine-readable `plan`/`apply` split (`aslice plan install ffmpeg > plan.json && aslice apply plan.json`) — which is also what the future multi-user daemon consumes.
+- **Scriptable:** `--json` on everything; stable exit-code contract; machine-readable `plan`/`apply` split (`aslice plan install extended:ffmpeg > plan.json && aslice apply plan.json`) — which is also what the future multi-user daemon consumes.
 
 <a id="orchards-repositories-and-trust-levels"></a>
 
@@ -933,7 +933,7 @@ A package manager that fails opaquely trains users to fear it. aslice logs **eve
 
 **The message-quality standard.** Log messages are UI, and they are held to the same bar as the CLI itself:
 
-- **Actionable errors, always.** Every error message names *what* failed, *why* as far as aslice can determine, and *what the user can do next*. `"verification failed"` is a bug; `"slice ffmpeg-7.1-0+core.v3: minisign signature invalid (key ed25519:RWQ0…, repo core) — refusing to install; run `aslice doctor` or re-fetch with --refresh-index"` is the standard.
+- **Actionable errors, always.** Every error message names *what* failed, *why* as far as aslice can determine, and *what the user can do next*. `"verification failed"` is a bug; `"slice ffmpeg-7.1-0+extended.v3: minisign signature invalid (key ed25519:RWQ0…, repo extended) — refusing to install; run `aslice doctor` or re-fetch with --refresh-index"` is the standard.
 - **Structured fields, human rendering.** Events are JSONL on disk (`ts`, `level`, `op`, `pkg`, `msg`, plus context fields); the terminal renders them as concise human lines. `--log-format json` pipes the raw stream for scripting; `-v`/`-vv` raise verbosity without changing what is *recorded*.
 - **One message, one fact, one place.** Errors propagate with context attached at each layer (fetch → verify → link), so the final message reads as a causal chain, not a stack trace. No message is ever printed twice by two layers.
 - **Progress is a log level, not a spinner-only UX.** Long operations (downloads, builds) emit periodic structured progress events, so a CI log or a `aslice log --follow` tells the same story the terminal spinner does.
@@ -1157,7 +1157,7 @@ Database migration creates a new versioned copy; old manager/state pairs remain 
 
 A Mac back from system recovery is blank, and the path from *blank* to *ready to work* is an afternoon of remembering: which packages, which Dock settings, which shell, which services, which runtime streams. aslice specifies one declarative file — `aslice-machine.toml` — and one command group: after the installer, `aslice machine apply` (the file defaults to `./aslice-machine.toml`; an `https://` URL works too) takes a blank machine to a working one, and because the file is plain TOML data it doubles as the shareable common language for "this is how my machine is set up". The inverse, `aslice machine export`, captures an existing machine back into the file. Full schema and semantics: [SETUP.md](SETUP.md); what follows is the architecture.
 
-**The file is a wishlist with preferences, not a lock.** `packages = ["ffmpeg@7", "postgresql +ssl"]` carries the same constraints `install` accepts; `[runtimes.default]` carries §12.9's stream selections; `[services]` carries the enable set; `[defaults.user."<domain>"]` / `[defaults.system."<domain>"]` carry macOS preference keys; `[shell]` carries the login shell; `[aslice]` and `[[repos]]` carry configuration and extra repositories. Like a Brewfile it is the human layer above exact state — the difference from a lock is the `package.json`/`package-lock.json` difference ([PACKAGE-FORMAT §7](PACKAGE-FORMAT.md#lock-files)). Unlike a Brewfile it is **data, never code**: no evaluation, no hooks, nothing executable — applying a stranger's file has a bounded, inspectable blast radius, and the plan shows every write before any happens (§12.2's plan/apply split, now pointed at whole machines).
+**The file is a wishlist with preferences, not a lock.** `packages = ["extended:ffmpeg@7", "postgresql +ssl"]` carries the same constraints `install` accepts; `[runtimes.default]` carries §12.9's stream selections; `[services]` carries the enable set; `[defaults.user."<domain>"]` / `[defaults.system."<domain>"]` carry macOS preference keys; `[shell]` carries the login shell; `[aslice]` and `[[repos]]` carry configuration and extra repositories. Like a Brewfile it is the human layer above exact state — the difference from a lock is the `package.json`/`package-lock.json` difference ([PACKAGE-FORMAT §7](PACKAGE-FORMAT.md#lock-files)). Unlike a Brewfile it is **data, never code**: no evaluation, no hooks, nothing executable — applying a stranger's file has a bounded, inspectable blast radius, and the plan shows every write before any happens (§12.2's plan/apply split, now pointed at whole machines).
 
 **One operation, three documents, two spellings.** Converging a machine, replaying a lock, and executing a saved plan are the same operation at three fidelities — *make reality match this document*. The document kind is still detected by content (JSON plan, `lock_version`, `schema`), but the spelling is split: plans and lock files keep the top-level verb (`aslice apply plan.json`, `aslice apply aslice.lock`), while the machine file lives under the `aslice machine` group — `aslice machine apply`, defaulting to `./aslice-machine.toml`. The split is deliberate: `aslice-machine.toml` is a reserved, self-describing name other tools can recognize, and a machine file passed to top-level `apply` (or a plan passed to `machine apply`) is refused with a pointer to the right spelling. A machine document is *planned* first: wishlist resolved against the current snapshot, preferences diffed, the full plan rendered and confirmed before execution. Ordering puts privileged work last (repositories → config → packages → selections → services → user defaults → system defaults + shell), so a plan refused at a consent gate still lands everything unprivileged and reports the remainder as skipped-refused.
 
@@ -1178,12 +1178,12 @@ The per-formula verbs (`create`, `lint`, `test`, `bump-pr` — §12.1) and the p
 **Lifecycle verbs — the `[deprecation]` table, edited by command.** Schema in [PACKAGE-FORMAT §3.14](PACKAGE-FORMAT.md#deprecation--the-package-lifecycle-declared-v06), policy in [ORCHARD-POLICY §8](ORCHARD-POLICY.md#deprecation-and-removal-lifecycle):
 
 ```sh
-aslice orchard deprecate ffmpeg --reason upstream-eol --replacement ffmpeg7 \
+aslice orchard deprecate extended:ffmpeg --reason upstream-eol --replacement extended:ffmpeg7 \
     --date 2027-03-01 --disable-date 2027-09-01
-aslice orchard disable ffmpeg        # pull disable_date forward to today
-aslice orchard undeprecate ffmpeg    # rescind — remove [deprecation]; the reason goes in the PR body
-aslice orchard tombstone ffmpeg      # remove the formula; the index tombstone is permanent (§3.14)
-aslice orchard rename ffmpeg ffmpeg7 # deprecate-as-renamed + scaffold the successor formula
+aslice orchard disable extended:ffmpeg        # pull disable_date forward to today
+aslice orchard undeprecate extended:ffmpeg    # rescind — remove [deprecation]; the reason goes in the PR body
+aslice orchard tombstone extended:ffmpeg      # remove the formula; the index tombstone is permanent (§3.14)
+aslice orchard rename extended:ffmpeg extended:ffmpeg7 # deprecate-as-renamed + scaffold the successor formula
 ```
 
 Each verb rewrites `[deprecation]` (or removes the formula) and validates what the linter will check anyway: dates in order, `replacement` present if and only if `reason = "renamed"`, the replacement resolving in the orchard. `tombstone` refuses a name that still has enabled dependents, and [ORCHARD-POLICY §8](ORCHARD-POLICY.md#deprecation-and-removal-lifecycle)'s security fast path is `deprecate --reason security --disable-date <today>` — a vote and a merge, not a special command.
@@ -1344,6 +1344,7 @@ Artifact identity, protected execution, exact replay, and transaction recovery a
 
 | Version | Date | Changes |
 |---|---|---|
+| v1.35 | September 2026 | Classify FFmpeg as extended and align affected package references and examples. |
 | v1.34 | September 2026 | Replace inline navigation with a collapsible Contents list; preserve section labels, links, and order. |
 | v1.33 | September 2026 | Replace the example command list in §12.1 with a purpose-grouped public command index linked to owning man pages; complete family coverage and distinguish unspecified interfaces from implemented behavior. No command contracts changed. |
 | v1.32 | September 2026 | Specify dependency-driven security remediation, explicit update and origin decisions, and the applicable farm, maintenance, and evidence contracts. Supersedes ABI-only rebuild and cost-first selection policies where previously stated; runtime and measured acceptance remain pending. |

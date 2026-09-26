@@ -123,10 +123,10 @@ class RecoveryContracts(unittest.TestCase):
 
     def test_qualified_target_keeps_namespace_version_and_value_colons(self):
         self.assertEqual(('audiolab:convolver@2', '+feature'),
-                         target_model(['ffmpeg', 'audiolab:convolver@2'], 'audiolab:convolver@2:+feature'))
-        self.assertEqual(('ffmpeg', '-Wl,-rpath,/example:a'),
-                         target_model(['ffmpeg'], 'ffmpeg:-Wl,-rpath,/example:a'))
-        for names, value in ((['ffmpeg'], 'other:+x'), (['ffmpeg'], 'ffmpeg:'),
+                         target_model(['extended:ffmpeg', 'audiolab:convolver@2'], 'audiolab:convolver@2:+feature'))
+        self.assertEqual(('extended:ffmpeg', '-Wl,-rpath,/example:a'),
+                         target_model(['extended:ffmpeg'], 'extended:ffmpeg:-Wl,-rpath,/example:a'))
+        for names, value in ((['extended:ffmpeg'], 'other:+x'), (['extended:ffmpeg'], 'extended:ffmpeg:'),
                              (['foo', 'foo:bar'], 'foo:bar:+x')):
             with self.assertRaises(ValueError):
                 target_model(names, value)

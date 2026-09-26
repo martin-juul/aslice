@@ -64,13 +64,13 @@ aslice orchard pin myorg/orchard "$commit"
 aslice orchard lint
 aslice orchard doctor --json
 aslice orchard freshness
-aslice orchard ci ffmpeg --flavors v2,v3
+aslice orchard ci extended:ffmpeg --flavors v2,v3
 aslice orchard dependents x264 --transitive
-aslice orchard deprecate ffmpeg --reason upstream-eol --date 2027-03-01
-aslice orchard disable ffmpeg
-aslice orchard undeprecate ffmpeg
-aslice orchard rename ffmpeg ffmpeg7
-aslice orchard tombstone ffmpeg
+aslice orchard deprecate extended:ffmpeg --reason upstream-eol --date 2027-03-01
+aslice orchard disable extended:ffmpeg
+aslice orchard undeprecate extended:ffmpeg
+aslice orchard rename extended:ffmpeg extended:ffmpeg7
+aslice orchard tombstone extended:ffmpeg
 aslice orchard port --from-homebrew ffmpeg
 ```
 

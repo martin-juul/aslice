@@ -2,7 +2,7 @@
 
 > State, identity, privilege, and recovery contracts: [STATE-AND-RECOVERY](STATE-AND-RECOVERY.md). Protected-volume patching: [SYSTEM-VOLUMES](SYSTEM-VOLUMES.md). These specifications do not establish completed implementation or platform validation.
 
-- **Status:** Design draft, v1.16 — September 2026
+- **Status:** Design draft, v1.17 — September 2026
 - **Companion to:** [DESIGN.md](DESIGN.md), [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md), [BUILD-INFRA.md](BUILD-INFRA.md), [ORCHARD-POLICY.md](ORCHARD-POLICY.md)
 - **Scope:** the shipped official source list, adding third-party repositories, the inherent trust-level model, and the dual signature scheme (Ed25519 canonical, OpenPGP supported).
 - **Vocabulary:** [NOMENCLATURE.md](NOMENCLATURE.md) — project terms, acronyms, and the Homebrew translation table.
@@ -99,7 +99,7 @@ Every repository serving binaries uses Ed25519 TUF metadata. Package signatures 
 Some rules hold at every level:
 
 - **A level can only be lowered by the user, and raised only by the defined path.** There is no `--trust-just-this-once` flag that bypasses a level's capability set — a bypass flag would make the levels decorative.
-- **Only core has bare package names.** `ffmpeg` identifies the core package. Every other repository, including extended and local repositories, requires its registered name as a prefix: `extended:vendorcli`, `audiolab:convolver`. Equal suffixes in different namespaces are different package identities. There is no cross-repository fallback, overlap prompt, or remembered repository preference (§10).
+- **Only core has bare package names.** `curl` identifies the core package. Every other repository, including extended and local repositories, requires its registered name as a prefix: `extended:ffmpeg`, `extended:vendorcli`, `audiolab:convolver`. Equal suffixes in different namespaces are different package identities. There is no cross-repository fallback, overlap prompt, or remembered repository preference (§10).
 - **Vendor-binary packages (`type = "binary"`) follow the same levels.** A `third-party` repo may serve vendor slices — payload-only, or graft-bearing under the unsigned-manifest warning below — subject to the signer-pinning rules of [DESIGN §12.4](DESIGN.md#vendor-binaries-pkgdmg-and-gui-apps) unchanged. Note that the Apple code-signing identity pin is *additional* to the repo signature, never a substitute for it.
 - **Graft behavior manifests are signed index metadata ([DESIGN §12.15](DESIGN.md#vendor-install-scripts-grafts--declared-approved-monitored-reversible)).** For `official` repos the farm rehearses every graft in per-OS VMs and the project signs the verified manifest ([ORCHARD-POLICY §10](ORCHARD-POLICY.md#merge-gates-what-ci-must-prove) gate 5). A `verified` repo signs its own manifests with its vouched key — behavior signing is part of what the vouch covers. `third-party` manifests are unsigned by construction: the client shows the unsigned-graft warning — provenance, the full declared behavior, a per-decision prompt that is never persisted — and the install proceeds only through it. `local` trees answer to the machine's owner alone. A manifest signature is additional to both the slice signature and any Apple signer pin, never a substitute.
 - **System packages (`[system]`, [DESIGN §12.7](DESIGN.md#system-software-kexts-and-sip-disabled-development-tools)) are a per-level capability, not a package property.** `official` and `verified` repositories may serve them. `third-party` repositories never may — no warning flow makes a stranger's kernel extension acceptable. `local` repositories may, on the user's own machine, with the same warnings. The solver refuses a `[system]` package from a non-capable repository with a message that names the level and the remedy, not a generic error. The same capability gates **root-domain services** (`domain = "system"` in the `[service]` table, [DESIGN §12.8](DESIGN.md#services-launchd-native-lifecycle-and-safe-upgrades)): running code as root is the privilege that matters, so a third-party repository may declare user agents but never root daemons. The refusal happens at solve time, with the same named-level message.
@@ -313,6 +313,7 @@ commands, and disaster recovery; this section summarizes repository interactions
 
 | Version | Date | Changes |
 |---|---|---|
+| v1.17 | September 2026 | Classify FFmpeg as extended and align affected package references and examples. |
 | v1.16 | September 2026 | Replace inline navigation with a collapsible Contents list; preserve section labels, links, and order. |
 | v1.15 | September 2026 | Specify dependency-driven security remediation, explicit update and origin decisions, and the applicable farm, maintenance, and evidence contracts. Supersedes ABI-only rebuild and cost-first selection policies where previously stated; runtime and measured acceptance remain pending. |
 | v1.14 | September 2026 | Remove retired comparison references and competitive framing; retain aslice requirements and link their owning specifications. Align affected contract summaries where applicable. |

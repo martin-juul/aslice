@@ -82,14 +82,14 @@ No family-wide dry-run contract or additional per-command numeric exits are spec
 ```sh
 aslice create https://example.org/foo-1.0.tar.gz
 aslice lint foo
-aslice build ./orchards/core/ffmpeg
-aslice build ffmpeg --variant +x265 --cflags="-O3 -march=native"
-aslice build ffmpeg --offline
-aslice build ffmpeg --keep --shell
-aslice build ffmpeg --emit-abi
-aslice test ffmpeg
-aslice livecheck ffmpeg
-aslice bump-pr ffmpeg 7.1.0
+aslice build ./orchards/extended/ffmpeg
+aslice build extended:ffmpeg --variant +x265 --cflags="-O3 -march=native"
+aslice build extended:ffmpeg --offline
+aslice build extended:ffmpeg --keep --shell
+aslice build extended:ffmpeg --emit-abi
+aslice test extended:ffmpeg
+aslice livecheck extended:ffmpeg
+aslice bump-pr extended:ffmpeg 7.1.0
 ```
 
 # EXIT STATUS

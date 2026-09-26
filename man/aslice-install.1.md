@@ -16,7 +16,7 @@ aslice-install — install packages
 
 Installs the newest eligible packages, then prefers binaries for that selection: resolves the request against the index, selects the newest version compatible with this OS release and the fastest flavor this CPU executes, downloads the slices, verifies signatures and hashes, checks library interfaces against the installed set, and links a new generation. No undeclared package code executes at any point — a package whose installer genuinely requires a script declares it as a graft, which runs only after its behavior manifest has been shown and approved (aslice-graft(1)). Preparation failures leave the live generation unchanged. Failures after live changes enter journal recovery; external conflicts may require attention, and protected-volume changes may require Recovery and reboot. Package rollback does not restore application data ([STATE-AND-RECOVERY §5](../docs/STATE-AND-RECOVERY.md#durable-transactions-and-recovery); [SYSTEM-VOLUMES §4](../docs/SYSTEM-VOLUMES.md#activation-rollback-and-os-updates)).
 
-*package* may be a bare name (`ffmpeg`), a version constraint (`ffmpeg@v6`), a namespaced name (`audiolab:convolver`), or a runtime stream (`php@8.4` — installing a stream never changes the selected one; see aslice-use(1)).
+*package* may be a bare core name (`curl`), a version constraint (`extended:ffmpeg@v6`), a namespaced name (`extended:ffmpeg` or `audiolab:convolver`), or a runtime stream (`php@8.4` — installing a stream never changes the selected one; see aslice-use(1)).
 
 Space-separated packages, including mixed-orchard requests, form one transaction.
 Pre-commit failure rolls back the complete managed-state batch. Display effective
@@ -44,7 +44,7 @@ verification. Effective mutation ownership lasts through checks and surviving he
 :   Compiler and linker flags for a local build of the named package only. Exact flags enter the artifact manifest. ABI-neutral choices may share a compatibility key; different outputs retain distinct artifact identities. Substitution still requires compatible CPU/OS requirements, ABI evidence, and dependent tests. Unsupported ABI-changing flags are rejected unless represented by a declared ABI variant; unknown effects require an isolated build and explicit dependency validation ([STATE-AND-RECOVERY §1](../docs/STATE-AND-RECOVERY.md#compatibility-and-artifact-identity) and [STATE-AND-RECOVERY §2](../docs/STATE-AND-RECOVERY.md#abi-and-execution-requirements)).
 
 **--cflags** *package*:"…", **--ldflags** *package*:"…"
-:   Package-targeted batch forms, for example `--cflags 'ffmpeg:-O3'`. Targets must identify an exact requested package, including its namespace for non-core packages. Reject ambiguous targets and conflicting duplicate assignments. Source-build, LTO, debug, and link options take `PACKAGE:true` or `PACKAGE:false` in batches; flavor, runtime, and extension-source options take `PACKAGE:VALUE`. Match the complete requested identifier, including a requested version, before parsing the value. Unqualified forms remain valid for one package. See [STATE-AND-RECOVERY §10.2.5](../docs/STATE-AND-RECOVERY.md#1025-command-requests-and-outcomes).
+:   Package-targeted batch forms, for example `--cflags 'extended:ffmpeg:-O3'`. Targets must identify an exact requested package, including its namespace for non-core packages. Reject ambiguous targets and conflicting duplicate assignments. Source-build, LTO, debug, and link options take `PACKAGE:true` or `PACKAGE:false` in batches; flavor, runtime, and extension-source options take `PACKAGE:VALUE`. Match the complete requested identifier, including a requested version, before parsing the value. Unqualified forms remain valid for one package. See [STATE-AND-RECOVERY §10.2.5](../docs/STATE-AND-RECOVERY.md#1025-command-requests-and-outcomes).
 
 **--health-timeout** *duration*
 :   Per-service health timeout after commit, default `60s`. Accept a positive finite integer with `ms`, `s`, or `m`; reject zero and overflow. Failure or timeout reports committed installation and returns nonzero.
@@ -73,9 +73,9 @@ verification. Effective mutation ownership lasts through checks and surviving he
 # EXAMPLES
 
 ```sh
-aslice install ffmpeg
-aslice install ffmpeg --variant ffmpeg:+x265 --cflags="-O3 -march=native"
-aslice install ffmpeg audiolab:convolver --variant ffmpeg:+x265 --cflags 'ffmpeg:-O3'
+aslice install extended:ffmpeg
+aslice install extended:ffmpeg --variant extended:ffmpeg:+x265 --cflags="-O3 -march=native"
+aslice install extended:ffmpeg audiolab:convolver --variant extended:ffmpeg:+x265 --cflags 'extended:ffmpeg:-O3'
 aslice install php@8.4 --with-extensions-from 8.3
 aslice install foo --accept-system-changes
 aslice install convolver --accept-grafts

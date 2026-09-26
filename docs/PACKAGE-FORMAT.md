@@ -2,7 +2,7 @@
 
 > State, identity, privilege, and recovery contracts: [STATE-AND-RECOVERY](STATE-AND-RECOVERY.md). Protected-volume patching: [SYSTEM-VOLUMES](SYSTEM-VOLUMES.md). These specifications do not establish completed implementation or platform validation.
 
-- **Status:** Format draft, v0.22 — September 2026
+- **Status:** Format draft, v0.23 — September 2026
 - **Companion to:** [DESIGN.md](DESIGN.md) — this document owns author input and the recipe API summarized in [DESIGN §6](DESIGN.md#package-format). [STATE-AND-RECOVERY](STATE-AND-RECOVERY.md) owns identity, trust, and recovery; examples and schemas must agree. The toolchain this format's builds run on is specified in [TOOLCHAIN.md](TOOLCHAIN.md).
 - **Scope:** the `package.toml` definition format, `build.star` build API, dependency and version semantics, transitive resolution, and lock files.
 - **Vocabulary:** [NOMENCLATURE.md](NOMENCLATURE.md) — project terms, acronyms, and the Homebrew translation table.
@@ -49,7 +49,7 @@ The governing principle is **data first**. A `package.toml` is pure TOML: it can
 ## 2. Files of a package
 
 ```text
-orchards/core/ffmpeg/
+orchards/extended/ffmpeg/
  ├── package.toml      # this specification (required)
  ├── build.star        # build logic (required iff [build].system = "custom")
  ├── tests.star        # smoke tests (required for core orchard)
@@ -211,8 +211,8 @@ The full dependency semantics are in §5. On `type = "binary"` packages, `build`
 ### 3.7 Interop declarations — provides, conflicts, replaces
 
 ```toml
-conflicts = ["ffmpeg4", "libav"]      # cannot be installed into the same profile
-replaces  = ["ffmpeg4"]               # rename/supersede: upgrades replace the old package atomically
+conflicts = ["extended:ffmpeg4", "libav"]      # cannot be installed into the same profile
+replaces  = ["extended:ffmpeg4"]               # rename/supersede: upgrades replace the old package atomically
 aliases   = ["ff"]                    # search/install aliases, no semantics
 
 [provides]
@@ -467,7 +467,7 @@ At exec time the tool's shim resolves in two steps: first the runtime stream (se
 [deprecation]
 date         = "2027-03-01"    # when deprecation starts
 reason       = "upstream-eol"  # upstream-eol | security | renamed | unmaintainable | takedown | other
-replacement  = "ffmpeg7"       # optional pointer; mandatory when reason = "renamed"
+replacement  = "extended:ffmpeg7"       # optional pointer; mandatory when reason = "renamed"
 disable_date = "2027-09-01"    # optional: new installs refuse after this without --force-disabled
 ```
 
@@ -544,7 +544,7 @@ The orchard records `version` in normalized form only; where upstream spelled it
 | `2024.09.1` | `2024.9.1` | CalVer with numeric components passes through |
 | `r4520` / `git describe` hashes | **rejected** | Use epoch + a synthetic version, chosen by the maintainer |
 
-A prerelease sorts before its release (`7.1.0-rc.1 < 7.1.0`) and is **excluded from default resolution** — you get one only by asking for it, with `aslice install ffmpeg --prerelease` or an explicit constraint.
+A prerelease sorts before its release (`7.1.0-rc.1 < 7.1.0`) and is **excluded from default resolution** — you get one only by asking for it, with `aslice install extended:ffmpeg --prerelease` or an explicit constraint.
 
 <a id="constraint-syntax"></a>
 
@@ -803,7 +803,7 @@ A dependent writes `runtime = ["blas ^3"]`; the profile's provider choice — `o
 
 ### 9.4 Full-featured — ffmpeg
 
-The full formula is the one developed through §2 and §3, `orchards/core/ffmpeg/`: conditional dependencies, provider-variant requirements, an audit CPE, a declarative service-free install. It is the reference formula that the linter's test suite round-trips.
+The full formula is the one developed through §2 and §3, `orchards/extended/ffmpeg/`: conditional dependencies, provider-variant requirements, an audit CPE, a declarative service-free install. It is the reference formula that the linter's test suite round-trips.
 
 <a id="vendor-binary--a-pkg-only-tool-with-a-legacy-artifact"></a>
 
@@ -846,6 +846,7 @@ The full form is in §3.11; the shape to remember is **two `[[binary]]` artifact
 
 | Version | Date | Changes |
 |---|---|---|
+| v0.23 | September 2026 | Classify FFmpeg as extended and align affected package references and examples. |
 | v0.22 | September 2026 | Replace inline navigation with a collapsible Contents list; preserve section labels, links, and order. |
 | v0.21 | September 2026 | Specify dependency-driven security remediation, explicit update and origin decisions, and the applicable farm, maintenance, and evidence contracts. Supersedes ABI-only rebuild and cost-first selection policies where previously stated; runtime and measured acceptance remain pending. |
 | v0.20 | September 2026 | Remove retired comparison references and competitive framing; retain aslice requirements and link their owning specifications. Align affected contract summaries where applicable. |

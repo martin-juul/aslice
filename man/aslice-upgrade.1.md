@@ -72,7 +72,7 @@ after commit stops checks safely and reports incomplete verification.
 
 ```sh
 aslice outdated --json
-aslice upgrade ffmpeg --dry-run
+aslice upgrade extended:ffmpeg --dry-run
 aslice upgrade --security
 aslice upgrade --security --minimal --allow-source-builds
 ```

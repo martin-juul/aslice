@@ -35,9 +35,9 @@ Note the overloaded spelling: `pin openssl` (one argument) is the hold described
 ```sh
 aslice pin openssl
 aslice unpin openssl
-aslice mark ffmpeg --on-request
+aslice mark extended:ffmpeg --on-request
 aslice mark x264 --as-dependency
-aslice uninstall ffmpeg
+aslice uninstall extended:ffmpeg
 aslice autoremove --dry-run
 ```
 

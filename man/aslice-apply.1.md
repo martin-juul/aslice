@@ -37,7 +37,7 @@ available exact artifacts; a lock alone is not an offline backup of their bytes.
 # EXAMPLES
 
 ```sh
-aslice plan install ffmpeg > plan.json
+aslice plan install extended:ffmpeg > plan.json
 aslice apply plan.json --dry-run
 aslice apply plan.json
 aslice lock export > aslice.lock

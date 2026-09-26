@@ -2,7 +2,7 @@
 
 > State, identity, privilege, and recovery contracts: [STATE-AND-RECOVERY](STATE-AND-RECOVERY.md). Protected-volume patching: [SYSTEM-VOLUMES](SYSTEM-VOLUMES.md). These specifications do not establish completed implementation or platform validation.
 
-- **Status:** Design draft, v0.19 — September 2026
+- **Status:** Design draft, v0.20 — September 2026
 - **Companion to:** [DESIGN §12.13](DESIGN.md#declarative-system-setup-aslice-machinetoml-and-the-aslice-machine-commands) (architecture and rationale), [MANUAL §10](MANUAL.md#one-file-one-command-rebuilding-a-machine), aslice-machine(1) (command reference). This document is the schema and semantics specification.
 - **Vocabulary:** [NOMENCLATURE.md](NOMENCLATURE.md) — project terms, acronyms, and the Homebrew translation table.
 
@@ -43,7 +43,7 @@ aslice machine export --defaults com.apple.dock,com.apple.finder > aslice-machin
 schema = 1                     # required; unknown schema versions are a hard error
 
 packages = [                   # the wishlist: constraints, not exact state
-  "ffmpeg@7",                  #   version constraint (DESIGN §12.1 syntax)
+  "extended:ffmpeg@7",                  #   version constraint (DESIGN §12.1 syntax)
   "postgresql +ssl",           #   variants
   "audiolab:convolver",        #   repository-namespaced (REPOSITORIES.md)
 ]
@@ -166,7 +166,7 @@ Exporting this list carries package selection, not transferable authorization. I
 
 ### 3.1 One operation, three documents
 
-The operation predates the feature. `aslice apply` already replayed an exported lock file (`aslice apply aslice.lock`, [PACKAGE-FORMAT §7](PACKAGE-FORMAT.md#lock-files)) and executed a saved plan (`aslice plan install ffmpeg > plan.json && aslice apply plan.json`, [DESIGN §12.1](DESIGN.md#commands)). Declarative setup is the same operation at a third fidelity — *make reality match this document* — and the spelling is split by document kind: plans and locks keep top-level `aslice apply`; the machine file gets `aslice machine apply`, so the command names what it converges:
+The operation predates the feature. `aslice apply` already replayed an exported lock file (`aslice apply aslice.lock`, [PACKAGE-FORMAT §7](PACKAGE-FORMAT.md#lock-files)) and executed a saved plan (`aslice plan install extended:ffmpeg > plan.json && aslice apply plan.json`, [DESIGN §12.1](DESIGN.md#commands)). Declarative setup is the same operation at a third fidelity — *make reality match this document* — and the spelling is split by document kind: plans and locks keep top-level `aslice apply`; the machine file gets `aslice machine apply`, so the command names what it converges:
 
 | Document | Fidelity | What apply does |
 |---|---|---|
@@ -349,6 +349,7 @@ Exit status: **0** applied (or nothing to do); **1** error (schema, resolution, 
 
 | Version | Date | Changes |
 |---|---|---|
+| v0.20 | September 2026 | Classify FFmpeg as extended and align affected package references and examples. |
 | v0.19 | September 2026 | Align wishlist resolution with newest-eligible selection and explicit source-build consent. |
 | v0.18 | September 2026 | Remove retired comparison references and competitive framing; retain aslice requirements and link their owning specifications. Align affected contract summaries where applicable. |
 | v0.17 | September 2026 | Hold mutation ownership through preparation and post-commit service checks; distinguish whole-batch pre-commit rollback from committed health failure. |

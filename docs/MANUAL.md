@@ -4,7 +4,7 @@
 
 **The user guide for aslice — a package manager for Intel macOS.**
 
-- **Status:** v0.23 — September 2026
+- **Status:** v0.24 — September 2026
 - **Project home:** [aslice.sh](https://aslice.sh) — homepage, documentation (aslice.sh/docs), and the public dashboard (aslice.sh/dashboard); the installer is served from get.aslice.sh (§2).
 - **Audience:** people who install and run software with aslice; that is most of what follows. If you *write* packages, read chapters 1–4 and then move to [AUTHORING.md](AUTHORING.md). If you want to know *why* things are the way they are, the rationale lives in [DESIGN.md](DESIGN.md).
 - **Companions:** the man pages in [man/](../man/) (also available as `aslice help <command>`), [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md), [ORCHARD-POLICY.md](ORCHARD-POLICY.md), [REPOSITORIES.md](REPOSITORIES.md), [GENESIS.md](runbooks/GENESIS.md), [TOOLCHAIN.md](TOOLCHAIN.md).
@@ -196,25 +196,25 @@ This chapter covers the dozen commands that make up daily use. Each command fami
 
 ```sh
 aslice search ffmpeg          # names and descriptions matching "ffmpeg"
-aslice info ffmpeg            # versions, variants, dependencies, size, provenance
-aslice install ffmpeg
+aslice info extended:ffmpeg            # versions, variants, dependencies, size, provenance
+aslice install extended:ffmpeg
 ```
 
 `install` selects the newest eligible requested version, then prefers a binary for that selection. It resolves your request against the index, picks the newest version that runs on your OS release and the fastest flavor your CPU executes, downloads the slices, verifies them, and links a new generation. A typical run prints the plan, then the result:
 
 ```console
-$ aslice install ffmpeg
-==> Plan: install ffmpeg 7.1 (v3, 14.2 MB) + 6 dependencies (31.8 MB total)
+$ aslice install extended:ffmpeg
+==> Plan: install extended:ffmpeg 7.1 (v3, 14.2 MB) + 6 dependencies (31.8 MB total)
 ==> Fetching 7 slices... done (4.1s)
 ==> Verifying signatures and hashes... done
 ==> Linking generation 43... done
-ffmpeg 7.1 installed. Run `aslice rollback` to return to generation 42.
+extended:ffmpeg 7.1 installed. Run `aslice rollback` to return to generation 42.
 ```
 
 You can install a space-separated batch from several orchards in one transaction:
 
 ```sh
-aslice install ffmpeg audiolab:convolver --variant ffmpeg:+x265
+aslice install extended:ffmpeg audiolab:convolver --variant extended:ffmpeg:+x265
 ```
 
 The plan shows each package's effective settings. Package-specific options must
@@ -225,18 +225,18 @@ failure after commit returns nonzero and says the installation committed.
 Useful variations:
 
 ```sh
-aslice install ffmpeg@v6              # a specific major version
-aslice install ffmpeg --dry-run       # print the full plan, change nothing
-aslice install ffmpeg --explain       # show why the solver chose each version
+aslice install extended:ffmpeg@v6              # a specific major version
+aslice install extended:ffmpeg --dry-run       # print the full plan, change nothing
+aslice install extended:ffmpeg --explain       # show why the solver chose each version
 aslice install audiolab:convolver     # a package from a specific added repository
 ```
 
 **Building from source.** You never need to, but you can:
 
 ```sh
-aslice install ffmpeg --build-from-source                  # compile it here
-aslice install ffmpeg --variant +x265 --cflags="-O3"       # non-default options
-aslice install ffmpeg --cflags="-O3 -march=native" --lto   # tuned to your machine
+aslice install extended:ffmpeg --build-from-source                  # compile it here
+aslice install extended:ffmpeg --variant +x265 --cflags="-O3"       # non-default options
+aslice install extended:ffmpeg --cflags="-O3 -march=native" --lto   # tuned to your machine
 ```
 
 Custom-flag builds can use prebuilt dependencies when their ABI evidence, dependent tests, and CPU/OS requirements permit it (§4.3). A `-march=native` ffmpeg records the selected CPU features; sharing a compatibility key does not make it usable on every machine. Unsupported ABI-changing flags are rejected unless covered by a declared ABI variant, and unknown effects require an isolated build and explicit dependency validation ([STATE-AND-RECOVERY §2](STATE-AND-RECOVERY.md#abi-and-execution-requirements)). A non-default *feature* variant (`--variant`) may or may not have a prebuilt slice; when it doesn't, aslice discloses the source work and obtains consent before building locally. Either way, the plan tells you which before anything downloads.
@@ -256,7 +256,7 @@ After an update, `aslice needs-restarting [--json]` reports restart, consumer re
 ```sh
 aslice outdated               # what would change, and why
 aslice upgrade                # everything, honoring your pins
-aslice upgrade ffmpeg         # one package (and what depends on it)
+aslice upgrade extended:ffmpeg         # one package (and what depends on it)
 ```
 
 An upgrade stages the complete new generation before activation, so a failed download leaves the current software untouched. Power loss during activation or external writes requires journal recovery. If an upgraded package runs a service, aslice stops the service, swaps, and starts it again; and if the new version won't start, it *asks you* whether to roll back instead of guessing (§7.2).
@@ -292,7 +292,7 @@ aslice autoremove             # remove anything nothing needs anymore
 aslice records whether you asked for a package by name or it arrived as a dependency. Once nothing reachable from your explicitly requested set needs a dependency, `autoremove` collects it — the same model as `apt autoremove`. If it ever disagrees with you about a package's status:
 
 ```sh
-aslice mark ffmpeg --on-request       # "I want this; stop calling it a dependency"
+aslice mark extended:ffmpeg --on-request       # "I want this; stop calling it a dependency"
 ```
 
 Uninstalling removes a package from future generations; old generations still reference it, so rollback keeps working until the garbage collector eventually reclaims it (§5.3).
@@ -320,7 +320,7 @@ You can use aslice happily knowing nothing in this chapter. Read it when you wan
 
 ### 4.1 What a slice is
 
-A slice is a zstd-compressed archive containing its container descriptor, canonical manifest, and payload. The manifest binds file hashes, exact dependencies, recipe, flags, CPU requirements, and ABI evidence. Detached signatures authenticate the delivered archive; SBOMs and variable builder provenance are separate authenticated objects bound to the artifact or archive digest ([SLICE-FORMAT §1](SLICE-FORMAT.md#byte-layout) and [SLICE-FORMAT §2](SLICE-FORMAT.md#content-identity-and-signatures); [STATE-AND-RECOVERY §1](STATE-AND-RECOVERY.md#compatibility-and-artifact-identity)). `aslice provenance ffmpeg` shows the associated evidence.
+A slice is a zstd-compressed archive containing its container descriptor, canonical manifest, and payload. The manifest binds file hashes, exact dependencies, recipe, flags, CPU requirements, and ABI evidence. Detached signatures authenticate the delivered archive; SBOMs and variable builder provenance are separate authenticated objects bound to the artifact or archive digest ([SLICE-FORMAT §1](SLICE-FORMAT.md#byte-layout) and [SLICE-FORMAT §2](SLICE-FORMAT.md#content-identity-and-signatures); [STATE-AND-RECOVERY §1](STATE-AND-RECOVERY.md#compatibility-and-artifact-identity)). `aslice provenance extended:ffmpeg` shows the associated evidence.
 
 Installing a slice has six stages. Materialization runs no undeclared package code;
 post-commit readiness checks execute declared services:
@@ -344,7 +344,7 @@ aslice detects the CPU once, at install time. Three flavors exist:
 - **v2** uses SSE4.2 and POPCNT (Nehalem and later, ~2009+).
 - **v3** uses AVX2 (Haswell and later, ~2014+) and is measurably faster on crypto, codecs, and compression — the workloads that dominate real package use.
 
-The solver treats flavor as a hard constraint: a v3 slice is never offered to a machine that cannot execute it, so there is no "illegal instruction" surprise waiting at run time. Because the farm builds all three flavors of everything in the core orchard, the fastest build your machine can run is simply the default. `aslice flavors ffmpeg` shows the matrix for your machine. `aslice config set flavor v1` forces a lower flavor — useful when you are preparing an external drive for an older Mac.
+The solver treats flavor as a hard constraint: a v3 slice is never offered to a machine that cannot execute it, so there is no "illegal instruction" surprise waiting at run time. The farm prebuilds compatible flavors for both orchards, with extended packages such as FFmpeg built on a rolling cadence. The solver selects the fastest eligible flavor available for your machine. `aslice flavors extended:ffmpeg` shows the matrix for your machine. `aslice config set flavor v1` forces a lower flavor — useful when you are preparing an external drive for an older Mac.
 
 <a id="mixing-binary-and-source-builds"></a>
 
@@ -420,7 +420,7 @@ aslice switch-generation 44   # and forward again — rollback is not destructiv
 
 Rollback is the answer to "the upgrade broke it." Because old generations are intact, going back is exact: you get the precise files you had, not a re-download of whatever the index currently thinks the old version was.
 
-This also makes experiments cheap. `aslice exec ffmpeg -- ffprobe in.mov` runs a command inside a temporary view with extra packages present and discards the view on exit — you can try something without committing to it.
+This also makes experiments cheap. `aslice exec extended:ffmpeg -- ffprobe in.mov` runs a command inside a temporary view with extra packages present and discards the view on exit — you can try something without committing to it.
 
 <a id="housekeeping"></a>
 
@@ -614,7 +614,7 @@ Signatures and trust levels answer narrow questions precisely: *are these bits e
 
 ```sh
 aslice audit                  # known vulnerabilities (CVEs) in your installed set
-aslice provenance ffmpeg      # who built this, from what source, with what toolchain
+aslice provenance extended:ffmpeg      # who built this, from what source, with what toolchain
 ```
 
 `audit` matches your installed set against public vulnerability feeds, works offline against a cached copy of the feeds, and reports affected-version ranges. Packages past their upstream's end-of-life are surfaced here too; they need `--allow-eol` to install in the first place.
@@ -657,7 +657,7 @@ The full schema and the precise semantics live in [SETUP.md](SETUP.md); this cha
 schema = 1
 
 packages = [
-  "ffmpeg@7",                # the same names and constraints as aslice install
+  "extended:ffmpeg@7",                # the same names and constraints as aslice install
   "postgresql +ssl",         # variants included
 ]
 
@@ -944,6 +944,7 @@ Historical labels and ordering below are preserved as recorded, including repeat
 
 | Version | Date | Changes |
 |---|---|---|
+| v0.24 | September 2026 | Classify FFmpeg as extended and align affected package references and examples. |
 | v0.23 | September 2026 | Replace inline navigation with a collapsible Contents list; preserve section labels, links, and order. |
 | v0.22 | September 2026 | Specify dependency-driven security remediation, explicit update and origin decisions, and the applicable farm, maintenance, and evidence contracts. Supersedes ABI-only rebuild and cost-first selection policies where previously stated; runtime and measured acceptance remain pending. |
 | v0.21 | September 2026 | Remove retired comparison references and competitive framing; retain aslice requirements and link their owning specifications. Align affected contract summaries where applicable. |
