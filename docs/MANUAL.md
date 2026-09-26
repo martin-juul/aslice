@@ -4,7 +4,7 @@
 
 **The user guide for aslice — a package manager for Intel macOS.**
 
-- **Status:** v0.20 — September 2026
+- **Status:** v0.21 — September 2026
 - **Project home:** [aslice.sh](https://aslice.sh) — homepage, documentation (aslice.sh/docs), and the public dashboard (aslice.sh/dashboard); the installer is served from get.aslice.sh (§2).
 - **Audience:** people who install and run software with aslice; that is most of what follows. If you *write* packages, read chapters 1–4 and then move to [AUTHORING.md](AUTHORING.md). If you want to know *why* things are the way they are, the rationale lives in [DESIGN.md](DESIGN.md).
 - **Companions:** the man pages in [man/](../man/) (also available as `aslice help <command>`), [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md), [ORCHARD-POLICY.md](ORCHARD-POLICY.md), [REPOSITORIES.md](REPOSITORIES.md), [GENESIS.md](runbooks/GENESIS.md), [TOOLCHAIN.md](TOOLCHAIN.md).
@@ -22,9 +22,9 @@ aslice is a package manager for Intel Macs running macOS 10.11 (El Capitan) thro
 
 Three facts about aslice explain almost everything else:
 
-**It installs binaries, and it never runs them at install time.** Packages arrive as *slices* — prebuilt, signed, compressed archives. To install one, aslice verifies the signature, checks every file against the manifest, and links the result into place. At no point does the package get to run a script on your machine. There is one declared exception — the *graft*, for software whose installer script genuinely cannot be declarative (audio DSP drivers, pro-video plugins): it runs only after you have read its declared behavior and approved it, confined to exactly what it declared, with everything it changes recorded for rollback (§4.5). Homebrew's `post_install` — arbitrary package code, run unannounced — has no equivalent here, and never will.
+**Binary installation is payload-only by default.** Packages arrive as *slices* — prebuilt, signed, compressed archives. To install one, aslice verifies the signature, checks every file against the manifest, and links the result into place. Undeclared package scripts never execute. There is one declared exception — the *graft*, for software whose installer script genuinely cannot be declarative (audio DSP drivers, pro-video plugins): it runs only after you have read its declared behavior and approved it, confined to exactly what it declared, with everything it changes recorded for rollback (§4.5).
 
-**Old states of your system are kept, and you can go back to them.** Installed packages live in an immutable store; what you actually use is a *generation*, a view of the store made of symlinks. Every install, upgrade, or uninstall builds a new generation and then flips a single symlink. When an upgrade breaks something, `aslice rollback` restores managed state through a journal; conflicts or reboot requirements can leave recovery pending. Nix proved this idea at scale; aslice keeps it small enough to stay understandable.
+**Old states of your system are kept, and you can go back to them.** Installed packages live in an immutable store; what you actually use is a *generation*, a view of the store made of symlinks. Every install, upgrade, or uninstall builds a new generation and then flips a single symlink. When an upgrade breaks something, `aslice rollback` restores managed state through a journal; conflicts or reboot requirements can leave recovery pending.
 
 **It accounts for old machines.** aslice detects your CPU and serves the fastest build that CPU can execute; there are three *flavors* — baseline, SSE4.2, and AVX2. It ships a current CA certificate bundle, because the one in your OS expired years ago. And when it cannot do something — a package needs SIP disabled, a vendor binary is pointer-only and comes from the vendor's own server, Safari's TLS stack is too old for a site no matter what it installs — it tells you so, instead of failing mysteriously later.
 
@@ -148,7 +148,7 @@ aslice updates itself like any other package:
 aslice self-update
 ```
 
-The update is signed and verified like any package, installed as a new generation, and health-checked after the swap — if the new binary fails its own smoke test, aslice rolls itself back automatically. `aslice self-update --check` reports without installing, and `aslice pin aslice` holds the manager in place if you never want it to move.
+The update is signed and verified like any package, installed as a new generation, and health-checked after tentative activation but before commit. A failed manager smoke test reverses tentative activation; restoration after a durable commit is a new transaction preserving trust and history. `aslice self-update --check` reports without installing, and `aslice pin aslice` holds the manager in place if you never want it to move.
 
 <a id="removing-aslice"></a>
 
@@ -325,7 +325,7 @@ The solver treats flavor as a hard constraint: a v3 slice is never offered to a 
 
 ### 4.3 Mixing binary and source builds
 
-Homebrew removed build options because of combinatorial explosion: every combination of options would have needed its own binaries, and local builds broke against prebuilt ones. aslice's answer is to check compatibility where it actually lives — in the libraries' published interfaces. Every built package records its provided and required interfaces, exact dependency artifacts, CPU requirements, and evidence quality. Substitution requires adequate ABI evidence and dependent tests on a compatible machine. Incomplete evidence retains the exact provider or requires rebuilding and testing dependents ([STATE-AND-RECOVERY §2](STATE-AND-RECOVERY.md#abi-and-execution-requirements)).
+Build variants require compatibility checks against the libraries' published interfaces. Every built package records its provided and required interfaces, exact dependency artifacts, CPU requirements, and evidence quality. Substitution requires adequate ABI evidence and dependent tests on a compatible machine. Incomplete evidence retains the exact provider or requires rebuilding and testing dependents ([STATE-AND-RECOVERY §2](STATE-AND-RECOVERY.md#abi-and-execution-requirements)).
 
 The practical consequences:
 
@@ -653,7 +653,7 @@ tilesize = 48
 # …
 ```
 
-Two properties are worth knowing before you trust it. First, the file is **data, never code**: unlike a Homebrew Brewfile, which is Ruby and can do anything Ruby can, nothing in an `aslice-machine.toml` executes. Applying a stranger's file has a bounded blast radius, and you see the plan first. Second, the file is a *wishlist*, not an exact snapshot — "ffmpeg 7" resolves against today's index. For bit-exact reproduction there is the lock file ([PACKAGE-FORMAT §7](PACKAGE-FORMAT.md#lock-files)), replayed with `aslice apply` — the same convergence operation as `aslice machine apply`, spelled by document kind: plans and locks go to `aslice apply`, the machine file to `aslice machine apply`.
+Two properties are worth knowing before you trust it. First, the file is **data, never code**: nothing in an `aslice-machine.toml` executes. Applying a stranger's file has a bounded blast radius, and you see the plan first. Second, the file is a *wishlist*, not an exact snapshot — "ffmpeg 7" resolves against today's index. For bit-exact reproduction there is the lock file ([PACKAGE-FORMAT §7](PACKAGE-FORMAT.md#lock-files)), replayed with `aslice apply` — the same convergence operation as `aslice machine apply`, spelled by document kind: plans and locks go to `aslice apply`, the machine file to `aslice machine apply`.
 
 <a id="applying-it"></a>
 
@@ -752,6 +752,12 @@ switch to the replacement.
 
 The result says **repaired**, **usable with listed unresolved repairs**, or
 **replacement prepared but activation blocked**, with the remaining actions.
+For unattended recovery, first inspect `aslice recover --salvage --dry-run --json`
+(or the intended recovery action), then pass that action with
+`--confirm-plan sha256:HEX` using the returned plan digest. Changed plans refuse
+before mutation. Unattended stopping requires `aslice operation stop --operation-id ID`.
+System/graft consent and administrator authorization remain separate requirements.
+
 Use `aslice operation status` to inspect the owner and phase, and
 `aslice operation stop` to request safe stopping as the initiator or an authenticated
 administrator. `aslice recover --continue` authorizes recovery and continuation;
@@ -761,7 +767,7 @@ with `aslice exec --replacement PATH -- PACKAGE COMMAND...`.
 These are specified workflows, not implemented recovery commands. The detailed
 contract and command decisions are in
 [STATE-AND-RECOVERY §5.1](STATE-AND-RECOVERY.md#51-guided-recovery-and-trusted-prefix-rebuilding)
-and [STATE-AND-RECOVERY §10.2](STATE-AND-RECOVERY.md#102-engineering-decisions-before-implementation).
+and [STATE-AND-RECOVERY §10.2](STATE-AND-RECOVERY.md#102-recovery-engineering-contracts).
 
 ```sh
 aslice doctor
@@ -932,5 +938,6 @@ Historical labels and ordering below are preserved as recorded, including repeat
 | Not recorded | September 2026 | corpus review corrections: artifact identity, protected execution, durable recovery, trust persistence, replay, platform limits, and examples aligned with STATE-AND-RECOVERY and SYSTEM-VOLUMES. These are specification changes; runtime acceptance remains pending. |
 | v0.16 | September 2026 | Add §1.3 and the helper reference link, explaining temporary helpers, package services, runtime shims, and the future multi-user daemon; no runtime changes. |
 | v0.17 | September 2026 | Documentation audit repairs: contract summaries aligned; owner-approved namespace, rollback, GC, naming, prefix, and graft decisions applied where relevant; semantic anchors and explicit citations added. Runtime implementation and platform acceptance remain pending. |
+| v0.21 | September 2026 | Remove retired comparison references and competitive framing; retain aslice requirements and link their owning specifications. Align affected contract summaries where applicable. |
 
 </details>

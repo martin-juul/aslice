@@ -1,0 +1,293 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aslice.sh/schematics/json/recovery-record.schema.json",
+  "title": "Recovery record",
+  "description": "Version 1 structural contract. Normative field semantics: docs/STATE-AND-RECOVERY.md section 10.2 and docs/DATABASE.md section 9. Cryptography, canonical encoding, chain continuity, ordering, and filesystem safety require semantic validation.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "format": {
+      "const": 1
+    },
+    "role": {
+      "enum": [
+        "client-state",
+        "client-cache",
+        "system-state",
+        "coordinator",
+        "publisher",
+        "release-signer"
+      ]
+    },
+    "instance_id": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{32}$"
+    },
+    "sequence": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "previous": {
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "operation_id": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{32}$"
+    },
+    "phase": {
+      "enum": [
+        "initialized",
+        "prepared",
+        "applying",
+        "pending-reboot",
+        "activated",
+        "committed",
+        "recovering",
+        "rolled-back",
+        "needs-attention",
+        "checked"
+      ]
+    },
+    "command": {
+      "type": "string",
+      "minLength": 1
+    },
+    "occurred_at": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "scope": {
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "repository": {
+              "type": "string",
+              "minLength": 1
+            },
+            "environment": {
+              "enum": [
+                "dev",
+                "staging",
+                "prod"
+              ]
+            }
+          },
+          "required": [
+            "repository",
+            "environment"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "before": {
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "after": {
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "changes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "enum": [
+              "generation",
+              "member",
+              "binding",
+              "request",
+              "hold",
+              "default",
+              "profile-priority",
+              "gc-reference",
+              "effect",
+              "service",
+              "prefix-registration",
+              "farm-enrollment",
+              "farm-plan",
+              "attempt",
+              "result",
+              "gate",
+              "quarantine",
+              "candidate",
+              "promotion",
+              "queue",
+              "fence",
+              "reservation",
+              "signing-outcome",
+              "activation",
+              "acknowledgement",
+              "recovery-choice",
+              "trust-reference"
+            ]
+          },
+          "version": {
+            "const": 1
+          },
+          "key": {
+            "type": "string",
+            "minLength": 1
+          },
+          "before": {
+            "anyOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "digest": {
+                    "type": "string",
+                    "pattern": "^sha256:[0-9a-f]{64}$"
+                  },
+                  "size": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "required": [
+                  "digest",
+                  "size"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "after": {
+            "anyOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "digest": {
+                    "type": "string",
+                    "pattern": "^sha256:[0-9a-f]{64}$"
+                  },
+                  "size": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "required": [
+                  "digest",
+                  "size"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "kind",
+          "version",
+          "key",
+          "before",
+          "after"
+        ],
+        "description": "Before/after references identify complete canonical domain values; null is explicit absence/deletion. Validate values with the owning contract before replay. A trust-reference records evidence, never a grant."
+      },
+      "uniqueItems": true
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "digest": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          },
+          "size": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "digest",
+          "size"
+        ]
+      },
+      "uniqueItems": true
+    }
+  },
+  "required": [
+    "format",
+    "role",
+    "instance_id",
+    "sequence",
+    "previous",
+    "operation_id",
+    "phase",
+    "command",
+    "occurred_at",
+    "scope",
+    "before",
+    "after",
+    "changes",
+    "evidence"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "sequence": {
+            "const": 1
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "previous": {
+            "type": "null"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "previous": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          }
+        }
+      }
+    }
+  ]
+}

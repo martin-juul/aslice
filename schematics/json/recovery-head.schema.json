@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aslice.sh/schematics/json/recovery-head.schema.json",
+  "title": "Recovery head",
+  "description": "Version 1 structural contract. Normative field semantics: docs/STATE-AND-RECOVERY.md section 10.2 and docs/DATABASE.md section 9. Cryptography, canonical encoding, chain continuity, ordering, and filesystem safety require semantic validation.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "format": {
+      "const": 1
+    },
+    "instance_id": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{32}$"
+    },
+    "sequence": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    }
+  },
+  "required": [
+    "format",
+    "instance_id",
+    "sequence",
+    "digest"
+  ]
+}

@@ -53,12 +53,6 @@ See the [runbooks index](runbooks/README.md) for reading guidance and procedure 
 | [Genesis](runbooks/GENESIS.md) | Bringing the project into existence and rebuilding it after a total loss. |
 | [Key runbook](runbooks/KEY-RUNBOOK.md) | Signing-key setup, rotation, recovery, and drills. |
 
-### Design context
-
-| Document | Purpose |
-|---|---|
-| [Homebrew review](HOMEBREW-REVIEW.md) | Capability comparison, design gaps, and resulting specification amendments. |
-
 ## Supporting resources
 
 - [Command manuals](../man/) — command syntax, options, examples, and exit statuses.

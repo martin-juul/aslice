@@ -8,9 +8,7 @@
 - Retrieved: 2026-09-26 (UTC date; web and HTTP capture)
 - Capture type: technical account plus complete upstream Markdown source asset.
 - Rights: BSD-2-Clause, Homebrew contributors; [license and notice](HOMEBREW_LICENSE.txt).
-- Used by:
-  - [HOMEBREW-REVIEW §2. Where aslice is already ahead](../HOMEBREW-REVIEW.md#2-where-aslice-is-already-ahead): Homebrew authenticates API metadata and applies several independent checks.
-  - [HOMEBREW-REVIEW §3.2 Security and trust](../HOMEBREW-REVIEW.md#32-security-and-trust): Attestation verification and sandboxing have explicit conditions and exclusions.
+- Used by: retained historical evidence; no current normative consumer.
 
 ## Captured material
 
@@ -28,11 +26,11 @@ Official package changes receive maintainer review and checksums; third-party ta
 
 ## Applicability and limits
 
-Exact opt-in defaults, verifier dependencies, and rollout status are version-sensitive. Comparisons must name their release and should not characterize all Homebrew content as unsigned or all executable packages as sandboxed at runtime.
+Exact opt-in defaults, verifier dependencies, and rollout status are version-sensitive. Claims must name their release; this account does not characterize all Homebrew content as unsigned or all executable packages as sandboxed at runtime.
 
 ## Project interpretation
 
-This dated source provides stronger evidence for the review's opt-in row than the 2024 proposal alone. Do not generalize that default to a different release without a new capture. TUF freshness protections, JWS authenticity, and build provenance answer distinct questions.
+This dated source records opt-in behavior beyond the 2024 proposal. Do not generalize that default to a different release without a new capture. TUF freshness protections, JWS authenticity, and build provenance answer distinct questions.
 
 ## Omissions and evidence gaps
 

@@ -1,0 +1,9 @@
+{
+  "format": 1,
+  "action": "activate",
+  "operation_id": "11111111111111111111111111111111",
+  "plan_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "dry_run": false,
+  "accept_system_changes": false,
+  "accept_grafts": false
+}

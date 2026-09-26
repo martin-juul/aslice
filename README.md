@@ -2,7 +2,7 @@
 
 aslice is a package manager for Intel Macs running macOS 10.11 (El Capitan) through 12 (Monterey) — every 64-bit Intel Mac, from the 2007 Core 2 Duo machines through the final Intel models of 2020.
 
-These machines still work. What stopped working is the software supply around them: Apple no longer ships them security updates, and Homebrew, the package manager most of them run, has moved on to Apple Silicon. aslice picks up where Homebrew leaves off. It is a successor in spirit, rebuilt around a platform that will never change again; that fixed target makes a cleaner design possible.
+These machines still work. What stopped working is the software supply around them: Apple no longer ships them security updates, and Homebrew, the package manager most of them run, has moved on to Apple Silicon. aslice specifies a software supply for that fixed platform, with maintained packages, reproducible inputs, and explicit recovery contracts.
 
 What you get:
 

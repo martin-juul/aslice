@@ -2,7 +2,7 @@
 
 > State, identity, privilege, and recovery contracts: [STATE-AND-RECOVERY](STATE-AND-RECOVERY.md). Protected-volume patching: [SYSTEM-VOLUMES](SYSTEM-VOLUMES.md). These specifications do not establish completed implementation or platform validation.
 
-- **Status:** Format draft, v0.19 — September 2026
+- **Status:** Format draft, v0.20 — September 2026
 - **Companion to:** [DESIGN.md](DESIGN.md) — this document owns author input and the recipe API summarized in [DESIGN §6](DESIGN.md#package-format). [STATE-AND-RECOVERY](STATE-AND-RECOVERY.md) owns identity, trust, and recovery; examples and schemas must agree. The toolchain this format's builds run on is specified in [TOOLCHAIN.md](TOOLCHAIN.md).
 - **Scope:** the `package.toml` definition format, `build.star` build API, dependency and version semantics, transitive resolution, and lock files.
 - **Vocabulary:** [NOMENCLATURE.md](NOMENCLATURE.md) — project terms, acronyms, and the Homebrew translation table.
@@ -244,7 +244,7 @@ zsh  = "share/zsh/site-functions/_ffmpeg"
 
 The plist itself never ships in the formula. aslice generates it from `[service]`, with a label distinguishing prefix, profile, and package; the exact encoding is specified with the helper protocol ([HELPERS §6](HELPERS.md#details-still-to-be-established)). User agents execute through their user-owned profile. Root-domain services execute only from a complete verified closure in protected helper-owned storage, including libraries, interpreters, configuration, and launch plists ([STATE-AND-RECOVERY §3](STATE-AND-RECOVERY.md#privileged-ownership-and-capability-checks)). They never execute through a user-writable profile or load user-owned environment overrides. `aslice-system` authorizes each protected activation or rollback, and the repository must hold the `system` capability ([REPOSITORIES §3](REPOSITORIES.md#trust-levels)). Changed declarations regenerate plists as part of the transaction. A package declares at most one `[service]`; software with several daemons is packaged as several packages. [DESIGN §12.8](DESIGN.md#services-launchd-native-lifecycle-and-safe-upgrades) specifies the service lifecycle.
 
-`link = false` is the principled form of Homebrew's keg-only ([HOMEBREW-REVIEW §4.5](HOMEBREW-REVIEW.md#p1--the-keg-only-decision-shadowing-system-software)): the package installs into the store, and nothing links into any profile. In core it is the default for versioned lineages (`openssl3` style) and for anything whose `bin/` names collide with `/usr/bin` or `/bin` (policy: [ORCHARD-POLICY §6](ORCHARD-POLICY.md#dependencies-and-system-software)); `aslice link <pkg>` opts a package into a profile explicitly. Dependents never need the link: dependency resolution works on store paths (`ctx.deps`), so being depended upon while unlinked is a normal state. When `link = false`, lint requires `link_reason`, and `info` and the installer display it — the user is told why the package did not appear in the profile. Finally, `notes` is the caveats field: human-readable, actionable post-install lines ("config lives in …", "run `aslice service start postgresql` to …"), printed at install and shown by `info`. A line that isn't actionable isn't a note ([ORCHARD-POLICY §14](ORCHARD-POLICY.md#package-documentation-standards)).
+`link = false` installs the package into the store without exposing it through a profile. In core it is the default for versioned lineages (`openssl3` style) and for anything whose `bin/` names collide with `/usr/bin` or `/bin` (policy: [ORCHARD-POLICY §6](ORCHARD-POLICY.md#dependencies-and-system-software)); `aslice link <pkg>` opts a package into a profile explicitly. Dependents never need the link: dependency resolution works on store paths (`ctx.deps`), so being depended upon while unlinked is a normal state. When `link = false`, lint requires `link_reason`, and `info` and the installer display it — the user is told why the package did not appear in the profile. Finally, `notes` is the caveats field: human-readable, actionable post-install lines ("config lives in …", "run `aslice service start postgresql` to …"), printed at install and shown by `info`. A line that isn't actionable isn't a note ([ORCHARD-POLICY §14](ORCHARD-POLICY.md#package-documentation-standards)).
 
 <a id="audit--vulnerability-matching-and-lifecycle"></a>
 
@@ -447,7 +447,7 @@ At exec time the tool's shim resolves in two steps: first the runtime stream (se
 
 ### 3.14 `[deprecation]` — the package lifecycle, declared (v0.6)
 
-`[deprecation]` replaces the retired `[package] deprecated` boolean. A boolean can say that a package is deprecated; it cannot say since when, why, or what to use instead. Deprecation here is a lifecycle with dates and reasons (policy: [ORCHARD-POLICY §8](ORCHARD-POLICY.md#deprecation-and-removal-lifecycle); origin: [HOMEBREW-REVIEW §4.3](HOMEBREW-REVIEW.md#p1--package-lifecycle-states)):
+`[deprecation]` replaces the retired `[package] deprecated` boolean. A boolean can say that a package is deprecated; it cannot say since when, why, or what to use instead. Deprecation here is a lifecycle with dates and reasons (policy: [ORCHARD-POLICY §8](ORCHARD-POLICY.md#deprecation-and-removal-lifecycle)):
 
 ```toml
 [deprecation]
@@ -463,7 +463,7 @@ The transitions work as follows. **Active → deprecated:** installs and `info`/
 
 ### 3.15 `[livecheck]` — upstream freshness, declared (v0.6)
 
-`[livecheck]` tells the orchard's automation how to find new upstream releases (origin: [HOMEBREW-REVIEW §4.2](HOMEBREW-REVIEW.md#p0--upstream-freshness-livecheck-and-autobump); freshness policy: [ORCHARD-POLICY §9](ORCHARD-POLICY.md#freshness-livecheck-and-autobump)):
+`[livecheck]` tells the orchard's automation how to find new upstream releases (freshness policy: [ORCHARD-POLICY §9](ORCHARD-POLICY.md#freshness-livecheck-and-autobump)):
 
 ```toml
 [livecheck]
@@ -657,7 +657,7 @@ The language is Starlark: deterministic, no network, filesystem confined to the 
 | `ctx.make(*args)`, `ctx.cmake(*args)`, `ctx.meson(*args)` | fn | Tool helpers with correct defaults |
 | `ctx.user_cflags` / `ctx.user_ldflags` | string | User flags from install time ([DESIGN §7.4](DESIGN.md#user-flags)); appended and recorded in the artifact manifest; ABI-changing flags need a declared ABI variant, unknown effects need dependency validation |
 | `ctx.patch(file)` | fn | Apply a checksummed patch from `patches/` |
-| `ctx.replace(file, pattern, replacement)` | fn | In-place text substitution for trivial fixups without a patch file (Homebrew's `inreplace`, its most-used helper); count-checked — zero replacements is a build error, never a silent no-op |
+| `ctx.replace(file, pattern, replacement)` | fn | In-place text substitution for trivial fixups without a patch file; count-checked — zero replacements is a build error, never a silent no-op |
 
 The builder, not the formula, fixes the environment: `LC_ALL=C`, `TZ=UTC`, `SOURCE_DATE_EPOCH` pinned to the source timestamp, and prefix-mapping flags for reproducibility ([DESIGN §9.5](DESIGN.md#build-provenance)). If a formula needs something this API does not offer, the correct response is a bug report against aslice — not a sandbox escape.
 
@@ -836,12 +836,13 @@ The full form is in §3.11; the shape to remember is **two `[[binary]]` artifact
 | v0.9 | Not recorded | is an editorial pass — prose revised for directness; no schema or semantic changes. |
 | v0.8 | Not recorded | §7.1 notes that `aslice apply` is now the unified convergence verb — saved plans, lock files, and declarative `setup.toml` documents (SETUP.md; DESIGN v1.11 §12.13). |
 | v0.7 | Not recorded | review corrections — §3.16's serving rule now matches REPOSITORIES §3 as amended (official/local by default; verified only via the explicit per-repo `allow-system-patch` grant; third-party never), and §3.8 documents `aslice link`/`aslice unlink` for `link = false` packages (DESIGN v1.10 §12.1). |
-| v0.6 | Not recorded | lands the lifecycle and freshness declarations proposed in HOMEBREW-REVIEW §8 and made normative policy by ORCHARD-POLICY v0.4 §1: **`[deprecation]`** replaces the retired `[package] deprecated` boolean (§3.14), **`[livecheck]`** declares upstream freshness tracking (§3.15), **`[install]`** gains `link`/`link_reason` (the principled keg-only) and the `notes` caveats field (§3.8), the `build.star` ctx API gains **`ctx.replace`** (§6.3), and **`[system-patch]`** declares flagged replacement of Apple-provided files (§3.16; mechanism in DESIGN §12.11). |
+| v0.6 | Not recorded | lands the lifecycle and freshness declarations specified for package authors and defined by ORCHARD-POLICY v0.4 §1: **`[deprecation]`** replaces the retired `[package] deprecated` boolean (§3.14), **`[livecheck]`** declares upstream freshness tracking (§3.15), **`[install]`** gains `link`/`link_reason` (explicit profile linking) and the `notes` caveats field (§3.8), the `build.star` ctx API gains **`ctx.replace`** (§6.3), and **`[system-patch]`** declares flagged replacement of Apple-provided files (§3.16; mechanism in DESIGN §12.11). |
 | v0.5 | Not recorded | adds the **multi-version runtime declarations**: `[runtime]` marks a runtime formula (shim set, ABI epoch, per-version userbase environment injection, extension scan dir), `[extension]` binds a compiled extension slice to a runtime's ABI epoch, and `[ride]` marks an interpreter-target tool that launches under the currently selected runtime (§3.13; mechanism in DESIGN §12.9). |
 | v0.4 | Not recorded | adds the **`[system]` declaration** for kernel extensions and SIP-disabled development tools (§3.12; mechanism and warnings in DESIGN §12.7) and replaces the checksummed-plist `[[install.service]]` with the **generated-plist `[service]` table** — the manifest describes the service, aslice writes the launchd plist (§3.8; lifecycle and stop–swap–restart upgrades in DESIGN §12.8). |
 | v0.3 | Not recorded | opens **32-bit and universal vendor payloads**: `arch` may include `"i386"`, with the 10.14 execution ceiling derived from the artifact itself and enforced at lint and solve time (§3.11). |
 | v0.2 | Not recorded | adds **vendor binary packages** — `type = "binary"`, `[[binary]]` artifacts with per-OS support tags, declarative payload maps, and mandatory signer pinning (§3.11); lock-file `origin` gains `"vendor-direct"` (§7.2). |
 | Not recorded | September 2026 | corpus review corrections: artifact identity, protected execution, durable recovery, trust persistence, replay, platform limits, and examples aligned with STATE-AND-RECOVERY and SYSTEM-VOLUMES. These are specification changes; runtime acceptance remains pending. |
 | v0.19 | September 2026 | Documentation audit repairs: contract summaries aligned; owner-approved namespace, rollback, GC, naming, prefix, and graft decisions applied where relevant; semantic anchors and explicit citations added. Runtime implementation and platform acceptance remain pending. |
+| v0.20 | September 2026 | Remove retired comparison references and competitive framing; retain aslice requirements and link their owning specifications. Align affected contract summaries where applicable. |
 
 </details>

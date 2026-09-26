@@ -1,6 +1,6 @@
 # aslice Schematics — Machine-Readable File Schemas
 
-- **Status:** v0.4 — September 2026
+- **Status:** v0.5 — September 2026
 - **Scope:** schemas for the public formats listed below; internal journal/service records require implementation specifications before those features ship, kept beside the prose specifications that define those formats.
 - **Vocabulary:** [../docs/NOMENCLATURE.md](../docs/NOMENCLATURE.md).
 
@@ -44,6 +44,20 @@ Three honesty rules govern the directory:
 1. **A schematic never invents a field.** Every key, enum, and pattern traces to a prose specification section, named in the file's own metadata. Where the prose is silent — see *Derived schematics* below — the schematic says so in its metadata and in this README.
 2. **Unknown structural keys are errors.** Fixed TOML tables and JSON objects reject unknown fields. Declared collections, such as runtime names, environment variables, and variants, intentionally accept dynamic keys under their item rules. A TOML table with no fixed children is open under the archived language specification; it must not be used to claim closed-table enforcement.
 3. **Structural validation is only one gate.** Cross-file rules, payload-derived CPU/OS requirements, capability authorization, and artifact verification still require semantic checks. Conditional rules expressible in a schema should also be encoded where practical; schema validity alone never establishes a safe installation.
+
+## Recovery contracts
+
+The version-1 recovery record, receipt, head, initialization, gate, export,
+checkpoint, recovery-plan, execution-catalog, operation-request, and operation-outcome schemas
+implement the structural contracts in
+[STATE-AND-RECOVERY §10.2](../docs/STATE-AND-RECOVERY.md#102-recovery-engineering-contracts).
+Their fixtures use illustrative hashes and signatures and are not authenticated
+recovery sets. Field descriptions and closed object shapes are normative;
+cryptographic authority, canonical bytes, chain continuity, current fingerprints,
+cross-owner ordering, and filesystem durability require semantic/runtime checks.
+Run `python -m unittest discover -s tests -p test_recovery_contract.py` for structural
+and decision-model cases. These models do not execute helper effects or simulate
+macOS power loss.
 
 ## Derived schematics
 
@@ -148,5 +162,6 @@ Each schematic versions with the prose specification it tracks, and its metadata
 | v0.3 | September 2026 | Consolidate revision notes into a collapsible history table; no specification changes. |
 | v0.2 | September 2026 | prose rewrite of the schema directory introduction and host-member validation explanation; no content changes. |
 | v0.4 | September 2026 | Documentation audit repairs: contract summaries aligned; owner-approved namespace, rollback, GC, naming, prefix, and graft decisions applied where relevant; semantic anchors and explicit citations added. Runtime implementation and platform acceptance remain pending. |
+| v0.5 | September 2026 | Add version-1 recovery records, receipts, initialization/heads, catalogs, gates, exports, signed checkpoints, recovery plans, and command request/outcome schemas with illustrative fixtures and decision-model tests. Runtime verification remains pending. |
 
 </details>

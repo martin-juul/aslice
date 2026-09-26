@@ -1,0 +1,22 @@
+{
+  "format": 1,
+  "action": "activate",
+  "instance_id": "11111111111111111111111111111111",
+  "interrupted_operation": null,
+  "base_head": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "base_generation": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "replacement_path": "/opt/aslice-replacement",
+  "evidence": [
+    {
+      "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "size": 1
+    }
+  ],
+  "artifacts": [
+    "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  ],
+  "omissions": [],
+  "required_consents": [],
+  "effects": [],
+  "choices": []
+}

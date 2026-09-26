@@ -8,8 +8,7 @@
 - Retrieved: 2026-09-26 (UTC date; web and HTTP capture)
 - Capture type: technical account of the material used; not a verbatim archive
 - Rights: Technical paraphrase; upstream attribution above. No full-original redistribution permission asserted.
-- Used by:
-  - [HOMEBREW-REVIEW §10. Sources](../HOMEBREW-REVIEW.md#10-sources): The May 2024 announcement establishes the start of the public provenance beta.
+- Used by: retained historical evidence; no current normative consumer.
 
 ## Captured material
 

@@ -8,9 +8,7 @@
 - Retrieved: 2026-09-26 (UTC date; web and HTTP capture)
 - Capture type: technical account plus complete upstream Markdown source asset.
 - Rights: BSD-2-Clause, Homebrew contributors; [license and notice](HOMEBREW_LICENSE.txt).
-- Used by:
-  - [HOMEBREW-REVIEW §2. Where aslice is already ahead](../HOMEBREW-REVIEW.md#2-where-aslice-is-already-ahead): Concurrent downloads and internal API evolution are existing Homebrew capabilities.
-  - [HOMEBREW-REVIEW §10. Sources](../HOMEBREW-REVIEW.md#10-sources): Version 5 is one dated comparison source; it does not cover every change in 4.6 or 5.1.
+- Used by: retained historical evidence; no current normative consumer.
 
 ## Captured material
 
@@ -32,11 +30,11 @@ Only the facts used by this repository are captured in this original-word accoun
 
 ## Project interpretation
 
-Use the post to date comparison features and distinguish download concurrency from install concurrency. Its planned retirement dates should be read alongside the later Intel CI incident; retain both accounts rather than rewriting the announcement to match events.
+Use the post to date release features and distinguish download concurrency from install concurrency. Its planned retirement dates should be read alongside the later Intel CI incident; retain both accounts rather than rewriting the announcement to match events.
 
 ## Omissions and evidence gaps
 
-The source asset includes the complete post but not every linked pull request. The 4.6.0 and 5.1.0 posts cited collectively in the project review are still missing independent captures.
+The source asset includes the complete post but not every linked pull request. The 4.6.0 and 5.1.0 posts are still missing independent captures.
 
 ## Preservation
 

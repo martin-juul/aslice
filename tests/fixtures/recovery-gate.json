@@ -1,0 +1,15 @@
+{
+  "format": 1,
+  "instance_id": "11111111111111111111111111111111",
+  "operation_id": "11111111111111111111111111111111",
+  "epoch": 1,
+  "intent": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "selections": [
+    "example"
+  ],
+  "artifacts": [
+    "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  ],
+  "resources": [],
+  "scope": "bounded"
+}

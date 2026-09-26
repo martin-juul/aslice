@@ -146,8 +146,9 @@ attempt rollback; after commit, stop checks safely and report incomplete verific
 retained request. `--manual` quiesces helpers and persists a mutation gate for
 external repair. `--salvage` prepares a replacement beside the original for review;
 `--activate` separately reviews and revalidates activation at its verified path.
-Protected-effect consent still applies; unattended salvage/activation confirmation
-syntax remains pending. These actions never implicitly authorize one another.
+Protected-effect consent still applies. Unattended actions require
+`--confirm-plan sha256:HEX` matching the reviewed recovery plan; obtain it with
+`--dry-run --json`. Unattended stopping requires `--operation-id ID`. These actions never implicitly authorize one another.
 
 `aslice exec --replacement PATH -- PACKAGE COMMAND...` explicitly executes only a
 validated isolated dependency closure from the replacement. It cannot silently
@@ -155,8 +156,8 @@ change normal shim selections or activate privileged integration.
 
 Recovery outcomes distinguish repaired, usable with listed unresolved repairs, and
 replacement prepared but activation blocked. The machine-readable fields and
-remaining engineering work are specified in
-[STATE-AND-RECOVERY §5.3](../docs/STATE-AND-RECOVERY.md#53-command-surface).
+confirmation and exit contracts are specified in
+[STATE-AND-RECOVERY §10.2.5](../docs/STATE-AND-RECOVERY.md#1025-command-requests-and-outcomes).
 
 # SEE ALSO
 

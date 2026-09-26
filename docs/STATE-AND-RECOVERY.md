@@ -1,6 +1,6 @@
 # State, artifacts, and recovery
 
-- **Status:** Specification v0.7 — September 2026. These contracts are specified, not implemented or validated on macOS.
+- **Status:** Specification v0.8 — September 2026. These contracts are specified, not implemented or validated on macOS.
 - **Authority:** This document owns artifact identity, privileged ownership, transaction recovery, replay, and retained trust. DESIGN explains the architecture; PACKAGE-FORMAT describes author input. Examples and schemas must agree with these contracts.
 
 Navigation: [1. Compatibility and artifact identity](#compatibility-and-artifact-identity) · [2. ABI and execution requirements](#abi-and-execution-requirements) · [3. Privileged ownership and capability checks](#privileged-ownership-and-capability-checks) · [4. Graft execution boundary](#graft-execution-boundary) · [5. Durable transactions and recovery](#durable-transactions-and-recovery) · [6. Self-update and decommission](#self-update-and-decommission) · [7. Persistent trust and initial bootstrap](#persistent-trust-and-initial-bootstrap) · [8. Plans, locks, archives, and offline use](#plans-locks-archives-and-offline-use) · [9. Certificate trust lifecycle](#certificate-trust-lifecycle) · [10. Acceptance and implementation order](#acceptance-and-implementation-order)
@@ -20,6 +20,12 @@ Canonical manifests use [RFC 8785](refs/RFC_8785_JSON_CANONICALIZATION_SCHEME.MD
 Canonical payloads use reserved relocation placeholders for their own store prefix; they cannot embed a hash of bytes that themselves contain that hash. Relocation records identify a file, byte offset, reserved width, expected original bytes, and replacement source (self or a bound dependency). The materializer verifies the canonical bytes, applies only those records, and writes a receipt containing the prefix, artifact identity, materializer version, and final file hashes. A second materialization at the same prefix must match. Unrelocatable artifacts are rejected at incompatible prefixes. Vendor-signed code is not rewritten; accept it only where its existing signatures and paths remain valid. Code signing that changes bytes happens before the final artifact identity is frozen.
 
 Archive extraction rejects absolute paths, `..`, duplicate entries, case/Unicode-normalization collisions on the destination filesystem, device nodes, setuid/setgid bits, and hardlinks or symlinks escaping the staged artifact. Extraction uses bounded sizes and descriptor-relative traversal without following untrusted symlinks. Signature and archive digest verification precede extraction. The manifest's file inventory must match the extracted tree exactly.
+
+Materialization also verifies any required executable signatures after relocation.
+A relocation record does not authorize invalidating a signature or re-signing installed
+bytes. If valid signing and the requested paths cannot coexist, refuse that artifact
+at that prefix; a separately built and signed artifact needs its own authenticated
+identity and plan. A materialization receipt cannot substitute for signature authority.
 
 <a id="abi-and-execution-requirements"></a>
 
@@ -69,9 +75,9 @@ One operation holds effective prefix mutation ownership from preparation through
 
 Each transaction records its identifier, base and proposed generation digests, exact artifact set, authorization, ordered operations, before/after fingerprints, backups, and progress. Privileged journals and backups live in the protected root. Before-images preserve file kind, bytes, mode, owner, ACLs, xattrs, and symlink targets where supported; unsupported metadata is a preflight refusal. Files, journal records, and affected directory entries are flushed before the next durable phase. HFS+ and APFS power-loss behavior must be validated, including the selected `fsync`/`F_FULLFSYNC` strategy; rename atomicity alone is not durability.
 
-The state machine is `prepared → applying → activated → committed`, with `recovering`, `rolled-back`, and `needs-attention` outcomes. Preparation authenticates and stages everything, takes durable backups, validates expected state, and persists the complete intent before live changes. Applying quiesces services and performs journaled external operations. Activation switches the profile and protected pointers, then records the new generation in SQLite. Commit follows reconciliation and precedes service health checks. Checks default to 60 seconds per service; overrides must be positive and finite. Failure or timeout returns nonzero and explicitly reports that installation committed, naming failed or unverified services. A later eligible rollback is a new transaction. Artifact validation, manager compatibility checks, and required protected-volume finalization remain pre-commit gates. There is no atomic primitive spanning SQLite, both pointers, and external state; the journal supplies recovery.
+The state machine is `prepared → applying → activated → committed`, with `recovering`, `rolled-back`, and `needs-attention` outcomes. Protected-volume application can persist `pending-reboot` before activation; this is a resumable pre-commit state, not a commit. Preparation authenticates and stages everything, takes durable backups, validates expected state, and persists the complete intent before live changes. Applying quiesces services and performs journaled external operations. Activation switches the profile and protected pointers, then records the new generation in SQLite. Commit follows reconciliation and precedes service health checks. Checks default to 60 seconds per service; overrides must be positive and finite. Failure or timeout returns nonzero and explicitly reports that installation committed, naming failed or unverified services. A later eligible rollback is a new transaction. Artifact validation, manager compatibility checks, and required protected-volume finalization remain pre-commit gates. There is no atomic primitive spanning SQLite, both pointers, and external state; the journal supplies recovery.
 
-On restart, conflicting mutations and GC stop until recovery resolves their requirements; replacement preparation follows §5.1. If no durable commit exists, recovery examines the actual pointers and operation fingerprints and restores the before-state, idempotently, in reverse order. A committed transaction reconciles its after-state. Before either forward or inverse writes, compare the current object with the recorded expected fingerprint. Concurrent external edits, missing backups, or inaccessible privileged state produce `needs-attention` with exact paths and remedies; they are never overwritten silently. Disk-full failures retain the journal and backups. Generations and affected artifacts remain GC roots until resolution.
+On restart, conflicting mutations and GC stop until recovery resolves their requirements; replacement preparation follows §5.1. A verified `pending-reboot` record is the sole resumable protected-volume exception: explicit `system-patch finalize` revalidates the prepared intent, boot identity, patch tree, and authority before activation and commit; failure keeps restoration pending in Recovery. It never resumes ordinary writes merely because the process restarted. For other operations, if no durable commit exists, recovery examines the actual pointers and operation fingerprints and restores the before-state, idempotently, in reverse order. A committed transaction reconciles its after-state. Before either forward or inverse writes, compare the current object with the recorded expected fingerprint. Concurrent external edits, missing backups, or inaccessible privileged state produce `needs-attention` with exact paths and remedies; they are never overwritten silently. Disk-full failures retain the journal and backups. Generations and affected artifacts remain GC roots until resolution.
 
 Space-separated package requests, including mixed-orchard requests, form one managed-state transaction. Every non-core package retains its qualified namespace. A pre-commit failure rolls back the entire managed-state batch, including machine apply. Package-specific options identify their target, for example `--variant ffmpeg:+x265`; reject ambiguous batch options and unknown targets. Stateful `--for` scoping is superseded. Show effective variants, flags, runtime bindings, and build choices per package before authorization. Trust establishment is a separate explicit prerequisite and is never reset by package rollback ([SETUP §3.2](SETUP.md#the-plan-and-the-order-of-operations)).
 
@@ -85,7 +91,7 @@ Recovery inventories affected files, services, registrations, permissions, and t
 
 Manual repair first waits for all helpers to stop writing and establishes a persistent gate against conflicting aslice mutations and GC. External repair tools remain usable. Re-entry inventories the repaired state, validates it against the chosen resolution, and records any accepted deviation before clearing the gate. Neither an exit nor a reboot clears it implicitly.
 
-A known-good recovery executable and independent recovery records must exist outside the active prefix, using a private user directory under `~/Library/Application Support/aslice/` and a separate root-owned directory under `/Library/Application Support/aslice/` for privileged evidence. Neither location may resolve inside the active prefix. Retain trust evidence, transaction receipts, choice/history records, manifests, and required backups; provide a verified export for recovery after disk loss. An outside-prefix copy on the same disk is not protection against disk failure, and user-owned copies are not protection against compromise of that account. These records recover evidence, not missing artifact bytes. The ordered durable protocol is specified in [DATABASE §9.3](DATABASE.md#93-independent-records-and-durable-copy-updates); §10.2 records remaining engineering review.
+A known-good recovery executable and independent recovery records must exist outside the active prefix, using a private user directory under `~/Library/Application Support/aslice/` and a separate root-owned directory under `/Library/Application Support/aslice/` for privileged evidence. Neither location may resolve inside the active prefix. Retain trust evidence, transaction receipts, choice/history records, manifests, and required backups; provide a verified export for recovery after disk loss. An outside-prefix copy on the same disk is not protection against disk failure, and user-owned copies are not protection against compromise of that account. These records recover evidence, not missing artifact bytes. The ordered durable protocol is specified in [DATABASE §9.3](DATABASE.md#93-independent-records-and-durable-copy-updates); §10.2 defines the recovery engineering contracts.
 
 Use per-prefix directories keyed by stable prefix identity under each Application
 Support root. Directories and the retained owner-executable recovery binary use
@@ -94,7 +100,7 @@ and executable ancestors must not be unprivileged-writable. Keep compact history
 indefinitely and retain backups and displaced content while unresolved or referenced.
 Exports include a verified inventory and all required recovery files, identifying
 missing components explicitly; preserve protected ownership boundaries on import.
-Exact child names and durable update mechanics remain subject to architect review.
+The storage layout and durable update mechanics are fixed in §10.2.
 
 Rebuilding separates recovered package selections from authority to execute bytes. Independently verify each rebuild artifact and its dependency closure under the retained or explicitly re-established repository trust. If evidence is insufficient, guide repository-level trust re-establishment with an actionable independent verification method. Irretrievably lost history requires an independently authenticated recovery bundle establishing current trust and safe version floors; affected rebuild artifacts remain blocked without it. Disclose lost security history and its consequences. A fingerprint acknowledgement alone is insufficient; do not silently accept replacement keys, recreate TOFU, or reset anti-rollback state. An unresolved authority gap blocks the affected artifacts, not recovery inspection or unrelated verified packages.
 
@@ -107,8 +113,8 @@ before authorizing re-establishment. The bundle must justify safe floors against
 all surviving checkpoints and receipts; a current root key or fresh metadata alone
 does not reconstruct forgotten rollback history. If its authority or floors cannot
 be established, explain the missing evidence and keep that repository blocked.
-Bundle issuance, format, and the concrete verification procedure require architect
-review before this workflow can ship (§10.2).
+Bundle issuance, format, and verification follow §10.2.2; successful issuance and
+recovery drills remain release gates.
 
 Prepare a replacement beside the original, preserving the original prefix and recovery evidence. Present missing artifacts, independently verified replacements, and proposed omissions together in one reviewed salvage plan. Names recovered from a damaged database express intent only. Any substitution or omission changes the plan and must be reviewed; it is not exact replay. Record decisions and unresolved external effects durably.
 
@@ -139,7 +145,7 @@ identity, generation and decision head, runtime defaults, installed streams, exa
 artifact bindings, materialization receipts, runtime/extension configuration, and
 complete dependency closures. It lives in the independent recovery set and is
 bound by digest to its durable commit decision. Keep the previous catalog until no
-recovery or execution root needs it. The catalog is a read projection of verified
+recovery or execution root needs it. Its decision-head field is the prepared history head; the terminal decision binds the catalog digest without a circular reference. The catalog is a read projection of verified
 committed evidence; its presence or checksum alone grants no trust. Protected
 execution continues to require the helper's independently verified protected copy.
 
@@ -192,7 +198,7 @@ Resolve option targets against the exact requested package identifiers, separati
 the target from its value after the complete identifier (for example
 `audiolab:convolver:+feature`). Reject conflicting duplicate assignments and any
 ambiguous target. Other package-specific options must likewise identify their
-target in batches; their remaining grammar requires review before implementation.
+target in batches; §10.2.5 defines the complete targeting grammar.
 Recovery flags select distinct actions; do not infer activation from salvage or
 grant privileged consent from `--continue`. Existing protected-effect and graft
 authorization remains required. Unattended salvage/activation must bind explicit
@@ -210,8 +216,8 @@ and `replacement_prepared_activation_blocked`, plus `committed`,
 three flags are booleans; `unresolved_repairs` lists grouped reasons, affected
 packages/services/paths, and next actions. Retain DATABASE's `recovery_required`
 and `retry_safe` diagnostics. Never infer complete verification or activation
-eligibility from partial usability. Full object schemas and exit mappings for the
-new command family remain implementation blockers in §10.2.
+eligibility from partial usability. Object schemas and exit mappings for the
+new command family are defined in §10.2.5.
 
 Rollback records a new transaction in the journal, preserving the history of earlier transactions. When rollback spans several generations, it computes the target managed state and checks for conflicts. Service plists and protected closures are restored together with the package generation; changed declarations require regenerated plists. Preferences and login-shell settings use recorded before-values, and intervening external edits are reported as conflicts.
 
@@ -221,7 +227,7 @@ Package rollback does not restore application databases, userbases, or remote sy
 
 ## 6. Self-update and decommission
 
-A known-good supervisor remains alive while the new manager runs as a child against a prepared state snapshot. It validates execution, version, database compatibility, index reading, and a bounded health timeout before activation. Post-activation failure is recovered by that supervisor or, after power loss, by a protected bootstrap recovery entry point retained outside the switched generation. The recovery entry point is updated separately only after the replacement has passed recovery drills. Old managers remain usable with their compatible state snapshots; switching back after newer writes requires compatible replay so it cannot erase choices or high-water state ([DATABASE](DATABASE.md#10-sqlite-connection-and-migration-policy)). Destructive in-place database migrations are forbidden; use a versioned copy and journal its activation.
+A known-good supervisor remains alive while the new manager runs as a child against a prepared state snapshot. It validates execution, version, database compatibility, index reading, and a bounded health timeout before activation. Post-activation failure is recovered by that supervisor or, after power loss, by a protected bootstrap recovery entry point retained outside the switched generation. The supervisor runs pre-activation compatibility checks and post-activation manager smoke checks before the durable commit, with a positive finite 60-second default timeout for each check. These are manager-integrity gates, distinct from ordinary post-commit service readiness. Failure before commit reverses tentative activation; after commit, restoration is a new authorized transaction preserving trust floors and compatible history replay. The recovery entry point is updated separately only after the replacement has passed recovery drills. Old managers remain usable with their compatible state snapshots; switching back after newer writes requires compatible replay so it cannot erase choices or high-water state ([DATABASE](DATABASE.md#10-sqlite-connection-and-migration-policy)). Destructive in-place database migrations are forbidden; use a versioned copy and journal its activation.
 
 Self-update updates shim targets transactionally as well as the manager. Hardlinks to the old multicall binary are not silently left behind. Crash injection covers failure to execute, crash before health reporting, timeout, disk exhaustion, migration failure, pointer changes, and supervisor loss. `aslice recover` invokes the retained recovery entry point and refuses ordinary package mutations until recovery is resolved.
 
@@ -316,20 +322,236 @@ prompts, or restrictions preventing manual repair as design issues requiring
 revision. Run existing documentation, citation, contract, and database-model checks,
 but never report them as proof of runtime recovery or hardware durability.
 
-### 10.2 Engineering decisions before implementation
+### 10.2 Recovery engineering contracts
 
-Bring the following concrete designs to the owner for decisions and architect
-review before implementing them. The behavioral requirements above are approved;
-the table distinguishes approved mechanisms from remaining implementation review.
+The following contracts close the storage, authority, isolation, activation, and
+command decisions. They are specifications with structural fixtures, not evidence
+of runtime enforcement. [DATABASE §9.3](DATABASE.md#93-independent-records-and-durable-copy-updates)
+owns cross-copy ordering; the contracts here supply its object formats and use.
 
-| Design | Required decision and review material |
+#### 10.2.1 Storage, formats, and durability
+
+The initialization record allocates a random 128-bit `instance_id`, encoded as 32
+lowercase hexadecimal digits. It is independent of the prefix pathname and is not
+reused for a replacement prefix. User recovery storage is
+`~/Library/Application Support/aslice/prefixes/<instance_id>/`; protected participant
+storage is `/Library/Application Support/aslice/recovery/<instance_id>/`. The helper
+binds both identities in its protected prefix registration. Paths are opened through
+verified directory descriptors; symlinked or wrongly owned recovery ancestors are
+refused. Existing independent storage is migrated by verified copy under mutation
+ownership, retaining the old copy until the new registration and inventory are durable.
+
+Each set contains `records/`, `objects/sha256/`, `catalogs/`, `gates/`, `exports/`,
+`head.json`, `initialization.json`, and `recovery/aslice`. Object filenames are full
+digest hex; catalog and gate files are content-addressed objects with atomic selected
+pointers. `head.json` contains `format`, `instance_id`, `sequence`, and `digest`.
+The initialization record contains `format`, `instance_id`, `owner_uid`,
+`prefix_path`, `recovery_path`, and `protected_instance_id` (null when unenrolled).
+Both formats are version 1. The retained recovery executable and its complete runtime
+closure are installed from authenticated artifacts and referenced by initialization
+evidence; a copied executable with dependencies inside the prefix is insufficient.
+
+[Recovery records](../schematics/json/recovery-record.schema.json) retain DATABASE's
+canonical envelope and typed changes. [Participant receipts](../schematics/json/recovery-receipt.schema.json)
+bind the owner, operation, authorized intent, step, before/after state, and evidence.
+[Execution catalogs](../schematics/json/execution-catalog.schema.json) bind exact
+selections and closures. [Gates](../schematics/json/recovery-gate.schema.json) name
+affected selections, artifacts, and configuration resources at a monotonic epoch.
+[Export inventories](../schematics/json/recovery-export.schema.json) identify every
+required file by component owner, relative path, size, and digest, and list missing
+components explicitly. Unknown versions, change kinds, or extra structural fields
+fail before replay. A schema-valid object still requires canonical-byte, digest,
+chain, ownership, and authorization checks. Schema descriptions and definitions
+specify field representations; these are normative companions to this section.
+
+Receipt `step` is a monotonic per-operation ordinal, allocated in the intent before
+execution. Repeated requests with the same owner/operation/step and intent digest
+return the retained receipt after actual-state reconciliation; different intent is
+a conflict. No lost acknowledgement permits a second execution of the effect.
+Terminal `committed` and `rolled-back` decisions for the same operation conflict;
+neither timestamp nor copy count resolves them. `needs-attention` is progress, not
+a terminal decision, and may be followed by a verified resolution.
+
+Flush each temporary file's contents and metadata with `fsync`, then request
+`F_FULLFSYNC` through the tested filesystem adapter before no-replacement publication.
+Flush affected parent directories after create, rename, link, or unlink; only then
+advance and flush the selected head or pointer. The adapter must establish stable
+ordering for both file and directory changes on the claimed HFS+/APFS configuration.
+Unsupported calls, failed flushes, and unvalidated storage behavior refuse new live
+writes. A failure after an existing live write retains recovery evidence and the gate;
+a failure after the decision flush preserves the commit. Never fall back silently
+to rename-only durability. Adapter fixtures and power-loss tests remain required.
+
+Export under the coordinated backup boundary in DATABASE, copying immutable objects
+first and finalizing the inventory last. Import into private staging, reject traversal,
+links, duplicate/colliding names, and inventory mismatch, then authenticate its known
+head and all trust references. Protected files are imported only by the helper after
+independent checks; user copies cannot restore protected authority. A partial export
+is usable for inspection and verified salvage, not complete state activation.
+
+#### 10.2.2 Recovery checkpoints for lost security history
+
+A [recovery checkpoint](../schematics/json/recovery-checkpoint.schema.json) is a
+canonical version-1 signed object issued by the repository's offline root authority.
+Its signed body identifies repository and environment, an increasing checkpoint
+sequence, issuance and expiry times, the root chain, role version floors and exact
+metadata digests, revocation inventory, signing-history evidence, and a lost-history
+statement. Signatures cover the canonical `signed` body using the active TUF root
+role's Ed25519 keys and threshold. This is an aslice recovery object, not a new TUF
+role or a replacement for normal TUF verification. Expiry is seven days after issuance;
+clock uncertainty requires independently establishing time before use.
+
+Before issuance, stop signing/publication for the affected environment and reconcile
+the offline archive, signer reservations (including unpublished signatures), publisher
+receipts, and retained checkpoints. Publish a fresh, consistent metadata set above
+every consumed role version, including delegated targets roles. Its versions become
+the checkpoint's floors. Timestamp refreshes are included in that reconciliation.
+The root operator verifies the inventory on a trusted machine and signs offline;
+archive the signed bundle and its digest separately before resuming publication.
+If complete signing/version evidence cannot be established, do not issue a checkpoint
+claiming safe continuity. Follow explicit authority rebootstrap instead.
+
+Obtain the bundle on an independently trusted machine. Authenticate it against an
+uncompromised retained root chain or obtain its exact SHA-256 and root fingerprint
+directly from the known repository owner through a previously established independent
+channel. Downloading two copies from owner-controlled hosting is not independent
+verification. A new contact assertion or an old compromised root signature is
+insufficient. Transfer offline and verify every object, signature threshold, expiry,
+repository/environment, and floor before displaying the recovery plan.
+
+For every surviving checkpoint or receipt, the offered floor must be at least its
+version; equal versions require equal digests. A newer surviving floor requires a
+new reconciled bundle, not client-side modification of the signed checkpoint. Retain
+all known revocations unless authenticated policy explicitly resolves their status.
+Re-establishment imports only verified authority and monotonic floors through a
+journaled, administrator-authorized helper operation when protected trust is involved.
+It does not recreate local approvals, lost choices, or proof that previously installed
+bytes were safe. Report those losses. A root-compromise recovery requires the separate
+[rebootstrap procedure](runbooks/KEY-RUNBOOK.md#disaster-recovery-trust-rebootstrap).
+
+#### 10.2.3 Execution admission and replacement activation
+
+Catalog entries reference the authenticated package records, artifact manifests,
+materialization receipts, exact transitive dependency set, runtime selections, and
+configuration evidence. Defaults map runtime names to installed stream identifiers;
+entries use the exact package identifier plus stream, with null for a non-runtime.
+All artifact sets and resource sets are sorted and duplicate-free. The catalog binds
+the prepared history head; the terminal commit binds the catalog digest. The catalog
+does not contain its own committing decision digest, avoiding a circular hash.
+
+Before dispatch, validate the selected committed evidence and current materialized
+bytes. Resolve Mach-O load commands, interpreter/shebang paths, declared dynamic
+plugins, executable search paths, and configuration capable of loading code against
+the complete closure. For isolated replacement execution, reject required references
+into the damaged prefix, unresolved dynamic paths, and unverified external configuration.
+Normal execution keeps the existing per-stream userbase policy; a replacement closure
+depending on mutable ecosystem code is ineligible unless that code and its dependency
+paths can be inventoried and validated for this execution. This is admission validation,
+not a claim to sandbox arbitrary installed applications after exec.
+
+Use one owner-controlled admission lock to serialize gate publication with lease
+registration. Readers validate, acquire it, recheck the selected catalog digest and
+gate epoch, and durably register the execution root before releasing it and calling
+exec. Writers acquire it, advance and flush the gate, then release it before applying
+effects. Leases record PID plus process-start identity; PID reuse or uncertain liveness
+does not release roots. Existing processes retain artifacts; writers quiesce affected
+managed services and refuse conflicting mutable configuration changes while an affected
+live lease cannot safely be quiesced. Gates are persistent evidence, not OS-lock state.
+
+Activation plans inventory each entry point and registration with before/after
+fingerprints, target replacement path, exact artifacts, required relocation receipts,
+and protected participants. Switching PATH integration, shims, launch registrations,
+and shell records uses the same ordered helper/client transaction. Never rename the
+original prefix or redirect an old absolute store path to different bytes. A changed
+artifact or omission changes the plan digest and requires review. Before commit,
+interruption reverses journaled effects; after commit it completes publication of the
+new catalog and integrations. Missing decision evidence keeps activation blocked.
+
+#### 10.2.4 Grouped conflict decisions
+
+Group conflicts by repository identity and package identifier, subdividing by service
+when service state differs; prefix-wide objects form a separate group. Sort groups
+by those identifiers and paths within each group. Show counts, reasons, recommended
+recorded-state restoration, available alternatives, and expandable evidence. All paths
+remain available in JSON even when the terminal display collapses a large group.
+
+Restoration requires verified before-images and current expected fingerprints. Keeping
+current state requires authenticated artifact identity, valid capabilities, compatible
+CPU/OS/dependencies, expected ownership, and validated effect/configuration state.
+Unverifiable current bytes cannot be accepted as executable artifacts by acknowledgement.
+Offer manual repair when neither choice passes. Preserve displaced bytes before writes.
+Save the choice with the group digest, plan digest, current fingerprints, and referenced
+evidence. Reuse it only if those bindings still match; invalidate only changed groups.
+No blanket confirmation overrides these checks.
+
+#### 10.2.5 Command requests and outcomes
+
+[Operation requests](../schematics/json/operation-request.schema.json) describe the
+approved recovery actions, status, and stop requests; they do not grant authority.
+`aslice operation stop --operation-id ID` is mandatory unattended. Interactively,
+omitting the ID displays the current operation and binds the confirmed request to
+that ID. A changed operation refuses the request. An absent operation returns status
+with null identity; stopping an unknown operation is an input error.
+
+`--confirm-plan sha256:HEX` binds unattended recovery continuation, manual repair,
+salvage, or activation to the exact reviewed plan. The corresponding action flag is
+also required; a generic yes flag does not imply recovery authority. Without the
+confirmation digest, a read-only `--dry-run --json` returns the proposed plan digest,
+requirements, and conflicts. Recompute under mutation ownership and refuse changed
+digests before writes. Recovery actions are mutually exclusive. Required system/graft
+consents and authentication still accumulate. Package plans remain package-only;
+recovery request objects cannot be passed to package `apply` as serialized machine plans.
+
+The version-1 [recovery plan](../schematics/json/recovery-plan.schema.json) binds the
+action, prefix identity, interrupted operation if any, base history head and generation,
+replacement path, evidence, exact artifacts, omissions, required consents, ordered
+effects, and saved conflict choices. Effect references bind complete canonical object
+state including filesystem metadata, not just file contents; null means absent.
+Its digest is SHA-256 of canonical plan bytes, excluding no fields. It contains no
+own digest, wall-clock time, or newly allocated operation ID. Dry-run returns the full
+plan in `data.plan` and its digest in `data.plan_digest`; absent plans use null.
+Human preview resolves evidence references into the concrete affected paths and
+before/after changes. A new mutation ID is allocated only after revalidation and
+authorization. `continue` requires a non-null established interrupted operation.
+
+All package-specific batch options use `PACKAGE:VALUE`: `--variant`, `--cflags`,
+`--ldflags`, `--flavor`, `--runtime`, `--with-extensions-from`, `--build-from-source`,
+`--lto`, `--debug`, and `--link`. Boolean options use `true` or `false` in targeted form. Match the complete
+requested identifier followed by `:` (including namespace and requested version);
+require exactly one match, then parse the entire remainder as that option's value.
+Do not split at the first colon or apply stateful scoping. Identical repeated
+assignments coalesce; different assignments to the same option/variant target refuse.
+Single-package existing forms remain valid. `--allow-eol`, system/graft consent,
+waiting, health timeout, dry-run, and output options apply to the whole operation;
+their effective scope is shown in the plan. Flavor values are `v1`, `v2`, or `v3`;
+runtime values retain `name@stream`, extension-source values retain the stream, and
+compiler/linker values retain their quoted bytes. Empty flag strings explicitly clear
+that override; other empty values refuse. Targeted options for unrequested packages
+refuse; adding a future package-specific option requires defining its targeted form.
+
+[Operation outcomes](../schematics/json/operation-outcome.schema.json) use the existing
+JSON envelope: `format`, `command`, `role`, `instance_id`, `status`, `data`, and
+`errors`. Status is `ok`, `refused`, `needs-attention`, or `error`; each error has
+`code`, `message`, `remedy`, and optional `path`. The schema defines all status/recovery
+data fields, including nulls for unavailable identities. `verification_complete` describes completed successful checks, not merely
+finished attempts. `activation_allowed` requires every activation gate to pass.
+`repaired` has no unresolved repairs; partial usability never implies completed repair.
+`recovery_required` concerns unresolved transaction/evidence state: an ordinary failed
+service check after commit can have this flag false and verification false.
+
+| Exit | Meaning |
 |---|---|
-| Independent recovery storage | Per-prefix Application Support directories, 0700 directories/executable, 0600 records, indefinite compact history, referenced backup retention, verified exports, and ordered history with protected receipts are approved. DATABASE's independent-record protocol defines durable ordering and disagreement handling. Review exact child names, flush adapters, record formats, and export validation mechanics |
-| Irretrievably lost security history | An independently authenticated recovery bundle establishing current trust and safe version floors is required. Specify its format, independent authentication method, issuance, and verification procedure; disclose what cannot be recovered |
-| Replacement isolation and runtime reads | Complete verified closures avoiding the damaged prefix and the committed execution catalog in §5.2 are approved. Review enforcement for absolute paths, loader/plugin paths, external configuration, catalog validation, and execution-admission leases; preserve shim precedence without inventing fallback |
-| Activation and relocation | Activation at the verified replacement path with original preservation is approved. Specify entry-point switching, relocation validation, protected integration, and interruption recovery |
-| Guided conflict presentation | Repository/package/service groups, recorded-state recommendations, validated current-state acceptance, and evidence-bound saved choices are approved. Specify concrete validation and presentation rules with large-conflict examples |
-| Commands and machine outcomes | §5.3 records approved spellings, outcomes, and fields. Complete remaining batch-option grammar, operation identity binding, unattended plan confirmation, complete output schemas, and exit mappings; distinguish usability, incomplete verification, and activation eligibility |
+| 0 | Requested action completed, or a read-only status/dry-run was successfully reported; inspect reported outcomes before acting |
+| 1 | Action failed, recovery/activation remains unresolved, reboot is pending, or committed installation has failed/incomplete verification |
+| 2 | Invalid input, ambiguous targeting, stale confirmation, or missing consent/authority |
+| 4 | Contention without unresolved recovery; no mutation started |
+| 130 | Authorized cancellation reached a safe stopping point; committed work remains committed |
+
+An unresolved cancellation exits 1. A successful salvage preparation exits 0 only
+when all preparation requirements passed; its `activation_allowed` can remain false.
+Status returning 0 never clears a gate. Errors carry stable codes and next actions;
+post-commit health failure uses `service_start_failed`, while pending reboot uses
+`pending_reboot`. Never retry committed work as a fresh mutation.
 
 This revision supersedes commit-after-service-health-checks, automatic unattended
 waiting, stateful `--for` batch scoping, and blanket shim denial solely because an
@@ -338,7 +560,8 @@ when unambiguous; additional package-targeted spellings follow §5.3.
 The shim audit found the broad denial in [DATABASE §9.1](DATABASE.md#91-commit-boundaries)
 and its deletion summary in [DATABASE §1.2](DATABASE.md#12-identity-and-reconstruction);
 those now defer to §5.2 here. DESIGN's session/project/default precedence
-is retained. Existing runtime/model code has not been changed to implement this design.
+is retained. Structural fixtures and decision models exercise the specified contracts;
+runtime enforcement and platform acceptance remain unimplemented.
 
 ## History
 
@@ -353,5 +576,6 @@ is retained. Existing runtime/model code has not been changed to implement this 
 | v0.3 | September 2026 | Consolidate revision notes into a collapsible history table; no specification changes. |
 | v0.2 | September 2026 | prose rewrite of the rollback transaction explanation; no content changes. |
 | v0.4 | September 2026 | Documentation audit repairs: contract summaries aligned; owner-approved namespace, rollback, GC, naming, prefix, and graft decisions applied where relevant; semantic anchors and explicit citations added. Runtime implementation and platform acceptance remain pending. |
+| v0.8 | September 2026 | Close recovery storage, signed checkpoint, admission, activation, grouped conflict, batch grammar, and command outcome contracts; specify protected-volume pending-reboot and manager-integrity commit boundaries with structural schemas and model cases. Runtime/platform acceptance remains pending. |
 
 </details>

@@ -8,9 +8,7 @@
 - Retrieved: 2026-09-26 (UTC date; web and HTTP capture)
 - Capture type: technical account of the material used; not a verbatim archive
 - Rights: Technical paraphrase; upstream attribution above. No full-original redistribution permission asserted.
-- Used by:
-  - [HOMEBREW-REVIEW §2. Where aslice is already ahead](../HOMEBREW-REVIEW.md#2-where-aslice-is-already-ahead): May 2024 verification used opt-in settings, gh, authenticated APIs, and a backfill.
-  - [HOMEBREW-REVIEW §3.2 Security and trust](../HOMEBREW-REVIEW.md#32-security-and-trust): Build provenance authenticates build identity, not package safety or update freshness.
+- Used by: retained historical evidence; no current normative consumer.
 
 ## Captured material
 
@@ -32,7 +30,7 @@ Only the facts used by this repository are captured in this original-word accoun
 
 ## Project interpretation
 
-The alternatives explain why a digest match is weaker than expected-build-identity verification. aslice's separate freshness and signature requirements address additional risks; they are not proven superior by this historical beta account.
+The alternatives distinguish a digest match from expected-build-identity verification. This historical beta account does not validate aslice's freshness, signature, or provenance implementation.
 
 ## Omissions and evidence gaps
 

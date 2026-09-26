@@ -1,0 +1,37 @@
+{
+  "format": 1,
+  "command": "recover --continue",
+  "role": "client-state",
+  "instance_id": "11111111111111111111111111111111",
+  "status": "error",
+  "errors": [
+    {
+      "code": "service_start_failed",
+      "message": "Installation committed; example service failed readiness.",
+      "remedy": "Inspect service logs."
+    }
+  ],
+  "data": {
+    "format": 1,
+    "operation_id": "11111111111111111111111111111111",
+    "plan_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "owner_uid": 501,
+    "phase": "committed",
+    "helpers_active": false,
+    "waiting": false,
+    "outcome": null,
+    "committed": true,
+    "verification_complete": false,
+    "activation_allowed": false,
+    "recovery_required": false,
+    "retry_safe": false,
+    "usable_closures": [
+      "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    ],
+    "unresolved_repairs": [],
+    "next_actions": [
+      "Inspect service logs."
+    ],
+    "plan": null
+  }
+}

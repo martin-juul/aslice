@@ -4,7 +4,7 @@
 
 **How to write, test, and ship aslice packages.**
 
-- **Status:** v0.15 — September 2026
+- **Status:** v0.16 — September 2026
 - **Audience:** package authors — people writing formulae for the core or extended orchards, packaging vendor binaries, or running their own orchard. Read [MANUAL.md](MANUAL.md) chapters 1–4 first; this guide assumes the vocabulary (slice, orchard, flavor, generation) and the user's view of the system.
 - **Companions:** [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md) is the authoritative schema — when this guide and the schema disagree, the schema is right. [ORCHARD-POLICY.md](ORCHARD-POLICY.md) is the policy this guide summarizes. [BUILD-INFRA.md](BUILD-INFRA.md) is the farm your PR builds on. [MANUAL.md](MANUAL.md) is what your users read.
 - **Vocabulary:** [NOMENCLATURE.md](NOMENCLATURE.md) — project terms, acronyms, and the Homebrew translation table.
@@ -232,7 +232,7 @@ When your package builds, the harness scans the staged output and records the in
 
 ### 5.3 Discipline
 
-`abi = true` variants carry no cap; each must name the interface it changes, and the ABI scan — not a reviewer's taste — is the check. This is the lesson of Homebrew's option sprawl, learned in advance and aimed the right way: the failure was unmaintained defaults and guesswork, not user choice. ffmpeg is the standing example — codec combinations are many, some uncommon, some buildable from source only, and all of them legitimate when a user needs one. Non-default variants build locally on the user's machine; the farm prebuilds defaults plus demonstrated-demand variants, so an unusual combination costs the project nothing. Build-flavor variants (`abi = false`) are unconstrained, because they spawn no binaries — but each still needs a reason to exist.
+`abi = true` variants carry no cap; each must name the interface it changes, and the ABI scan — not a reviewer's taste — is the check. ffmpeg is the standing example — codec combinations are many, some uncommon, some buildable from source only, and all of them legitimate when a user needs one. Non-default variants build locally on the user's machine; the farm prebuilds defaults plus demonstrated-demand variants, so an unusual combination costs the project nothing. Build-flavor variants (`abi = false`) are unconstrained, because they spawn no binaries — but each still needs a reason to exist.
 
 ---
 
@@ -457,5 +457,6 @@ Or the first three and the ABI check at once: `aslice orchard ci <pkg>` — chap
 | v0.2 | Not recorded | review corrections — §8's payload map uses the real `[[binary.payload]]` array-of-tables shape, the invented `ctx.dep_lib_dirs` helper becomes the documented `ctx.deps` path, the service/root-daemon gate includes local repositories (§9), and the unsigned-vendor extended-only exception is recorded (§8, appendix). |
 | Not recorded | September 2026 | corpus review corrections: artifact identity, protected execution, durable recovery, trust persistence, replay, platform limits, and examples aligned with STATE-AND-RECOVERY and SYSTEM-VOLUMES. These are specification changes; runtime acceptance remains pending. |
 | v0.15 | September 2026 | Documentation audit repairs: contract summaries aligned; owner-approved namespace, rollback, GC, naming, prefix, and graft decisions applied where relevant; semantic anchors and explicit citations added. Runtime implementation and platform acceptance remain pending. |
+| v0.16 | September 2026 | Remove retired comparison references and competitive framing; retain aslice requirements and link their owning specifications. Align affected contract summaries where applicable. |
 
 </details>

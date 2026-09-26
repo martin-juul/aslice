@@ -138,6 +138,17 @@ Keep Ed25519 and minisign for launch. Changing algorithms requires a separate cl
 
 ## 6. Disaster recovery: trust rebootstrap
 
+Lost client history with uncompromised repository authority uses the offline-root-signed
+[recovery checkpoint procedure](../STATE-AND-RECOVERY.md#1022-recovery-checkpoints-for-lost-security-history).
+Pause the affected environment's signing and publication, reconcile all consumed versions
+and revocations, publish a fresh consistent metadata set, and sign its checkpoint offline.
+Archive its exact bytes and digest off-device. The checkpoint expires after seven days;
+an expired or conflicting bundle requires renewed reconciliation and issuance. Rehearse
+recovery against stale client receipts and lost signer acknowledgements before release.
+No checkpoint may assert safe version floors when signing history is incomplete.
+The steps below apply to lost or compromised root authority, not routine client repair.
+
+
 1. Stop publication and issue the §4 advisory. State whether root authority was lost or compromised.
 2. Repeat §2 on clean devices with new keys. Establish new public pins through independently authenticated communication; two copies on compromised hosting are not independent authentication.
 3. Existing users explicitly rebootstrap using the new installer or a documented repair flow showing verified fingerprints. No silent root replacement is permitted. A compromised old root's signature alone is not proof of the new one.
@@ -190,5 +201,6 @@ Users' machines have no project-held per-user keys or accounts. Third-party orch
 | September 2026 | prose rewrite of the introduction and signer-compromise explanation; no procedural changes. |
 | September 2026 | Documentation audit repairs: contract summaries aligned; owner-approved namespace, rollback, GC, naming, prefix, and graft decisions applied where relevant; semantic anchors and explicit citations added. Runtime implementation and platform acceptance remain pending. |
 | September 2026 | Relocate to `docs/runbooks/` and rebase relative links; no procedural changes. |
+| September 2026 | Define offline-root checkpoint issuance for lost client security history, including complete version reconciliation, seven-day expiry, and independent verification; retain separate root-compromise rebootstrap. |
 
 </details>

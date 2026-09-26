@@ -2,10 +2,9 @@
 
 > State, identity, privilege, and recovery contracts: [STATE-AND-RECOVERY](STATE-AND-RECOVERY.md). Protected-volume patching: [SYSTEM-VOLUMES](SYSTEM-VOLUMES.md). These specifications do not establish completed implementation or platform validation.
 
-- **Status:** Policy v1.16 — September 2026
-- **Companion to:** [DESIGN.md](DESIGN.md), [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md), [BUILD-INFRA.md](BUILD-INFRA.md), [REPOSITORIES.md](REPOSITORIES.md), [HOMEBREW-REVIEW.md](HOMEBREW-REVIEW.md), [TOOLCHAIN.md](TOOLCHAIN.md)
+- **Status:** Policy v1.17 — September 2026
+- **Companion to:** [DESIGN.md](DESIGN.md), [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md), [BUILD-INFRA.md](BUILD-INFRA.md), [REPOSITORIES.md](REPOSITORIES.md), [TOOLCHAIN.md](TOOLCHAIN.md)
 - **Audience:** orchard maintainers, reviewers, and contributors
-- **Commissioned by:** [HOMEBREW-REVIEW §8](HOMEBREW-REVIEW.md#spec-amendment-checklist) — one file where Homebrew scattered dozens of docs pages and tribal knowledge
 - **Vocabulary:** [NOMENCLATURE.md](NOMENCLATURE.md) — project terms, acronyms, and the Homebrew translation table.
 
 ---
@@ -16,7 +15,7 @@ Navigation: [1. Purpose and precedence](#purpose-and-precedence) · [2. Orchard 
 
 ## 1. Purpose and precedence
 
-This file is the single rulebook: what may live in aslice's orchards, how packages are born, maintained, deprecated, and buried, and what bars a pull request must clear to merge. Homebrew accumulated its equivalent rules across dozens of documentation pages, review folklore, and maintainer memory. aslice writes them down now, while the project is still young enough for one file to hold them.
+This file is the single rulebook: what may live in aslice's orchards, how packages are born, maintained, deprecated, and buried, and what bars a pull request must clear to merge.
 
 **Precedence.** The specifications define *mechanism*: what fields exist, what the solver does, what CI can check. This file defines *policy*: what maintainers accept, require, and refuse. If the two appear to conflict, the conflict is a bug — file an issue against whichever document is wrong. Every schema field referenced here is landed: `[deprecation]` [PACKAGE-FORMAT §3.14](PACKAGE-FORMAT.md#deprecation--the-package-lifecycle-declared-v06), `[livecheck]` [PACKAGE-FORMAT §3.15](PACKAGE-FORMAT.md#livecheck--upstream-freshness-declared-v06), `link`/`link_reason` and `notes` [PACKAGE-FORMAT §3.8](PACKAGE-FORMAT.md#install--declarative-post-install-behavior), `ctx.replace` [PACKAGE-FORMAT §6.3](PACKAGE-FORMAT.md#buildstar--the-custom-api), `[system-patch]` [PACKAGE-FORMAT §3.16](PACKAGE-FORMAT.md#system-patch--flagged-replacement-of-apple-provided-files-v06) — all in PACKAGE-FORMAT v0.6, alongside `[system]` (v0.4 [PACKAGE-FORMAT §3.12](PACKAGE-FORMAT.md#system--kernel-extensions-and-sip-disabled-tools-v04), with the `[service]` table of [PACKAGE-FORMAT §3.8](PACKAGE-FORMAT.md#install--declarative-post-install-behavior)) and `[runtime]`/`[extension]`/`[ride]` (v0.5 [PACKAGE-FORMAT §3.13](PACKAGE-FORMAT.md#runtime-extension-ride--multi-version-runtimes-v05)).
 
@@ -50,9 +49,9 @@ Two project orchards, two acceptance bars. Third-party orchards set their own pa
 
 **Hard rejections — both tiers, no exceptions, no override flags:**
 
-- **Anything that patches or modifies macOS system files *outside the declared `[system-patch]` category*** ([DESIGN §13.1](DESIGN.md#package-acceptance-policy)). The default stands: aslice installs alongside the OS and never edits `/System`, `/usr`, or Apple's binaries — not silently, not incidentally, not as a side effect of anything else. The single exception is §13's system-patch category ([DESIGN §12.11](DESIGN.md#system-patches-flagged-reversible-replacement-of-apple-provided-files)): declared targets, the original backed up, replacement by profile symlink, rollback to the byte, consent at every decision point, official and local repositories only, refused paths blocked by construction. What survives is the guarantee in its defensible form: aslice never patches your system *behind your back*. (Kernel extensions and SIP-disabled development software are likewise **not** rejections — they are the restricted system-software category of §13: declared, warned, consent-gated, trust-gated.)
+- **Anything that patches or modifies macOS system files *outside the declared `[system-patch]` category*** ([DESIGN §13.1](DESIGN.md#package-acceptance-policy)). The default stands: aslice installs alongside the OS and never edits `/System`, `/usr`, or Apple's binaries — not silently, not incidentally, not as a side effect of anything else. The single exception is §13's system-patch category ([DESIGN §12.11](DESIGN.md#system-patches-flagged-reversible-replacement-of-apple-provided-files)): declared permitted targets, protected originals and replacement closures, fingerprint-checked journaled restoration with Recovery/reboot where required, consent at every decision point, official/local repositories or verified repositories with an explicit per-repository grant, and refused paths blocked by construction. What survives is the guarantee in its defensible form: aslice never patches your system *behind your back*. (Kernel extensions and SIP-disabled development software are likewise **not** rejections — they are the restricted system-software category of §13: declared, warned, consent-gated, trust-gated.)
 - **Anything whose installation requires executing *undeclared* vendor or maintainer scripts.** Binary installs execute zero package code by default; the sole exception is the declared, rehearsed, user-approved graft (§12; [DESIGN §12.15](DESIGN.md#vendor-install-scripts-grafts--declared-approved-monitored-reversible)). A `.pkg`/`.dmg` whose function requires its `preinstall`/`postinstall` scripts belongs in the orchard only with those scripts declared as grafts, and an accepted package *discovered* to have undeclared ones is removed, not accommodated (§12).
-- **Runtime dependencies on `/usr/lib` dylibs or `/usr/bin` tools** — the codified rejection of Homebrew's `uses_from_macos` (§6).
+- **Runtime dependencies on `/usr/lib` dylibs or `/usr/bin` tools** — subject to the platform-interface exceptions in §6.
 - **HEAD / unpinned builds in core.** Both reproducibility and the lock model rest on pins. Extended strongly discourages unpinned builds; third-party orchards answer to their own trust level.
 - **Software that is itself hostile** — known malware, scareware, or packages whose primary function is deception. Obscurity is never a reason for exclusion (charter); hostility always is.
 - **License-less content.** Every package carries an SPDX `license` (§12 for vendor terms).
@@ -92,7 +91,7 @@ The entire platform story rests on tags users can trust. Hence the rules:
 
 ## 5. Variant discipline
 
-Variants are aslice's answer to Homebrew's options disaster; the discipline below is what keeps the answer from becoming a second disaster ([DESIGN §13.2](DESIGN.md#variant-discipline)):
+Variants declare supported build choices and their ABI effects ([DESIGN §13.2](DESIGN.md#variant-discipline)):
 
 - **`abi = true` variants carry no cap.** Each must name the exported interface it changes — review checks the tag against the ABI scan, not the worthiness of the request. ffmpeg-class packages legitimately carry many codec combinations, uncommon ones included; which variants a user enables is the user's call, not the project's (owner decision, September 2026). Variants that may be compiled but not redistributed work like any other non-default variant: the client builds them locally from source, and the farm never prebuilds them (§11).
 - **`abi = false` variants are unconstrained** — they never spawn binary flavors, so they cost the project nothing.
@@ -107,9 +106,9 @@ Variants are aslice's answer to Homebrew's options disaster; the discipline belo
 
 ## 6. Dependencies and system software
 
-- **Runtime dependencies resolve to aslice packages only.** Never `/usr/lib` dylibs, never `/usr/bin` tools, never "whatever the system ships." This is the codified rejection of Homebrew's `uses_from_macos` ([HOMEBREW-REVIEW §5](HOMEBREW-REVIEW.md#what-aslice-should-deliberately-not-copy)), and the rationale is foundational: on 10.11 the system libraries *are the problem*, and OpenSSL 0.9.8-era TLS is why the machines are stranded. Lint enforces the rule.
+- **Runtime dependencies resolve to aslice packages only.** Use only the explicitly allowed platform interfaces; do not resolve packaged dependencies to arbitrary `/usr/lib` dylibs or `/usr/bin` tools. The platform-interface allowlist is defined in [DESIGN §13.1](DESIGN.md#package-acceptance-policy); other runtime dependencies must be packaged explicitly. Lint enforces the rule.
 - **The only exceptions are system *frameworks***: `Accelerate`, `SystemConfiguration`, `CoreAudio`, `CoreFoundation`, and the other always-present dyld-shared-cache frameworks enumerated in the lint allowlist. Frameworks are the platform's ABI, not its bundled software — the Accelerate-shim BLAS provider depends on exactly this distinction. Additions to the allowlist are policy PRs against this file and the lint table together.
-- **`link = false` — the principled keg-only** ([HOMEBREW-REVIEW §4.5](HOMEBREW-REVIEW.md#p1--the-keg-only-decision-shadowing-system-software)). A package installs into the store without linking into profiles when it would shadow macOS-provided tools, or when a versioned lineage demands it. The policy, concretely: in core, versioned packages (`openssl3` style) and anything shipping `bin/` names that collide with `/usr/bin` or `/bin` default to `link = false`, and `link_reason` is mandatory and lint-enforced. Dependents never need the profile link, because dependency resolution is store-path-based — "unlinked but depended upon" is a normal state, not a hack. Users opt in per profile with `aslice link <pkg>`.
+- **`link = false` — explicit profile exposure** ([PACKAGE-FORMAT §3.8](PACKAGE-FORMAT.md#install--declarative-post-install-behavior)). A package installs into the store without linking into profiles when it would shadow macOS-provided tools, or when a versioned lineage demands it. The policy, concretely: in core, versioned packages (`openssl3` style) and anything shipping `bin/` names that collide with `/usr/bin` or `/bin` default to `link = false`, and `link_reason` is mandatory and lint-enforced. Dependents never need the profile link, because dependency resolution is store-path-based — "unlinked but depended upon" is a normal state, not a hack. Users opt in per profile with `aslice link <pkg>`.
 
 ---
 
@@ -130,7 +129,7 @@ Patches are how a legacy platform stays alive, and also how orchards rot. The ru
 
 ## 8. Deprecation and removal lifecycle
 
-Packages have a life cycle, and the orchard states where each one is in it ([HOMEBREW-REVIEW §4.3](HOMEBREW-REVIEW.md#p1--package-lifecycle-states)):
+Packages have a life cycle, and the orchard states where each one is in it ([ORCHARD-POLICY §8](ORCHARD-POLICY.md#deprecation-and-removal-lifecycle)):
 
 ```toml
 [deprecation]
@@ -142,7 +141,7 @@ disable_date = "2027-09-01"    # optional: new installs refuse after this
 
 - **active → deprecated:** installs and `info`/`audit` warn with the reason and replacement; existing installs unaffected; the package still receives slices.
 - **deprecated → disabled** (at `disable_date`): new installs refuse without `--force-disabled`; existing installs keep working, remain in locks, and keep their generations.
-- **disabled → tombstoned:** the formula leaves orchard HEAD, but the index keeps a **permanent tombstone** — name, final version, reason, replacement — so historical snapshots and old locks resolve forever. This is where aslice's snapshot model does genuinely *better* than git-tap archaeology. Never delete the record.
+- **disabled → tombstoned:** the formula leaves orchard HEAD, but the index keeps a **permanent tombstone** — name, final version, reason, replacement — so historical snapshots and old locks resolve forever. Never delete the record.
 - **Renames** are deprecations with `reason = "renamed"` and a mandatory `replacement`, plus an alias-table entry.
 - **Security fast path:** a package with an unfixable, actively dangerous vulnerability may skip straight to disabled by owner approval during single-owner launch, with the reason recorded. User safety outranks process.
 - **EOL-in-extended is normal life**, not a failure: upstream-EOL packages live in extended with `reason = "upstream-eol"` indefinitely, as long as they still build and someone answers for them ([DESIGN §13.1](DESIGN.md#package-acceptance-policy)). Nobody else ships for these machines — hosting the honorable dead is part of the mission.
@@ -155,7 +154,7 @@ disable_date = "2027-09-01"    # optional: new installs refuse after this
 
 ## 9. Freshness: livecheck and autobump
 
-The platform is frozen; upstreams are not. Freshness automation is *the* ongoing workload, and policy treats it as such ([HOMEBREW-REVIEW §4.2](HOMEBREW-REVIEW.md#p0--upstream-freshness-livecheck-and-autobump)):
+The platform is frozen; upstreams are not. Freshness automation is *the* ongoing workload, and policy treats it as such ([ORCHARD-POLICY §9](ORCHARD-POLICY.md#freshness-livecheck-and-autobump)):
 
 - **Every core package carries `[livecheck]`**; extended packages should. A core package whose livecheck strategy rots — upstream moved forges, changed its tag scheme — is a bug filed against the named maintainer.
 - **Defaults:** `skip_prerelease = true`, `throttle_days = 3`, `cooldown_days = 2`. The cooldown is the supply-chain poisoning window: time for a malicious upstream release to get caught before aslice ships it. For the historically risky ecosystems (npm, PyPI, RubyGems, crates) the cooldown may be raised; it is never lowered below 2.
@@ -171,7 +170,7 @@ The platform is frozen; upstreams are not. Freshness automation is *the* ongoing
 
 ## 10. Merge gates: what CI must prove
 
-Every orchard change PR clears the same six gates ([HOMEBREW-REVIEW §4.7](HOMEBREW-REVIEW.md#p1--orchard-ci-merge-gates-specified)). Promotion PRs reuse the candidate's authenticated build evidence and verify unchanged content under §18.1–§18.2; they do not rebuild served artifacts. There is no maintainer override; the gates are what make review a question of policy rather than compilation:
+Every orchard change PR clears the same six gates ([ORCHARD-POLICY §10](ORCHARD-POLICY.md#merge-gates-what-ci-must-prove)). Promotion PRs reuse the candidate's authenticated build evidence and verify unchanged content under §18.1–§18.2; they do not rebuild served artifacts. There is no maintainer override; the gates are what make review a question of policy rather than compilation:
 
 1. **Lint** — schema, this policy (`link_reason`, patch headers, license, description rules), plus the `--new-package` ruleset for additions.
 2. **Matrix build** — sandboxed build on **every declared flavor** at the formula's `min_os`, then smoke-run on **each OS release in `[min_os, 12]`** on the farm VMs. Tests may be flagged flavor/OS-irrelevant (pure data packages), with the flag visible in the PR.
@@ -293,7 +292,7 @@ Some software exists only as an installer. The policy for it ([DESIGN §12.4](DE
 - **Environments:** `dev`, `staging`, and `prod` follow §18.1. This replaces the proposed `edge`/`stable` channel split. Production is the default; development and staging are explicit selections, never automatic fallback sources.
 - **Snapshot retention:** all published snapshots and their referenced hosted artifacts, recipes, and source objects indefinitely, with historical downloads authorized by the current archive catalog ([STATE-AND-RECOVERY §8](STATE-AND-RECOVERY.md#plans-locks-archives-and-offline-use)). Historical installs (`--index-snapshot`) are a feature, and retention is what makes the promise real.
 - **Dependent rebuilds ride the triggering snapshot** (§10 gate 4) — no separate "rebuild wave" days.
-- **aslice itself** releases through the same machinery, as package zero (self-update, [HOMEBREW-REVIEW §4.1](HOMEBREW-REVIEW.md#p0--self-distribution-self-update-and-bootstrap-trust)). Client releases join the same signed batches and are generation-swapped like everything else.
+- **aslice itself** releases through the same machinery, as package zero (self-update, [DESIGN §12.12](DESIGN.md#self-update-aslice-is-package-zero)). Client releases join the same signed batches and are generation-swapped like everything else.
 
 <a id="environments-branching-and-promoted-builds"></a>
 
@@ -370,15 +369,15 @@ Historical labels and ordering below are preserved as recorded, including repeat
 | v1.10 | September 2026 | TOOLCHAIN.md v0.1 joins the companions; companion versions refreshed — DESIGN v1.21, PACKAGE-FORMAT v0.16, BUILD-INFRA v0.15; no policy changes. |
 | v1.9 | Not recorded | prose review pass — the register was already clean, no prose changes; companion versions refreshed — DESIGN v1.20, BUILD-INFRA v0.14, REPOSITORIES v1.7; no policy changes. |
 | v1.9 | September 2026 | prose review pass: the register survived unchanged (gems kept deliberately: 'hosting the honorable dead is part of the mission', 'User safety outranks process', 'an unmaintained system patch is a liability with a symlink', 'written words are decorative here'); companion versions refreshed — DESIGN v1.20, BUILD-INFRA v0.14, REPOSITORIES v1.7; no policy changes. |
-| v1.8 | Not recorded | review correction — the §14 `notes` example's `aslice services start` becomes `aslice service start` (the command is singular, DESIGN §12.1); companion versions refreshed — BUILD-INFRA v0.13, REPOSITORIES v1.6, HOMEBREW-REVIEW v0.21. |
-| v1.8 | September 2026 | the §14 `notes` example's command typo corrected (`aslice service`, singular); companions refreshed to BUILD-INFRA v0.13, REPOSITORIES v1.6, HOMEBREW-REVIEW v0.21. |
+| v1.8 | Not recorded | review correction — the §14 `notes` example's `aslice services start` becomes `aslice service start` (the command is singular, DESIGN §12.1); companion versions refreshed — BUILD-INFRA v0.13, REPOSITORIES v1.6 |
+| v1.8 | September 2026 | the §14 `notes` example's command typo corrected (`aslice service`, singular); companions refreshed to BUILD-INFRA v0.13, REPOSITORIES v1.6 |
 | v1.7 | Not recorded | grafts land (mechanism DESIGN v1.19 §12.15; schema PACKAGE-FORMAT v0.15 §3.11) — §12's payload-only rule becomes the default with the declared-graft exception and the rehearsal bar, §10's merge gates become six (farm graft rehearsal), §13's vendor-kext bullet crosses over, and §2's core-acceptance row follows; owner decision, September 2026. |
 | v1.7 | September 2026 | grafts, by owner decision: vendor installer scripts become a declared, rehearsed, signed, user-approved exception to the payload-only default. §2's hard rejection now targets *undeclared* scripts; §12 gains the graft exception and the rehearsal bar (manifests authored from evidence, farm-rehearsed per OS, signed into the index — core and extended ship no unsigned manifest); §10's merge gates become six, gate 5 rehearsing grafts in per-OS VMs; §13's vendor-kext bullet crosses over; third-party orchards carry grafts only unsigned, under the client's loud warning (mechanism DESIGN v1.19 §12.15; schema PACKAGE-FORMAT v0.15 §3.11). |
 | v1.6 | Not recorded | §9 names the farm dashboard's public home — aslice.sh/dashboard; the project domain carries the human pages as paths on the apex and the machine endpoints as subdomains, per the owner's layout decision (September 2026); no policy changes. |
 | v1.1–v1.6 | September 2026 | prose rewrite in the project's voice; NOMENCLATURE vocabulary header; the maintainer's `aslice orchard` CLI for lifecycle edits, freshness, and local gate runs (§8, §9, §10); the variant-cap retirement, license-gate removal, and the abandonware stance with the `takedown` reason (§5, §8); the farm dashboard's public home at aslice.sh/dashboard (§9). The status header carries the full per-version record. |
-| v1.5 | Not recorded | the `abi = true` variant cap is retired — variants are governed by need and honest ABI tags, not quota, and compile-only licenses are served as non-default local builds (§5); the license-policing gates drop out of §2 and §12, leaving documentation duties; §8 states the abandonware stance — hosted indefinitely, removable only by a verified complaint from the real copyright owner, with `takedown` as a new lifecycle reason; companion versions refreshed (DESIGN v1.17, PACKAGE-FORMAT v0.13, BUILD-INFRA v0.12, REPOSITORIES v1.5, HOMEBREW-REVIEW v0.19). |
-| v1.4 | Not recorded | the maintainer's CLI lands (DESIGN v1.16 §12.14) — §8's lifecycle gains the `aslice orchard` deprecate/disable/undeprecate/tombstone/rename verbs, §9's public freshness metric gains its local computation (`aslice orchard freshness`), and §10's five gates gain their local run (`aslice orchard ci`); companion versions refreshed (DESIGN v1.16, PACKAGE-FORMAT v0.12, BUILD-INFRA v0.11, REPOSITORIES v1.4, HOMEBREW-REVIEW v0.18); no policy changes. |
-| v1.3 | Not recorded | NOMENCLATURE.md vocabulary reference added to the header; companion versions refreshed (DESIGN v1.15, PACKAGE-FORMAT v0.12, BUILD-INFRA v0.10, REPOSITORIES v1.3, HOMEBREW-REVIEW v0.17); no policy changes. |
+| v1.5 | Not recorded | the `abi = true` variant cap is retired — variants are governed by need and honest ABI tags, not quota, and compile-only licenses are served as non-default local builds (§5); the license-policing gates drop out of §2 and §12, leaving documentation duties; §8 states the abandonware stance — hosted indefinitely, removable only by a verified complaint from the real copyright owner, with `takedown` as a new lifecycle reason; companion versions refreshed (DESIGN v1.17, PACKAGE-FORMAT v0.13, BUILD-INFRA v0.12, REPOSITORIES v1.5). |
+| v1.4 | Not recorded | the maintainer's CLI lands (DESIGN v1.16 §12.14) — §8's lifecycle gains the `aslice orchard` deprecate/disable/undeprecate/tombstone/rename verbs, §9's public freshness metric gains its local computation (`aslice orchard freshness`), and §10's five gates gain their local run (`aslice orchard ci`); companion versions refreshed (DESIGN v1.16, PACKAGE-FORMAT v0.12, BUILD-INFRA v0.11, REPOSITORIES v1.4); no policy changes. |
+| v1.3 | Not recorded | NOMENCLATURE.md vocabulary reference added to the header; companion versions refreshed (DESIGN v1.15, PACKAGE-FORMAT v0.12, BUILD-INFRA v0.10, REPOSITORIES v1.3); no policy changes. |
 | v1.2 | Not recorded | review pass — §13's warning-rule references name DESIGN §12.7/§12.11 explicitly; companion versions refreshed; no policy changes. |
 | v1.1 | Not recorded | prose rewrite throughout — chapters reworded in the project's technical-writing voice; no policy changes. |
 | v1.0 | Not recorded | editorial pass — prose revised for directness; no policy changes. |
@@ -398,8 +397,9 @@ Historical labels and ordering below are preserved as recorded, including repeat
 | v0.3 | September 2026 | service-package acceptance, following DESIGN v1.3 §12.8: root-domain daemons (`domain = "system"`) meet §13's bar; user agents meet the normal tier bar and are preferred. |
 | v0.2 | Not recorded | kernel extensions and SIP-disabled development software move from hard rejection to the restricted, warned, trust-gated system-software category — §2, new §13; mechanism in DESIGN v1.2 §12.7. |
 | v0.2 | September 2026 | the SIP/kext hard rejection becomes the restricted system-software category (§2, new §13), following DESIGN v1.2: declared requirements, per-operation elevation, mandatory warnings, trust-gated serving, demonstrated rollback; patching system files stays rejected forever. |
-| v0.1 | September 2026 | initial rulebook, commissioned by HOMEBREW-REVIEW.md §8: consolidates the acceptance bar (DESIGN §13.1), variant discipline (§13.2), the deprecation lifecycle, patch documentation, merge gates, and release cadence proposed across the review into one maintainer-facing document. |
+| v0.1 | September 2026 | initial rulebook, consolidates the acceptance bar (DESIGN §13.1), variant discipline (§13.2), the deprecation lifecycle, patch documentation, merge gates, and release cadence in one maintainer-facing document. |
 | Not recorded | September 2026 | corpus review corrections: artifact identity, protected execution, durable recovery, trust persistence, replay, platform limits, and examples aligned with STATE-AND-RECOVERY and SYSTEM-VOLUMES. These are specification changes; runtime acceptance remains pending. |
 | v1.16 | September 2026 | Documentation audit repairs: contract summaries aligned; owner-approved namespace, rollback, GC, naming, prefix, and graft decisions applied where relevant; semantic anchors and explicit citations added. Runtime implementation and platform acceptance remain pending. |
+| v1.17 | September 2026 | Remove retired comparison references and competitive framing; retain aslice requirements and link their owning specifications. Align affected contract summaries where applicable. |
 
 </details>

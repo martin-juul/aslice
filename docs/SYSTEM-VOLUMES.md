@@ -1,6 +1,6 @@
 # Protected system-volume patches
 
-- **Status:** Specification v0.4 — September 2026. Support is designed for Intel macOS 10.11–12; each OS build/filesystem/security configuration remains blocked from release until the acceptance matrix passes.
+- **Status:** Specification v0.5 — September 2026. Support is designed for Intel macOS 10.11–12; each OS build/filesystem/security configuration remains blocked from release until the acceptance matrix passes.
 - **Authority:** This document owns the protected-volume backend for [DESIGN §12.11](DESIGN.md#system-patches-flagged-reversible-replacement-of-apple-provided-files). [State and recovery](STATE-AND-RECOVERY.md) owns authorization, protected storage, and the operation journal.
 
 <a id="three-backends"></a>
@@ -41,7 +41,7 @@ Replacement executables and their dependencies come from the protected closure d
 
 ## 4. Activation, rollback, and OS updates
 
-The result before reboot is `pending-reboot`, not success or a committed package generation. `aslice system-patch status` reports the selected snapshot and pending transaction. On the next boot, `aslice system-patch finalize` verifies the actual boot snapshot, OS build, patch tree, closure, and required service tests, then commits the journal. Until finalization, affected package mutations and GC are blocked. An unsuccessful boot is recovered from the kit in Recovery, without depending on the patched manager or shell.
+The result before reboot is `pending-reboot`, not success or a committed package generation. `aslice system-patch status` reports the selected snapshot and pending transaction. On the next boot, `aslice system-patch finalize` verifies the actual boot snapshot, OS build, patch tree, and closure, then commits the journal. Required service readiness checks run after the durable commit under the ordinary bounded-check contract. A failed or timed-out service check returns nonzero and reports committed installation; an eligible rollback is a new authorized restoration transaction. The helper flushes `pending-reboot` evidence before releasing effective ownership for reboot; persistent gates retain the affected scope. On restart, only explicit finalization of that matching intent or authorized restoration may resolve it. Until finalization, affected package mutations and GC are blocked. An unsuccessful boot is recovered from the kit in Recovery, without depending on the patched manager or shell.
 
 `aslice rollback` of a generation spanning protected-volume changes creates a restoration plan and reports `pending-reboot`; it does not silently claim an instant whole-machine rollback. `aslice-system volume-restore <plan>` in Recovery checks the recorded volume identities and selects the retained compatible prior snapshot on 11–12, or restores the recorded Catalina before-images. If other managed patches must remain, prepare a new snapshot of the entire desired set instead of undoing them accidentally. Service data is outside this snapshot contract.
 
@@ -67,5 +67,6 @@ Until an adapter passes these gates, the client reports that exact configuration
 | v0.3 | September 2026 | Consolidate revision notes into a collapsible history table; no specification changes. |
 | v0.2 | September 2026 | prose rewrite of the adapter acceptance explanation; no content changes. |
 | v0.4 | September 2026 | Documentation audit repairs: contract summaries aligned; owner-approved namespace, rollback, GC, naming, prefix, and graft decisions applied where relevant; semantic anchors and explicit citations added. Runtime implementation and platform acceptance remain pending. |
+| v0.5 | September 2026 | Separate pre-commit boot/patch integrity from post-commit service readiness and define explicit resumption of durable pending-reboot intent. |
 
 </details>

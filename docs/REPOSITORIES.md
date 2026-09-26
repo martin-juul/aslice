@@ -2,7 +2,7 @@
 
 > State, identity, privilege, and recovery contracts: [STATE-AND-RECOVERY](STATE-AND-RECOVERY.md). Protected-volume patching: [SYSTEM-VOLUMES](SYSTEM-VOLUMES.md). These specifications do not establish completed implementation or platform validation.
 
-- **Status:** Design draft, v1.13 — September 2026
+- **Status:** Design draft, v1.14 — September 2026
 - **Companion to:** [DESIGN.md](DESIGN.md), [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md), [BUILD-INFRA.md](BUILD-INFRA.md), [ORCHARD-POLICY.md](ORCHARD-POLICY.md)
 - **Scope:** the shipped official source list, adding third-party repositories, the inherent trust-level model, and the dual signature scheme (Ed25519 canonical, OpenPGP supported).
 - **Vocabulary:** [NOMENCLATURE.md](NOMENCLATURE.md) — project terms, acronyms, and the Homebrew translation table.
@@ -149,7 +149,7 @@ The client's rule is uniform: **the scheme is a property of the repository, the 
 
 ### 5.3 Rotation and revocation
 
-- **Official keys:** an initial 1-of-1 root on an offline Pi, distinct targets, snapshot, and slice-signing keys on a dedicated networked release Pi, and the timestamp key on the publisher (KEY-RUNBOOK). Planned rotations and later multi-party adoption use sequential TUF roots satisfying both old and new root thresholds; all intermediate versions remain available. Replacing any top-level role key requires a root update; refreshing metadata with unchanged keys does not. Root compromise or loss without a usable backup requires explicit trust rebootstrap, not a silent pin change. The compiled-in bootstrap pin is updated through self-update ([HOMEBREW-REVIEW §4.1](HOMEBREW-REVIEW.md#p0--self-distribution-self-update-and-bootstrap-trust)), and each rotation is announced.
+- **Official keys:** an initial 1-of-1 root on an offline Pi, distinct targets, snapshot, and slice-signing keys on a dedicated networked release Pi, and the timestamp key on the publisher (KEY-RUNBOOK). Planned rotations and later multi-party adoption use sequential TUF roots satisfying both old and new root thresholds; all intermediate versions remain available. Replacing any top-level role key requires a root update; refreshing metadata with unchanged keys does not. Root compromise or loss without a usable backup requires explicit trust rebootstrap, not a silent pin change. The compiled-in bootstrap pin is updated through self-update ([DESIGN §12.12](DESIGN.md#self-update-aslice-is-package-zero)), and each rotation is announced.
 - **Third-party keys:** every repository follows the same sequential TUF root-update rules. Package-key transitions must be authenticated by trusted metadata. A transition signature alone cannot bypass TUF thresholds, revocation, or a required project countersignature. Unauthenticated replacement requires an independently verified re-pin; root compromise requires rebootstrap ([STATE-AND-RECOVERY §7](STATE-AND-RECOVERY.md#persistent-trust-and-initial-bootstrap)).
 - **Revocation:** expired TUF metadata blocks repository updates; stopping publication does not instantly revoke client trust. Installed software keeps running. On top of that mechanism, official source-list updates can carry a `revoked_keys` list: a kill switch for a `verified` repo's countersignature that does not require a client release.
 
@@ -304,5 +304,6 @@ commands, and disaster recovery; this section summarizes repository interactions
 | v0.2 | Not recorded | cross-repository overlap resolution with remembered decisions — §10; the state database's role — §11. |
 | Not recorded | September 2026 | corpus review corrections: artifact identity, protected execution, durable recovery, trust persistence, replay, platform limits, and examples aligned with STATE-AND-RECOVERY and SYSTEM-VOLUMES. These are specification changes; runtime acceptance remains pending. |
 | v1.12 | September 2026 | Documentation audit repairs: contract summaries aligned; owner-approved namespace, rollback, GC, naming, prefix, and graft decisions applied where relevant; semantic anchors and explicit citations added. Runtime implementation and platform acceptance remain pending. |
+| v1.14 | September 2026 | Remove retired comparison references and competitive framing; retain aslice requirements and link their owning specifications. Align affected contract summaries where applicable. |
 
 </details>

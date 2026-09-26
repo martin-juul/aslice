@@ -8,14 +8,11 @@
 - Retrieved: 2026-09-26 (UTC date; web and HTTP capture)
 - Capture type: technical account plus complete upstream Markdown source asset.
 - Rights: BSD-2-Clause, Homebrew contributors; [license and notice](HOMEBREW_LICENSE.txt).
-- Used by:
-  - [HOMEBREW-REVIEW §3.2 Security and trust](../HOMEBREW-REVIEW.md#32-security-and-trust): Tap trust gates evaluation of third-party Ruby.
-  - [HOMEBREW-REVIEW §3.3 Orchard / maintainer machinery](../HOMEBREW-REVIEW.md#33-orchard--maintainer-machinery): Cooldown and install-step features are release-level evidence.
-  - [HOMEBREW-REVIEW §3.4 Environments, services, ecosystem](../HOMEBREW-REVIEW.md#34-environments-services-ecosystem): Bundle parallelism and brew exec are distinct environment features.
+- Used by: retained historical evidence; no current normative consumer.
 
 ## Captured material
 
-Version 6 requires explicit trust before evaluating or running third-party tap code, binds trust lists to remotes, and trusts official taps by default. Its smaller internal JSON API becomes the default. It describes Linux sandboxing, hardened install phases, parallel bundle installs, developer-default confirmation prompts, and new brew exec environments. It announces initial macOS 27 support and reiterates Intel CI/bottle retirement in September 2026, with Intel execution removal in September 2027. Security fixes address insecure download redirects, installer Git hooks, and a user-controlled installer plist. SBOM generation becomes opt-in. These are release-level comparison facts; exact command semantics and later defaults require their own versioned contracts.
+Version 6 requires explicit trust before evaluating or running third-party tap code, binds trust lists to remotes, and trusts official taps by default. Its smaller internal JSON API becomes the default. It describes Linux sandboxing, hardened install phases, parallel bundle installs, developer-default confirmation prompts, and new brew exec environments. It announces initial macOS 27 support and reiterates Intel CI/bottle retirement in September 2026, with Intel execution removal in September 2027. Security fixes address insecure download redirects, installer Git hooks, and a user-controlled installer plist. SBOM generation becomes opt-in. These are release-level facts; exact command semantics and later defaults require their own versioned contracts.
 
 ## Decision-relevant context
 
@@ -35,7 +32,7 @@ Dated account of the relevant facts, not a full original or an implementation te
 
 ## Project interpretation
 
-Keep trust admission, sandbox containment, and declarative steps separate in comparisons. Each addresses a different execution boundary. A release feature list does not establish aslice parity until its own equivalent is implemented and tested.
+Keep trust admission, sandbox containment, and declarative steps distinct. Each addresses a different execution boundary. This account preserves historical Homebrew mechanisms; it establishes no aslice implementation claim.
 
 ## Omissions and evidence gaps
 

@@ -10,14 +10,12 @@
 - Rights: BSD-2-Clause, Homebrew contributors; [license and notice](HOMEBREW_LICENSE.txt).
 - Used by:
   - [DESIGN §1.1 The gap that is opening](../DESIGN.md#11-the-gap-that-is-opening): Intel Tier 3, bottle cessation, and execution removal are separate events.
-  - [HOMEBREW-REVIEW §2. Where aslice is already ahead](../HOMEBREW-REVIEW.md#2-where-aslice-is-already-ahead): Performance, security, services, and GUI comparison claims are dated to this release.
-  - [HOMEBREW-REVIEW §3.2 Security and trust](../HOMEBREW-REVIEW.md#32-security-and-trust): Installation protection has vendor-installer and runtime boundaries.
 
 ## Captured material
 
 The release moves Intel macOS to Tier 3, ends Catalina support, and reports no routine new Intel bottles; the planned Intel execution cutoff is September 2027. It describes parallel installation work, security advisories and vulnerability checking, stronger installation sandboxing, and migration of third-party formula/cask hooks toward declarative install steps.
 
-The release also describes services environment overrides and changes to shell environment handling. These observations motivate aslice's legacy platform scope and operational feature comparison. They do not establish that an unimplemented replacement is faster or safer.
+The release also describes services environment overrides and changes to shell environment handling. The platform-support announcement supplies context for aslice's legacy platform scope; the other features are retained as dated release history.
 
 ## Decision-relevant context
 
@@ -33,11 +31,11 @@ Official taps reject legacy Ruby install hooks; third-party hooks warn until 202
 
 ## Applicability and limits
 
-This is a dated release comparison. Preserve the date when printing; future support policy can change. Per-feature implementation claims require the individual upstream contract, not inference from marketing language.
+This is a dated release account. Preserve the date when printing; future support policy can change. Per-feature implementation claims require the individual upstream contract, not inference from marketing language.
 
 ## Project interpretation
 
-The post supports the legacy-platform opportunity and particular comparison rows. It does not support universal claims that Homebrew installation is unsandboxed, that all bottles disappear, or that aslice is faster. Any such broader comparison needs separate evidence and a project review.
+The post supports the legacy-platform context. It does not establish that all existing bottles disappear or supply the detailed contracts for every installation path. No aslice performance or security claim follows from this release account.
 
 ## Omissions and evidence gaps
 

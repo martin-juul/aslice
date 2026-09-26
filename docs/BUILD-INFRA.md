@@ -2,8 +2,8 @@
 
 > State, identity, privilege, and recovery contracts: [STATE-AND-RECOVERY](STATE-AND-RECOVERY.md). Protected-volume patching: [SYSTEM-VOLUMES](SYSTEM-VOLUMES.md). These specifications do not establish completed implementation or platform validation.
 
-- **Status:** Design draft, v0.23 — September 2026
-- **Companion to:** [DESIGN.md](DESIGN.md), [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md), [HOMEBREW-REVIEW.md](HOMEBREW-REVIEW.md), [TOOLCHAIN.md](TOOLCHAIN.md)
+- **Status:** Design draft, v0.24 — September 2026
+- **Companion to:** [DESIGN.md](DESIGN.md), [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md), [TOOLCHAIN.md](TOOLCHAIN.md)
 - **Scope:** the build harness (`aslice build`), farm orchestration (`aslice farm`), scheduling, worker trust, the VM test matrix, and the pipeline from build result to published repository.
 - **Vocabulary:** [NOMENCLATURE.md](NOMENCLATURE.md) — project terms, acronyms, and the Homebrew translation table.
 
@@ -18,7 +18,7 @@ Navigation: [1. The founding axiom](#the-founding-axiom) · [2. The harness: one
 **The farm is not a special system.** Every build the project runs goes through the machinery a user invokes with `aslice build`. Contributors can reproduce a job on a Mac with the required CPU, OS, and resources. Three properties follow from this axiom:
 
 - **Debuggability.** A failing farm build can be reproduced locally with one command on a compatible machine, using the same pinned inputs and harness. Host and guest capabilities still matter (§6.1).
-- **Resilience.** A farm outage costs binary *freshness*, never user capability: the farm's pipeline is the user's pipeline, so users can always build from source. (Here lies the structural difference from Homebrew — its bottle pipeline is infrastructure users never touch, and when it stops, bottles stop.)
+- **Resilience.** A farm outage costs binary *freshness*, never user capability: the farm's pipeline is the user's pipeline, so users can always build from source.
 - **Trust.** Reproducibility cross-checks (§7) are volunteers running the same harness — no special access, no special build of the tooling.
 
 The axiom is not free: the harness must serve an unattended fleet and a human at a keyboard equally well. Everything below is shaped by that requirement.
@@ -152,7 +152,7 @@ Assignment requires detected CPU features, OS support for those features, valida
 
 When the laptop is unavailable, `v3` work stays queued; eligible `v1`/`v2` jobs continue on the Mac Pro. Unsupported flavors are never assigned or silently substituted. Required OS/flavor tests and independent rebuilds without a capable worker remain pending. Capacity shortages do not narrow a formula's declared support or waive a gate. Resource values in example job manifests (§2.1) are illustrative, not measured capacity or concurrency commitments.
 
-A provider change triggers the **ABI gate** ([HOMEBREW-REVIEW §4.7](HOMEBREW-REVIEW.md#p1--orchard-ci-merge-gates-specified)): the old and new provider slices are scan-diffed, and on regression the dependent revision-bump jobs are generated *into the same plan*. The index snapshot that eventually lands therefore contains the provider and its rebuilt dependents **together** — the broken-window state Homebrew users know ("everything's broken until the rebuilds land") is structurally absent, because the snapshot is atomic.
+A provider change triggers the **ABI gate** ([ORCHARD-POLICY §10](ORCHARD-POLICY.md#merge-gates-what-ci-must-prove)): the old and new provider slices are scan-diffed, and on regression the dependent revision-bump jobs are generated *into the same plan*. The index snapshot that eventually lands therefore contains the provider and its rebuilt dependents **together**. Publication waits for the complete provider/dependent set.
 
 <a id="lanes"></a>
 
@@ -160,7 +160,7 @@ A provider change triggers the **ABI gate** ([HOMEBREW-REVIEW §4.7](HOMEBREW-RE
 
 Three queues, drained in order but preemptible upward:
 
-1. **Freshness** — autobump PR gates (the livecheck machinery from [HOMEBREW-REVIEW §4.2](HOMEBREW-REVIEW.md#p0--upstream-freshness-livecheck-and-autobump) builds here).
+1. **Freshness** — autobump PR gates (the livecheck machinery from [ORCHARD-POLICY §9](ORCHARD-POLICY.md#freshness-livecheck-and-autobump) builds here).
 2. **Trunk** — merged changes heading for the next published snapshot.
 3. **Backfill** — the long tail: extended-orchard packages, missing flavors, old versions that need slices. Prioritized by the [DESIGN §9.4](DESIGN.md#what-gets-prebuilt) value signals (dependency centrality, farm-measured build pain, irreplaceability, community requests) — never by download counts.
 
@@ -280,7 +280,7 @@ owner-approved orchard merge → CI → agent staging (untrusted)
 
 [KEY-RUNBOOK §2.1](runbooks/KEY-RUNBOOK.md#automatic-orchard-to-client-publication) specifies candidate contents, authenticated owner-merge authorization, retained signing state, serialized publication, and idempotent retries. Owner merge is the final human approval, including new core slices. Stale candidates must reconcile against current repository and signing state before signing again. The root Pi is not used for routine releases. The publisher refreshes timestamps daily for the valid approved snapshot; targets/snapshot renew automatically below 30 days using the last approved content. Root renewal and top-level key replacement remain offline operations ([KEY-RUNBOOK §1.1](runbooks/KEY-RUNBOOK.md#metadata-validity-and-renewal) and [KEY-RUNBOOK §3](runbooks/KEY-RUNBOOK.md#routine-key-rotation)). Client metadata refresh makes releases discoverable; publication does not force installation. Execute the end-to-end and failure drills in [KEY-RUNBOOK §7](runbooks/KEY-RUNBOOK.md#drills-and-acceptance) before launch.
 
-The index snapshot is published atomically with its dependent rebuilds (§6.1). Those builds are part of the frozen dev candidate and are reused in staging and prod. Missing required flavor builds, tests, rehearsals, or independent rebuilds keep the affected publication set pending; laptop absence never permits a partial provider/dependent update. Retention follows [HOMEBREW-REVIEW §6](HOMEBREW-REVIEW.md#additions-to-the-designmd-15-risk-table): all published historical snapshots and their referenced hosted objects are retained under a currently authorized archive catalog ([STATE-AND-RECOVERY §8](STATE-AND-RECOVERY.md#plans-locks-archives-and-offline-use)) — and that is what makes historical installs ([HOMEBREW-REVIEW §4.14](HOMEBREW-REVIEW.md#p2--opportunities-homebrew-doesnt-have-not-gaps-but-cheap-differentiators-surfaced-by-the-review)) true.
+The index snapshot is published atomically with its dependent rebuilds (§6.1). Those builds are part of the frozen dev candidate and are reused in staging and prod. Missing required flavor builds, tests, rehearsals, or independent rebuilds keep the affected publication set pending; laptop absence never permits a partial provider/dependent update. Retention follows [STATE-AND-RECOVERY §8](STATE-AND-RECOVERY.md#plans-locks-archives-and-offline-use): all published historical snapshots and their referenced hosted objects are retained under a currently authorized archive catalog.
 
 The same publish deposits **every source artifact the build fetched** into the tree's `blobs/sha256/` area: the vendored-source archive ([DESIGN §9.6](DESIGN.md#the-repository-system)). Upstreams delete, reshuffle, and re-roll tarballs constantly. An orchard that vendors its sources never notices, and a from-nothing re-standup never starves ([GENESIS §2](runbooks/GENESIS.md#the-genesis-inventory)).
 
@@ -335,19 +335,20 @@ No user telemetry exists anywhere in this system ([DESIGN §2.2](DESIGN.md#non-g
 | v0.16 | Not recorded | topology rewritten for the owned Mac Pro and on-demand MacBook Pro; capability scheduling, batched VM validation, pending gates, independent rebuild limits, and shared-host signing risk made explicit |
 | v0.15 | Not recorded | TOOLCHAIN.md v0.1 joins the companions — §2's pinned toolchain slice is specified there; companion references refreshed — DESIGN v1.21, PACKAGE-FORMAT v0.16; no content change. |
 | v0.14 | Not recorded | prose review pass — two throat-clearing connectives removed (§2.1, §7.3); gems kept deliberately ('The coordinator is boring by design', 'the matrix's marginal cost is electricity, not maintenance', 'identical code, zero authority'); companion reference refreshed to DESIGN v1.20; no content change. |
-| v0.13 | Not recorded | graft rehearsal lands in the farm spec — §6.4's PR-gate chain gains the rehearsal gate for graft-bearing binaries (per-OS VM rehearsal, observed behavior diffed against the declared manifest, signing only on exact match — DESIGN v1.19 §12.15), §7.1's quarantine list gains the rehearsal-receipt gate as its sixth check (and §7.5's layer counts follow), §8's VM matrix gains the rehearsal run shape, §3's binary pipeline notes grafts are hash-verified but never run by the harness, and §12's Phase 2 names the rehearsal lane; companions refreshed (DESIGN v1.19, PACKAGE-FORMAT v0.15, HOMEBREW-REVIEW v0.21). |
-| v0.12 | Not recorded | the project domain lands — the farm coordinator's canonical endpoint is farm.aslice.sh (§7.4) and the transparency dashboard's public home is aslice.sh/dashboard (§10), per the owner's layout decision of paths for humans and subdomains for machines (September 2026); companion references refreshed to DESIGN v1.17, PACKAGE-FORMAT v0.13, HOMEBREW-REVIEW v0.19; no content change. |
-| v0.11 | Not recorded | companions refreshed to DESIGN v1.16, PACKAGE-FORMAT v0.12, HOMEBREW-REVIEW v0.18; no content change. |
-| v0.10 | Not recorded | NOMENCLATURE.md vocabulary reference added to the header; companions refreshed to DESIGN v1.15, PACKAGE-FORMAT v0.12, HOMEBREW-REVIEW v0.17; no content change. |
+| v0.13 | Not recorded | graft rehearsal lands in the farm spec — §6.4's PR-gate chain gains the rehearsal gate for graft-bearing binaries (per-OS VM rehearsal, observed behavior diffed against the declared manifest, signing only on exact match — DESIGN v1.19 §12.15), §7.1's quarantine list gains the rehearsal-receipt gate as its sixth check (and §7.5's layer counts follow), §8's VM matrix gains the rehearsal run shape, §3's binary pipeline notes grafts are hash-verified but never run by the harness, and §12's Phase 2 names the rehearsal lane; companions refreshed (DESIGN v1.19, PACKAGE-FORMAT v0.15). |
+| v0.12 | Not recorded | the project domain lands — the farm coordinator's canonical endpoint is farm.aslice.sh (§7.4) and the transparency dashboard's public home is aslice.sh/dashboard (§10), per the owner's layout decision of paths for humans and subdomains for machines (September 2026); companion references refreshed to DESIGN v1.17, PACKAGE-FORMAT v0.13; no content change. |
+| v0.11 | Not recorded | companions refreshed to DESIGN v1.16, PACKAGE-FORMAT v0.12; no content change. |
+| v0.10 | Not recorded | NOMENCLATURE.md vocabulary reference added to the header; companions refreshed to DESIGN v1.15, PACKAGE-FORMAT v0.12; no content change. |
 | v0.9 | Not recorded | review pass — the three bare §9.4 references now name DESIGN §9.4 explicitly; companion references refreshed; no content change. |
 | v0.8 | Not recorded | prose rewrite throughout — chapters reworded in the project's technical-writing voice; no content change. |
 | v0.7 | Not recorded | editorial pass — prose revised for directness; no content change. |
 | v0.6 | Not recorded | the genesis audit — every fetched source is vendored into the repository tree (§3, §9), VM golden-image genesis and the installer-app archive are specified (§8), and the from-nothing sequence lands as GENESIS.md (§12); companions DESIGN v1.9 / REVIEW v0.11. |
 | v0.5 | Not recorded | the gate's genesis protocol — the first `clamav` slice is scanned by a throwaway hand-built scanner with a `bootstrap` receipt, the other four quarantine gates carry full weight, go-live is a transparency-log event, and the packaged scanner sweeps the pre-gate backlog including its own origin slice (§7.5). |
 | v0.4 | Not recorded | the malware-signature gate — every staged slice is scanned against current definitions before signing-host promotion (new §7.5, §7.1 gate 5, §11 failure row, §12 Phase 1); the scanner is the orchard's own `clamav` core package (ORCHARD-POLICY v0.7 §2); client-side scanning stays the user's decision. |
-| v0.3 | Not recorded | companion references refreshed — DESIGN v1.8, PACKAGE-FORMAT v0.6, HOMEBREW-REVIEW v0.10; no content change. |
-| v0.2 | Not recorded | companion references refreshed — DESIGN v1.7, PACKAGE-FORMAT v0.6, HOMEBREW-REVIEW v0.9; all internal cross-references re-verified against current section numbering, no content change. |
+| v0.3 | Not recorded | companion references refreshed — DESIGN v1.8, PACKAGE-FORMAT v0.6; no content change. |
+| v0.2 | Not recorded | companion references refreshed — DESIGN v1.7, PACKAGE-FORMAT v0.6; all internal cross-references re-verified against current section numbering, no content change. |
 | Not recorded | September 2026 | corpus review corrections: artifact identity, protected execution, durable recovery, trust persistence, replay, platform limits, and examples aligned with STATE-AND-RECOVERY and SYSTEM-VOLUMES. These are specification changes; runtime acceptance remains pending. |
 | v0.22 | September 2026 | Documentation audit repairs: contract summaries aligned; owner-approved namespace, rollback, GC, naming, prefix, and graft decisions applied where relevant; semantic anchors and explicit citations added. Runtime implementation and platform acceptance remain pending. |
+| v0.24 | September 2026 | Remove retired comparison references and competitive framing; retain aslice requirements and link their owning specifications. Align affected contract summaries where applicable. |
 
 </details>

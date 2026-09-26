@@ -1,6 +1,6 @@
 # SQLite storage and disaster recovery
 
-- **Status:** Specification v0.3 — September 2026. The SQL and model tests are executable; database commands, services, migrations, and hardware recovery are not implemented.
+- **Status:** Specification v0.4 — September 2026. The SQL and model tests are executable; database commands, services, migrations, and hardware recovery are not implemented.
 - **Authority:** This document owns SQLite schemas, connection policy, reconstruction records, and database maintenance. [STATE-AND-RECOVERY](STATE-AND-RECOVERY.md) owns artifact identity, trust, privilege, and the transaction state machine. [KEY-RUNBOOK](runbooks/KEY-RUNBOOK.md) owns signing authority and compromise response.
 
 ## 1. Ownership and authority
@@ -364,7 +364,8 @@ null only for sequence 1), `operation_id` (32 lowercase hex digits), `phase`,
 `command`, `occurred_at` (UTC epoch seconds), `scope` (repository/environment or
 null for an instance-wide operation), `before`, `after` (logical state digests or
 null), `changes`, and `evidence`. `changes` is an ordered array of typed domain
-operations with complete before/after values, including explicit deletion markers;
+operations whose before/after references bind complete canonical values, with null
+as the explicit absence/deletion marker;
 `evidence` is a sorted, duplicate-free array of digest/byte-length references.
 Record identity is SHA-256 of the canonical bytes, stored separately from the
 bytes themselves. Names are `<sequence>-<digest-hex>.json`. Initialize the stream
@@ -424,7 +425,9 @@ unavailable; no implicit fallback is introduced. The separately retained committ
 execution catalog and affected-selection gates supply that read path independently
 of SQLite; §9.3 orders its durable publication. Diagnostic reads report mismatches.
 If the terminal commit is absent, recovery reverses effects
-and tentative choices under the existing fingerprint rules; committed operations
+and tentative choices under the existing fingerprint rules, except for explicit
+finalization of a verified protected-volume `pending-reboot` intent under
+[SYSTEM-VOLUMES §4](SYSTEM-VOLUMES.md#activation-rollback-and-os-updates); committed operations
 reconcile their after-state. SQL rollback alone does not undo filesystem changes.
 
 Reservations and fence allocations are special irreversible decisions: their
@@ -488,7 +491,8 @@ interruption. Apply the following order under effective mutation ownership:
    showing the verified after-state and prepared commit boundary. These receipts
    are not a terminal commit by themselves. Flush the single commit decision in the
    outside-prefix history, binding all participant receipts, state and catalog digests.
-   This is the commit point; a crash before it invokes pre-commit reversal, and a
+   This is the commit point; a crash before it invokes pre-commit reversal (with
+   the explicit protected-volume finalization exception in §9.1), and a
    crash after it preserves the commit. Unknown or inaccessible decision evidence
    permits neither guessing rollback nor declaring success.
 4. Mirror the decision into the prefix, acknowledge it in protected records through
@@ -519,7 +523,8 @@ protected components. Finalize the verified inventory last. A partial export lis
 missing participants and is not a complete recovery set. Local redundancy does not
 establish resistance to disk loss or compromise of the owner account.
 
-These are specified ordering requirements. Per-filesystem flush adapters, binary
+The storage layout, canonical JSON record/receipt schemas, flush obligations, and
+export validation are specified in [STATE-AND-RECOVERY §10.2](STATE-AND-RECOVERY.md#102-recovery-engineering-contracts). Per-filesystem adapters,
 record/receipt decoders, and crash-injection evidence must pass the release gates
 before the protocol can be described as implemented or durable on hardware.
 
@@ -586,8 +591,8 @@ contention promptly. A configured timeout alone does not authorize waiting.
 After waiting or recovery, revalidate the base, trust, and plan; materially changed
 operations require fresh confirmation. Prefix ownership spans preparation through
 post-commit service checks, including surviving helpers until they stop writing.
-The approved waiting/stopping command surface and remaining protocol work are in
-[STATE-AND-RECOVERY §10.2](STATE-AND-RECOVERY.md#102-engineering-decisions-before-implementation).
+The approved waiting/stopping command surface and protocol are in
+[STATE-AND-RECOVERY §10.2](STATE-AND-RECOVERY.md#102-recovery-engineering-contracts).
 
 Authorized foreground waits use `db.lock_timeout = "30s"`; the common
 `--lock-timeout DURATION` option overrides it for one invocation. Accept a
@@ -886,9 +891,9 @@ Verify artifacts independently, prepare beside the original, and review missing
 artifacts, verified replacements, and omissions together. Isolated verified closures
 may be usable before normal activation or affected privileged integration is allowed.
 Report repaired, usable with listed unresolved repairs, or replacement prepared but
-activation blocked. The authoritative workflow and unresolved mechanisms are in
+activation blocked. The authoritative workflow and recovery mechanisms are in
 [STATE-AND-RECOVERY §5.1](STATE-AND-RECOVERY.md#51-guided-recovery-and-trusted-prefix-rebuilding)
-and [STATE-AND-RECOVERY §10.2](STATE-AND-RECOVERY.md#102-engineering-decisions-before-implementation).
+and [STATE-AND-RECOVERY §10.2](STATE-AND-RECOVERY.md#102-recovery-engineering-contracts).
 
 | Failure | Ordered action and success condition |
 |---|---|
@@ -999,5 +1004,6 @@ do not satisfy these platform and security acceptance gates.
 | v0.3 | September 2026 | Specify ordered independent recovery history with protected receipts and committed execution-catalog publication; align explicit waiting, surviving-helper ownership, post-commit checks, guided recovery, and unaffected shim access. Supersede blanket runtime denial and distinguish existing models from pending runtime acceptance. |
 | v0.2 | September 2026 | Specify cumulative contention waits, phase-aware cancellation, automatic maintenance, cleanup retention, explicit compaction, and schema-2 copy migration; extend executable policy models. |
 | v0.1 | September 2026 | Specify six SQLite roles, executable schemas, durable reconstruction, inspection, coordinated backups, migration, and disaster recovery. Runtime and hardware acceptance remain pending. |
+| v0.4 | September 2026 | Align durable record values, recovery object formats, and protected-volume finalization with the recovery contracts; retain a single durable commit decision and independent participant evidence. |
 
 </details>

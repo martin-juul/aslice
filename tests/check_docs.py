@@ -14,7 +14,7 @@ from markdown_it import MarkdownIt
 from mdit_py_plugins.deflist import deflist_plugin
 
 PARSER = MarkdownIt('commonmark', {'html': True}).enable('table').use(deflist_plugin)
-DOCNAME = r'(?:DATABASE|STATE-AND-RECOVERY|SYSTEM-VOLUMES|PACKAGE-FORMAT|ORCHARD-POLICY|HOMEBREW-REVIEW|BUILD-INFRA|KEY-RUNBOOK|NOMENCLATURE|REPOSITORIES|SLICE-FORMAT|CONTRIBUTING|AUTHORING|TOOLCHAIN|GENESIS|MANUAL|DESIGN|SETUP|SECURITY|HELPERS|REVIEW)(?:\.md)?'
+DOCNAME = r'(?:DATABASE|STATE-AND-RECOVERY|SYSTEM-VOLUMES|PACKAGE-FORMAT|ORCHARD-POLICY|BUILD-INFRA|KEY-RUNBOOK|NOMENCLATURE|REPOSITORIES|SLICE-FORMAT|CONTRIBUTING|AUTHORING|TOOLCHAIN|GENESIS|MANUAL|DESIGN|SETUP|SECURITY|HELPERS)(?:\.md)?'
 CITATION = re.compile(r'(?:(?P<doc>'+DOCNAME+r')\s+)?§{1,2}(?P<num>\d+(?:\.\d+)*)')
 
 @dataclass
@@ -35,7 +35,7 @@ def inventory(root):
 
 def historical(path, heading):
     # Named, bounded records; links remain checked even when citations are historical.
-    return heading == 'History' or (path.name == 'HOMEBREW-REVIEW.md' and heading.startswith('8. ')) or (path.name == 'REPOSITORIES.md' and heading.startswith('9. '))
+    return heading == 'History' or (path.name == 'REPOSITORIES.md' and heading.startswith('9. '))
 
 class Anchors(HTMLParser):
     def __init__(self):
@@ -165,7 +165,6 @@ def check(root, paths=None):
                     m=refs[0]; num=dest.ids.get(fragment,(None,0))[0]
                     if m['num']!=num:doc.add(line,'citation-number',f'Label {m[0]} disagrees with destination section {num}: {url}')
                     owner=(m['doc'] or '').removesuffix('.md')
-                    if owner=='REVIEW':owner='HOMEBREW-REVIEW'
                     if path!=doc.path and not owner:doc.add(line,'citation-label','Cross-document label must name the document')
                     if owner and owner!=path.stem:doc.add(line,'citation-document',f'Label names {owner}, target is {path.stem}')
     return [f for d in docs.values() for f in d.findings],docs

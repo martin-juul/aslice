@@ -1,0 +1,21 @@
+{
+  "format": 1,
+  "role": "client-state",
+  "instance_id": "11111111111111111111111111111111",
+  "sequence": 1,
+  "previous": null,
+  "operation_id": "11111111111111111111111111111111",
+  "phase": "initialized",
+  "command": "init",
+  "occurred_at": 0,
+  "scope": null,
+  "before": null,
+  "after": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "changes": [],
+  "evidence": [
+    {
+      "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "size": 1
+    }
+  ]
+}

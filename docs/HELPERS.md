@@ -1,6 +1,6 @@
 # aslice Helpers and Background Services
 
-- **Status:** Specification v0.3 — September 2026. This reference describes the client design; it does not establish completed implementation or validation on macOS.
+- **Status:** Specification v0.4 — September 2026. This reference describes the client design; it does not establish completed implementation or validation on macOS.
 - **Authority:** [DESIGN](DESIGN.md) defines the process roles. [STATE-AND-RECOVERY](STATE-AND-RECOVERY.md) owns privileged storage, authorization, transactions, and recovery; [SYSTEM-VOLUMES](SYSTEM-VOLUMES.md) owns protected-volume operations.
 
 <a id="what-runs-and-for-how-long"></a>
@@ -42,7 +42,7 @@ background service registration. Their restrictions come from
 | `aslice-build` | The build harness runs Starlark build phases in this helper, spawning it with each phase's policy. | Unprivileged; build phases write within the build directory and read the pinned toolchain and dependencies through an isolated buildroot. The install phase writes to staging only. | None for build and staging; tests have no network by default, with a logged per-formula `test_network = true` exception. |
 | `aslice-link` | The client delegates ordinary store/profile writes to this role when registering artifacts and preparing or switching generations. | Unprivileged; the designated writer of the ordinary user-owned store/profile. No compiler access. Protected root closures belong to `aslice-system`. | None. |
 | `aslice-system` | The client requests a declared privileged operation; protected-volume work also uses the recovery kit's helper. Each invocation is authorized, with no resident helper daemon required. | Elevated; imports verified closures and maintains protected configuration, trust, journals, and backups. External writes are limited to authorized operations (§3). | The contracts do not specify a general network profile for this helper. Independent verification is required even when staging came from the client. |
-| Runtime shim | A shell or another caller invokes a runtime/tool name. The shim resolves the selection and `exec`s the installed program, leaving no wrapper process. | No elevation step; reads runtime selections and the state database to find an installed store path, and supplies the declared per-stream userbase environment. | No network sandbox contract is specified for shim dispatch or the program it launches. |
+| Runtime shim | A shell or another caller invokes a runtime/tool name. The shim resolves the selection and `exec`s the installed program, leaving no wrapper process. | No elevation step; reads the committed execution catalog, validates the selected closure and gate epoch, registers an execution lease, and supplies the declared per-stream userbase environment. | No network sandbox contract is specified for shim dispatch or the program it launches. |
 
 Extraction follows authentication of the archive and checks the staged inventory
 against the manifest. Path traversal, escaping links, special files, collisions,

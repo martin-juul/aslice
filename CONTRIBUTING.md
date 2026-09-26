@@ -109,6 +109,7 @@ python tests/check_docs.py
 python -m unittest discover -s tests -p test_docs.py
 python tests/check_contracts.py
 python -m unittest discover -s tests -p test_database.py
+python -m unittest discover -s tests -p test_recovery_contract.py
 python .agents/skills/ref-curator/scripts/refs.py verify --root .
 git diff --check
 ```
@@ -120,8 +121,7 @@ fences, and table structure. It supports CommonMark, GFM tables, and Pandoc-styl
 definition lists. External URL availability and factual correctness require
 separate review.
 
-History sections, HOMEBREW-REVIEW's section 8 preserved proposals, and
-REPOSITORIES' section 9 historical amendment record retain their citations;
+History sections and REPOSITORIES' section 9 historical amendment record retain their citations;
 their links remain checked. Code and inline literals are not prose. Archive
 originals beginning at the Full captured source heading retain upstream syntax;
 wrappers remain checked, with bare source-section locators referring to the
