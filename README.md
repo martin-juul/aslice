@@ -41,6 +41,7 @@ In the order a newcomer should read them:
 - [Slice format](docs/SLICE-FORMAT.md) — archive layout, container and manifest schematics, verification, and extraction limits
 - [Protected system volumes](docs/SYSTEM-VOLUMES.md) — Recovery and boot-snapshot patching across the supported OS range
 - [Design document](docs/DESIGN.md) — architecture, platform matrix, distribution, security model, roadmap
+- [Helpers and background services](docs/HELPERS.md) — client process roles, privileged operations, runtime shims, and package services
 - [Package format specification](docs/PACKAGE-FORMAT.md) — the `package.toml` schema, dependency semantics, versioning, lock files, the build API
 - [Homebrew comparison & gap review](docs/HOMEBREW-REVIEW.md) — a feature-by-feature review against Homebrew 7.0, what's missing, and the spec amendments it produced
 - [Build infrastructure](docs/BUILD-INFRA.md) — the build farm and the `aslice build` / `aslice farm` harness: one pipeline, run identically by the farm and by any user's Mac
@@ -73,5 +74,6 @@ In the order a newcomer should read them:
 | September 2026 | the declarative-setup file renamed `aslice-machine.toml`, its commands grouped under `aslice machine` (apply / export / import --from-brewfile); top-level `aslice apply` keeps plans and lock files (owner decision). |
 | September 2026 | TOOLCHAIN.md added to the document list. |
 | September 2026 | prose rewrite of the introduction and machine-setup overview; no content changes. |
+| September 2026 | Add the helpers and background services reference to the documentation index; no runtime changes. |
 
 </details>

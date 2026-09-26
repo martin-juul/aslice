@@ -4,7 +4,7 @@
 
 **The user guide for aslice — a package manager for Intel macOS.**
 
-- **Status:** v0.15 — September 2026
+- **Status:** v0.16 — September 2026
 - **Project home:** [aslice.sh](https://aslice.sh) — homepage, documentation (aslice.sh/docs), and the public dashboard (aslice.sh/dashboard); the installer is served from get.aslice.sh (§2).
 - **Audience:** people who install and run software with aslice; that is most of what follows. If you *write* packages, read chapters 1–4 and then move to [AUTHORING.md](AUTHORING.md). If you want to know *why* things are the way they are, the rationale lives in [DESIGN.md](DESIGN.md).
 - **Companions:** the man pages in [man/](../man/) (also available as `aslice help <command>`), [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md), [ORCHARD-POLICY.md](ORCHARD-POLICY.md), [REPOSITORIES.md](REPOSITORIES.md), [GENESIS.md](GENESIS.md), [TOOLCHAIN.md](TOOLCHAIN.md).
@@ -52,6 +52,25 @@ These words appear in every message aslice prints, so they are worth learning on
 5. Everything aslice fetches — slices, index metadata, the CA bundle, aslice itself — is signed and hash-pinned. A verification failure blocks the operation and is always reported; it cannot be silenced.
 
 If you remember store + generations + signed everything, the rest of this manual is details.
+
+### 1.3 Helpers and background services
+
+During an install, the client starts temporary helpers to fetch, extract, and link
+packages; source builds also use a sandboxed build helper. Ordinary operations run
+as your user. Declared privileged changes go through `aslice-system`, with
+per-operation authorization and independently verified code and dependencies in
+protected root-owned storage.
+
+Those helpers finish with their work. A package service, such as PostgreSQL, can
+keep running under launchd after the command exits: user agents run as you, while
+root daemons require the privileged helper. A runtime shim has a shorter job: it
+selects an installed runtime and replaces itself with that program. The current
+design requires no persistent aslice daemon; the proposed multi-user daemon is
+future work.
+
+[HELPERS.md](HELPERS.md) describes each role, its access boundaries, and how managed
+effects are removed. Service commands are in §7 and decommission is in §2.5. These
+are design contracts, not claims of completed implementation or platform validation.
 
 ---
 
@@ -700,5 +719,6 @@ The prefix layout, for orientation: `store/` (immutable packages), `profiles/gen
 | v0.3 | Not recorded | new chapter 10 — declarative whole-machine setup with `setup.toml`, `aslice apply`, `aslice export`, and `aslice import --from-brewfile` (SETUP.md); chapters 10–13 renumber to 11–14. |
 | v0.2 | Not recorded | review corrections — §2.3 covers bash alongside zsh, §2.5 lists the three outside-prefix exceptions to a clean removal instead of claiming none exist, §3's man-page claim is softened to what actually ships, §3.1 documents `link`/`unlink` for `link = false` packages, and §7.1's root-daemon gate includes local repositories. |
 | Not recorded | September 2026 | corpus review corrections: artifact identity, protected execution, durable recovery, trust persistence, replay, platform limits, and examples aligned with STATE-AND-RECOVERY and SYSTEM-VOLUMES. These are specification changes; runtime acceptance remains pending. |
+| v0.16 | September 2026 | Add §1.3 and the helper reference link, explaining temporary helpers, package services, runtime shims, and the future multi-user daemon; no runtime changes. |
 
 </details>
