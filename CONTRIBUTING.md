@@ -42,7 +42,7 @@ Local and farm builds use the same pipeline, but host capability and OS coverage
 
 ### Porting from Homebrew
 
-`tools/` contains the Ruby-formula importer ([DESIGN §13.3](docs/DESIGN.md#coexistence-and-migration-from-homebrew)). It handles the mechanical translation; you handle the judgment calls:
+The Ruby-formula importer is planned for `tools/` ([DESIGN §13.3](docs/DESIGN.md#coexistence-and-migration-from-homebrew)). It will handle the mechanical translation; you handle the judgment calls:
 
 | Homebrew | aslice |
 |---|---|
@@ -63,6 +63,8 @@ Merge gates are mechanical ([ORCHARD-POLICY §10](docs/ORCHARD-POLICY.md#merge-g
 Owner approval applies to all changes during single-owner launch, including new core packages, versioned lineages, `abi = true` variants, system-software and system-patch packages, and policy changes. The owner may approve their own changes; second-reviewer and maintainer-vote requirements are superseded for this phase ([ORCHARD-POLICY §17](docs/ORCHARD-POLICY.md#governance-and-review-process)). Independent maintainers can help review; multi-party governance remains a future transition. Automated gates cannot be waived.
 
 ## Documentation style
+
+Follow [STRUCTURE.md](STRUCTURE.md) for file placement and the boundary between durable documentation and work records.
 
 The docs ship with the manager, and reviewers hold them to the same bar as formulae. Write the way the code is written: mechanics first, one fact per sentence, one idea per paragraph.
 
@@ -162,5 +164,6 @@ Original contributions are licensed under [Apache-2.0](LICENSE), the project's l
 | September 2026 | variant discipline rule updated: the six-variant cap is retired (ORCHARD-POLICY v1.5); variants are governed by need and honest ABI tags. |
 | September 2026 | prose rewrite of the contribution and review introductions; no rule changes. |
 | September 2026 | Documentation audit repairs: contract summaries aligned; owner-approved namespace, rollback, GC, naming, prefix, and graft decisions applied where relevant; semantic anchors and explicit citations added. Runtime implementation and platform acceptance remain pending. |
+| September 2026 | Link the repository structure policy and describe the Homebrew importer as planned; retain writing conventions and checker instructions here. |
 
 </details>

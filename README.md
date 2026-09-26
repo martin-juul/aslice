@@ -35,6 +35,8 @@ Original project material is licensed under [Apache-2.0](LICENSE). Third-party m
 
 ## Documents
 
+[Project structure](STRUCTURE.md) defines where repository content belongs and the planned C++ layout.
+
 In the order a newcomer should read them:
 
 - [State and recovery](docs/STATE-AND-RECOVERY.md) — artifact identities, privilege boundaries, transactions, replay, and acceptance gates
@@ -75,5 +77,6 @@ In the order a newcomer should read them:
 | September 2026 | TOOLCHAIN.md added to the document list. |
 | September 2026 | prose rewrite of the introduction and machine-setup overview; no content changes. |
 | September 2026 | Add the helpers and background services reference to the documentation index; no runtime changes. |
+| September 2026 | Link the repository structure guidelines and planned C++ layout. |
 
 </details>
