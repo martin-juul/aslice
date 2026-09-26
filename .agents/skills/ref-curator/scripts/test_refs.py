@@ -55,6 +55,16 @@ class ArchiveTests(unittest.TestCase):
         return {p.name: (p.read_bytes(), p.stat().st_mtime_ns)
                 for p in self.archive.iterdir() if p.is_file()}
 
+    def test_explicit_anchor_and_full_source_navigation(self):
+        guide = self.root / "docs/Guide (old).md"
+        guide.write_text('<a id="stable"></a>\n\n## 2. Current heading\n', encoding="utf-8")
+        self.write("A.MD", '# Record\n\n[Section](../Guide%20%28old%29.md#stable)\n'
+                   '[Original](A.source.txt) [Notice](LICENSE.txt)\n'
+                   '[Full](#full-captured-source)\n\n## Full captured source\n'
+                   '[upstream](not-local.md)\n')
+        refs.refresh(self.root)
+        self.assertEqual(self.findings(), [])
+
     def test_verify_is_read_only(self):
         before = self.snapshot()
         self.assertEqual(self.findings(), [])

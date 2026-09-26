@@ -2,9 +2,11 @@
 
 > State, identity, privilege, and recovery contracts: [STATE-AND-RECOVERY](STATE-AND-RECOVERY.md). Protected-volume patching: [SYSTEM-VOLUMES](SYSTEM-VOLUMES.md). These specifications do not establish completed implementation or platform validation.
 
-- **Status:** Design draft, v0.15 — September 2026
-- **Companion to:** DESIGN.md v1.22 §12.13 (architecture and rationale), MANUAL.md §10 (user guide), aslice-machine(1) (command reference). This document is the schema and semantics specification.
+- **Status:** Design draft, v0.16 — September 2026
+- **Companion to:** [DESIGN §12.13](DESIGN.md#declarative-system-setup-aslice-machinetoml-and-the-aslice-machine-commands) (architecture and rationale), [MANUAL §10](MANUAL.md#one-file-one-command-rebuilding-a-machine), aslice-machine(1) (command reference). This document is the schema and semantics specification.
 - **Vocabulary:** [NOMENCLATURE.md](NOMENCLATURE.md) — project terms, acronyms, and the Homebrew translation table.
+
+<a id="the-scenario"></a>
 
 ## 1. The scenario
 
@@ -26,9 +28,13 @@ aslice machine export > aslice-machine.toml
 aslice machine export --defaults com.apple.dock,com.apple.finder > aslice-machine.toml
 ```
 
+<a id="the-file"></a>
+
 ## 2. The file
 
 `aslice-machine.toml` uses TOML, like `package.toml`, `aslice.toml`, `sources.toml`, and the lock file. It is **data, never code**: no hooks, script blocks, or evaluated expressions. Homebrew's Brewfile is a Ruby DSL executed by `brew bundle`, so it can do anything Ruby can do. The setup file can execute nothing (§7); you can inspect its declarations before applying them.
+
+<a id="schema-overview"></a>
 
 ### 2.1 Schema overview
 
@@ -37,7 +43,7 @@ aslice machine export --defaults com.apple.dock,com.apple.finder > aslice-machin
 schema = 1                     # required; unknown schema versions are a hard error
 
 packages = [                   # the wishlist: constraints, not exact state
-  "ffmpeg@7",                  #   version constraint (§12.1 syntax)
+  "ffmpeg@7",                  #   version constraint (DESIGN §12.1 syntax)
   "postgresql +ssl",           #   variants
   "audiolab:convolver",        #   repository-namespaced (REPOSITORIES.md)
 ]
@@ -77,19 +83,27 @@ FXPreferredViewStyle = "Nlsv"
 
 Unknown top-level keys are a hard error. The reasoning: a file written for a newer aslice must fail on an older one — fail outright, never half-apply. The `schema` key versions the document as a whole, and incompatible future changes bump it.
 
+<a id="packages"></a>
+
 ### 2.2 `packages`
 
-Each entry is a name with optional decoration — an `@version` constraint, `+variant`/`-variant` flags, a `repo:` namespace — the same syntax `aslice install` accepts on the command line. Note what the file asks for, though. This is the *constraint* layer, not the *state* layer: it says "ensure ffmpeg 7", and the solver picks the exact build against the current index snapshot. If what you want is a machine reproduced bit-for-bit, that is the **lock file**'s job (`aslice lock export`; PACKAGE-FORMAT §7). The difference is `package.json` vs. `package-lock.json`, and both flow through the convergence verbs of §3.1.
+Each entry is a name with optional decoration — an `@version` constraint, `+variant`/`-variant` flags, a required `repo:` namespace for every non-core package (including extended) — the same syntax `aslice install` accepts on the command line. Note what the file asks for, though. This is the *constraint* layer, not the *state* layer: it says "ensure ffmpeg 7", and the solver picks the exact build against the current index snapshot. If what you want is a machine reproduced bit-for-bit, that is the **lock file**'s job (`aslice lock export`; [PACKAGE-FORMAT §7](PACKAGE-FORMAT.md#lock-files)). The difference is `package.json` vs. `package-lock.json`, and both flow through the convergence verbs of §3.1.
 
 Resolution follows the ordinary rules: binary-first, flavor auto-detected. One consequence of the wishlist being *reproducible*: a package that exists only as a local build is a plan error unless its repository is reachable. "Rely on something only my old disk had" is refused by construction.
 
+<a id="runtimes"></a>
+
 ### 2.3 `runtimes`
 
-`[runtimes.default]` maps runtime names to streams, applied as `aslice default <runtime> <stream>` (DESIGN §12.9): recorded in the state DB, consumed by the shim layer. Two kinds of selection deliberately stay out of this file. Project pins (`aslice.toml` in a project tree) belong to projects — commit `aslice.toml` there. Session selections (`aslice use`) are by definition not machine setup.
+`[runtimes.default]` maps runtime names to streams, applied as `aslice default <runtime> <stream>` ([DESIGN §12.9](DESIGN.md#multi-version-runtimes-use-pin-default--and-version-bound-extensions)): recorded in the state DB, consumed by the shim layer. Two kinds of selection deliberately stay out of this file. Project pins (`aslice.toml` in a project tree) belong to projects — commit `aslice.toml` there. Session selections (`aslice use`) are by definition not machine setup.
+
+<a id="services"></a>
 
 ### 2.4 `services`
 
-`start` lists packages whose declared launchd services should be enabled, exactly as `aslice service start <pkg>` would enable them (DESIGN §12.8). Enabling happens after the packages install, and each generated plist binds the runtime alias selected at enable time — so a `[runtimes.default]` change in a later apply never silently moves a running service out from under you. Root-domain services (`domain = "system"`) remain trust-gated per REPOSITORIES.md §3: a file cannot enable what the repository's trust level forbids.
+`start` lists packages whose declared launchd services should be enabled, exactly as `aslice service start <pkg>` would enable them ([DESIGN §12.8](DESIGN.md#services-launchd-native-lifecycle-and-safe-upgrades)). Enabling happens after the packages install, and each generated plist binds the runtime alias selected at enable time — so a `[runtimes.default]` change in a later apply never silently moves a running service out from under you. Root-domain services (`domain = "system"`) remain trust-gated per [REPOSITORIES §3](REPOSITORIES.md#trust-levels): a file cannot enable what the repository's trust level forbids.
+
+<a id="shell"></a>
 
 ### 2.5 `shell`
 
@@ -97,10 +111,12 @@ Resolution follows the ordinary rules: binary-first, flavor auto-detected. One c
 
 Shell enrollment and account selection are separate operations on 10.11–12:
 
-1. `chsh(1)` refuses any shell not listed in `/etc/shells` — a system file aslice does not otherwise touch. Enrolling an aslice shell means appending one line to `/etc/shells`. The write is performed by the `aslice-system` helper (DESIGN §10.4) under the §3.4 consent gate, recorded in the state DB, and undone if aslice added the line and the shell is later unset or uninstalled. The line is *appended*, never reordered; Apple's entries are never modified.
+1. `chsh(1)` refuses any shell not listed in `/etc/shells` — a system file aslice does not otherwise touch. Enrolling an aslice shell means appending one line to `/etc/shells`. The write is performed by the `aslice-system` helper ([DESIGN §10.4](DESIGN.md#privilege-discipline)) under the §3.4 consent gate, recorded in the state DB, and undone if aslice added the line and the shell is later unset or uninstalled. The line is *appended*, never reordered; Apple's entries are never modified.
 2. The OS default is `/bin/bash` through 10.14 and `/bin/zsh` for newly created accounts from Catalina onward ([Apple shell defaults](refs/APPLE_DEFAULT_LOGIN_SHELL.MD)). Existing or migrated accounts may differ. Compare the requested shell with the account's actual login-shell record, not an OS-version assumption; an already matching selection needs no change. `chsh` itself runs unprivileged: it edits the user's own directory record and may prompt for the login password. That prompt is macOS's, not aslice's.
 
 If the requested shell package is not installed yet, the plan installs it first; if it is not in any configured repository, the plan fails before anything changes.
+
+<a id="defaults"></a>
 
 ### 2.6 `defaults`
 
@@ -115,11 +131,15 @@ One thing to know about preferences: applications read them at launch, not conti
 
 Writing a default for an application that is not installed yet is fine, and common: the key sits in the domain's plist until the application picks it up at first launch. Which means the ordering between `[defaults]` entries and `packages` is not the user's problem.
 
+<a id="aslice-and-repos"></a>
+
 ### 2.7 `[aslice]` and `[[repos]]`
 
-`[aslice]` carries ordinary configuration keys (MANUAL §13) — `flavor`, `mirrors`, `gc.*`, and friends — applied exactly as `aslice config set` would apply them. The section exists so that a machine prepared for an older Mac (`flavor = "v1"`) or an offline mirror fleet can say so in the same file as everything else.
+`[aslice]` carries ordinary configuration keys ([MANUAL §13](MANUAL.md#configuration-reference)) — `flavor`, `mirrors`, `gc.*`, and friends — applied exactly as `aslice config set` would apply them. The section exists so that a machine prepared for an older Mac (`flavor = "v1"`) or an offline mirror fleet can say so in the same file as everything else.
 
-`[[repos]]` declares additional repositories. Applying one is `aslice repo add <url>`: TOFU key pinning, with its interactive confirmation (REPOSITORIES.md §7). One rule is absolute: a file **cannot elevate trust**. `verified` status comes only from the normal grant flow, never from a document. And a declared repo whose URL is already configured under another name — or whose name is configured with another URL — is a conflict error, not a silent override.
+`[[repos]]` declares additional repositories. Applying one is `aslice repo add <url>`: TOFU key pinning, with its interactive confirmation ([REPOSITORIES §7](REPOSITORIES.md#aslice-repo-command-surface-completed)). One rule is absolute: a file **cannot elevate trust**. `verified` status comes only from the normal grant flow, never from a document. And a declared repo whose URL is already configured under another name — or whose name is configured with another URL — is a conflict error, not a silent override.
+
+<a id="grafts"></a>
 
 ### 2.8 `[grafts]`
 
@@ -128,46 +148,47 @@ Writing a default for an application that is not installed yet is fine, and comm
 allow = ["protools-hd", "audiolab:convolver"]
 ```
 
-Some packages carry **grafts** — vendor installer scripts, declared in the formula with a behavior manifest and run only with the user's approval (MANUAL §4.5; model DESIGN §12.15; schema PACKAGE-FORMAT §3.11). Interactively, an approval is given at the prompt and recorded in the state DB. The `[grafts]` table is the declarative counterpart, pnpm-style: `allow` names the packages whose grafts may run without prompting, so a known set rebuilds a machine unattended.
+Some packages carry grafts: vendor scripts confined to isolated staging ([STATE-AND-RECOVERY §4](STATE-AND-RECOVERY.md#graft-execution-boundary)). `[grafts].allow` selects packages whose existing local approval may be reused. A name alone grants no authority.
 
-The entries are package names in the same addressing as `packages` — plain, or `repo:`-namespaced. The semantics, with the sharp edges named:
+- The approval must match repository identity, package version, script hashes, and the complete effective behavior-manifest digest. Changed bindings require a fresh decision.
+- Only reviewed signed manifests can reuse persistent approval. Unsigned manifests always require a fresh decision.
+- Entries use the same qualified addressing as `packages` and must name packages the file installs. A package without grafts is noted as a no-op.
+- The plan displays the effective behavior even when an approval matches. Capability checks and system-change consent still apply.
+- A fresh machine has no matching approval: it must obtain informed approval again. Non-interactive execution without matching approval requires explicit `--accept-grafts`, subject to the same capability checks; file contents cannot supply consent.
 
-- **The list suppresses the prompt, never the display.** The plan prints every graft's behavior manifest before execution whether or not the package is allow-listed; what the list waives is the question, not the evidence.
-- **Only signed manifests can be allow-listed.** A graft whose manifest is unsigned (a third-party repository, an official package whose rehearsal has not run) prompts at every apply, per decision, whatever the file says — an allow-list entry for one is ignored with a warning. The allow-list is a form of persistence, and persistence is reserved for manifests somebody has rehearsed and signed (REPOSITORIES.md §3).
-- **Entries must name packages the file installs.** An entry absent from `packages` is a schema error; an entry for a package that declares no grafts is a no-op, noted in the plan.
-- **Refusal stays refusal.** Non-interactive applies refuse graft-bearing packages not on the list (exit 2) unless `--accept-grafts` is passed — the same contract shape as `--accept-system-changes`, one severity level down (§3.4).
+Exporting this list carries package selection, not transferable authorization. It cannot reproduce another machine's trust or approvals.
 
-`aslice machine export` writes the list from your recorded approvals (§4.1), so the file you share carries the decisions you already made — and no others.
+<a id="aslice-machine-apply"></a>
 
 ## 3. `aslice machine apply`
 
+<a id="one-operation-three-documents"></a>
+
 ### 3.1 One operation, three documents
 
-The operation predates the feature. `aslice apply` already replayed an exported lock file (`aslice apply aslice.lock`, PACKAGE-FORMAT §7) and executed a saved plan (`aslice plan install ffmpeg > plan.json && aslice apply plan.json`, DESIGN §12.1). Declarative setup is the same operation at a third fidelity — *make reality match this document* — and the spelling is split by document kind: plans and locks keep top-level `aslice apply`; the machine file gets `aslice machine apply`, so the command names what it converges:
+The operation predates the feature. `aslice apply` already replayed an exported lock file (`aslice apply aslice.lock`, [PACKAGE-FORMAT §7](PACKAGE-FORMAT.md#lock-files)) and executed a saved plan (`aslice plan install ffmpeg > plan.json && aslice apply plan.json`, [DESIGN §12.1](DESIGN.md#commands)). Declarative setup is the same operation at a third fidelity — *make reality match this document* — and the spelling is split by document kind: plans and locks keep top-level `aslice apply`; the machine file gets `aslice machine apply`, so the command names what it converges:
 
 | Document | Fidelity | What apply does |
 |---|---|---|
 | `plan.json` | exact, pre-resolved | execute the saved plan |
-| `aslice.lock` | exact state | replay the locked profile (PACKAGE-FORMAT §7) |
+| `aslice.lock` | exact state | replay the locked profile ([PACKAGE-FORMAT §7](PACKAGE-FORMAT.md#lock-files)) |
 | `aslice-machine.toml` | constraints + preferences | plan (resolve wishlist, diff preferences), show, confirm, execute |
 
-The file kind is detected, never guessed: JSON is a plan, `lock_version = N` is a lock, `schema = N` with setup tables is a machine file, and anything else is an error that names what was actually found. With no argument, `aslice machine apply` reads `./aslice-machine.toml` if it exists; a machine file passed to top-level `aslice apply` is refused with a pointer here — the split is by document kind, with no overlap. The argument may also be an `https://` URL. In that case the file is fetched through the ordinary TLS stack (DESIGN §12.10), hash-printed, and planned before any consent is asked — you always review the *resolved* plan rather than trusting the URL blindly.
+The file kind is detected, never guessed: JSON is a plan, `lock_version = N` is a lock, `schema = N` with setup tables is a machine file, and anything else is an error that names what was actually found. With no argument, `aslice machine apply` reads `./aslice-machine.toml` if it exists; a machine file passed to top-level `aslice apply` is refused with a pointer here — the split is by document kind, with no overlap. The argument may also be an `https://` URL. In that case the file is fetched through the ordinary TLS stack ([DESIGN §12.10](DESIGN.md#trust-store-modern-ca-certificates-on-a-frozen-platform)), hash-printed, and planned before any consent is asked — you always review the *resolved* plan rather than trusting the URL blindly.
+
+<a id="the-plan-and-the-order-of-operations"></a>
 
 ### 3.2 The plan and the order of operations
 
-Every apply is a plan first. The plan is computed in full, rendered in the same format as `aslice plan` (`--json` for machines), and confirmed before anything executes. The steps run in this order, and the order is load-bearing:
+Machine apply is one transaction for the complete managed-state change. First validate the file and resolve its packages against authenticated metadata. A newly declared repository must complete its separate trust-establishment flow before it can supply that metadata; missing trust stops planning and identifies the prerequisite. Establishing trust is explicit and does not install packages or approve grafts.
 
-1. **Validate** — schema, keys, package specs, domain syntax. Everything parses, or nothing happens.
-2. **Repositories** — add declared repos (TOFU confirmation), refresh metadata.
-3. **Configuration** — `[aslice]` keys.
-4. **Packages** — resolve the wishlist against the current index snapshot; one generation for the whole set (DESIGN §8.3), so a failed apply never leaves a half-installed package list.
-5. **Runtime selections** — the `[runtimes.default]` entries.
-6. **Services** — enable declared services, verify they came up.
-7. **User preferences** — the `[defaults.user]` writes.
-8. **System preferences and shell** — the `[defaults.system]` writes, `/etc/shells` enrollment, `chsh` (§3.4 gate).
-9. **Report** — what changed, what was already so, what needs restarting.
+Before mutation, compute the complete package, configuration, runtime, service, preference, and shell changes; verify recovery prerequisites; show the plan; and collect every required consent. A refusal stops the apply before managed state changes. `--dry-run` performs no writes. Machine-wide serialized operation plans remain deferred until their schema exists; package-plan JSON cannot stand in for them ([STATE-AND-RECOVERY §8](STATE-AND-RECOVERY.md#plans-locks-archives-and-offline-use)).
 
-Why this order? Because the setup file's own privileged writes are all at step 8 — package installation at step 4 needs privileges only if an approved graft is elevated (§2.8), and the graft approval flow handles that case (§3.4). A plan that cannot get consent still lands everything unprivileged, and reports the remainder as skipped-refused rather than failed.
+After confirmation, authenticate and stage all inputs, take the prefix and protected-root locks in their defined order, recheck the planned base state, and persist the journal and before-images. Apply configuration and the resolved package set, runtime selections, services, user/system preferences, and shell changes under that journal. Privileged effects require the helper and their own capability checks wherever they occur, including package system effects and root services. Commit only after reconciliation and required health checks.
+
+Any failure rolls back the whole apply through [STATE-AND-RECOVERY §5](STATE-AND-RECOVERY.md#durable-transactions-and-recovery). Recovery or a required reboot may leave the transaction pending; it must not report a partial apply as success.
+
+<a id="idempotence-convergence-and---prune"></a>
 
 ### 3.3 Idempotence, convergence, and `--prune`
 
@@ -176,46 +197,58 @@ Apply is convergent. Run the same file twice and the second run is a no-op ("0 c
 `aslice machine apply --prune` opts into the other direction of convergence: anything **recorded as file-managed** (§3.5) but no longer declared gets retracted — packages uninstalled (only if they are still leaves that nothing else needs), preference keys restored to their recorded pre-apply values, services disabled. Two hard limits keep this safe:
 
 - Prune touches only file-managed records. Packages you installed by hand and keys you set by hand are invisible to it.
-- Repositories are never pruned. Trust decisions are sticky by policy (REPOSITORIES.md §4), and removing a repo remains `aslice repo remove` — a deliberate act, not a side effect of editing a file.
+- Repositories are never pruned. Trust decisions are sticky by policy ([REPOSITORIES §4](REPOSITORIES.md#adding-a-third-party-repository)), and removing a repo remains `aslice repo remove` — a deliberate act, not a side effect of editing a file.
+
+<a id="consent-gates"></a>
 
 ### 3.4 Consent gates
 
-Two parts of a setup file write to OS territory. N5 (DESIGN §2.2) forbids that in general; here it is allowed through the same declared, flagged, reversible model as `[system-patch]` (DESIGN §12.11):
+Two parts of a setup file write to OS territory. N5 ([DESIGN §2.2](DESIGN.md#non-goals)) forbids that in general; here it is allowed through the same declared, flagged, reversible model as `[system-patch]` ([DESIGN §12.11](DESIGN.md#system-patches-flagged-reversible-replacement-of-apple-provided-files)):
 
 - `[defaults.system.*]` — root writes to `/Library/Preferences`.
 - `[shell]` enrollment — appending to `/etc/shells`.
 
-Run interactively, each gated step prompts with what will be written and why. Run non-interactively — scripts, `--json`, pipes, the recovery-terminal scenario — gated steps are **refused** (exit 2) unless you pass `--accept-system-changes`: the same flag and the same contract as system packages and system patches (DESIGN §12.7, §12.11). `--dry-run` shows the complete plan, gated steps included, and changes nothing.
+Run interactively, each gated step prompts with what will be written and why. Run non-interactively — scripts, `--json`, pipes, the recovery-terminal scenario — gated steps are **refused** (exit 2) unless you pass `--accept-system-changes`: the same flag and the same contract as system packages and system patches ([DESIGN §12.7](DESIGN.md#system-software-kexts-and-sip-disabled-development-tools) and [DESIGN §12.11](DESIGN.md#system-patches-flagged-reversible-replacement-of-apple-provided-files)). `--dry-run` shows the complete plan, gated steps included, and changes nothing.
 
-Graft-bearing packages (MANUAL §4.5) are a third gate, of a different kind: nothing they do is a write until a script runs, and the gate is the graft approval flow. A package named in the file's `[grafts]` allow-list (§2.8) runs its grafts without prompting; anything else asks interactively, or is refused non-interactively (exit 2) unless `--accept-grafts` is passed — one severity level below `--accept-system-changes`, the same contract shape.
+Graft-bearing packages require matching local approval or a fresh informed decision (§2.8). Names in the machine file do not waive approval. `--accept-grafts` does not grant system capabilities or replace `--accept-system-changes`. Collect required consents before mutation; refusal aborts the whole apply.
 
-The upshot: a file fetched from someone else is safe to *plan* unconditionally. Consent is per-gated-step, informed, and never bundled into a blanket "trust this file".
+Planning reads untrusted data and verifies its inputs; it does not execute package code. A shared file supplies desired state, not repository trust or consent.
+
+<a id="recorded-inverses-preferences-ride-generations"></a>
 
 ### 3.5 Recorded inverses: preferences ride generations
 
-Machine apply uses the durable transaction and conflict rules in STATE-AND-RECOVERY §5. Record exact pre-change values before preferences, shell, and `/etc/shells` changes; journal external operations and reconcile them after interruption. Rollback restores managed state only when expected values still match, and does not undo application-data migrations. Protected-volume changes require the separate Recovery/reboot workflow in SYSTEM-VOLUMES.
+Machine apply uses the durable transaction and conflict rules in [STATE-AND-RECOVERY §5](STATE-AND-RECOVERY.md#durable-transactions-and-recovery). Record exact pre-change values before preferences, shell, and `/etc/shells` changes; journal external operations and reconcile them after interruption. Rollback restores managed state only when expected values still match, and does not undo application-data migrations. Protected-volume changes require the separate Recovery/reboot workflow in SYSTEM-VOLUMES.
 
 The same record powers `--prune` (§3.3) and `aslice history`. Every setup-applied change is attributable: which file, which apply, which generation.
 
+<a id="failure-handling"></a>
+
 ### 3.6 Failure handling
 
-If a step fails, the plan aborts at that point. The steps that completed stand — each is individually coherent: packages are one generation, preferences are individually atomic — and the report says where the plan stopped. Re-running the same file resumes by convergence, since already-done steps are no-ops. Three failure shapes are worth naming: a failed *package* resolution aborts before anything is installed; a failed service start surfaces §12.8's rollback prompt; a refused consent gate skips the gated remainder with exit 2.
+If any step fails, roll back the entire apply, restoring the recorded before-state in reverse journal order. Completed steps do not stand as a successful partial setup. Concurrent external edits, missing backups, or unavailable protected state produce `needs-attention`; retain the journal and recovery tools and report the exact conflict rather than overwriting it. A power loss resumes recovery before any new mutation. Repository trust established separately before planning is retained and is not reset by package rollback ([STATE-AND-RECOVERY §5](STATE-AND-RECOVERY.md#durable-transactions-and-recovery) and [STATE-AND-RECOVERY §7](STATE-AND-RECOVERY.md#persistent-trust-and-initial-bootstrap)).
+
+<a id="aslice-machine-export"></a>
 
 ## 4. `aslice machine export`
+
+<a id="what-it-captures"></a>
 
 ### 4.1 What it captures
 
 `aslice machine export` writes an `aslice-machine.toml` describing the current machine to stdout — redirect it wherever you like. What gets captured:
 
-- **Packages** — the leaves (`aslice leaves`: explicitly requested, not dependencies), with `@stream` where a stream selection matters, non-default variants as `+flags`, and non-official origins as `repo:` namespaces. Locally-built packages are included but commented out, with a note explaining why: they cannot be reproduced from a repository, and pretending otherwise is how shared files rot.
+- **Packages** — explicitly requested packages (`on_request`), including requested packages that also have dependents, with `@stream` where a stream selection matters, non-default variants as `+flags`, and every non-core origin as a `repo:` namespace. Locally-built packages are included but commented out, with a note explaining why: they cannot be reproduced from a repository, and pretending otherwise is how shared files rot.
 - **Runtime selections** — the profile-wide defaults (§2.3). Session variables and project pins are not machine state, so they are not exported.
 - **Services** — the enabled set.
 - **Login shell** — exported only when it differs from the OS default (`/bin/bash` before Catalina; `/bin/zsh` for new accounts on Catalina and later, with migrated accounts checked from their actual state). An aslice-managed shell path maps back to its package name; a foreign path (a Homebrew-installed shell, say) is commented out with the raw path and a note.
 - **Repositories** — the configured non-official repositories, name + URL. Keys are re-pinned by the applying machine through normal TOFU; exported files carry no key material.
 - **Configuration** — `[aslice]` keys whose values differ from defaults.
-- **Graft approvals** — exported as `[grafts].allow` (§2.8): the packages whose grafts you approved interactively, so a rebuilt machine replays the same decisions. Approvals of unsigned manifests are never recorded (DESIGN §12.15), so there is nothing to export — every export of the list is, by construction, a list of signed-manifest packages.
+- **Graft selections** — exported as `[grafts].allow` (§2.8), naming packages with recorded signed-manifest approvals. Export transfers no approval: another machine must independently approve the exact repository/version/script/manifest binding.
 
 Export sorts its output and uses stable formatting, so two exports diff cleanly in version control.
+
+<a id="--defaults-on-demand-never-automatic"></a>
 
 ### 4.2 `--defaults`: on demand, never automatic
 
@@ -230,6 +263,8 @@ aslice machine export --defaults com.apple.dock --system-defaults com.apple.logi
 
 Named domains are read with `defaults read` and emitted as `[defaults.user."…"]` / `[defaults.system."…"]` tables. The output carries a generated header comment naming the capture date and a standing warning: **review before sharing — application domains can contain account- or machine-specific values.** Values whose types are deferred (dict, data, date — §2.6) are emitted as comments with a note, never silently dropped.
 
+<a id="what-it-cannot-capture"></a>
+
 ### 4.3 What it cannot capture
 
 The following parts of a setup are outside export's scope:
@@ -239,9 +274,11 @@ The following parts of a setup are outside export's scope:
 - Anything not knowable from aslice's own state — manually installed software, Apple-ID-signed apps, system settings made in System Settings panes that don't map to named domains you export.
 - Secrets. Keychain items are never read, never written. If your workflow needs credentials, they enter the machine by a different, deliberate path.
 
+<a id="aslice-machine-import---from-brewfile"></a>
+
 ## 5. `aslice machine import --from-brewfile`
 
-The existing common language for Mac setup is the Brewfile; for many users it is the source of truth (HOMEBREW-REVIEW §4.6). Import is mechanical translation — no cleverness — complementing `aslice adopt --from-homebrew` (which reads the Cellar):
+The existing common language for Mac setup is the Brewfile; for many users it is the source of truth ([HOMEBREW-REVIEW §4.6](HOMEBREW-REVIEW.md#p1--environment-wishlists-and-ephemeral-exec)). Import is mechanical translation — no cleverness — complementing `aslice adopt --from-homebrew` (which reads the Cellar):
 
 ```sh
 aslice machine import --from-brewfile Brewfile > aslice-machine.toml
@@ -249,9 +286,11 @@ aslice machine import --from-brewfile Brewfile > aslice-machine.toml
 
 - `brew "name"` entries become `packages` entries. Names that differ in the orchard are reported as unknown at apply time by the normal solver diagnostics.
 - `tap "name"` entries become comments — aslice repositories are not Homebrew taps; add the equivalent with `[[repos]]`.
-- `cask`, `mas`, and `vscode` entries are skipped with a printed list. Cask software often exists as a vendor-binary package (DESIGN §12.4) — the skip list suggests searching the orchard; Mac App Store and VS Code extension installs are out of scope (§8).
+- `cask`, `mas`, and `vscode` entries are skipped with a printed list. Cask software often exists as a vendor-binary package ([DESIGN §12.4](DESIGN.md#vendor-binaries-pkgdmg-and-gui-apps)) — the skip list suggests searching the orchard; Mac App Store and VS Code extension installs are out of scope (§8).
 
 Treat the import as a starting point for hand-tuning, not a fidelity guarantee. The output says so itself, in its header comment.
+
+<a id="sharing-setups"></a>
 
 ## 6. Sharing setups
 
@@ -262,12 +301,16 @@ Two rules keep shared files healthy:
 1. **No secrets, ever.** Nothing in the schema legitimately holds a credential, and export's defaults capture warns at generation time (§4.2). Treat any token-shaped value in a shared file as a leak — because it is one.
 2. **Machine-specific values stay out.** Hostnames, hardware serials, per-display layouts: the test is whether a value names *this* machine rather than *how I like machines*. If it names this machine, it does not belong in the file. The deferred by-host domains (§2.6) exist as a category partly to keep that boundary visible.
 
+<a id="security-and-trust"></a>
+
 ## 7. Security and trust
 
 - **Data, not code.** No evaluation, no hooks, no shell-outs declared by the file. So the attack surface of applying a hostile file is limited to four things: installing packages (ordinary solver + trust levels), naming repositories (TOFU-pinned, never elevated), writing preferences (user ones unprivileged, system ones consent-gated), and pre-approving grafts — bounded because only signed, rehearsed manifests can be allow-listed (§2.8), so the worst a hostile file can silently run is a script the farm already watched behave, with its full manifest printed in the plan you confirmed. Compare `brew bundle`: the Brewfile is Ruby, so any line in it can execute arbitrary code.
-- **Trust levels bind as usual.** A setup file cannot make a third-party repository serve root daemons, system packages, or system patches. The repository capabilities of REPOSITORIES.md §3 apply unchanged.
+- **Trust levels bind as usual.** A setup file cannot make a third-party repository serve root daemons, system packages, or system patches. The repository capabilities of [REPOSITORIES §3](REPOSITORIES.md#trust-levels) apply unchanged.
 - **Consent is per-gate, informed, and replayable.** The plan shows every write before any happens, `--dry-run` is always available, and gated steps name their target files.
 - **Attribution.** Every applied change is recorded with the file's hash and the generation that carried it (§3.5). "What did that file do to me" is always answerable, with `aslice history`.
+
+<a id="what-this-is-not"></a>
 
 ## 8. What this is not
 
@@ -276,9 +319,11 @@ Two rules keep shared files healthy:
 - **Not a configuration-management fleet tool.** No agent, no daemon, no drift detection loop, no remote push. `aslice machine apply` is a command you run, on the machine, when you choose. If a fleet wants periodic enforcement, `cron` or `launchd` running `aslice machine apply` is the entire story — there is nothing else to buy.
 - **Not exact reproduction.** Exact reproduction is the lock file's job (§3.1); `aslice-machine.toml` is the human layer above it.
 
+<a id="command-reference"></a>
+
 ## 9. Command reference
 
-```
+```sh
 aslice machine apply [aslice-machine.toml | https://…]
                                   # converge the machine to the file (default: ./aslice-machine.toml)
   --dry-run                       # print the full plan, change nothing
@@ -293,9 +338,9 @@ aslice machine import --from-brewfile <Brewfile>
                                   # translate a Brewfile into an aslice-machine.toml on stdout (§5)
 ```
 
-Plans and lock files keep the top-level verb: `aslice apply plan.json` executes a saved plan (DESIGN §12.1) and `aslice apply aslice.lock` replays a locked profile (PACKAGE-FORMAT §7).
+Plans and lock files keep the top-level verb: `aslice apply plan.json` executes a saved plan ([DESIGN §12.1](DESIGN.md#commands)) and `aslice apply aslice.lock` replays a locked profile ([PACKAGE-FORMAT §7](PACKAGE-FORMAT.md#lock-files)).
 
-Exit status: **0** applied (or nothing to do); **1** error (schema, resolution, execution); **2** refused at a consent or trust gate. The plan is always printed before execution, and security events are logged unsuppressibly per DESIGN §12.5.
+Exit status: **0** applied (or nothing to do); **1** error (schema, resolution, execution); **2** refused at a consent or trust gate. The plan is always printed before execution, and security events are logged unsuppressibly per [DESIGN §12.5](DESIGN.md#logging-and-diagnostics).
 
 ## History
 
@@ -318,5 +363,6 @@ Exit status: **0** applied (or nothing to do); **1** error (schema, resolution, 
 | v0.3 | Not recorded | second editorial pass — sentence-level revision for readability; no schema or semantic changes. |
 | v0.2 | Not recorded | editorial pass — prose revised for directness; no schema or semantic changes. |
 | Not recorded | September 2026 | corpus review corrections: artifact identity, protected execution, durable recovery, trust persistence, replay, platform limits, and examples aligned with STATE-AND-RECOVERY and SYSTEM-VOLUMES. These are specification changes; runtime acceptance remains pending. |
+| v0.16 | September 2026 | Documentation audit repairs: contract summaries aligned; owner-approved namespace, rollback, GC, naming, prefix, and graft decisions applied where relevant; semantic anchors and explicit citations added. Runtime implementation and platform acceptance remain pending. |
 
 </details>

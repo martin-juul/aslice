@@ -9,7 +9,9 @@ aslice-gc, aslice-clean, aslice-store — reclaim disk and verify the store
 # SYNOPSIS
 
 `aslice gc` [**--dry-run**] [**--older-than** *30d*]
+
 `aslice clean` [**--dry-run**]
+
 `aslice store verify` [**--quarantine** *package*]
 
 # DESCRIPTION
@@ -24,6 +26,8 @@ Both print what would go, and why, with **--dry-run**; the watermarks are config
 
 **store verify** re-hashes store paths against their manifests — the immutability tripwire. A mismatch means corruption or tampering and is treated as a security event. With **--quarantine**, the offending path is pulled from all future generations (dependents are reported); reinstall restores a verified copy.
 
+Keep the last 5 generations by default. `gc.store_watermark` is the store limit (default 20 GB); `gc.warning_margin_percent` is the warning margin below it (default 10, range 0–100). Warn when usage reaches `limit × (1 - margin / 100)`. At or above the limit, ask `Run garbage collection? [y/N]`; No is the default. Never run GC automatically from the size check. Non-interactive checks print the warning and the `aslice gc` remedy without collecting. Explicit `aslice gc` remains available. Collection retains every root required by [STATE-AND-RECOVERY §2](../docs/STATE-AND-RECOVERY.md#abi-and-execution-requirements) and [STATE-AND-RECOVERY §5](../docs/STATE-AND-RECOVERY.md#durable-transactions-and-recovery); a threshold does not make reachable artifacts collectible.
+
 # SEE ALSO
 
-aslice(1), aslice-doctor(1), MANUAL.md §3.5, §5.3
+aslice(1), aslice-doctor(1), [MANUAL §3.5](../docs/MANUAL.md#reclaiming-disk-clean-and-gc) and [MANUAL §5.3](../docs/MANUAL.md#housekeeping)

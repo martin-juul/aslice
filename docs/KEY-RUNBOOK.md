@@ -2,7 +2,7 @@
 
 > State, identity, privilege, and recovery contracts: [STATE-AND-RECOVERY](STATE-AND-RECOVERY.md). Protected-volume patching: [SYSTEM-VOLUMES](SYSTEM-VOLUMES.md). These specifications do not establish completed implementation or platform validation.
 
-This runbook governs every cryptographic key aslice trusts, as called for in DESIGN §10.2. The worst day of the project should be a procedure, not an improvisation.
+This runbook governs every cryptographic key aslice trusts, as called for in [DESIGN §10.2](DESIGN.md#signatures-and-repository-integrity-tuf). The worst day of the project should be a procedure, not an improvisation.
 
 **Status: design, September 2026.** The initial release uses one accountable operator, two existing Raspberry Pis, and encrypted software keys. Hardware validation and the drills below remain launch requirements, not completed work. Independent custodians and hardware tokens are future options, not launch prerequisites.
 
@@ -14,6 +14,8 @@ Four rules govern everything below:
 - **Every key event produces a record.** Record operator, device identities, public fingerprints, metadata versions and hashes, time, and backup locations in the private recovery archive. Publish a signed summary without private keys, recovery secrets, or sensitive storage details.
 - **Trust is explicit.** Initial users trust the project owner. Multiple owner-controlled devices provide separation and recovery, not independent-party oversight. Software keys are extractable if a Pi or its unlocked storage is compromised; backups are additional key copies requiring protection.
 - **Drills are real.** Complete §7 before launch and retain receipts. Written procedures are not evidence that recovery works.
+
+<a id="key-inventory-and-machines"></a>
 
 ## 1. Key inventory and machines
 
@@ -34,6 +36,8 @@ The **publisher** is the restricted preparation/publication VM on the owned Mac 
 
 The release keys share one Pi, so compromising that online signer can authorize malicious releases despite the keys being separate. Offline root custody supports replacing authority, but cannot undo installations or make compromised content trustworthy. A transparency log supports detection and audit; it cannot prevent an authorized malicious signature or guarantee detection.
 
+<a id="metadata-validity-and-renewal"></a>
+
 ### 1.1 Metadata validity and renewal
 
 | Role | Validity from signing | Renewal |
@@ -47,6 +51,8 @@ Check validity daily. When either targets or snapshot has fewer than 30 days rem
 
 Key rotation is different: replacing any top-level TUF role key requires a root update, including timestamp-key replacement. Daily timestamp signing needs no root session.
 
+<a id="initial-root-setup"></a>
+
 ## 2. Initial root setup
 
 One operator can perform this procedure; no witness or additional custodian is required.
@@ -58,11 +64,13 @@ One operator can perform this procedure; no witness or additional custodian is r
 5. Restore onto a clean spare Pi and verify fingerprints and test signatures before launch (§7). Remove temporary restored private material after the drill; any retained backup device is inventoried as another key copy.
 6. Publish root metadata and fingerprints through the repository and second transport; pin the root hash in the installer. Compare bytes across placements. Sign and archive the setup report; the transparency log's genesis entry references its hash when the log is brought up.
 
+<a id="automatic-orchard-to-client-publication"></a>
+
 ### 2.1 Automatic orchard-to-client publication
 
 The owner's merge into the protected environment branch is the final human approval for that environment during single-owner launch, including new core slices: `develop` for dev, `beta` for staging, and `master` for prod. A dev merge does not authorize staging or prod. The existing `aslice repo build / sign / publish` stages exchange a release candidate automatically. This is a design specification: candidate delivery, signer service, publication coordination, and acceptance drills remain implementation work. Client signature formats remain unchanged. Candidate authorization, gate receipts, and signing journals are internal control-plane records, not new fields in the closed TUF or index schemas.
 
-Enforce [ORCHARD-POLICY §18.1–§18.2](ORCHARD-POLICY.md#181-environments-branching-and-promoted-builds) before signing or activation. Bind authorization to repository identity, environment, exact required branch, release base version, and frozen candidate inventory. Staging requires the dev candidate record; prod requires its successful staging record. Reuse the identical finalized artifacts and their signatures; `repo build` prepares publication metadata and does not rebuild or repack promoted payloads. Byte-changing signing, including Apple signing/notarization, precedes the dev inventory freeze. Scope retained state, queues, version reservations, and authorization to each repository/environment so a dev request cannot activate prod. Publication metadata may change under the policy's explicit bookkeeping allowance, but changed release content is refused with a recorded reason and requires a new base version starting in dev. Stale-candidate reconciliation below may rebuild publication metadata only; it cannot substitute artifacts or updated dependencies under the same base version.
+Enforce [ORCHARD-POLICY §18.1](ORCHARD-POLICY.md#181-environments-branching-and-promoted-builds) and [ORCHARD-POLICY §18.2](ORCHARD-POLICY.md#182-release-versioning-and-unchanged-content-enforcement) before signing or activation. Bind authorization to repository identity, environment, exact required branch, release base version, and frozen candidate inventory. Staging requires the dev candidate record; prod requires its successful staging record. Reuse the identical finalized artifacts and their signatures; `repo build` prepares publication metadata and does not rebuild or repack promoted payloads. Byte-changing signing, including Apple signing/notarization, precedes the dev inventory freeze. Scope retained state, queues, version reservations, and authorization to each repository/environment so a dev request cannot activate prod. Publication metadata may change under the policy's explicit bookkeeping allowance, but changed release content is refused with a recorded reason and requires a new base version starting in dev. Stale-candidate reconciliation below may rebuild publication metadata only; it cannot substitute artifacts or updated dependencies under the same base version.
 
 1. **Prepare (`repo build`).** After the owner-authorized merge and all required gates, collect artifact bytes, index and targets metadata (including verified graft manifests), existing signatures for retained slices, source blobs, the exact orchard commit, and authenticated gate receipts bound to that commit, build inputs, and artifact digests. Require lint, build, test, ABI, malware, graft-rehearsal, and independent-rebuild gates wherever policy requires them. Failed or missing gates, including unavailable capacity, leave the affected release pending. Include an authenticated merge record from the configured orchard authority, trusted root chain, prior metadata, proposed versions/expiries, and a path/length/hash inventory. Bind a stable candidate identifier and digest to the currently published snapshot and retained signing-state revision. The first candidate declares an empty repository base and uses the root established in §2.
 2. **Deliver automatically.** The publisher sends the candidate over an authenticated channel to the release Pi. Transport identity alone is not commit authorization: verify the owner-approved merge record against the configured repository, protected branch, owner identity, and exact commit. Trust anchors and gate policy come from retained configuration, never candidate-supplied keys or policy. Treat paths, archives, metadata, and receipts as untrusted; reject path traversal, unexpected files, inconsistent inventories, unauthorized commits, and unverifiable evidence. Never execute candidate-provided scripts or builds.
@@ -73,11 +81,15 @@ Enforce [ORCHARD-POLICY §18.1–§18.2](ORCHARD-POLICY.md#181-environments-bran
 
 Routine releases and unchanged-content renewals never require the root Pi or per-release approval. Renewal verifies the retained authorization and artifact inventory from the last approved published set; it cannot promote pending content or clear a quarantine. No automation waives a build, test, quarantine, or required independent-rebuild gate. Sign the final bootstrap binary and published checksums on the release Pi too. Apple signing/notarization is separate and must precede the final minisign signature if it changes the bytes. Root renewal and top-level key replacement remain deliberate offline operations (§3).
 
+<a id="routine-key-rotation"></a>
+
 ## 3. Routine key rotation
 
 Generate successors on the machine that will hold them. For targets, snapshot, or timestamp replacement, take the successor public key to the root Pi and update its role using §3.1. Stage compatible metadata signed by the successor before activating the new timestamp. Keep intermediate roots available indefinitely.
 
 For slice-key replacement, publish the successor public key in the TUF-authenticated trusted-key set before using it for slices. Planned rotation may retain the old key for previously authorized immutable digests; compromise requires audit and revocation under §4, not unrestricted historical acceptance. Coordinator and agent identity changes retain their enrollment/pinning procedures.
+
+<a id="planned-root-update-or-rotation"></a>
 
 ### 3.1 Planned root update or rotation
 
@@ -86,6 +98,8 @@ For slice-key replacement, publish the successor public key in the TUF-authentic
 3. Publish sequential versioned roots without gaps. Verify an existing client follows the chain and accepts the compatible release metadata. Preserve intermediate roots for returning clients.
 4. Update repository and second-transport placements, installer/bootstrap pins for new installations, and the recovery archive. Announce the change; existing clients follow authenticated rotation without manual re-pinning.
 5. After verifying the transition and successor backup restoration, retire superseded private copies, including backups. Retain public metadata and audit records.
+
+<a id="compromise-response"></a>
 
 ## 4. Compromise response
 
@@ -97,11 +111,15 @@ Lost devices or backup material, unexplained signatures, and compromised farm or
 4. **Audit the window.** Inspect published roots, targets, snapshots, slices, and gate evidence since last-known-good. Compare archived receipts and the transparency log where available; rebuild where required. Signature validity cannot clear content signed during compromise.
 5. **Resume deliberately.** Publish audited metadata and content with appropriate newer versions, verify with existing and fresh clients, and publish findings and a postmortem. Never bypass client rollback or expiry protection to resume service.
 
+<a id="root-loss-or-compromise"></a>
+
 ### 4.1 Root loss or compromise
 
 - **Device failure with a trustworthy backup:** restore offline, verify an independently retained public fingerprint and latest trusted signing state, and rehearse a signature. Possible disclosure requires the compromise path.
 - **No usable root key or backup:** use §6. There is no in-band chain without old signing authority.
 - **Suspected compromise of the initial 1-of-1 root:** an attacker can authorize replacement roots too. An old-key signature cannot establish legitimate recovery. Use §6 with independently authenticated new pins and an advisory; ordinary rotation alone is insufficient.
+
+<a id="future-independent-custody-and-hardware"></a>
 
 ## 5. Future independent custody and hardware
 
@@ -116,6 +134,8 @@ Hardware is optional. Evaluate exact model, firmware, application, middleware, P
 
 Keep Ed25519 and minisign for launch. Changing algorithms requires a separate client-compatibility decision. Root-transition requirements follow the [TUF specification](refs/THE_UPDATE_FRAMEWORK_SPECIFICATION.MD).
 
+<a id="disaster-recovery-trust-rebootstrap"></a>
+
 ## 6. Disaster recovery: trust rebootstrap
 
 1. Stop publication and issue the §4 advisory. State whether root authority was lost or compromised.
@@ -123,6 +143,8 @@ Keep Ed25519 and minisign for launch. Changing algorithms requires a separate cl
 3. Existing users explicitly rebootstrap using the new installer or a documented repair flow showing verified fingerprints. No silent root replacement is permitted. A compromised old root's signature alone is not proof of the new one.
 4. Audit retained artifacts, re-sign as required, and publish under the new root. Preserve old public history and describe content continuity without implying trust continuity.
 5. Publish a postmortem and amend the procedure from observed failures.
+
+<a id="drills-and-acceptance"></a>
 
 ## 7. Drills and acceptance
 
@@ -139,9 +161,11 @@ Before launch, record successful runs of:
 
 Repeat backup restoration and planned root rotation annually. Restore and verify every replacement signer before production use. Exercise freeze/resume and publisher recovery, replacing the timestamp key through a root update when the old key is unavailable or suspect. Test fixtures remain separate from production authority; never simulate compromise by exposing real keys.
 
+<a id="boundaries"></a>
+
 ## 8. Boundaries
 
-Users' machines have no project-held per-user keys or accounts. Third-party orchards maintain their own keys under REPOSITORIES §5. Vendor Apple signatures and source-verification keys remain separate from repository signing. An optional hardware security-contact PGP key does not impose a token requirement on launch.
+Users' machines have no project-held per-user keys or accounts. Third-party orchards maintain their own keys under [REPOSITORIES §5](REPOSITORIES.md#signing-keys-two-schemes-one-verification-pipeline). Vendor Apple signatures and source-verification keys remain separate from repository signing. An optional hardware security-contact PGP key does not impose a token requirement on launch.
 
 ## History
 
@@ -154,5 +178,6 @@ Users' machines have no project-held per-user keys or accounts. Third-party orch
 | September 2026 | the manual offline-release design is superseded by owner-merge authorization, a dedicated networked release signer, automatic metadata renewal, and serialized atomic publication. The offline 1-of-1 root, encrypted backups, recovery drills, Ed25519/minisign formats, and future multi-party migration remain. Services and hardware drills are not yet implemented or validated. |
 | September 2026 | corpus review corrections: artifact identity, protected execution, durable recovery, trust persistence, replay, platform limits, and examples aligned with STATE-AND-RECOVERY and SYSTEM-VOLUMES. These are specification changes; runtime acceptance remains pending. |
 | September 2026 | prose rewrite of the introduction and signer-compromise explanation; no procedural changes. |
+| September 2026 | Documentation audit repairs: contract summaries aligned; owner-approved namespace, rollback, GC, naming, prefix, and graft decisions applied where relevant; semantic anchors and explicit citations added. Runtime implementation and platform acceptance remain pending. |
 
 </details>

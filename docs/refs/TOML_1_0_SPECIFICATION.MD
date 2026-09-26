@@ -1,5 +1,7 @@
 # TOML 1 0 Specification
 
+Navigation: [Account](#captured-material) | [Source context](#decision-relevant-context) | [Full original](#full-captured-source) | [Catalog](README.MD)
+
 ## Source identity
 
 - Original source: https://toml.io/en/v1.0.0
@@ -11,7 +13,7 @@
 - Used by:
   - [PACKAGE-FORMAT §3. `package.toml` — full schema](../PACKAGE-FORMAT.md#3-packagetoml--full-schema): Package tables and arrays of tables use TOML syntax before project schema validation.
   - [PACKAGE-FORMAT §7. Lock files](../PACKAGE-FORMAT.md#7-lock-files): Lock-file TOML syntax does not itself define exact-reproduction semantics.
-  - [README — The three schema languages](../../schematics/README.md#the-three-schema-languages): TOML documents and TOML Schema documents are separate contracts.
+  - [schematics/README — The three schema languages](../../schematics/README.md#the-three-schema-languages): TOML documents and TOML Schema documents are separate contracts.
 
 ## Captured material
 

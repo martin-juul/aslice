@@ -25,7 +25,7 @@ aslice collects no telemetry or analytics of any kind — there is no opt-out be
 :   Review and withdraw recorded installer-script approvals: `graft approvals`, `graft revoke`. Approving a graft happens at install; see aslice-graft(1).
 
 **search**, **info**, **flavors**, **leaves**, **why**
-:   Find and inspect packages. `flavors` shows the prebuilt matrix for this machine; `why` explains what requires a package; `leaves` lists explicitly-requested packages (`--user-built` for locally compiled ones).
+:   Find and inspect packages. `flavors` shows the prebuilt matrix for this machine; `why` explains what requires a package; `leaves` lists packages with no installed dependents (`--user-built` for locally compiled ones).
 
 **pin**, **unpin**
 :   With one argument, hold a package against upgrades. With two (`pin php 8.4`), pin the current project to a runtime stream — see aslice-use(1).
@@ -120,6 +120,9 @@ aslice collects no telemetry or analytics of any kind — there is no opt-out be
 # EXIT STATUS
 
 **0** success; **1** general error; **2** plan refused (trust, policy, or consent gate). aslice-doctor(1) defines its own battery exit codes.
+
+**recover**, **decommission**
+:   Resume durable recovery, or inventory and remove managed external effects before deleting the prefix. `decommission --dry-run` inventories without changes; pending restoration preserves recovery tools ([STATE-AND-RECOVERY §6](../docs/STATE-AND-RECOVERY.md#self-update-and-decommission)).
 
 # SEE ALSO
 

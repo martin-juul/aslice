@@ -31,7 +31,7 @@ The project applies these facts to macOS 10.11–12. The article does not valida
 
 ## Project interpretation
 
-Enrollment and export should compare the requested path with the account record. An unchanged selection is a no-op. A Terminal preference is insufficient evidence for changing that record. Preserve the prior value for rollback under STATE-AND-RECOVERY §5. Per-OS execution tests remain required.
+Enrollment and export should compare the requested path with the account record. An unchanged selection is a no-op. A Terminal preference is insufficient evidence for changing that record. Preserve the prior value for rollback under [STATE-AND-RECOVERY §5](../STATE-AND-RECOVERY.md#durable-transactions-and-recovery). Per-OS execution tests remain required.
 
 ## Omissions and evidence gaps
 

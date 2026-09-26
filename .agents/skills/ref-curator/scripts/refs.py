@@ -56,6 +56,7 @@ def project_lines(text, wrapper=False):
                 fence = None
             continue
         if wrapper and line.strip() == "## Full captured source":
+            yield number, line
             break
         if match:
             fence = (match[1][0], len(match[1]))
@@ -93,7 +94,7 @@ def links(lines, errors, context):
         if re.match(r"^\s{0,3}\[[^\]]+\]:", original):
             continue
         line = without_code(original)
-        if re.search(r"<(?:a|img)\b", line, re.I):
+        if re.search(r"<(?:a|img)\b", line, re.I) and not re.fullmatch(r'\s*<a id="[a-z0-9_-]+"></a>\s*', line):
             errors.append(f"{context}:{n}: unsupported HTML link/anchor; review manually")
         position = 0
         consumed = []
@@ -162,7 +163,15 @@ def anchors(path, errors, root):
     lines = list(project_lines(path.read_text(encoding="utf-8"),
                                path.parent == root / "docs/refs"))
     previous = ""
+    explicit = set()
     for n, line in lines:
+        anchor = re.fullmatch(r'\s*<a id="([a-z0-9_-]+)"></a>\s*', line)
+        if anchor:
+            if anchor[1] in explicit:
+                errors.append(f"{path.relative_to(root)}:{n}: duplicate explicit anchor {anchor[1]}")
+            explicit.add(anchor[1])
+            result.add(anchor[1])
+            continue
         if previous.strip() and re.fullmatch(r"\s{0,3}(?:=+|-+)\s*", line):
             errors.append(f"{path.relative_to(root)}:{n}: unsupported setext heading")
         previous = line

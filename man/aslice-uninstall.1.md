@@ -9,9 +9,13 @@ aslice-uninstall, aslice-autoremove, aslice-mark, aslice-pin — remove and hold
 # SYNOPSIS
 
 `aslice uninstall` *package*…
+
 `aslice autoremove` [**--dry-run**]
+
 `aslice mark` *package* **--on-request**|**--as-dependency**
+
 `aslice pin` *package*
+
 `aslice unpin` *package*
 
 # DESCRIPTION
@@ -28,4 +32,4 @@ Note the overloaded spelling: `pin openssl` (one argument) is the hold described
 
 # SEE ALSO
 
-aslice(1), aslice-gc(1), aslice-use(1), MANUAL.md §3.3–§3.4
+aslice(1), aslice-gc(1), aslice-use(1), [MANUAL §3.3](../docs/MANUAL.md#holding-a-package-pin-and-unpin) and [MANUAL §3.4](../docs/MANUAL.md#removing-software)

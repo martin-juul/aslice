@@ -1,7 +1,9 @@
 # Slice container format
 
-- **Status:** Specification v0.3 — September 2026. Packing and extraction implementations remain acceptance work.
+- **Status:** Specification v0.4 — September 2026. Packing and extraction implementations remain acceptance work.
 - **Schematic:** [slice.schema.json](../schematics/json/slice.schema.json) validates the container descriptor; [artifact-manifest.schema.json](../schematics/json/artifact-manifest.schema.json) validates its manifest.
+
+<a id="byte-layout"></a>
 
 ## 1. Byte layout
 
@@ -20,6 +22,8 @@ Only per-entry pax headers needed for UTF-8 paths, link paths, or size are allow
 
 `slice.json` follows the container schematic. Its manifest digest equals the signed index's `artifact_id`, and its length is checked against both the actual bytes and the index's `manifest_size`. `payload_entries` counts the manifest inventory, excluding the `payload/` root and metadata headers. `payload_bytes` is the sum of regular-file sizes. These fields declare resource usage within fixed bounds; they do not justify unchecked memory allocation. An implementation may impose lower configured limits and must explain a refusal before extraction.
 
+<a id="content-identity-and-signatures"></a>
+
 ## 2. Content identity and signatures
 
 The canonical manifest binds the file inventory, dependency artifacts, recipe, exact flags, CPU requirements, and ABI evidence. It does not contain its own digest. SHA-256 of those canonical manifest bytes is `artifact_id`; the file hashes bind the payload. SHA-256 of the complete compressed `.slice` is `blob_digest`. The signed index binds both digests and their byte lengths, with the exact recipe digest and length.
@@ -27,6 +31,8 @@ The canonical manifest binds the file inventory, dependency artifacts, recipe, e
 Detached minisign-compatible Ed25519 or the repository's configured OpenPGP signature authenticates the complete archive bytes, under the repository's package-signing authority. TUF independently authorizes that archive and its manifest/recipe records. The signature is a sibling transport object, never an archive member that signs itself. Builder identities, timestamps, SBOMs, receipts, and notarization evidence are separate authenticated objects bound to the frozen artifact/archive digests. Apple signing that changes executable bytes is completed before the served manifest and archive are frozen; unsigned reproducibility evidence remains separate.
 
 Relocation follows [STATE-AND-RECOVERY §1](STATE-AND-RECOVERY.md#1-compatibility-and-artifact-identity). A signed vendor executable is not silently rewritten, thinned, or re-signed. A manifest cannot authorize extraction outside the staged artifact or mutate another installed artifact.
+
+<a id="verification-and-extraction"></a>
 
 ## 3. Verification and extraction
 
@@ -37,6 +43,8 @@ Relocation follows [STATE-AND-RECOVERY §1](STATE-AND-RECOVERY.md#1-compatibilit
 5. Check every entry's kind, size, mode, and SHA-256 or symlink target against the manifest; reject missing or extra files. Confirm totals and end-of-archive padding. Apply authorized relocation in staging, verify installed-byte receipts, then register the immutable artifact through the transaction journal.
 
 Schema validation alone establishes none of the cryptographic, filesystem, or resource-limit properties above. They require extractor tests and fuzzing on both HFS+ and APFS. File metadata unsupported by this normalized payload format must be expressed as a separate declared helper operation or refused; it is never smuggled through tar headers.
+
+<a id="fixtures-and-evolution"></a>
 
 ## 4. Fixtures and evolution
 
@@ -55,5 +63,6 @@ Run the structural checks with `python -m unittest discover -s tests -p test_sli
 |---|---|---|
 | v0.3 | September 2026 | Consolidate revision notes into a collapsible history table; no specification changes. |
 | v0.2 | September 2026 | prose rewrite of the container resource-limit explanation; no content changes. |
+| v0.4 | September 2026 | Documentation audit repairs: contract summaries aligned; owner-approved namespace, rollback, GC, naming, prefix, and graft decisions applied where relevant; semantic anchors and explicit citations added. Runtime implementation and platform acceptance remain pending. |
 
 </details>

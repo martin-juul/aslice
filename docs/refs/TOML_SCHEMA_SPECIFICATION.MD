@@ -1,5 +1,7 @@
 # TOML Schema Specification
 
+Navigation: [Account](#captured-material) | [Source context](#decision-relevant-context) | [Full original](#full-captured-source) | [Catalog](README.MD)
+
 ## Source identity
 
 - Original source: https://tomlschema.org
@@ -9,8 +11,8 @@
 - Capture type: complete upstream text with attribution and license
 - Rights: MIT; retain [TOML_SCHEMA_LICENSE.txt](TOML_SCHEMA_LICENSE.txt).
 - Used by:
-  - [README — The three schema languages](../../schematics/README.md#the-three-schema-languages): The .tosd language describes TOML document structure.
-  - [README — Authority and precedence](../../schematics/README.md#authority-and-precedence): Fixed children and dynamic collections have different closure behavior.
+  - [schematics/README — The three schema languages](../../schematics/README.md#the-three-schema-languages): The .tosd language describes TOML document structure.
+  - [schematics/README — Authority and precedence](../../schematics/README.md#authority-and-precedence): Fixed children and dynamic collections have different closure behavior.
   - [PACKAGE-FORMAT §8. Validation and tooling](../PACKAGE-FORMAT.md#8-validation-and-tooling): Formula validation requires more than parsing .tosd syntax.
 
 ## Captured material

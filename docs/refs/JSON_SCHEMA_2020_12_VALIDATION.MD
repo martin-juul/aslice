@@ -1,5 +1,7 @@
 # JSON Schema 2020 12 Validation
 
+Navigation: [Account](#captured-material) | [Source context](#decision-relevant-context) | [Full original](#full-captured-source) | [Catalog](README.MD)
+
 ## Source identity
 
 - Original source: https://www.ietf.org/archive/id/draft-bhutton-json-schema-validation-01.txt
@@ -9,7 +11,7 @@
 - Capture type: complete upstream text with attribution and license
 - Rights: Original notices and redistribution terms retained in the full source.
 - Used by:
-  - [README — Authority and precedence](../../schematics/README.md#authority-and-precedence): Required fields, closed structures, and conditional assertions are structural gates.
+  - [schematics/README — Authority and precedence](../../schematics/README.md#authority-and-precedence): Required fields, closed structures, and conditional assertions are structural gates.
   - [SLICE-FORMAT §4. Fixtures and evolution](../SLICE-FORMAT.md#4-fixtures-and-evolution): Fixtures exercise schema constraints without proving extractor security.
 
 ## Captured material

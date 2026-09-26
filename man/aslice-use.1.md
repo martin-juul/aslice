@@ -9,9 +9,13 @@ aslice-use, aslice-pin, aslice-default, aslice-versions, aslice-which — select
 # SYNOPSIS
 
 `aslice use` *runtime* *stream* [**--clear**] [**--install**]
+
 `aslice pin` *runtime* *stream* [**--install**]
+
 `aslice default` *runtime* [*stream*]
+
 `aslice versions` *runtime*
+
 `aslice which` *runtime*
 
 # DESCRIPTION
@@ -39,9 +43,9 @@ Upgrades stay in their lane: `aslice upgrade php` moves within the selected stre
 **./aslice.toml**
 :   Project pins, written by `aslice pin`. Commit it.
 
-**~/.aslice/runtimes/**<runtime>**/**<stream>**/
+`~/.aslice/runtimes/<runtime>/<stream>/`
 :   Per-stream userbases for ecosystem installers (`pip install`, `gem install`, …). User territory: aslice never audits or deletes them, and warns about orphans on uninstall.
 
 # SEE ALSO
 
-aslice(1), aslice-install(1), MANUAL.md §6
+aslice(1), aslice-install(1), [MANUAL §6](../docs/MANUAL.md#managing-runtimes-php-python-ruby-node)

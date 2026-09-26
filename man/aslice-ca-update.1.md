@@ -9,10 +9,15 @@ aslice-ca-update — refresh CA trust on a frozen OS
 # SYNOPSIS
 
 `aslice ca-update` [**--check**]
+
 `aslice ca-update --keychain`
+
 `aslice ca-update --keychain-remove`
+
 `aslice ca-update --crypto`
+
 `aslice ca-update --apple-certs`
+
 `aslice ca-update --from-file` *bundle.pem*
 
 # DESCRIPTION
@@ -23,8 +28,8 @@ Bare **ca-update** refreshes the signed private CA bundle for compatible aslice 
 
 **--apple-certs** applies the separately signed Apple certificate inventory under those rules. Each named service needs chain validation and per-OS tests. Certificate import cannot guarantee that an obsolete service protocol works.
 
-**--from-file** installs a local private bundle and records its SHA-256 without fetching. It grants no authority to import unrestricted system trust. PEM extraction omits some browser trust restrictions; the private bundle is not a complete reproduction of browser policy. See STATE-AND-RECOVERY §9.
+**--from-file** installs a local private bundle and records its SHA-256 without fetching. It grants no authority to import unrestricted system trust. PEM extraction omits some browser trust restrictions; the private bundle is not a complete reproduction of browser policy. See [STATE-AND-RECOVERY §9](../docs/STATE-AND-RECOVERY.md#certificate-trust-lifecycle).
 
 # SEE ALSO
 
-aslice(1), aslice-doctor(1), MANUAL.md §8
+aslice(1), aslice-doctor(1), [MANUAL §8](../docs/MANUAL.md#keeping-tls-alive-on-an-old-os)

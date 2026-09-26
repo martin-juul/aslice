@@ -113,6 +113,14 @@ description = "aslice's own configuration, applied exactly as aslice config set 
         type = "types.sizeValue"
         optional = true
 
+        [elements.aslice.gc.warning_margin_percent]
+        type = "integer"
+        min = 0
+        max = 100
+        optional = true
+        default = 10
+        description = "Warn this percentage below the store limit; at the limit ask y/N. Never collect automatically."
+
     [elements.aslice.clean]
     type = "table"
     optional = true
@@ -171,13 +179,13 @@ description = "launchd services to enable after install (SETUP §2.4)."
 [elements.grafts]
 type = "table"
 optional = true
-description = "Pre-approved installer-script grafts, pnpm-style (SETUP §2.8). Suppresses the prompt, never the display."
+description = "Selections of matching local approvals (SETUP §2.8); names alone grant no authority and a fresh machine must approve again."
 
     [elements.grafts.allow]
     type = "array"
     itemtype = "types.pkgAddress"
     optional = true
-    description = "Packages whose grafts may run without prompting; entries must name installed packages — apply checks."
+    description = "Packages selecting existing local approvals matching repository, version, script hashes, and manifest digest; names alone grant no approval; entries must name installed packages — apply checks."
 
 [elements.shell]
 type = "table"

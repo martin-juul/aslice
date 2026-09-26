@@ -9,11 +9,12 @@ aslice-upgrade, aslice-outdated — update installed packages
 # SYNOPSIS
 
 `aslice upgrade` [*package*…]
+
 `aslice outdated` [**--json**]
 
 # DESCRIPTION
 
-**outdated** lists what would change and why, honoring pins. **upgrade** performs it: resolves, fetches, and builds the complete new generation before touching the live one, so a failed download leaves the live generation unchanged. Power loss during activation or external writes requires journal recovery; conflicts are reported for attention (STATE-AND-RECOVERY §5).
+**outdated** lists what would change and why, honoring pins. **upgrade** performs it: resolves, fetches, and builds the complete new generation before touching the live one, so a failed download leaves the live generation unchanged. Power loss during activation or external writes requires journal recovery; conflicts are reported for attention ([STATE-AND-RECOVERY §5](../docs/STATE-AND-RECOVERY.md#durable-transactions-and-recovery)).
 
 Rules upgrade never breaks on its own:
 
@@ -26,11 +27,11 @@ Packages with running services are stopped, swapped, and restarted as part of th
 # OPTIONS
 
 **--rollback-on-service-failure**
-:   Unattended path: roll the generation back automatically if an upgraded service fails to start. Interactive runs never need this — they are asked. Non-interactive runs without it are refused, leaving rollback to an explicit `aslice rollback`.
+:   Explicit unattended rollback on service readiness failure, permitted only when the persistent-data compatibility contract or authorized tested backup/restore procedure makes rollback valid. Without this flag, an unattended failure returns failure and retains evidence; it does not silently roll back. Interactive failures offer only eligible recovery choices ([STATE-AND-RECOVERY §5](../docs/STATE-AND-RECOVERY.md#durable-transactions-and-recovery)).
 
 **--dry-run**, **--json**
 :   Print the plan without changing anything; machine-readable output.
 
 # SEE ALSO
 
-aslice(1), aslice-install(1), aslice-service(1), MANUAL.md §3.2, §7.2
+aslice(1), aslice-install(1), aslice-service(1), [MANUAL §3.2](../docs/MANUAL.md#upgrading) and [MANUAL §7.2](../docs/MANUAL.md#upgrades-and-the-rollback-prompt)

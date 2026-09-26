@@ -1,7 +1,9 @@
 # Protected system-volume patches
 
-- **Status:** Specification v0.3 — September 2026. Support is designed for Intel macOS 10.11–12; each OS build/filesystem/security configuration remains blocked from release until the acceptance matrix passes.
-- **Authority:** This document owns the protected-volume backend for DESIGN §12.11. [State and recovery](STATE-AND-RECOVERY.md) owns authorization, protected storage, and the operation journal.
+- **Status:** Specification v0.4 — September 2026. Support is designed for Intel macOS 10.11–12; each OS build/filesystem/security configuration remains blocked from release until the acceptance matrix passes.
+- **Authority:** This document owns the protected-volume backend for [DESIGN §12.11](DESIGN.md#system-patches-flagged-reversible-replacement-of-apple-provided-files). [State and recovery](STATE-AND-RECOVERY.md) owns authorization, protected storage, and the operation journal.
+
+<a id="three-backends"></a>
 
 ## 1. Three backends
 
@@ -13,6 +15,8 @@
 
 SIP and signed-system-volume protection are separate preconditions. [Apple documents the read-only volume introduced in 10.15 and the SSV introduced in 11](refs/APPLE_SIGNED_SYSTEM_VOLUME_SECURITY.MD). A SIP check alone never authorizes mounting or patching either volume. Only declared tools, configurations, and data are eligible: the kernel, dyld, libSystem, `/System`, platform-binary libraries, boot-critical consumers, and paths needed before the protected Data-volume closure is available remain refused. Alias and symlink resolution cannot bypass those refusals.
 
+<a id="enrollment-and-preflight"></a>
+
 ## 2. Enrollment and preflight
 
 `aslice system-patch prepare` builds a patch plan from installed, authenticated declarations. For protected volumes it records the exact OS build, hardware/T2 class, filesystem and APFS volume-group UUIDs, System/Data roles, current boot snapshot UUID, security settings, FileVault state, free-space requirement, and the complete desired patch set. Never infer a device by stripping a suffix from `/dev/disk...`, or identify it only by its display name.
@@ -20,6 +24,8 @@ SIP and signed-system-volume protection are separate preconditions. [Apple docum
 Before changes, verify a working Recovery environment and a separately stored recovery kit containing the verified helper, plan, original inventory, snapshot identifiers, and restoration instructions. The kit contains no private signing key. Bind authorization to its plan digest and the measured OS/volume identities. Test restore before enabling that configuration for public use. Keep a verified whole-system backup as well as per-file originals; APFS snapshots on the same disk are not protection against disk loss.
 
 The user makes security-setting changes in Recovery; aslice prints their exact effect and never toggles them itself. On 10.11–10.15 this includes SIP state where required. On 11–12 it additionally includes authenticated-root state and any model-specific Startup Security restrictions. FileVault/security combinations disallowed by the OS are refused with a remedy and a fresh preflight; the manager never decrypts a disk or changes startup security automatically. [Apple's SIP configuration procedure](refs/APPLE_CONFIGURING_SYSTEM_INTEGRITY_PROTECTION.MD) explains the Recovery requirement.
+
+<a id="recovery-assisted-application"></a>
 
 ## 3. Recovery-assisted application
 
@@ -29,7 +35,9 @@ For Catalina, persist exact originals and metadata before each replacement, appl
 
 The adapter must verify the exact supported `bless` snapshot-selection and creation interfaces on the target release. Apple's [developer discussion of writable root volumes](refs/APPLE_WRITABLE_ROOT_VOLUME_DISCUSSION.MD) provides background; it is not a substitute for recorded per-release command fixtures and a boot/restore drill. Hardcoded universal command strings are not a supported adapter.
 
-Replacement executables and their dependencies come from the protected closure defined in STATE-AND-RECOVERY §3. Where a permitted symlink crosses to Data, preflight proves that the consumer starts only after that closure is mounted. Otherwise refuse the target. The complete closure stays pinned until all snapshots referencing it are retired. The original inventory preserves ownership, modes, ACLs, xattrs, flags, and file kind as well as bytes.
+Replacement executables and their dependencies come from the protected closure defined in [STATE-AND-RECOVERY §3](STATE-AND-RECOVERY.md#privileged-ownership-and-capability-checks). Where a permitted symlink crosses to Data, preflight proves that the consumer starts only after that closure is mounted. Otherwise refuse the target. The complete closure stays pinned until all snapshots referencing it are retired. The original inventory preserves ownership, modes, ACLs, xattrs, flags, and file kind as well as bytes.
+
+<a id="activation-rollback-and-os-updates"></a>
 
 ## 4. Activation, rollback, and OS updates
 
@@ -40,6 +48,8 @@ The result before reboot is `pending-reboot`, not success or a committed package
 Restoring a sealed snapshot and re-enabling authenticated root are separate user-authorized steps, verified after the restored system boots. Never enable verification while an unsigned patched snapshot remains selected. Snapshot deletion is forbidden while referenced by recovery state. If the snapshot or original inventory is missing or damaged, stop with the recovery-kit and system-backup procedure; do not improvise a partial restore.
 
 An Apple OS update changes the baseline. Compare the OS build, volume/snapshot identities, and original fingerprints before every action. Retain originals per OS baseline; never copy an old OS's tool over a newer one. A changed baseline invalidates outstanding plans and requires a fresh authenticated package plan, fresh originals, and renewed consent. Old journals remain auditable. Decommission cannot delete the prefix, protected closure, or recovery kit while a snapshot still references them or a reboot is pending.
+
+<a id="acceptance-matrix"></a>
 
 ## 5. Acceptance matrix
 
@@ -56,5 +66,6 @@ Until an adapter passes these gates, the client reports that exact configuration
 |---|---|---|
 | v0.3 | September 2026 | Consolidate revision notes into a collapsible history table; no specification changes. |
 | v0.2 | September 2026 | prose rewrite of the adapter acceptance explanation; no content changes. |
+| v0.4 | September 2026 | Documentation audit repairs: contract summaries aligned; owner-approved namespace, rollback, GC, naming, prefix, and graft decisions applied where relevant; semantic anchors and explicit citations added. Runtime implementation and platform acceptance remain pending. |
 
 </details>

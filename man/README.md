@@ -1,6 +1,8 @@
 # aslice man pages
 
-This directory holds the man page sources. Two rules define the system:
+This directory holds the man page sources. Status: specified interface and build workflow; generated CLI help and installation remain implementation work.
+
+Two rules define the system:
 
 1. **The man pages and the CLI help are one source.** `aslice help <command>` renders the same text as `man aslice-<command>`. There is no separate help text to drift out of sync — if a command's behavior changes, this file changes, and both views update together.
 2. **Pages are written for people.** The reader is tired, something is broken, and the page's job is to be the shortest correct path back.
@@ -9,11 +11,11 @@ This directory holds the man page sources. Two rules define the system:
 
 Pages are Markdown in pandoc's man-page dialect: a three-line `%` title block, then `NAME`, `SYNOPSIS`, `DESCRIPTION`, and the sections the page needs. Build them with:
 
-```
+```sh
 pandoc -s -t man man/aslice-install.1.md -o share/man/man1/aslice-install.1
 ```
 
-The aslice build runs this command for every `*.1.md` here and installs the results into the prefix's `share/man/man1/`. `aslice shellenv` adds that directory to `MANPATH`. No other tooling is involved, and the source remains readable as plain Markdown on the web and in editors.
+The specified aslice build will run this command for every `*.1.md` here and installs the results into the prefix's `share/man/man1/`. `aslice shellenv` adds that directory to `MANPATH`. No other tooling is involved, and the source remains readable as plain Markdown on the web and in editors.
 
 ## Writing style
 

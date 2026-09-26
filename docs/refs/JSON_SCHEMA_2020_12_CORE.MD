@@ -1,5 +1,7 @@
 # JSON Schema 2020 12 Core
 
+Navigation: [Account](#captured-material) | [Source context](#decision-relevant-context) | [Full original](#full-captured-source) | [Catalog](README.MD)
+
 ## Source identity
 
 - Original source: https://www.ietf.org/archive/id/draft-bhutton-json-schema-01.txt
@@ -9,8 +11,8 @@
 - Capture type: complete upstream text with attribution and license
 - Rights: Original notices and redistribution terms retained in the full source.
 - Used by:
-  - [README — The three schema languages](../../schematics/README.md#the-three-schema-languages): JSON schematics use the 2020-12 dialect and local schema resources.
-  - [README — Authority and precedence](../../schematics/README.md#authority-and-precedence): Structural schemas do not replace prose semantics.
+  - [schematics/README — The three schema languages](../../schematics/README.md#the-three-schema-languages): JSON schematics use the 2020-12 dialect and local schema resources.
+  - [schematics/README — Authority and precedence](../../schematics/README.md#authority-and-precedence): Structural schemas do not replace prose semantics.
 
 ## Captured material
 

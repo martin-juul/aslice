@@ -1,12 +1,16 @@
 # aslice vs Homebrew — Capability Review and Gap Analysis
 
-- **Status:** Review v0.25 — September 2026
-- **Companion to:** [DESIGN.md](DESIGN.md) v1.23, [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md) v0.15, [BUILD-INFRA.md](BUILD-INFRA.md) v0.17, [REPOSITORIES.md](REPOSITORIES.md) v1.8, [ORCHARD-POLICY.md](ORCHARD-POLICY.md) v1.11
+- **Status:** Review v0.26 — September 2026
+- **Companion to:** [DESIGN.md](DESIGN.md), [PACKAGE-FORMAT.md](PACKAGE-FORMAT.md), [BUILD-INFRA.md](BUILD-INFRA.md), [REPOSITORIES.md](REPOSITORIES.md), [ORCHARD-POLICY.md](ORCHARD-POLICY.md)
 - **Method:** aslice's two specifications compared feature-by-feature against Homebrew's living feature set as of Homebrew 7.0.0 (September 2026). Apple-Silicon-specific work and Homebrew's Intel deprecation/removal machinery are excluded per review scope; everything else Homebrew does today is fair game.
 - **Sources:** Homebrew release notes 4.6.0 → 7.0.0, docs.brew.sh (Security and Supply Chain, Tap Trust), Homebrew/brew issue #17019 (attestation verification). Links in §10.
 - **Vocabulary:** [NOMENCLATURE.md](NOMENCLATURE.md) — project terms, acronyms, and the Homebrew translation table.
 
 ---
+
+Navigation: [1. Verdict up front](#verdict-up-front) · [2. Where aslice is already ahead](#where-aslice-is-already-ahead) · [3. Detailed comparison matrix](#detailed-comparison-matrix) · [4. The gaps, in detail](#the-gaps-in-detail) · [5. What aslice should deliberately NOT copy](#what-aslice-should-deliberately-not-copy) · [6. Additions to the DESIGN risk table](#additions-to-the-designmd-15-risk-table) · [7. Priority mapping to the roadmap](#priority-mapping-to-the-roadmap) · [8. Spec amendment checklist](#spec-amendment-checklist) · [9. What this review did NOT find](#what-this-review-did-not-find) · [10. Sources](#sources)
+
+<a id="verdict-up-front"></a>
 
 ## 1. Verdict up front
 
@@ -19,18 +23,20 @@ The original comparison emphasized operational coverage. The later corpus review
 1. **Upstream release tracking and bump automation** — a `livecheck`/autobump equivalent. The OS platform is frozen; upstreams are not. Package churn is the *entire* ongoing workload, and Homebrew runs it with heavy automation (livecheck DSL, scheduled autobump, `bump-formula-pr`, supply-side cooldowns). Without an equivalent planned from day one, the orchard rots on a schedule. **(P0)**
 2. **Self-distribution** — no specified mechanism for aslice to update *itself*, and no signing/notarization story for the bootstrap binary users are asked to `curl | sh` into existence. **(P0)**
 3. **Package lifecycle states** — Homebrew's `deprecate!`/`disable!` with dates and reasons, pinning, `outdated`. aslice has a boolean and a lock file where a lifecycle is needed. **(P1)**
-4. ~~**Services UX**~~ — **specified (DESIGN v1.3 §12.8, PACKAGE-FORMAT v0.4):** `[service]` declares the service and aslice generates the plist, `aslice service` is the launchd-native CLI, env overrides live outside the immutable store, and upgrades stop–swap–restart running services as part of the transaction (§4.4).
+4. ~~**Services UX**~~ — **specified (DESIGN v1.3 [DESIGN §12.8](DESIGN.md#services-launchd-native-lifecycle-and-safe-upgrades), PACKAGE-FORMAT v0.4):** `[service]` declares the service and aslice generates the plist, `aslice service` is the launchd-native CLI, env overrides live outside the immutable store, and upgrades stop–swap–restart running services as part of the transaction (§4.4).
 5. **The "keg-only" decision** — no policy for packages that shadow macOS-provided tools/libraries (curl, sqlite3, openssl). Homebrew's answer is ugly but load-bearing; aslice needs its principled equivalent. **(P1)**
 
 Resolve the state, identity, and trust contracts before implementation makes them expensive to change.
 
 ---
 
+<a id="where-aslice-is-already-ahead"></a>
+
 ## 2. Where aslice is already ahead
 
 | Dimension | Homebrew 7.0 reality | aslice spec | Verdict |
 |---|---|---|---|
-| Install-time package code | `post_install` Ruby deprecated in 7.0, migrating to `*_steps` DSL; third-party taps still arbitrary Ruby, now gated by tap trust (6.0) — trust prompts, not elimination | **Zero undeclared** package code at binary install, from day one, for every orchard — vendor installer scripts run only as declared, approved, sandboxed, rehearsed grafts (DESIGN v1.19 §12.15) | Ahead — aslice starts where Homebrew converges |
+| Install-time package code | `post_install` Ruby deprecated in 7.0, migrating to `*_steps` DSL; third-party taps still arbitrary Ruby, now gated by tap trust (6.0) — trust prompts, not elimination | **Zero undeclared** package code at binary install, from day one, for every orchard — vendor installer scripts run only as declared, approved, sandboxed, rehearsed grafts (DESIGN v1.19 [DESIGN §12.15](DESIGN.md#vendor-install-scripts-grafts--declared-approved-monitored-reversible)) | Ahead — aslice starts where Homebrew converges |
 | Binary provenance | Sigstore/GitHub attestations; the archived May 2024 beta used opt-in verification, `gh`, authenticated GitHub APIs, and a historical backfill; this source does not establish the current default | minisign/Ed25519 signatures verified **before extraction on every slice**, no external tool, plus separately authenticated provenance bound to the artifact | Ahead — always-on, self-contained |
 | Index/metadata integrity | JWS-signed JSON API (a real improvement; signed metadata) | Full **TUF**: initially 1-of-1 offline root, dedicated networked targets/snapshot signer, publisher timestamp key — rollback, freeze, and mix-and-match protection | Ahead |
 | Feature variants/flags | Removed from `homebrew-core` in 2019; options live only in third-party taps and break bottle assumptions | ABI-neutral optimization may share a compatibility key; exact flags and output enter artifact identity; `abi = true` variants change the compatibility key | Ahead — the founding insight |
@@ -43,96 +49,112 @@ Resolve the state, identity, and trust contracts before implementation makes the
 | Downloads | Concurrent by default since 5.0 | HTTP/2, 8-way parallel, resumable ranges, zstd | Parity |
 | Relocation | Relocation metadata recorded, poured bottles rewritten; prefix length constraints bite on Linux; non-/usr/local prefixes degrade bottle coverage | Fixed default prefix = zero rewriting in the common case; relocation metadata for custom prefixes | Parity, simpler common case |
 | Index updates | Internal JSON API (no git taps needed by default) — fast | TUF snapshot diffs — comparable, signed harder | Parity-to-ahead |
-| **Freshness pipeline** | **livecheck DSL, autobump, bump-formula-pr, cooldowns** | **Specified** — `[livecheck]`, scheduled autobump, `bump-pr`, cooldowns (PACKAGE-FORMAT §3.15, ORCHARD-POLICY §9): parity on paper | **Behind — the gap now is execution, not design** |
+| **Freshness pipeline** | **livecheck DSL, autobump, bump-formula-pr, cooldowns** | **Specified** — `[livecheck]`, scheduled autobump, `bump-pr`, cooldowns ([PACKAGE-FORMAT §3.15](PACKAGE-FORMAT.md#livecheck--upstream-freshness-declared-v06), ORCHARD-POLICY [DESIGN §9](DESIGN.md#distribution-and-the-build-farm)): parity on paper | **Behind — the gap now is execution, not design** |
 | **Corpus** | ~15 years of formulae encoding macOS quirk knowledge | 0 today; 300 core planned | **Behind — the real moat** |
 | Services UX | `brew services` mature; per-service env overrides (7.0) | Declarative `[service]` + launchd-native CLI + stop–swap–restart upgrades (§4.4 — specified, DESIGN v1.3) | **Ahead** on upgrade safety |
 | Multi-version runtimes | Separate `php@x.y`/`python@x.y` formulae, keg-only juggling; the real answer is external managers (nvm, pyenv, rbenv, Volta) shadowing brew with their own shims and state | Release streams in one formula; shim layer with session/project/default selection (`use`/`pin`/`default`); tools ride the selected runtime; extensions ABI-epoch-bound (§4.15 — specified, DESIGN v1.5) | **Ahead** — version management as a package-manager feature, not a second tool |
-| Environments | `brew bundle` (Brewfile), `brew exec` (npx-like, 6.0) | Lock files (exact reproduction); `aslice exec` temporary views (§4.6 — specified, DESIGN v1.8 §12.1); `aslice-machine.toml` wishlist with whole-machine `aslice machine apply`/`export` (§4.6 — specified, DESIGN v1.18 §12.13) | Specified |
+| Environments | `brew bundle` (Brewfile), `brew exec` (npx-like, 6.0) | Lock files (exact reproduction); `aslice exec` temporary views (§4.6 — specified, DESIGN v1.8 [DESIGN §12.1](DESIGN.md#commands)); `aslice-machine.toml` wishlist with whole-machine `aslice machine apply`/`export` (§4.6 — specified, DESIGN v1.18 [DESIGN §12.13](DESIGN.md#declarative-system-setup-aslice-machinetoml-and-the-aslice-machine-commands)) | Specified |
 | GUI | BrewUI native app (7.0) | None (CLI-first audience) | Behind, acceptably |
 
 ---
 
+<a id="detailed-comparison-matrix"></a>
+
 ## 3. Detailed comparison matrix
 
 Legend: ✅ spec covers it · ⚡ aslice is ahead · ⚠ partial / under-specified · ❌ missing
+
+<a id="install--upgrade--day-two-ux"></a>
 
 ### 3.1 Install / upgrade / day-two UX
 
 | Homebrew capability | aslice status | Notes |
 |---|---|---|
 | install (binary-first), uninstall, upgrade | ⚡ | Binary-first is the default in both; aslice adds flavor selection |
-| reinstall | ✅ | `aslice reinstall` — same version, fresh link, repairs a damaged profile entry (DESIGN v1.8 §12.1) |
-| outdated (list upgradeable) | ✅ | `aslice outdated [--json]` — what would upgrade, and why; honors pins (DESIGN v1.8 §12.1) |
-| pin / unpin (hold a package) | ✅ | `aslice pin` / `unpin` — upgrade skips held packages, `outdated` says so (DESIGN v1.8 §8.4, §12.1); §4.3 closed |
+| reinstall | ✅ | `aslice reinstall` — same version, fresh link, repairs a damaged profile entry (DESIGN v1.8 [DESIGN §12.1](DESIGN.md#commands)) |
+| outdated (list upgradeable) | ✅ | `aslice outdated [--json]` — what would upgrade, and why; honors pins (DESIGN v1.8 [DESIGN §12.1](DESIGN.md#commands)) |
+| pin / unpin (hold a package) | ✅ | `aslice pin` / `unpin` — upgrade skips held packages, `outdated` says so (DESIGN v1.8 [DESIGN §8.4](DESIGN.md#garbage-collection-discipline), [DESIGN §12.1](DESIGN.md#commands)); §4.3 closed |
 | leaves / deps / uses / why | ✅ | `leaves`, `why` specified; add `uses --installed` (reverse edges) explicitly |
-| autoremove (orphan deps) | ✅ | `on_request` tracking specified — every DB install record carries it, `aslice mark` repairs the record (DESIGN v1.8 §8.4); §4.9 closed |
-| cleanup (cache scrubbing) | ✅ | `aslice clean` owns the cache — watermark-driven LRU eviction, `--dry-run` symmetry with `gc` (DESIGN v1.8 §8.4, §12.1); §4.10 closed |
+| autoremove (orphan deps) | ✅ | `on_request` tracking specified — every DB install record carries it, `aslice mark` repairs the record (DESIGN v1.8 [DESIGN §8.4](DESIGN.md#garbage-collection-discipline)); §4.9 closed |
+| cleanup (cache scrubbing) | ✅ | `aslice clean` owns the cache — watermark-driven LRU eviction, `--dry-run` symmetry with `gc` (DESIGN v1.8 [DESIGN §8.4](DESIGN.md#garbage-collection-discipline), [DESIGN §12.1](DESIGN.md#commands)); §4.10 closed |
 | fetch (standalone prefetch, retry/resume) | ⚠ | Resumable ranges specified in perf model; no user-facing `fetch` command |
-| doctor | ⚡ | Fully specified (DESIGN §12.6): check battery with stable IDs, `--json`, scriptable exit codes, curated narrow `--fix`, Homebrew-coexistence checks — ahead of Homebrew's |
-| shellenv (emit PATH setup) | ✅ | `aslice shellenv` — pure echo, no writes (DESIGN v1.8 §12.1); `aslice init` covers zsh and bash (MANUAL §2.3) |
+| doctor | ⚡ | Fully specified ([DESIGN §12.6](DESIGN.md#doctor-sanity-checking)): check battery with stable IDs, `--json`, scriptable exit codes, curated narrow `--fix`, Homebrew-coexistence checks — ahead of Homebrew's |
+| shellenv (emit PATH setup) | ✅ | `aslice shellenv` — pure echo, no writes (DESIGN v1.8 [DESIGN §12.1](DESIGN.md#commands)); `aslice init` covers zsh and bash ([MANUAL §2.3](MANUAL.md#after-the-install)) |
 | info/search with rich metadata | ⚠ | `--json` on everything is specified; `keywords` field powers search. Missing: a **public web index** — see §4.8 |
 | install specific version (`install foo@1.2`, version-install) | ⚡ | `aslice install ffmpeg@v6` + index snapshots give *arbitrary historical* installs — better than Homebrew's versioned-formula hacks |
-| link / unlink / switch between installed versions | ✅ | Generations supersede `switch`; per-profile `aslice link`/`unlink` for `link = false` shadowing packages specified (DESIGN v1.10 §12.1, PACKAGE-FORMAT §3.8); §4.5 closed |
+| link / unlink / switch between installed versions | ✅ | Generations supersede `switch`; per-profile `aslice link`/`unlink` for `link = false` shadowing packages specified (DESIGN v1.10 [DESIGN §12.1](DESIGN.md#commands), [PACKAGE-FORMAT §3.8](PACKAGE-FORMAT.md#install--declarative-post-install-behavior)); §4.5 closed |
+
+<a id="security-and-trust"></a>
 
 ### 3.2 Security and trust
 
 | Homebrew capability | aslice status | Notes |
 |---|---|---|
-| Tap trust (explicit trust before code runs, 6.0) | ⚡ | Orchard trust levels + the no-undeclared-install-code model obsoletes the entire category — the one execution path, grafts, is declared, approved, and rehearsed (DESIGN v1.19 §12.15) |
+| Tap trust (explicit trust before code runs, 6.0) | ⚡ | Orchard trust levels + the no-undeclared-install-code model obsoletes the entire category — the one execution path, grafts, is declared, approved, and rehearsed (DESIGN v1.19 [DESIGN §12.15](DESIGN.md#vendor-install-scripts-grafts--declared-approved-monitored-reversible)) |
 | Bottle attestations (Sigstore, opt-in) | ⚡ | Always-on minisign + TUF; consider *also* emitting GitHub Artifact Attestations for GHCR-hosted slices (free, defense-in-depth) |
 | Signed JSON API (JWS) | ⚡ | TUF supersedes |
 | Vulnerability DB (`brew vulns`) | ⚡ | `audit` + CPE + SBOM; add advisory-index caching for offline audit (Homebrew generates one from formulae.brew.sh — same trick works for the aslice index) |
 | Build sandbox | ⚡ | Phase-scoped Seatbelt profiles + hermetic env |
-| **Self-update security** | ⚡ specified | `aslice self-update` — signed, verified, installed as a new generation, health-checked after the swap, automatic rollback on a failed smoke test (DESIGN v1.8 §12.12); §4.1 closed |
-| **Bootstrap binary trust** | ⚡ specified | Minisign-signed *and* Apple-notarized bootstrap (DESIGN §10.3), hash-pinned in the installer with a second transport; §4.1 closed |
+| **Self-update security** | ⚡ specified | `aslice self-update` — signed, verified, installed as a new generation, health-checked after the swap, automatic rollback on a failed smoke test (DESIGN v1.8 [DESIGN §12.12](DESIGN.md#self-update-aslice-is-package-zero)); §4.1 closed |
+| **Bootstrap binary trust** | ⚡ specified | Minisign-signed *and* Apple-notarized bootstrap ([DESIGN §10.3](DESIGN.md#trust-bootstrapping)), hash-pinned in the installer with a second transport; §4.1 closed |
 | SECURITY.md / vuln reporting for aslice itself | ⚡ specified | SECURITY.md, CONTRIBUTING.md, and the key-ceremony/rotation runbook (docs/KEY-RUNBOOK.md) shipped; the code-of-conduct proposal was owner-rejected (§4.12) |
-| Stale system trust store (expired/missing roots — this platform's day-one failure) | ⚡ specified | Homebrew: nothing — the keg-only `ca-certificates` formula helps CLI tools only, the system store rots untouched. aslice: `aslice ca-update` — signed, generation-managed bundle (configurable source, Mozilla-via-curl default) + profile env wiring + opt-in System-keychain import via `aslice-system`, recorded and reversible to the certificate (DESIGN v1.6 §12.10); v1.7 adds `--crypto` (upgrades the crypto-provider slices — modern ciphers/TLS 1.3 for aslice userland; SecureTransport's frozen limits printed, never hidden) and `--apple-certs` (Apple's own roots — not in Mozilla's program — from a pinned `apple-roots` slice, same consent/recording/reversibility rules) |
-| System file modification (patching the OS itself) | ⚡ | Homebrew: Cask pkg scripts and `installer script:` — arbitrary code, often as root, with no backup and no rollback. aslice: declared `[system-patch]` — original bytes and metadata are retained in protected storage, executable replacements use a root-owned closure, and journaled restoration may require Recovery and reboot, consent is per-decision, serving is gated to official and local repositories (verified only via the user's explicit per-repo grant), and catastrophic paths plus platform-binary dylibs are refused by construction (DESIGN §12.11; SYSTEM-VOLUMES) |
+| Stale system trust store (expired/missing roots — this platform's day-one failure) | ⚡ specified | Homebrew: nothing — the keg-only `ca-certificates` formula helps CLI tools only, the system store rots untouched. aslice: `aslice ca-update` — signed, generation-managed bundle (configurable source, Mozilla-via-curl default) + profile env wiring + opt-in System-keychain import via `aslice-system`, recorded and reversible to the certificate (DESIGN v1.6 [DESIGN §12.10](DESIGN.md#trust-store-modern-ca-certificates-on-a-frozen-platform)); v1.7 adds `--crypto` (upgrades the crypto-provider slices — modern ciphers/TLS 1.3 for aslice userland; SecureTransport's frozen limits printed, never hidden) and `--apple-certs` (Apple's own roots — not in Mozilla's program — from a pinned `apple-roots` slice, same consent/recording/reversibility rules) |
+| System file modification (patching the OS itself) | ⚡ | Homebrew: Cask pkg scripts and `installer script:` — arbitrary code, often as root, with no backup and no rollback. aslice: declared `[system-patch]` — original bytes and metadata are retained in protected storage, executable replacements use a root-owned closure, and journaled restoration may require Recovery and reboot, consent is per-decision, serving is gated to official and local repositories (verified only via the user's explicit per-repo grant), and catastrophic paths plus platform-binary dylibs are refused by construction ([DESIGN §12.11](DESIGN.md#system-patches-flagged-reversible-replacement-of-apple-provided-files); SYSTEM-VOLUMES) |
+
+<a id="orchard--maintainer-machinery"></a>
 
 ### 3.3 Orchard / maintainer machinery
 
 | Homebrew capability | aslice status | Notes |
 |---|---|---|
-| livecheck DSL (detect upstream releases) | ⚡ specified | `[livecheck]` specified (PACKAGE-FORMAT v0.6 §3.15); §4.2 closed on paper — execution remains |
-| autobump (scheduled automatic version bumps) | ⚡ specified | Scheduled autobump is policy (ORCHARD-POLICY §9); PR merges gate on the matrix (§4.7) |
-| bump-formula-pr / bump-revision | ⚡ specified | `aslice bump-pr <pkg> <version>` — edit, lint, smoke-build one flavor, open the PR (DESIGN v1.8 §12.1) |
-| Supply-side cooldowns (npm/PyPI/RubyGems delay before bumping, 6.0) | ⚡ specified | Cooldown floor of 2 days, raisable for the historically risky ecosystems (PACKAGE-FORMAT §3.15, ORCHARD-POLICY §9) |
-| brew create (formula scaffolding from URL) | ⚡ specified | `aslice create <url>` — fetch, hash, sniff the build system, emit a package.toml draft (DESIGN v1.8 §12.1); §4.11 |
+| livecheck DSL (detect upstream releases) | ⚡ specified | `[livecheck]` specified (PACKAGE-FORMAT v0.6 [PACKAGE-FORMAT §3.15](PACKAGE-FORMAT.md#livecheck--upstream-freshness-declared-v06)); §4.2 closed on paper — execution remains |
+| autobump (scheduled automatic version bumps) | ⚡ specified | Scheduled autobump is policy (ORCHARD-POLICY [DESIGN §9](DESIGN.md#distribution-and-the-build-farm)); PR merges gate on the matrix (§4.7) |
+| bump-formula-pr / bump-revision | ⚡ specified | `aslice bump-pr <pkg> <version>` — edit, lint, smoke-build one flavor, open the PR (DESIGN v1.8 [DESIGN §12.1](DESIGN.md#commands)) |
+| Supply-side cooldowns (npm/PyPI/RubyGems delay before bumping, 6.0) | ⚡ specified | Cooldown floor of 2 days, raisable for the historically risky ecosystems ([PACKAGE-FORMAT §3.15](PACKAGE-FORMAT.md#livecheck--upstream-freshness-declared-v06), ORCHARD-POLICY [DESIGN §9](DESIGN.md#distribution-and-the-build-farm)) |
+| brew create (formula scaffolding from URL) | ⚡ specified | `aslice create <url>` — fetch, hash, sniff the build system, emit a package.toml draft (DESIGN v1.8 [DESIGN §12.1](DESIGN.md#commands)); §4.11 |
 | audit --new / style checks | ⚠ | `aslice lint` covers schema + policy; add a `--new-package` ruleset (homepage reachable, license present, description rules) |
-| test-bot CI (build, test, bottle, merge-gate) | ⚡ | Merge gates specified: full declared flavor × OS matrix, ABI-diff gates on provider revisions, dependent-rebuild cascade (DESIGN v1.8 §13.4); the gate also runs pre-PR as `aslice orchard ci` (DESIGN v1.16 §12.14); §4.7 closed |
-| brew test (run formula's test block on installed package) | ⚡ | `aslice test <pkg>` runs tests.star against the installed slice, on demand (DESIGN v1.8 §12.1) |
-| Formula importer | ⚡ | §13.3 Ruby→TOML/Starlark importer, shipped as `aslice orchard port --from-homebrew` (DESIGN v1.16 §12.14) — ahead of Homebrew (which has no such thing because it never needed one) |
+| test-bot CI (build, test, bottle, merge-gate) | ⚡ | Merge gates specified: full declared flavor × OS matrix, ABI-diff gates on provider revisions, dependent-rebuild cascade (DESIGN v1.8 [DESIGN §13.4](DESIGN.md#governance)); the gate also runs pre-PR as `aslice orchard ci` (DESIGN v1.16 [DESIGN §12.14](DESIGN.md#orchard-maintenance-the-maintainers-cli)); §4.7 closed |
+| brew test (run formula's test block on installed package) | ⚡ | `aslice test <pkg>` runs tests.star against the installed slice, on demand (DESIGN v1.8 [DESIGN §12.1](DESIGN.md#commands)) |
+| Formula importer | ⚡ | [DESIGN §13.3](DESIGN.md#coexistence-and-migration-from-homebrew) Ruby→TOML/Starlark importer, shipped as `aslice orchard port --from-homebrew` (DESIGN v1.16 [DESIGN §12.14](DESIGN.md#orchard-maintenance-the-maintainers-cli)) — ahead of Homebrew (which has no such thing because it never needed one) |
+
+<a id="environments-services-ecosystem"></a>
 
 ### 3.4 Environments, services, ecosystem
 
 | Homebrew capability | aslice status | Notes |
 |---|---|---|
-| brew services (start/stop/restart/list, env overrides) | ⚡ specified | Declarative `[service]` + launchd-native `aslice service` CLI + stop–swap–restart upgrades + per-service env overrides (§4.4 — DESIGN v1.3 §12.8, PACKAGE-FORMAT v0.4) |
-| Versioned runtimes (php@x.y, python@x.y) + the nvm/pyenv/rbenv/Volta ecosystem around them | ⚡ specified | One formula with release streams; shims resolve session → project → default; `aslice use/pin/default`; tools ride the selected runtime; extension slices bind to the runtime's ABI epoch; pip/gem/npm installs bind per-version through shim-injected userbases (§4.15 — DESIGN v1.5 §12.9, PACKAGE-FORMAT v0.5 §3.13) |
+| brew services (start/stop/restart/list, env overrides) | ⚡ specified | Declarative `[service]` + launchd-native `aslice service` CLI + stop–swap–restart upgrades + per-service env overrides (§4.4 — DESIGN v1.3 [DESIGN §12.8](DESIGN.md#services-launchd-native-lifecycle-and-safe-upgrades), PACKAGE-FORMAT v0.4) |
+| Versioned runtimes (php@x.y, python@x.y) + the nvm/pyenv/rbenv/Volta ecosystem around them | ⚡ specified | One formula with release streams; shims resolve session → project → default; `aslice use/pin/default`; tools ride the selected runtime; extension slices bind to the runtime's ABI epoch; pip/gem/npm installs bind per-version through shim-injected userbases (§4.15 — DESIGN v1.5 [DESIGN §12.9](DESIGN.md#multi-version-runtimes-use-pin-default--and-version-bound-extensions), PACKAGE-FORMAT v0.5 [PACKAGE-FORMAT §3.13](PACKAGE-FORMAT.md#runtime-extension-ride--multi-version-runtimes-v05)) |
 | brew bundle (Brewfile wishlist, dump) | ⚡ | `aslice-machine.toml` + `aslice machine apply`/`export` — specified broader than the wishlist: packages, runtime selections, services, `defaults`, login shell; data-not-Ruby where the Brewfile executes (§4.6, SETUP.md) |
-| brew exec (npx-like ephemeral environments, 6.0) | ⚡ specified | `aslice exec <pkg> -- <cmd>` — temporary profile view, discarded on exit (DESIGN v1.8 §12.1); §4.6 |
-| Brewfile import for migration | ⚡ | `aslice machine import --from-brewfile` translates a Brewfile into an aslice-machine.toml with a printed skip list for cask/mas/vscode (§4.6, SETUP.md §5) |
-| brew shellenv / completions / man pages | ⚠ partially | `shellenv`/`init` specified (DESIGN v1.8 §12.1, MANUAL §2.3); man pages exist (man/); completions open — §4.13 |
+| brew exec (npx-like ephemeral environments, 6.0) | ⚡ specified | `aslice exec <pkg> -- <cmd>` — temporary profile view, discarded on exit (DESIGN v1.8 [DESIGN §12.1](DESIGN.md#commands)); §4.6 |
+| Brewfile import for migration | ⚡ | `aslice machine import --from-brewfile` translates a Brewfile into an aslice-machine.toml with a printed skip list for cask/mas/vscode (§4.6, SETUP.md [DESIGN §5](DESIGN.md#core-architecture)) |
+| brew shellenv / completions / man pages | ⚠ partially | `shellenv`/`init` specified (DESIGN v1.8 [DESIGN §12.1](DESIGN.md#commands), [MANUAL §2.3](MANUAL.md#after-the-install)); man pages exist (man/); completions open — §4.13 |
 | HOMEBREW_* env contract, brew config/env | ⚠ | `aslice config` exists; publish a stable `ASLICE_*` environment contract — see §4.13 |
-| Offline mode | ⚡ specified | Cache-and-snapshot offline operation specified — cached slices install, `doctor --offline` reports snapshot age (MANUAL §9.5); the `ASLICE_*` contract remains open (§4.13) |
-| Analytics (opt-out) | ⚡ | **None, ever** — resolved decision (DESIGN §2.2 N7): aslice collects no telemetry or analytics of any kind, not even opt-in. The project is infrastructure, not a product |
+| Offline mode | ⚡ specified | Cache-and-snapshot offline operation specified — cached slices install, `doctor --offline` reports snapshot age (MANUAL [DESIGN §9.5](DESIGN.md#build-provenance)); the `ASLICE_*` contract remains open (§4.13) |
+| Analytics (opt-out) | ⚡ | **None, ever** — resolved decision ([DESIGN §2.2](DESIGN.md#non-goals) N7): aslice collects no telemetry or analytics of any kind, not even opt-in. The project is infrastructure, not a product |
 | formulae.brew.sh web index | ❌ | See §4.8 |
 | BrewUI native GUI (7.0) | ❌ | Acceptable to defer; note as opportunity for the retro-Mac community |
-| Casks (GUI apps/fonts) | ⚠ partially superseded | Vendor-binary packages are **in scope** per the repository/vendor-binary decision (PACKAGE-FORMAT v0.2+ §3.11, DESIGN §12.4): `.pkg`/`.dmg`-only software installs payload-only by default — installer scripts never execute unless declared as grafts (DESIGN v1.19 §12.15) — with pinned signers and per-artifact OS/arch tags, **including 32-bit and universal payloads on 10.11–10.14** (the last releases that execute 32-bit code — a population Homebrew never served even at its peak), hosted or vendor-fetched. What remains deferred is app *polish* (icon chrome, `~/Applications` integration), and the declarative `.app` schema reservation stands for that |
+| Casks (GUI apps/fonts) | ⚠ partially superseded | Vendor-binary packages are **in scope** per the repository/vendor-binary decision (PACKAGE-FORMAT v0.2+ [PACKAGE-FORMAT §3.11](PACKAGE-FORMAT.md#binary--vendor-binaries-pkgdmg-only-software), [DESIGN §12.4](DESIGN.md#vendor-binaries-pkgdmg-and-gui-apps)): `.pkg`/`.dmg`-only software installs payload-only by default — installer scripts never execute unless declared as grafts (DESIGN v1.19 [DESIGN §12.15](DESIGN.md#vendor-install-scripts-grafts--declared-approved-monitored-reversible)) — with pinned signers and per-artifact OS/arch tags, **including 32-bit and universal payloads on 10.11–10.14** (the last releases that execute 32-bit code — a population Homebrew never served even at its peak), hosted or vendor-fetched. What remains deferred is app *polish* (icon chrome, `~/Applications` integration), and the declarative `.app` schema reservation stands for that |
 
 ---
+
+<a id="the-gaps-in-detail"></a>
 
 ## 4. The gaps, in detail
 
 Each gap gets the same treatment: what Homebrew has, why it matters *specifically for aslice*, and the concrete proposal.
 
+<a id="p0--self-distribution-self-update-and-bootstrap-trust"></a>
+
 ### 4.1 P0 — Self-distribution: self-update and bootstrap trust
 
 **Homebrew:** updates itself via `brew update` (git pull of Homebrew/brew against tagged stable releases); ships a signed, notarized `.pkg` installer (Apple Silicon only — the Intel-era answer was the install script plus CLT).
 
-**Current specification:** [STATE-AND-RECOVERY §6–§7](STATE-AND-RECOVERY.md) defines authenticated bootstrap kits, supervisor-based self-update, versioned state snapshots, shim activation, and a retained recovery entry point. The manager occupies `store/<artifact-hex>/` like other artifacts. A supervisor tests the new child before committing activation; power-loss recovery remains available outside the switched generation.
+**Current specification:** [STATE-AND-RECOVERY §6](STATE-AND-RECOVERY.md#self-update-and-decommission) and [STATE-AND-RECOVERY §7](STATE-AND-RECOVERY.md#persistent-trust-and-initial-bootstrap) defines authenticated bootstrap kits, supervisor-based self-update, versioned state snapshots, shim activation, and a retained recovery entry point. The manager occupies `store/<artifact-hex>/` like other artifacts. A supervisor tests the new child before committing activation; power-loss recovery remains available outside the switched generation.
 
 On TLS-dead systems, the offline kit is verified against an independently authenticated digest before execution. The verified binary checks signatures; an unverified script does not download its own root of trust. Apple notarization is separate distribution evidence. Implementation and crash-injection acceptance tests remain pending.
+
+<a id="p0--upstream-freshness-livecheck-and-autobump"></a>
 
 ### 4.2 P0 — Upstream freshness: livecheck and autobump
 
@@ -140,7 +162,7 @@ On TLS-dead systems, the offline kit is verified against an independently authen
 
 **aslice today:** nothing. Versions change by hand.
 
-**Why it matters more for aslice than for Homebrew:** DESIGN §9.3's core economic claim is "the platform is frozen, so volunteer effort goes to packages, not platform firefighting." That inverts the workload: freshness automation *is* the project. Homebrew's autobump exists because humans don't scale to thousands of upstreams; aslice's 300-package core is the size where automation pays immediately and manual bumps quietly stop happening in year two.
+**Why it matters more for aslice than for Homebrew:** [DESIGN §9.3](DESIGN.md#the-build-farm)'s core economic claim is "the platform is frozen, so volunteer effort goes to packages, not platform firefighting." That inverts the workload: freshness automation *is* the project. Homebrew's autobump exists because humans don't scale to thousands of upstreams; aslice's 300-package core is the size where automation pays immediately and manual bumps quietly stop happening in year two.
 
 **Proposal — add to PACKAGE-FORMAT.md:**
 
@@ -159,7 +181,9 @@ skip_prerelease = true             # default true
 - **Cooldowns and throttle from day one** — cheap insurance, and a differentiator to advertise.
 - `brew bump-formula-pr` equivalent: `aslice bump-pr <pkg> <version>` — does the local edit, lints, builds one flavor as a smoke test, opens the PR.
 
-**Status: specified (PACKAGE-FORMAT v0.6 §3.15).** The `[livecheck]` block landed as proposed — strategies, throttle, and the cooldown floor of 2 days, raisable for the historically risky ecosystems. Freshness policy (required in core, days-behind-upstream as the dashboard number) is ORCHARD-POLICY §9.
+**Status: specified (PACKAGE-FORMAT v0.6 [PACKAGE-FORMAT §3.15](PACKAGE-FORMAT.md#livecheck--upstream-freshness-declared-v06)).** The `[livecheck]` block landed as proposed — strategies, throttle, and the cooldown floor of 2 days, raisable for the historically risky ecosystems. Freshness policy (required in core, days-behind-upstream as the dashboard number) is ORCHARD-POLICY [DESIGN §9](DESIGN.md#distribution-and-the-build-farm).
+
+<a id="p1--package-lifecycle-states"></a>
 
 ### 4.3 P1 — Package lifecycle states
 
@@ -179,7 +203,9 @@ disable_date = "2027-09-01"   # optional: after this, new installs refuse withou
 
 Semantics: **active → deprecated** (installs warn, `audit`/`info` surface it) **→ disabled** (new installs refused, existing installs keep working and remain in locks) **→ tombstoned** (formula removed from orchard HEAD; the index keeps a permanent tombstone so old locks still resolve against historical snapshots — something Homebrew's git-tap model does *worse* than aslice's snapshot model can). Add `aslice pin <pkg>` / `unpin` (recorded in the DB, honored by `upgrade`, surfaced in `outdated`), and `aslice outdated [--json]`.
 
-**Status: specified (PACKAGE-FORMAT v0.6 §3.14; `pin`/`unpin` and `outdated` in DESIGN v1.8 §8.4, §12.1).** The `[deprecation]` table landed as proposed, replacing the `[package] deprecated` boolean; the tombstone guarantee and the security fast path are policy in ORCHARD-POLICY §8.
+**Status: specified (PACKAGE-FORMAT v0.6 [PACKAGE-FORMAT §3.14](PACKAGE-FORMAT.md#deprecation--the-package-lifecycle-declared-v06); `pin`/`unpin` and `outdated` in DESIGN v1.8 [DESIGN §8.4](DESIGN.md#garbage-collection-discipline), [DESIGN §12.1](DESIGN.md#commands)).** The `[deprecation]` table landed as proposed, replacing the `[package] deprecated` boolean; the tombstone guarantee and the security fast path are policy in [ORCHARD-POLICY §8](ORCHARD-POLICY.md#deprecation-and-removal-lifecycle).
+
+<a id="p1--services-ux"></a>
 
 ### 4.4 P1 — Services UX
 
@@ -189,16 +215,18 @@ Semantics: **active → deprecated** (installs warn, `audit`/`info` surface it) 
 
 **Proposal:**
 - `aslice services list|start|stop|restart|run|info <pkg>` — thin, correct layer over launchd, reading the declarative plist. `run` (foreground, no registration) is worth copying — it's how people debug.
-- **Override file:** `$XDG_CONFIG_HOME/aslice/services/<pkg>.env` (or `~/.aslice/etc/services/`), applied by the *launcher* at `start` time — never by editing the store's plist (store immutability §8.1 makes this forced, which is good: Homebrew mutates generated files, aslice can't, so the design lands in the right place automatically).
+- **Override file:** `$XDG_CONFIG_HOME/aslice/services/<pkg>.env` (or `~/.aslice/etc/services/`), applied by the *launcher* at `start` time — never by editing the store's plist (store immutability [DESIGN §8.1](DESIGN.md#layout) makes this forced, which is good: Homebrew mutates generated files, aslice can't, so the design lands in the right place automatically).
 - Services are per-profile: `aslice services list` shows which profile each service belongs to.
 
-**Status: specified (DESIGN v1.3 §12.8, PACKAGE-FORMAT v0.4).** The design went further than this proposal: `[service]` is generated-plist — the formula ships no plist file at all — and the upgrade transaction itself quiesces affected services (stop, atomic swap, restart, health-checked), so a running nginx is never updated out from under itself. Root-domain daemons go through `aslice-system` and the repository `system` capability; user agents stay unprivileged.
+**Status: specified (DESIGN v1.3 [DESIGN §12.8](DESIGN.md#services-launchd-native-lifecycle-and-safe-upgrades), PACKAGE-FORMAT v0.4).** The design went further than this proposal: `[service]` is generated-plist — the formula ships no plist file at all — and the upgrade transaction itself quiesces affected services (stop, atomic swap, restart, health-checked), so a running nginx is never updated out from under itself. Root-domain daemons go through `aslice-system` and the repository `system` capability; user agents stay unprivileged.
+
+<a id="p1--the-keg-only-decision-shadowing-system-software"></a>
 
 ### 4.5 P1 — The keg-only decision (shadowing system software)
 
 **Homebrew:** `keg_only` — packages shadowing macOS-provided software (openssl, sqlite, curl, ruby…) install but don't link into the prefix, with a reason string; versioned formulae (`openssl@3`) are keg-only by default.
 
-**aslice today:** no equivalent. Versioned packages like `openssl@3` are named (PACKAGE-FORMAT §5.2) and `links_priority` exists (§3.8), but nothing says "don't link by default."
+**aslice today:** no equivalent. Versioned packages like `openssl@3` are named (PACKAGE-FORMAT [DESIGN §5.2](DESIGN.md#major-components)) and `links_priority` exists ([PACKAGE-FORMAT §3.8](PACKAGE-FORMAT.md#install--declarative-post-install-behavior)), but nothing says "don't link by default."
 
 **Why it matters even with a private prefix:** `/opt/aslice/bin` on PATH ahead of `/usr/bin` means aslice's `curl`, `sqlite3`, `python3` shadow Apple's — usually desired, sometimes breaking (system scripts hardcode BSD behaviors; `lldb`, security tools). The failure mode is subtle and support-heavy.
 
@@ -206,7 +234,9 @@ Semantics: **active → deprecated** (installs warn, `audit`/`info` surface it) 
 - `link = false` (default true) with mandatory `link_reason = "shadows-macos"` — the principled keg-only. Installed into the store, absent from the profile; `aslice link openssl@3` opts in per-profile; dependents use `ctx.deps` paths and never need the profile link at all (this is where aslice's model is *cleaner* than keg-only: dependency resolution is store-path-based, so "unlinked but depended upon" is natural, not a hack).
 - **Policy:** versioned packages (`openssl@3` style) and anything shipping `bin/` names that collide with `/usr/bin` or `/bin` default to `link = false` in core. Lint enforces the reason string.
 
-**Status: specified (PACKAGE-FORMAT v0.6 §3.8).** `link`/`link_reason` landed with lint enforcement of the reason; the core-default policy is ORCHARD-POLICY §6, which adopted this proposal's wording.
+**Status: specified (PACKAGE-FORMAT v0.6 [PACKAGE-FORMAT §3.8](PACKAGE-FORMAT.md#install--declarative-post-install-behavior)).** `link`/`link_reason` landed with lint enforcement of the reason; the core-default policy is ORCHARD-POLICY [DESIGN §6](DESIGN.md#package-format), which adopted this proposal's wording.
+
+<a id="p1--environment-wishlists-and-ephemeral-exec"></a>
 
 ### 4.6 P1 — Environment wishlists and ephemeral exec
 
@@ -215,67 +245,81 @@ Semantics: **active → deprecated** (installs warn, `audit`/`info` surface it) 
 **aslice today:** lock files are *exact state*, not a wishlist — `aslice apply aslice.lock` replays a captured profile, but there's no human-authored "ensure ffmpeg, python, postgresql (I don't care how)" document, and no ephemeral execution.
 
 **Proposal:**
-- **`aslice.toml` project wishlist** (name it `aslice-bundle.toml`? bikeshed later): `packages = ["ffmpeg ^7", "postgresql", "openssl@3 (link=false)"]` + `aslice bundle install/check/dump`. It differs from the lock the way `package.json` differs from `package-lock.json` — constraints vs. exact state. The lock file section (§7) already draws this analogy; complete it.
+- **`aslice.toml` project wishlist** (name it `aslice-bundle.toml`? bikeshed later): `packages = ["ffmpeg ^7", "postgresql", "openssl@3 (link=false)"]` + `aslice bundle install/check/dump`. It differs from the lock the way `package.json` differs from `package-lock.json` — constraints vs. exact state. The lock file section ([DESIGN §7](DESIGN.md#the-variant-and-abi-model--interoperability-by-design)) already draws this analogy; complete it.
 - **`aslice adopt --from-brewfile`** — parse a Brewfile's `brew` entries into a wishlist (trivially mechanical; ignore `cask`/`mas` with a printed skip list).
 - **`aslice exec <pkg> -- <cmd>`** — build a temporary profile view (symlink forest into a tmp generation), run, discard. Nearly free given generations; very useful for testing tools without polluting the default profile.
 
-**Status: specified (DESIGN v1.18 §12.13, SETUP.md v0.9).** The wishlist landed broader than proposed: `aslice-machine.toml` covers not just packages but runtime selections, services, `defaults` preferences, and the login shell — one `aslice machine apply` from blank Mac to working machine, `aslice machine export` to capture one — as data-not-Ruby where the Brewfile executes. The verb is `aslice machine apply`, not `bundle`; lock replay and plan execution keep the top-level `aslice apply` — the surface splits by document kind — and the Brewfile path is `aslice machine import --from-brewfile`. `aslice exec` had landed earlier (DESIGN v1.8 §12.1).
+**Status: specified (DESIGN v1.18 [DESIGN §12.13](DESIGN.md#declarative-system-setup-aslice-machinetoml-and-the-aslice-machine-commands), SETUP.md v0.9).** The wishlist landed broader than proposed: `aslice-machine.toml` covers not just packages but runtime selections, services, `defaults` preferences, and the login shell — one `aslice machine apply` from blank Mac to working machine, `aslice machine export` to capture one — as data-not-Ruby where the Brewfile executes. The verb is `aslice machine apply`, not `bundle`; lock replay and plan execution keep the top-level `aslice apply` — the surface splits by document kind — and the Brewfile path is `aslice machine import --from-brewfile`. `aslice exec` had landed earlier (DESIGN v1.8 [DESIGN §12.1](DESIGN.md#commands)).
+
+<a id="p1--orchard-ci-merge-gates-specified"></a>
 
 ### 4.7 P1 — Orchard CI merge gates, specified
 
 **Homebrew:** test-bot builds, tests, bottles, and gates merges; bottle upload happens only post-merge; dependency-impact annotations on PRs.
 
-**aslice today:** §13.4 says CI "builds the package in the sandbox on both flavors" (now three). Under-specified at the points where the ABI model creates new obligations.
+**aslice today:** [DESIGN §13.4](DESIGN.md#governance) says CI "builds the package in the sandbox on both flavors" (now three). Under-specified at the points where the ABI model creates new obligations.
 
 **Proposal — the merge gate for an orchard PR is:**
 1. `lint` (schema + policy + `--new-package` ruleset for additions).
 2. Sandboxed build on **every declared flavor** (v1/v2/v3) at the formula's `min_os`, plus smoke-run on **each OS release in `[min_os, 12]`** via the farm VMs (tests can be flavor/OS-skippable where genuinely irrelevant, e.g., pure data packages).
 3. `tests.star` passes on at least one OS × flavor (core) — already policy, make it mechanical.
 4. **ABI gate for provider bumps:** if the PR changes a library's version/revision, CI runs the ABI scan diff between old and new slice; if `compatibility_version` or the symbol fingerprint regresses, the PR must either bump the soname-bearing version, or mark and schedule **dependent rebuilds** (which the farm does automatically on merge, publishing dependents' revision bumps in the same index snapshot — so clients never see the window Homebrew users know as "everything's broken until the rebuilds land").
-5. Slice and snapshot signing happen automatically only after owner-approved merge and required gates, on the dedicated networked release Pi; the publisher verifies and atomically publishes the returned candidate (KEY-RUNBOOK §2.1).
+5. Slice and snapshot signing happen automatically only after owner-approved merge and required gates, on the dedicated networked release Pi; the publisher verifies and atomically publishes the returned candidate ([KEY-RUNBOOK §2.1](KEY-RUNBOOK.md#automatic-orchard-to-client-publication)).
+
+<a id="p1--discovery-the-public-web-index"></a>
 
 ### 4.8 P1 — Discovery: the public web index
 
 **Homebrew:** formulae.brew.sh — searchable web catalog + JSON API + analytics dashboards; it is quietly a major adoption driver (people google "ffmpeg mac" and land there).
 
-**Proposal:** generate a static site from the signed index in the same CI pass that publishes snapshots — package pages (description, versions, flavors, min_os, install command), JSON API mirroring the index. Pure static files, mirrorable like the index itself, served at aslice.sh/packages. Cheap, and it doubles as the transparency surface §13.4 promises (publish build-farm status and the snapshot log there too).
+**Proposal:** generate a static site from the signed index in the same CI pass that publishes snapshots — package pages (description, versions, flavors, min_os, install command), JSON API mirroring the index. Pure static files, mirrorable like the index itself, served at aslice.sh/packages. Cheap, and it doubles as the transparency surface [DESIGN §13.4](DESIGN.md#governance) promises (publish build-farm status and the snapshot log there too).
+
+<a id="p1--installed-on-request-tracking"></a>
 
 ### 4.9 P1 — Installed-on-request tracking
 
 **Homebrew:** distinguishes user-requested installs from dependencies (7.0: `brew list --no-installed-on-request`); `autoremove` correctness depends on it.
 
-**aslice today:** `autoremove` is listed (§12.1) but the DB requirement is implicit.
+**aslice today:** `autoremove` is listed ([DESIGN §12.1](DESIGN.md#commands)) but the DB requirement is implicit.
 
 **Proposal:** every DB install record carries `on_request = true|false` (install command vs. pulled-in). `autoremove` = garbage-collect runtime-reachable nothing-from-`on_request` roots, cross-checked against retained generations. One column; spec it now or retro-fit it painfully. Also add `aslice mark <pkg> --on-request/--as-dependency` for fixing the record (Homebrew has no clean equivalent and users notice).
 
-**Status: specified (DESIGN v1.8 §8.4).** Every DB install record carries `on_request`; `autoremove` collects nothing reachable from an `on_request` root, cross-checked against retained generations, and `aslice mark` repairs the record.
+**Status: specified (DESIGN v1.8 [DESIGN §8.4](DESIGN.md#garbage-collection-discipline)).** Every DB install record carries `on_request`; `autoremove` collects nothing reachable from an `on_request` root, cross-checked against retained generations, and `aslice mark` repairs the record.
+
+<a id="p1--cache-eviction-policy"></a>
 
 ### 4.10 P1 — Cache eviction policy
 
 **Homebrew:** `brew cleanup [--prune=N] [-s]` scrubs old downloads and stale kegs; 7.0 sped it up.
 
-**aslice today:** §8.4 specs GC for the *store*; `cache/` (slices, sources, index snapshots, ccache) has no policy.
+**aslice today:** [DESIGN §8.4](DESIGN.md#garbage-collection-discipline) specs GC for the *store*; `cache/` (slices, sources, index snapshots, ccache) has no policy.
 
 **Proposal:** `aslice clean` (name it `clean`, keep `gc` for the store): LRU eviction of slice/source tarballs not referenced by any installed package or retained generation, watermark-driven (default: evict when cache > 10 GB, keep anything younger than 30 days), `--dry-run` symmetry with `gc`. Source tarballs are the sleeper category — `--build-from-source` users accumulate them silently.
 
-**Status: specified (DESIGN v1.8 §8.4, §12.1).** `aslice clean` owns the cache with watermark-driven LRU eviction and `--dry-run` symmetry; `gc` owns the store.
+**Status: specified (DESIGN v1.8 [DESIGN §8.4](DESIGN.md#garbage-collection-discipline), [DESIGN §12.1](DESIGN.md#commands)).** `aslice clean` owns the cache with watermark-driven LRU eviction and `--dry-run` symmetry; `gc` owns the store.
+
+<a id="p2--author-and-contributor-tooling"></a>
 
 ### 4.11 P2 — Author and contributor tooling
 
-- **`aslice create <url>`** — fetch the tarball, hash it, sniff the build system (configure script? CMakeLists? meson.build? Cargo.toml?), emit a `package.toml` draft with `[build].system` guessed. Homebrew's `brew create` does this and it is a real contribution funnel; combined with the §13.3 Ruby-formula importer it covers both net-new and ported packages.
+- **`aslice create <url>`** — fetch the tarball, hash it, sniff the build system (configure script? CMakeLists? meson.build? Cargo.toml?), emit a `package.toml` draft with `[build].system` guessed. Homebrew's `brew create` does this and it is a real contribution funnel; combined with the [DESIGN §13.3](DESIGN.md#coexistence-and-migration-from-homebrew) Ruby-formula importer it covers both net-new and ported packages.
 - **`aslice test <pkg>`** — run `tests.star` against an *installed* package, on demand (Homebrew `brew test`). Spec tests.star to run in both contexts.
 - **`aslice audit-formula --new`** — the new-package policy ruleset (§3.3 above).
 - **Documentation stubs:** `aslice home <pkg>` (open homepage) — one-liner that people actually use.
 
-**Status: mostly specified (DESIGN v1.8 §12.1).** `aslice create`, `aslice test`, and `aslice bump-pr` landed as proposed; the `audit-formula --new` ruleset and `aslice home` remain open.
+**Status: mostly specified (DESIGN v1.8 [DESIGN §12.1](DESIGN.md#commands)).** `aslice create`, `aslice test`, and `aslice bump-pr` landed as proposed; the `audit-formula --new` ruleset and `aslice home` remain open.
+
+<a id="p2--project-hygiene-documents"></a>
 
 ### 4.12 P2 — Project hygiene documents
 
-**Homebrew:** SECURITY.md, governance docs, code of conduct, maintainer guides — the trust scaffolding §13.4 gestures at.
+**Homebrew:** SECURITY.md, governance docs, code of conduct, maintainer guides — the trust scaffolding [DESIGN §13.4](DESIGN.md#governance) gestures at.
 
-**Proposal:** before public launch: `SECURITY.md` (how to report a vulnerability *in aslice itself*, key-contact runbook), `CODE_OF_CONDUCT.md`, `CONTRIBUTING.md` (formula style guide: when a variant is justified, `min_os` accuracy, patch documentation requirements), and the key-ceremony/rotation runbook referenced in §10.2 written down rather than implied.
+**Proposal:** before public launch: `SECURITY.md` (how to report a vulnerability *in aslice itself*, key-contact runbook), `CODE_OF_CONDUCT.md`, `CONTRIBUTING.md` (formula style guide: when a variant is justified, `min_os` accuracy, patch documentation requirements), and the key-ceremony/rotation runbook referenced in [DESIGN §10.2](DESIGN.md#signatures-and-repository-integrity-tuf) written down rather than implied.
 
-**Status: specified, with one owner amendment.** SECURITY.md, CONTRIBUTING.md, and the key-ceremony/rotation runbook (docs/KEY-RUNBOOK.md) shipped. The code-of-conduct proposal was rejected by the owner — conduct norms live in CONTRIBUTING.md instead, recorded in DESIGN §13.4.
+**Status: specified, with one owner amendment.** SECURITY.md, CONTRIBUTING.md, and the key-ceremony/rotation runbook (docs/KEY-RUNBOOK.md) shipped. The code-of-conduct proposal was rejected by the owner — conduct norms live in CONTRIBUTING.md instead, recorded in [DESIGN §13.4](DESIGN.md#governance).
+
+<a id="p2--operator-surface"></a>
 
 ### 4.13 P2 — Operator surface
 
@@ -285,14 +329,18 @@ Semantics: **active → deprecated** (installs warn, `audit`/`info` surface it) 
 - **`--offline` / `ASLICE_OFFLINE`** — resolve and install from cache only; paired with cached OSV data, makes `audit` and `install` work on air-gapped lab machines (a real slice of the target audience: audio rigs and lab boxes that never touch the internet).
 - **Auto-update policy** — Homebrew auto-updates the index on install (annoying enough that `HOMEBREW_NO_AUTO_UPDATE` is folklore). aslice spec: index auto-refreshes only if older than N hours (default 24), never on `install` of an already-resolvable plan, and `doctor` warns on staleness instead of forcing a wait.
 
-**Status: partially specified.** `aslice shellenv` and `aslice init` landed (DESIGN v1.8 §12.1; MANUAL §2.3 covers zsh and bash), and aslice's own man pages exist (man/). Still open: shell completions, the stable `ASLICE_*` environment contract, and the index auto-refresh policy.
+**Status: partially specified.** `aslice shellenv` and `aslice init` landed (DESIGN v1.8 [DESIGN §12.1](DESIGN.md#commands); [MANUAL §2.3](MANUAL.md#after-the-install) covers zsh and bash), and aslice's own man pages exist (man/). Still open: shell completions, the stable `ASLICE_*` environment contract, and the index auto-refresh policy.
+
+<a id="p2--opportunities-homebrew-doesnt-have-not-gaps-but-cheap-differentiators-surfaced-by-the-review"></a>
 
 ### 4.14 P2 — Opportunities Homebrew doesn't have (not gaps, but cheap differentiators surfaced by the review)
 
-- **Environments and promotion.** The earlier stable/edge proposal is superseded by [ORCHARD-POLICY §18.1–§18.2](ORCHARD-POLICY.md#181-environments-branching-and-promoted-builds): dev (`develop`), staging (`beta`), and prod (`master`) in the same repository, for aslice and all orchards. Build once and promote the same artifact inventory through all three; environment suffixes are external release labels, and content changes require a new base version with a recorded reason.
+- **Environments and promotion.** The earlier stable/edge proposal is superseded by [ORCHARD-POLICY §18.1](ORCHARD-POLICY.md#181-environments-branching-and-promoted-builds) and [ORCHARD-POLICY §18.2](ORCHARD-POLICY.md#182-release-versioning-and-unchanged-content-enforcement): dev (`develop`), staging (`beta`), and prod (`master`) in the same repository, for aslice and all orchards. Build once and promote the same artifact inventory through all three; environment suffixes are external release labels, and content changes require a new base version with a recorded reason.
 - **Delta updates between revisions.** zstd `--long` payloads already help; true binary deltas (bsdiff-style) between successive revisions of the same package would cut bandwidth for the upgrade-heavy use case. Farm-side only, client falls back to full slices.
 - **Historical installs as a feature.** `aslice install ffmpeg --index-snapshot 2026-09-01` — the snapshot is content-addressed and retained, so "the exact package set from the day this paper's results were produced" is a one-liner. Homebrew can approximate this only by archaeology. Worth marketing to the lab/CI audience.
 - **`aslice why --explain` everywhere.** The derivation-tree rendering is already spec'd for solves; extend it to `outdated` and `audit` ("why is this flagged") — explainability as the house style.
+
+<a id="p1--multi-version-runtime-management-version-managers"></a>
 
 ### 4.15 P1 — Multi-version runtime management (version managers)
 
@@ -300,9 +348,11 @@ Semantics: **active → deprecated** (installs warn, `audit`/`info` surface it) 
 
 **Why it matters for aslice:** this platform's audience keeps old runtimes *on purpose* — a php 7.4 site that may never be ported, a python pinned by a frozen lab pipeline, a ruby held by an ancient Rails app. Version management is not a power-user extra here; it is the daily workflow.
 
-**Status: specified (DESIGN v1.5 §12.9, PACKAGE-FORMAT v0.5 §3.13).** The design takes the Volta model as the baseline and extends it in three directions Volta doesn't reach. Selection is three-layered — `aslice use` (session, via a shim-visible env var and optional shell integration), `aslice pin` (project `aslice.toml`: Volta's `package.json` pin made ecosystem-neutral), `aslice default` (profile-wide) — resolved by a multicall shim layer ahead of the profile on PATH, exec-only, sub-millisecond. Tools that are pure interpreter-target artifacts (composer, yarn, poetry) declare `[ride]` and launch under the *currently selected* runtime — Volta's best idea, generalized beyond node. And the extension problem is solved structurally: compiled extensions are slices keyed to the runtime's declared ABI epoch (`[extension] runtime = "php"` → `php-redis+php8.4` and `+php8.3` coexist as distinct store paths, generation-managed and rollback-complete), while pip/gem/npm/pecl installs bind per-version through shim-injected userbase environments. Upgrades never cross streams: `aslice upgrade php` patches within 8.4, and moving to 8.5 is an explicit `install` + `use`/`pin`/`default` decision.
+**Status: specified (DESIGN v1.5 [DESIGN §12.9](DESIGN.md#multi-version-runtimes-use-pin-default--and-version-bound-extensions), PACKAGE-FORMAT v0.5 [PACKAGE-FORMAT §3.13](PACKAGE-FORMAT.md#runtime-extension-ride--multi-version-runtimes-v05)).** The design takes the Volta model as the baseline and extends it in three directions Volta doesn't reach. Selection is three-layered — `aslice use` (session, via a shim-visible env var and optional shell integration), `aslice pin` (project `aslice.toml`: Volta's `package.json` pin made ecosystem-neutral), `aslice default` (profile-wide) — resolved by a multicall shim layer ahead of the profile on PATH, exec-only, sub-millisecond. Tools that are pure interpreter-target artifacts (composer, yarn, poetry) declare `[ride]` and launch under the *currently selected* runtime — Volta's best idea, generalized beyond node. And the extension problem is solved structurally: compiled extensions are slices keyed to the runtime's declared ABI epoch (`[extension] runtime = "php"` → `php-redis+php8.4` and `+php8.3` coexist as distinct store paths, generation-managed and rollback-complete), while pip/gem/npm/pecl installs bind per-version through shim-injected userbase environments. Upgrades never cross streams: `aslice upgrade php` patches within 8.4, and moving to 8.5 is an explicit `install` + `use`/`pin`/`default` decision.
 
 ---
+
+<a id="what-aslice-should-deliberately-not-copy"></a>
 
 ## 5. What aslice should deliberately NOT copy
 
@@ -312,13 +362,15 @@ Semantics: **active → deprecated** (installs warn, `audit`/`info` surface it) 
 | `uses_from_macos` (lean on system libs to dedupe) | **Rejected, codified** | On 10.11 the system libs are the problem (OpenSSL 0.9.8-era). Lint rule: runtime deps resolve to aslice packages only; exceptions are *frameworks* (Accelerate, SystemConfiguration, CoreAudio…) enumerated in an allowlist, never `/usr/lib` dylibs or `/usr/bin` tools. The Accelerate-shim BLAS provider example already assumes this — write it down as policy |
 | keg-only as a post-hoc hack | Rejected; replaced by principled `link = false` (§4.5) | Store-path dependency resolution makes "unlinked but depended upon" natural |
 | Auto-update on every command | Rejected | Staleness policy + `doctor` warnings instead (§4.13) |
-| Opt-out analytics | Rejected, absolutely | **No telemetry or analytics of any kind, ever — not even opt-in** (DESIGN §2.2 N7). The project is not a product; prebuild prioritization runs on dependency centrality, build pain, irreplaceability, and direct community requests — never on usage volume, which mismeasures value on a legacy platform where the rarest library may be the one nobody else ships |
+| Opt-out analytics | Rejected, absolutely | **No telemetry or analytics of any kind, ever — not even opt-in** ([DESIGN §2.2](DESIGN.md#non-goals) N7). The project is not a product; prebuild prioritization runs on dependency centrality, build pain, irreplaceability, and direct community requests — never on usage volume, which mismeasures value on a legacy platform where the rarest library may be the one nobody else ships |
 | HEAD builds in core | Rejected | Reproducibility and the lock model both depend on pins; third-party orchards may do what they like under their own trust level |
 | `/usr/local` ownership, sudo in steady state | Rejected (already) | — |
-| Casks at launch | Superseded in part; installer-script execution admitted **only as grafts** | Vendor `.pkg`/`.dmg` software is now in scope via `type = "binary"` (§3.4 row above) — payload-only by default. Homebrew casks' ability to run `installer script:` blocks unannounced is a supply-chain hole aslice still rejects (DESIGN §10.1); the narrowed exception (owner decision, September 2026) is the graft — a script declared with an exhaustive behavior manifest, hash-pinned, user-approved per package, sandboxed to its declaration, farm-rehearsed and signed for core and extended, and fully reversible (DESIGN v1.19 §12.15). What was rejected forever is *undeclared* script execution, and it still is; the remaining deferral is GUI-app polish, and the declarative `.app` reservation (§12.4) is the right shape for it |
+| Casks at launch | Superseded in part; installer-script execution admitted **only as grafts** | Vendor `.pkg`/`.dmg` software is now in scope via `type = "binary"` (§3.4 row above) — payload-only by default. Homebrew casks' ability to run `installer script:` blocks unannounced is a supply-chain hole aslice still rejects ([DESIGN §10.1](DESIGN.md#declarative-packages-hermetic-builds)); the narrowed exception (owner decision, September 2026) is the graft — a script declared with an exhaustive behavior manifest, hash-pinned, user-approved per package, sandboxed to its declaration, farm-rehearsed and signed for core and extended, and fully reversible (DESIGN v1.19 [DESIGN §12.15](DESIGN.md#vendor-install-scripts-grafts--declared-approved-monitored-reversible)). What was rejected forever is *undeclared* script execution, and it still is; the remaining deferral is GUI-app polish, and the declarative `.app` reservation ([DESIGN §12.4](DESIGN.md#vendor-binaries-pkgdmg-and-gui-apps)) is the right shape for it |
 | BrewUI-style native GUI | Defer | Wrong audience at launch; revisit when the orchard is deep — the index being clean, signed JSON makes a GUI an evening project later |
 
 ---
+
+<a id="additions-to-the-designmd-15-risk-table"></a>
 
 ## 6. Additions to the DESIGN.md §15 risk table
 
@@ -332,6 +384,8 @@ Semantics: **active → deprecated** (installs warn, `audit`/`info` surface it) 
 
 ---
 
+<a id="priority-mapping-to-the-roadmap"></a>
+
 ## 7. Priority mapping to the roadmap
 
 | Item | Priority | Phase |
@@ -339,19 +393,21 @@ Semantics: **active → deprecated** (installs warn, `audit`/`info` surface it) 
 | Self-update as package zero + bootstrap signing/notarization | P0 | **Phase 0** (it must ship in the first usable binary; retrofitting update mechanisms is how projects die) |
 | livecheck schema + `aslice livecheck` + scheduled autobump + bump-pr | P0 | **Phase 1**, alongside the 300-package core seeding — the tooling *is* how the core gets maintained |
 | Lifecycle states (`[deprecation]`, pin, outdated, reinstall) | P1 | Phase 1 (cheap; the DB schema wants `on_request` and pins from birth) |
-| Services CLI + per-service env overrides | P1 | Phase 1 — design complete (DESIGN v1.3 §12.8, PACKAGE-FORMAT v0.4 `[service]`) |
-| Multi-version runtimes (shim layer, use/pin/default, riding tools, extension slices) | P1 | Phase 2 — design complete (DESIGN v1.5 §12.9, PACKAGE-FORMAT v0.5 §3.13) |
+| Services CLI + per-service env overrides | P1 | Phase 1 — design complete (DESIGN v1.3 [DESIGN §12.8](DESIGN.md#services-launchd-native-lifecycle-and-safe-upgrades), PACKAGE-FORMAT v0.4 `[service]`) |
+| Multi-version runtimes (shim layer, use/pin/default, riding tools, extension slices) | P1 | Phase 2 — design complete (DESIGN v1.5 [DESIGN §12.9](DESIGN.md#multi-version-runtimes-use-pin-default--and-version-bound-extensions), PACKAGE-FORMAT v0.5 [PACKAGE-FORMAT §3.13](PACKAGE-FORMAT.md#runtime-extension-ride--multi-version-runtimes-v05)) |
 | `link = false` policy + lint rules + system-framework allowlist | P1 | Phase 1 (policy must exist *before* the core orchard accumulates violations) |
 | Orchard CI merge gates incl. ABI gate + dependent-rebuild cascade | P1 | Phase 1→2 (gate first, ABI-diff automation as the scanner matures) |
 | autoremove correctness (`on_request`), `aslice clean` cache policy | P1 | Phase 1 |
 | Web index (static site + JSON API) | P1 | Phase 2 (needs an index worth browsing) |
-| Wishlist bundle, adopt --from-brewfile, `aslice exec` | P2 | Phase 2 — design complete (`exec` in DESIGN v1.8 §12.1; `aslice-machine.toml` and the `aslice machine` `apply`/`export`/`import --from-brewfile` group in DESIGN v1.18 §12.13, SETUP.md v0.9) |
+| Wishlist bundle, adopt --from-brewfile, `aslice exec` | P2 | Phase 2 — design complete (`exec` in DESIGN v1.8 [DESIGN §12.1](DESIGN.md#commands); `aslice-machine.toml` and the `aslice machine` `apply`/`export`/`import --from-brewfile` group in DESIGN v1.18 [DESIGN §12.13](DESIGN.md#declarative-system-setup-aslice-machinetoml-and-the-aslice-machine-commands), SETUP.md v0.9) |
 | shellenv, completions, man pages, ASLICE_* contract, --offline | P2 | Phase 1 for shellenv/completions (they're part of "feels finished"), rest Phase 2 |
 | SECURITY.md/CoC/CONTRIBUTING/key runbook | P1 | **Phase 0** — shipped; the CoC part of the proposal was owner-rejected (§4.12) |
 | Channels, delta updates, historical-install marketing | P2 | Phase 3 |
 | GUI | P3 | Post-Phase 3, demand-driven |
 
 ---
+
+<a id="spec-amendment-checklist"></a>
 
 ## 8. Spec amendment checklist
 
@@ -382,15 +438,19 @@ Concrete deltas this review proposes to the two specifications:
 
 ---
 
+<a id="what-this-review-did-not-find"></a>
+
 ## 9. What this review did NOT find
 
 Worth stating explicitly, because a review that only adds things is suspicious:
 
 - **The architecture requires further work.** The corpus review found contradictions in artifact identity, privileged ownership, replay, and recovery. STATE-AND-RECOVERY and SYSTEM-VOLUMES define the corrected contracts; their acceptance tests remain implementation work.
 - **Security comparisons are design claims, not measured results.** The protected execution, transaction, graft, and trust-state gates must pass before claiming stronger safety than an implemented package manager.
-- **No reason to expand scope.** Nothing in the comparison argues for Apple Silicon, macOS 13+, or Linux. Vendor `.pkg`/`.dmg` software entered scope by a separate decision (§3.4) — payload-only by default, with installer scripts admitted only as declared grafts (DESIGN v1.19 §12.15) — but cask-style GUI-app polish stays out. Homebrew's breadth is what aslice's scope discipline exists to avoid. *(Post-review: kernel extensions and SIP-disabled development tools entered scope in DESIGN v1.2 as the declared, warned, trust-gated `[system]` category — a project-owner decision, not a review finding. The installer-script execution rejection stands unchanged: `aslice-system` performs the privileged steps declaratively, and vendor code still never runs.)* *(Post-review update, September 2026: the rejection was narrowed — vendor installer scripts are in scope as declared, user-approved, farm-rehearsed grafts (DESIGN v1.19 §12.15). What stands is the rejection of *undeclared* execution: vendor code that is not a declared graft still never runs.)*
+- **No reason to expand scope.** Nothing in the comparison argues for Apple Silicon, macOS 13+, or Linux. Vendor `.pkg`/`.dmg` software entered scope by a separate decision (§3.4) — payload-only by default, with installer scripts admitted only as declared grafts (DESIGN v1.19 [DESIGN §12.15](DESIGN.md#vendor-install-scripts-grafts--declared-approved-monitored-reversible)) — but cask-style GUI-app polish stays out. Homebrew's breadth is what aslice's scope discipline exists to avoid. *(Post-review: kernel extensions and SIP-disabled development tools entered scope in DESIGN v1.2 as the declared, warned, trust-gated `[system]` category — a project-owner decision, not a review finding. The installer-script execution rejection stands unchanged: `aslice-system` performs the privileged steps declaratively, and vendor code still never runs.)* *(Post-review update, September 2026: the rejection was narrowed — vendor installer scripts are in scope as declared, user-approved, farm-rehearsed grafts (DESIGN v1.19 [DESIGN §12.15](DESIGN.md#vendor-install-scripts-grafts--declared-approved-monitored-reversible)). What stands is the rejection of *undeclared* execution: vendor code that is not a declared graft still never runs.)*
 
 ---
+
+<a id="sources"></a>
 
 ## 10. Sources
 
@@ -433,5 +493,6 @@ Worth stating explicitly, because a review that only adds things is suspicious:
 | v0.3 | Not recorded | 32-bit/universal vendor payloads on 10.11–10.14; |
 | v0.2 | Not recorded | vendor-binary packages supersede the cask deferral — §3.4, §5, §9 rows updated; |
 | Not recorded | September 2026 | corpus review corrections: artifact identity, protected execution, durable recovery, trust persistence, replay, platform limits, and examples aligned with STATE-AND-RECOVERY and SYSTEM-VOLUMES. These are specification changes; runtime acceptance remains pending. |
+| v0.26 | September 2026 | Documentation audit repairs: contract summaries aligned; owner-approved namespace, rollback, GC, naming, prefix, and graft decisions applied where relevant; semantic anchors and explicit citations added. Runtime implementation and platform acceptance remain pending. |
 
 </details>

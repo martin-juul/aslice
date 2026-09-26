@@ -1,5 +1,7 @@
 # The Update Framework Specification
 
+Navigation: [Account](#captured-material) | [Source context](#decision-relevant-context) | [Full original](#full-captured-source) | [Catalog](README.MD)
+
 ## Source identity
 
 - Original source: https://github.com/theupdateframework/specification/blob/master/tuf-spec.md

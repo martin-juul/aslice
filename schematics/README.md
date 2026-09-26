@@ -1,6 +1,6 @@
 # aslice Schematics — Machine-Readable File Schemas
 
-- **Status:** v0.3 — September 2026
+- **Status:** v0.4 — September 2026
 - **Scope:** schemas for the public formats listed below; internal journal/service records require implementation specifications before those features ship, kept beside the prose specifications that define those formats.
 - **Vocabulary:** [../docs/NOMENCLATURE.md](../docs/NOMENCLATURE.md).
 
@@ -10,22 +10,22 @@ Each public format below has a prose contract defining its semantics and a struc
 
 | File | Format | Schematic | Prose specification |
 |---|---|---|---|
-| `package.toml` | TOML | [`toml/package.tosd`](toml/package.tosd) | PACKAGE-FORMAT.md §3 |
-| `aslice.lock` | TOML | [`toml/lock.tosd`](toml/lock.tosd) | PACKAGE-FORMAT.md §7 |
-| `aslice-machine.toml` | TOML | [`toml/machine.tosd`](toml/machine.tosd) | SETUP.md §2 |
-| `etc/aslice.toml` (config) | TOML | [`toml/config.tosd`](toml/config.tosd) | MANUAL.md §13 |
-| `./aslice.toml` (project pins) | TOML | [`toml/project.tosd`](toml/project.tosd) | DESIGN.md §12.9 |
-| `/opt/aslice/etc/sources.toml` | TOML | [`toml/sources.tosd`](toml/sources.tosd) | REPOSITORIES.md §2 |
+| `package.toml` | TOML | [`toml/package.tosd`](toml/package.tosd) | [PACKAGE-FORMAT §3](../docs/PACKAGE-FORMAT.md#packagetoml--full-schema) |
+| `aslice.lock` | TOML | [`toml/lock.tosd`](toml/lock.tosd) | [PACKAGE-FORMAT §7](../docs/PACKAGE-FORMAT.md#lock-files) |
+| `aslice-machine.toml` | TOML | [`toml/machine.tosd`](toml/machine.tosd) | [SETUP §2](../docs/SETUP.md#the-file) |
+| `etc/aslice.toml` (config) | TOML | [`toml/config.tosd`](toml/config.tosd) | [MANUAL §13](../docs/MANUAL.md#configuration-reference) |
+| `./aslice.toml` (project pins) | TOML | [`toml/project.tosd`](toml/project.tosd) | [DESIGN §12.9](../docs/DESIGN.md#multi-version-runtimes-use-pin-default--and-version-bound-extensions) |
+| `/opt/aslice/etc/sources.toml` | TOML | [`toml/sources.tosd`](toml/sources.tosd) | [REPOSITORIES §2](../docs/REPOSITORIES.md#the-shipped-source-list) |
 | `repo.toml` | TOML | [`toml/repo.tosd`](toml/repo.tosd) | *proposed — see below* |
-| `plan.json` | JSON | [`json/plan.schema.json`](json/plan.schema.json) | DESIGN.md §12.2 |
+| `plan.json` | JSON | [`json/plan.schema.json`](json/plan.schema.json) | [DESIGN §12.2](../docs/DESIGN.md#interaction-principles) |
 | `.slice` container descriptor (`slice.json`) | JSON inside pax tar + Zstandard | [`json/slice.schema.json`](json/slice.schema.json) | [SLICE-FORMAT.md](../docs/SLICE-FORMAT.md) |
-| canonical artifact manifest | JSON | [`json/artifact-manifest.schema.json`](json/artifact-manifest.schema.json) | STATE-AND-RECOVERY §1–§2 |
-| exact package record | JSON | [`json/package-record.schema.json`](json/package-record.schema.json) | STATE-AND-RECOVERY §8 |
-| archive catalog | JSON | [`json/archive-catalog.schema.json`](json/archive-catalog.schema.json) | STATE-AND-RECOVERY §8 |
-| index snapshot | JSON | [`json/index-snapshot.schema.json`](json/index-snapshot.schema.json) | DESIGN.md §9.6 |
+| canonical artifact manifest | JSON | [`json/artifact-manifest.schema.json`](json/artifact-manifest.schema.json) | [STATE-AND-RECOVERY §1](../docs/STATE-AND-RECOVERY.md#compatibility-and-artifact-identity) and [STATE-AND-RECOVERY §2](../docs/STATE-AND-RECOVERY.md#abi-and-execution-requirements) |
+| exact package record | JSON | [`json/package-record.schema.json`](json/package-record.schema.json) | [STATE-AND-RECOVERY §8](../docs/STATE-AND-RECOVERY.md#plans-locks-archives-and-offline-use) |
+| archive catalog | JSON | [`json/archive-catalog.schema.json`](json/archive-catalog.schema.json) | [STATE-AND-RECOVERY §8](../docs/STATE-AND-RECOVERY.md#plans-locks-archives-and-offline-use) |
+| index snapshot | JSON | [`json/index-snapshot.schema.json`](json/index-snapshot.schema.json) | [DESIGN §9.6](../docs/DESIGN.md#the-repository-system) |
 | TUF metadata | JSON | [`json/tuf/*.schema.json`](json/tuf/) | upstream TUF 1.0 specification |
-| `build.star` | Starlark | [`starlark/build.schema.star`](starlark/build.schema.star) | PACKAGE-FORMAT.md §6.3 |
-| `tests.star` | Starlark | [`starlark/tests.schema.star`](starlark/tests.schema.star) | AUTHORING.md §6 |
+| `build.star` | Starlark | [`starlark/build.schema.star`](starlark/build.schema.star) | [PACKAGE-FORMAT §6.3](../docs/PACKAGE-FORMAT.md#buildstar--the-custom-api) |
+| `tests.star` | Starlark | [`starlark/tests.schema.star`](starlark/tests.schema.star) | [AUTHORING §6](../docs/AUTHORING.md#tests) |
 
 ## The three schema languages
 
@@ -37,7 +37,7 @@ Automatic official publication ([KEY-RUNBOOK §2.1](../docs/KEY-RUNBOOK.md#21-au
 
 ## Authority and precedence
 
-The prose specifications in `docs/` are authoritative for semantics; the schematics here are the machine-checkable structural companion. If a schematic and its prose specification disagree, the disagreement is a bug — file an issue against whichever is wrong. This mirrors ORCHARD-POLICY.md §1's mechanism/policy split.
+The prose specifications in `docs/` are authoritative for semantics; the schematics here are the machine-checkable structural companion. If a schematic and its prose specification disagree, the disagreement is a bug — file an issue against whichever is wrong. This mirrors [ORCHARD-POLICY §1](../docs/ORCHARD-POLICY.md#purpose-and-precedence)'s mechanism/policy split.
 
 Three honesty rules govern the directory:
 
@@ -49,10 +49,10 @@ Three honesty rules govern the directory:
 
 Four schematics cover ground the prose specifies only in part. Each is faithful to every field the prose names, and each names the gap in its metadata:
 
-- **`json/plan.schema.json`** — DESIGN §12.2 establishes the plan/apply split and that plans are JSON; the field layout is derived from the lock-file record (PACKAGE-FORMAT §7.2) plus the consent gates a plan must surface (DESIGN §12.11, §12.15).
-- **`json/index-snapshot.schema.json`** — DESIGN §9.6 fixes the transport (zstd JSON snapshots + diffs) and the per-package tags (versions, build identities, OS bounds, flavors, arch, source hashes); ORCHARD-POLICY §8 adds permanent tombstones; REPOSITORIES §3 adds signed graft manifests. The concrete JSON layout is derived from those statements.
-- **`toml/repo.tosd`** — NOMENCLATURE defines a repository as "a Git repository of formulas with a `repo.toml`", but no prose section enumerates its keys yet. This schematic is the proposed minimal shape: the `namespace` the repository serves (REPOSITORIES §2) plus human-facing metadata. It deliberately contains no trust level — trust is assigned by the client, never claimed by the file (REPOSITORIES §1, axiom 2).
-- **`toml/project.tosd`** — DESIGN §12.9 and aslice-use(1) fix the content (one file pinning every runtime to a stream; streams like `8.4`, never exact patches) and the `[runtimes]` table header. This schematic uses `[runtimes]`, the project-layer sibling of the machine file's `[runtimes.default]`.
+- **`json/plan.schema.json`** — [DESIGN §12.2](../docs/DESIGN.md#interaction-principles) establishes the plan/apply split and that plans are JSON; the field layout is derived from the lock-file record ([PACKAGE-FORMAT §7.2](../docs/PACKAGE-FORMAT.md#format)) plus the consent gates a plan must surface ([DESIGN §12.11](../docs/DESIGN.md#system-patches-flagged-reversible-replacement-of-apple-provided-files) and [DESIGN §12.15](../docs/DESIGN.md#vendor-install-scripts-grafts--declared-approved-monitored-reversible)).
+- **`json/index-snapshot.schema.json`** — [DESIGN §9.6](../docs/DESIGN.md#the-repository-system) fixes the transport (zstd JSON snapshots + diffs) and the per-package tags (versions, build identities, OS bounds, flavors, arch, source hashes); [ORCHARD-POLICY §8](../docs/ORCHARD-POLICY.md#deprecation-and-removal-lifecycle) adds permanent tombstones; [REPOSITORIES §3](../docs/REPOSITORIES.md#trust-levels) adds signed graft manifests. The concrete JSON layout is derived from those statements.
+- **`toml/repo.tosd`** — NOMENCLATURE distinguishes the Git recipe orchard from its signed static distribution repository. `repo.toml` describes the published repository; its complete field set remains a schema proposal. This schematic is the proposed minimal shape: the `namespace` the repository serves ([REPOSITORIES §2](../docs/REPOSITORIES.md#the-shipped-source-list)) plus human-facing metadata. It deliberately contains no trust level — trust is assigned by the client, never claimed by the file ([REPOSITORIES §1](../docs/REPOSITORIES.md#axioms), axiom 2).
+- **`toml/project.tosd`** — [DESIGN §12.9](../docs/DESIGN.md#multi-version-runtimes-use-pin-default--and-version-bound-extensions) and aslice-use(1) fix the content (one file pinning every runtime to a stream; streams like `8.4`, never exact patches) and the `[runtimes]` table header. This schematic uses `[runtimes]`, the project-layer sibling of the machine file's `[runtimes.default]`.
 
 ## starlarkschema — the Starlark schema format (v1.0.0)
 
@@ -115,7 +115,7 @@ A target module's entry point must match its signature exactly: same positional 
 },
 ```
 
-A member access not present in the surface — `ctx.network()`, say — is a validation error. The schema expresses the capability list (PACKAGE-FORMAT §6.3), allowing the validator to reject access outside that list before runtime sandbox enforcement.
+A member access not present in the surface — `ctx.network()`, say — is a validation error. The schema expresses the capability list ([PACKAGE-FORMAT §6.3](../docs/PACKAGE-FORMAT.md#buildstar--the-custom-api)), allowing the validator to reject access outside that list before runtime sandbox enforcement.
 
 ### Type descriptors
 
@@ -132,7 +132,7 @@ Validation never executes target code, and a validator never evaluates a schema 
 
 ### What starlarkschema deliberately does not check
 
-Data flow, argument *values*, sandbox policy (enforced at runtime by the sandbox itself, DESIGN §10.5), and helper-function internals. The schema pins the contract between harness and module; everything behind that contract is the author's business.
+Data flow, argument *values*, sandbox policy (enforced at runtime by the sandbox itself, [DESIGN §10.5](../docs/DESIGN.md#sandboxed-builds)), and helper-function internals. The schema pins the contract between harness and module; everything behind that contract is the author's business.
 
 ## Versioning
 
@@ -147,5 +147,6 @@ Each schematic versions with the prose specification it tracks, and its metadata
 |---|---|---|
 | v0.3 | September 2026 | Consolidate revision notes into a collapsible history table; no specification changes. |
 | v0.2 | September 2026 | prose rewrite of the schema directory introduction and host-member validation explanation; no content changes. |
+| v0.4 | September 2026 | Documentation audit repairs: contract summaries aligned; owner-approved namespace, rollback, GC, naming, prefix, and graft decisions applied where relevant; semantic anchors and explicit citations added. Runtime implementation and platform acceptance remain pending. |
 
 </details>

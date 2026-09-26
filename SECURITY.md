@@ -50,7 +50,7 @@ In scope, roughly ordered by how much each class matters:
 
 ## Out of scope
 
-- **Vulnerabilities in packaged software** (ffmpeg has a CVE, openssl has a CVE). Those flow through the orchard: file an issue on the orchard repository or, better, a bump/backport PR — the advisory feed and `aslice audit` already surface them to users (ORCHARD-POLICY §16). Report here only if aslice's *handling* of such a package is the problem (e.g. `audit` fails to flag it).
+- **Vulnerabilities in packaged software** (ffmpeg has a CVE, openssl has a CVE). Those flow through the orchard: file an issue on the orchard repository or, better, a bump/backport PR — the advisory feed and `aslice audit` already surface them to users ([ORCHARD-POLICY §16](docs/ORCHARD-POLICY.md#security-response)). Report here only if aslice's *handling* of such a package is the problem (e.g. `audit` fails to flag it).
 - **Vulnerabilities in macOS itself.** Apple does not patch these OS releases; that is the reason aslice exists. We document and route around what we can (see `aslice ca-update`, `[system-patch]`), but we cannot fix the kernel.
 - **Attacks that already have root**, or physical access. The threat model starts below that line.
 - **Social engineering of maintainers**, and reports about the content of third-party orchards — those are governed by their own trust level and are explicitly not vouched for by aslice.
@@ -58,7 +58,7 @@ In scope, roughly ordered by how much each class matters:
 
 ## Supported versions
 
-Pre-1.0: **the latest release only**. Self-update is a first-class, rollback-complete path (DESIGN §12.12), so "are you current?" is always the first question and the answer is always cheap. After 1.0 this document will name a supported window; do not expect long support tails — the platform is frozen, the manager is not.
+Pre-1.0: **the latest release only**. Self-update is a first-class, rollback-complete path ([DESIGN §12.12](docs/DESIGN.md#self-update-aslice-is-package-zero)), so "are you current?" is always the first question and the answer is always cheap. After 1.0 this document will name a supported window; do not expect long support tails — the platform is frozen, the manager is not.
 
 ## If a key is compromised
 
@@ -80,5 +80,6 @@ Key compromise is handled in the open under **[docs/KEY-RUNBOOK.md](docs/KEY-RUN
 | September 2026 | NOMENCLATURE.md vocabulary pointer added; no policy changes. |
 | September 2026 | contact moves to security@aslice.sh with the project domain (owner decision); no policy changes. |
 | September 2026 | prose rewrite of encrypted reporting and key-incident guidance; no policy changes. |
+| September 2026 | Documentation audit repairs: contract summaries aligned; owner-approved namespace, rollback, GC, naming, prefix, and graft decisions applied where relevant; semantic anchors and explicit citations added. Runtime implementation and platform acceptance remain pending. |
 
 </details>

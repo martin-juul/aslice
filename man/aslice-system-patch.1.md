@@ -9,8 +9,14 @@ aslice-system-patch — inspect and reverse declared replacements of Apple-provi
 # SYNOPSIS
 
 `aslice system-patch list`
+
 `aslice system-patch status` [*path*]
+
 `aslice system-patch restore` *path*
+
+`aslice system-patch prepare`
+
+`aslice system-patch finalize`
 
 # DESCRIPTION
 
@@ -20,9 +26,11 @@ The kernel, `dyld`, `libSystem`, `/System`, and platform load-path libraries rem
 
 **list** shows managed patches. **status** reports hashes, OS/volume baseline, pending reboot, and external drift. **restore** plans the compatible backend's restoration; it may require Recovery and reboot. Missing backups, changed security state, and OS-baseline conflicts stop restoration with a remedy.
 
+**prepare** validates the complete patch plan and persists protected recovery material before entering the OS-specific Recovery workflow. **finalize** verifies the booted volume/snapshot and resulting bytes before committing; it cannot mark a failed or unverified reboot successful. [SYSTEM-VOLUMES §2](../docs/SYSTEM-VOLUMES.md#enrollment-and-preflight) and [SYSTEM-VOLUMES §4](../docs/SYSTEM-VOLUMES.md#activation-rollback-and-os-updates) owns the workflow; platform adapters remain unimplemented.
+
 # TRUST
 
-Serving `[system-patch]` packages requires the repository `system-patch` capability (REPOSITORIES.md §3): official and local repositories have it by default; a verified repository receives it only through the user's explicit per-repo grant (`aslice repo allow-system-patch <name>`, refused by default, revocable with `aslice repo deny-system-patch <name>`); third-party repositories never.
+Serving `[system-patch]` packages requires the repository `system-patch` capability ([REPOSITORIES §3](../docs/REPOSITORIES.md#trust-levels)): official and local repositories have it by default; a verified repository receives it only through the user's explicit per-repo grant (`aslice repo allow-system-patch <name>`, refused by default, revocable with `aslice repo deny-system-patch <name>`); third-party repositories never.
 
 # OS UPDATES
 
@@ -39,4 +47,4 @@ Rollback is a journaled restoration plan. Protected-volume rollback can require 
 
 # SEE ALSO
 
-aslice(1), aslice-doctor(1), aslice-repo(1), MANUAL.md §8.4, DESIGN.md §12.11, PACKAGE-FORMAT.md §3.16
+aslice(1), aslice-doctor(1), aslice-repo(1), [MANUAL §8.4](../docs/MANUAL.md#replacing-apples-fossilized-tools), [DESIGN §12.11](../docs/DESIGN.md#system-patches-flagged-reversible-replacement-of-apple-provided-files), [PACKAGE-FORMAT §3.16](../docs/PACKAGE-FORMAT.md#system-patch--flagged-replacement-of-apple-provided-files-v06)

@@ -9,6 +9,7 @@ aslice-graft — review and withdraw installer-script approvals
 # SYNOPSIS
 
 `aslice graft approvals` [`--json`]
+
 `aslice graft revoke` *package*…
 
 # DESCRIPTION
@@ -25,7 +26,7 @@ A **graft** is a vendor installer script a package genuinely cannot do without �
 
 **revoke** withdraws recorded approvals for the named packages. The next install of a revoked package asks again.
 
-There is no "always allow" and no global switch. The nearest thing is the `[grafts]` allow-list in `aslice-machine.toml` (SETUP.md §2.8), which suppresses the prompt for named packages whose manifests are signed — never the display, and never for unsigned manifests. For non-interactive installs, `aslice install --accept-grafts` (aslice-install(1)) consents for that run only; refusal is exit status 2.
+There is no "always allow" and no global switch. The nearest thing is the `[grafts]` allow-list in `aslice-machine.toml` ([SETUP §2.8](../docs/SETUP.md#grafts)), which suppresses the prompt for named packages whose manifests are signed — never the display, and never for unsigned manifests. For non-interactive installs, `aslice install --accept-grafts` (aslice-install(1)) consents for that run only; refusal is exit status 2.
 
 # EXIT STATUS
 
@@ -33,4 +34,4 @@ There is no "always allow" and no global switch. The nearest thing is the `[graf
 
 # SEE ALSO
 
-aslice(1), aslice-install(1), aslice-machine(1), MANUAL.md §4.5, SETUP.md §2.8, PACKAGE-FORMAT.md §3.11, DESIGN.md §12.15
+aslice(1), aslice-install(1), aslice-machine(1), [MANUAL §4.5](../docs/MANUAL.md#grafts-when-installing-takes-a-script), [SETUP §2.8](../docs/SETUP.md#grafts), [PACKAGE-FORMAT §3.11](../docs/PACKAGE-FORMAT.md#binary--vendor-binaries-pkgdmg-only-software), [DESIGN §12.15](../docs/DESIGN.md#vendor-install-scripts-grafts--declared-approved-monitored-reversible)

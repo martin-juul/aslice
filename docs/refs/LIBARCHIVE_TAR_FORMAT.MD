@@ -1,5 +1,7 @@
 # libarchive tar format manual
 
+Navigation: [Account](#captured-material) | [Source context](#decision-relevant-context) | [Full original](#full-captured-source) | [Catalog](README.MD)
+
 ## Source identity
 
 - Original source: https://raw.githubusercontent.com/libarchive/libarchive/v3.8.2/libarchive/tar.5

@@ -1,5 +1,7 @@
 # Zstandard Compression and the application/zstd Media Type
 
+Navigation: [Account](#captured-material) | [Source context](#decision-relevant-context) | [Full original](#full-captured-source) | [Catalog](README.MD)
+
 ## Source identity
 
 - Original source: https://www.rfc-editor.org/rfc/rfc8878.txt

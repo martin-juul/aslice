@@ -39,4 +39,4 @@ A clean machine prints one line: `aslice: your installation is healthy (N checks
 
 # SEE ALSO
 
-aslice(1), aslice-ca-update(1), MANUAL.md §11
+aslice(1), aslice-ca-update(1), [MANUAL §12](../docs/MANUAL.md#when-something-goes-wrong)

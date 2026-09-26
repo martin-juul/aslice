@@ -57,7 +57,15 @@ optional = true
     type = "types.sizeValue"
     optional = true
     default = "20 GB"
-    description = "Store size that triggers a GC suggestion on install."
+    description = "Store limit; at or above it ask whether to run GC, default No."
+
+    [elements.gc.warning_margin_percent]
+    type = "integer"
+    min = 0
+    max = 100
+    optional = true
+    default = 10
+    description = "Warn this percentage below the store limit; at the limit ask y/N. Never collect automatically."
 
 [elements.clean]
 type = "table"

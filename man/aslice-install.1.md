@@ -9,11 +9,12 @@ aslice-install — install packages
 # SYNOPSIS
 
 `aslice install` [*options*] *package*…
+
 `aslice reinstall` [*options*] *package*…
 
 # DESCRIPTION
 
-Installs packages, binary-first: resolves the request against the index, selects the newest version compatible with this OS release and the fastest flavor this CPU executes, downloads the slices, verifies signatures and hashes, checks library interfaces against the installed set, and links a new generation. No undeclared package code executes at any point — a package whose installer genuinely requires a script declares it as a graft, which runs only after its behavior manifest has been shown and approved (aslice-graft(1)). Preparation failures leave the live generation unchanged. Failures after live changes enter journal recovery; external conflicts may require attention, and protected-volume changes may require Recovery and reboot. Package rollback does not restore application data (STATE-AND-RECOVERY §5; SYSTEM-VOLUMES §4).
+Installs packages, binary-first: resolves the request against the index, selects the newest version compatible with this OS release and the fastest flavor this CPU executes, downloads the slices, verifies signatures and hashes, checks library interfaces against the installed set, and links a new generation. No undeclared package code executes at any point — a package whose installer genuinely requires a script declares it as a graft, which runs only after its behavior manifest has been shown and approved (aslice-graft(1)). Preparation failures leave the live generation unchanged. Failures after live changes enter journal recovery; external conflicts may require attention, and protected-volume changes may require Recovery and reboot. Package rollback does not restore application data ([STATE-AND-RECOVERY §5](../docs/STATE-AND-RECOVERY.md#durable-transactions-and-recovery); [SYSTEM-VOLUMES §4](../docs/SYSTEM-VOLUMES.md#activation-rollback-and-os-updates)).
 
 *package* may be a bare name (`ffmpeg`), a version constraint (`ffmpeg@v6`), a namespaced name (`audiolab:convolver`), or a runtime stream (`php@8.4` — installing a stream never changes the selected one; see aslice-use(1)).
 
@@ -28,7 +29,7 @@ Installs packages, binary-first: resolves the request against the index, selects
 :   Enable or disable a declared feature variant. Interface-changing variants (`abi = true`) produce a distinct build identity; others trigger a local build with the same compatibility key and a distinct artifact identity. aslice reports whether a prebuilt slice exists for the combination before compiling.
 
 **--cflags**="…", **--ldflags**="…", **--lto**, **--debug**
-:   Compiler and linker flags for a local build of the named package only. Exact flags enter the artifact manifest. ABI-neutral choices may share a compatibility key; different outputs retain distinct artifact identities. Substitution still requires compatible CPU/OS requirements, ABI evidence, and dependent tests. Unsupported ABI-changing flags are rejected unless represented by a declared ABI variant; unknown effects require an isolated build and explicit dependency validation (STATE-AND-RECOVERY §1–§2).
+:   Compiler and linker flags for a local build of the named package only. Exact flags enter the artifact manifest. ABI-neutral choices may share a compatibility key; different outputs retain distinct artifact identities. Substitution still requires compatible CPU/OS requirements, ABI evidence, and dependent tests. Unsupported ABI-changing flags are rejected unless represented by a declared ABI variant; unknown effects require an isolated build and explicit dependency validation ([STATE-AND-RECOVERY §1](../docs/STATE-AND-RECOVERY.md#compatibility-and-artifact-identity) and [STATE-AND-RECOVERY §2](../docs/STATE-AND-RECOVERY.md#abi-and-execution-requirements)).
 
 **--runtime** *name@stream*
 :   For runtime extensions: bind to the given stream instead of the currently selected one.
@@ -53,7 +54,7 @@ Installs packages, binary-first: resolves the request against the index, selects
 
 # EXAMPLES
 
-```
+```sh
 aslice install ffmpeg
 aslice install ffmpeg --variant +x265 --cflags="-O3 -march=native"
 aslice install php@8.4 --with-extensions-from 8.3
@@ -63,4 +64,4 @@ aslice install convolver --accept-grafts
 
 # SEE ALSO
 
-aslice(1), aslice-upgrade(1), aslice-uninstall(1), aslice-use(1), aslice-graft(1), MANUAL.md §3–§4
+aslice(1), aslice-upgrade(1), aslice-uninstall(1), aslice-use(1), aslice-graft(1), [MANUAL §3](../docs/MANUAL.md#everyday-commands) and [MANUAL §4](../docs/MANUAL.md#how-installs-actually-work)

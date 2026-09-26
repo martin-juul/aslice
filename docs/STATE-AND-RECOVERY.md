@@ -1,7 +1,11 @@
 # State, artifacts, and recovery
 
-- **Status:** Specification v0.3 — September 2026. These contracts are specified, not implemented or validated on macOS.
+- **Status:** Specification v0.4 — September 2026. These contracts are specified, not implemented or validated on macOS.
 - **Authority:** This document owns artifact identity, privileged ownership, transaction recovery, replay, and retained trust. DESIGN explains the architecture; PACKAGE-FORMAT describes author input. Examples and schemas must agree with these contracts.
+
+Navigation: [1. Compatibility and artifact identity](#compatibility-and-artifact-identity) · [2. ABI and execution requirements](#abi-and-execution-requirements) · [3. Privileged ownership and capability checks](#privileged-ownership-and-capability-checks) · [4. Graft execution boundary](#graft-execution-boundary) · [5. Durable transactions and recovery](#durable-transactions-and-recovery) · [6. Self-update and decommission](#self-update-and-decommission) · [7. Persistent trust and initial bootstrap](#persistent-trust-and-initial-bootstrap) · [8. Plans, locks, archives, and offline use](#plans-locks-archives-and-offline-use) · [9. Certificate trust lifecycle](#certificate-trust-lifecycle) · [10. Acceptance and implementation order](#acceptance-and-implementation-order)
+
+<a id="compatibility-and-artifact-identity"></a>
 
 ## 1. Compatibility and artifact identity
 
@@ -17,6 +21,8 @@ Canonical payloads use reserved relocation placeholders for their own store pref
 
 Archive extraction rejects absolute paths, `..`, duplicate entries, case/Unicode-normalization collisions on the destination filesystem, device nodes, setuid/setgid bits, and hardlinks or symlinks escaping the staged artifact. Extraction uses bounded sizes and descriptor-relative traversal without following untrusted symlinks. Signature and archive digest verification precede extraction. The manifest's file inventory must match the extracted tree exactly.
 
+<a id="abi-and-execution-requirements"></a>
+
 ## 2. ABI and execution requirements
 
 The loader-version check compares a provider's `current_version` with the compatibility requirement recorded by the client. The provider's own `compatibility_version` is also recorded but is not substituted for `current_version` in that comparison. See [Apple's dynamic-library guidance](refs/APPLE_DYNAMIC_LIBRARY_DESIGN_GUIDELINES.MD).
@@ -29,6 +35,8 @@ Every executable artifact, including vendor binaries, records `cpu_features` and
 
 Arbitrary compiler flags are not automatically ABI-neutral. The harness rejects unsupported ABI-changing flags unless represented in the declared ABI variant contract. Unknown flag effects require an isolated build and explicit dependency validation, not transparent substitution.
 
+<a id="privileged-ownership-and-capability-checks"></a>
+
 ## 3. Privileged ownership and capability checks
 
 The ordinary prefix remains user-owned. Root execution uses a separate protected root at `/Library/Application Support/aslice/system`, owned by root with no unprivileged-writable ancestor or execution/configuration directory. Root services run from immutable verified closures there, including libraries, interpreters, plugins, launch configuration, and executable search paths. Their active pointer and generated plists are root-controlled. Root service environment changes require an authorized helper transaction; user-owned `.env` files are never loaded by root. Writable service data and logs are separate root-controlled locations, with narrower service-user ownership where explicitly required.
@@ -39,13 +47,17 @@ The helper executable itself is installed in the protected root from a verified 
 
 Capabilities follow effects. Installing or loading a kext or registering a root daemon requires `system`, whether expressed by `[system]`, `[service]`, or a graft. Replacing an Apple-provided path requires `system-patch` and its target restrictions. Other writes outside the prefix are individually declared and authorized; refusal lists apply to all mechanisms. Third-party repositories cannot acquire these capabilities through grafts, a machine file, or an unsigned warning. Required `--accept-system-changes` and `--accept-grafts` gates accumulate; one never substitutes for the other.
 
+<a id="graft-execution-boundary"></a>
+
 ## 4. Graft execution boundary
 
 A supported graft executes against an isolated staging view with the declared path mapping. It never receives unrestricted root access to the live filesystem. All resulting filesystem changes are validated, previewed, and committed by the helper's transaction machinery. Kext and daemon registration are declarative helper operations, not direct `kextload`, `launchctl`, Mach-service, Apple-event, or privileged-broker calls from the script. Sandbox policy denies those routes and must be tested on each supported OS before admission. Observing a process tree is evidence, not an enforcement mechanism.
 
 Scripts requiring live privileged RPC, firmware changes, uncontrolled background processes, or irreversible remote effects are unsupported and refused before execution. Network-dependent input must be fetched as a pinned source before staging; `network = true` remains reserved and is refused in v1. A vendor script that cannot run with these restrictions is not packageable as a v1 graft. The package manager does not claim to undo arbitrary vendor code.
 
-Approval binds repository identity, package version, script digests, and the complete effective behavior-manifest digest. Broader permissions invalidate approval even if the script bytes are unchanged. Machine-file allow-lists authorize reviewed signed manifests subject to the same capability and consent checks; unsigned manifests never receive persistent approval. Rehearsal covers each supported OS and validates both successful execution and attempted boundary violations. It cannot replace enforcement.
+Approval binds repository identity, package version, script digests, and the complete effective behavior-manifest digest. Broader permissions invalidate approval even if the script bytes are unchanged. Machine-file names select only existing local approvals matching repository identity, version, script digests, and the complete effective manifest digest. A fresh machine must approve again; exported names transfer no authority. Matching approvals remain subject to the same capability and consent checks; unsigned manifests never receive persistent approval. Rehearsal covers each supported OS and validates both successful execution and attempted boundary violations. It cannot replace enforcement.
+
+<a id="durable-transactions-and-recovery"></a>
 
 ## 5. Durable transactions and recovery
 
@@ -57,9 +69,13 @@ The state machine is `prepared → applying → activated → committed`, with `
 
 On restart, mutations and GC stop until recovery completes. If no durable commit exists, recovery examines the actual pointers and operation fingerprints and restores the before-state, idempotently, in reverse order. A committed transaction reconciles its after-state. Before either forward or inverse writes, compare the current object with the recorded expected fingerprint. Concurrent external edits, missing backups, or inaccessible privileged state produce `needs-attention` with exact paths and remedies; they are never overwritten silently. Disk-full failures retain the journal and backups. Generations and affected artifacts remain GC roots until resolution.
 
+Machine apply is one managed-state transaction: a failed step rolls back the entire apply. Trust establishment is a separate explicit prerequisite and is never reset by package rollback ([SETUP §3.2](SETUP.md#the-plan-and-the-order-of-operations)).
+
 Rollback records a new transaction in the journal, preserving the history of earlier transactions. When rollback spans several generations, it computes the target managed state and checks for conflicts. Service plists and protected closures are restored together with the package generation; changed declarations require regenerated plists. Preferences and login-shell settings use recorded before-values, and intervening external edits are reported as conflicts.
 
 Package rollback does not restore application databases, userbases, or remote systems. Before a service upgrade that can migrate persistent data, require a declared backward-compatibility contract or a tested backup/restore procedure and explicit authorization; otherwise refuse automated upgrade of the running service. A pid check is only process liveness. Service-specific readiness and data compatibility determine whether automatic rollback is permitted. Unattended service failure returns failure and retains evidence unless the caller explicitly selected a valid rollback procedure.
+
+<a id="self-update-and-decommission"></a>
 
 ## 6. Self-update and decommission
 
@@ -70,6 +86,8 @@ Self-update updates shim targets transactionally as well as the manager. Hardlin
 `aslice decommission --dry-run` inventories external effects while the manager, trust records, and backups still exist. `aslice decommission` then authorizes and journals: restoring the user's prior login shell and owned `/etc/shells` entry; stopping and unregistering managed services; reversing supported grafts and system patches; removing managed kexts where safe; removing only aslice-owned certificate trust entries; and removing owned integration links. A required reboot or conflicting external edit leaves cleanup pending and preserves the recovery tools. User data and ecosystem userbases are retained and listed. Hand-written shell initialization lines receive explicit removal instructions.
 
 Only after cleanup succeeds may the prefix be deleted. Root-owned closures, receipts, and backups are removed by the helper only when no other prefix or active operation references them. Decommission prints remaining user data and any required manual actions; it never claims deletion of the prefix alone removes all effects.
+
+<a id="persistent-trust-and-initial-bootstrap"></a>
 
 ## 7. Persistent trust and initial bootstrap
 
@@ -83,15 +101,19 @@ On a TLS-dead machine, obtain the bootstrap kit on a supported machine over auth
 
 The online route obtains the installer over authenticated HTTPS. HTTP may carry later artifacts only after the authentic installer or kit has established their exact hashes. Release assets and Pages are redundant transports, not independent authorities if both share compromised control. A verification failure never falls back to an unauthenticated script or a new hash from the same failing channel.
 
+<a id="plans-locks-archives-and-offline-use"></a>
+
 ## 8. Plans, locks, archives, and offline use
 
 An executable package plan names its profile, base generation digest, repository identities/environments and exact index digests, and exact old/new package records for each action. Empty actions represent a no-op. Every new record carries artifact and blob digests, recipe digest, compatibility key, CPU/OS requirements, origin, and local build flags. Remove actions bind the old artifact. Apply rechecks the base generation, machine compatibility, current repository capabilities and known revocations, authenticated artifact metadata, and every consent. Textual announcements or a plan's claimed consent list grant no authority. Drift refuses the plan and requests replanning; it does not silently resolve newer packages.
 
-Locks carry the complete package set, per-repository index bindings, exact artifacts and runtime dependency bindings. Local artifact export includes its recipe and inputs, but exact replay requires the recorded artifact bytes; rebuilding merely the same compatibility key is not exact replay. Vendor-direct records bind the original vendor digest and signer separately from the normalized extracted artifact. On a different machine, explicit re-resolution reports each changed artifact; `--frozen` refuses it. A machine wishlist creates a new plan; serialized machine-wide operation plans are deferred until their operation schema exists and cannot masquerade as package plans.
+Locks carry the complete package set, per-repository index bindings, exact artifacts and runtime dependency bindings. Local artifact export includes its recipe and inputs, but exact replay requires the recorded artifact bytes; rebuilding merely the same compatibility key is not exact replay. Vendor-direct records bind the original vendor digest and signer separately from the normalized extracted artifact. On a different machine, explicit re-resolution reports each changed artifact; `--frozen` refuses it. Only core packages may use bare names; every other repository, including extended, requires its registered namespace. Names never fall back across repositories ([REPOSITORIES §10](REPOSITORIES.md#overlapping-packages-across-repositories)). A machine wishlist creates a new plan; serialized machine-wide operation plans are deferred until their operation schema exists and cannot masquerade as package plans.
 
 Ordinary repository refresh obeys TUF expiry and rollback checks. Offline mode may reuse only already-cached bytes with a retained local receipt proving prior verification while the metadata was valid. It rehashes those bytes, respects known revocations, prints verification time and metadata age, and makes no freshness claim. It cannot import new metadata, discover trust, or accept an uncached target under expired metadata. Lost receipts require revalidation against current trusted metadata or explicit trust recovery.
 
 Historical index snapshots, recipes, manifests, and hosted artifact blobs referenced by published releases are retained, rather than keeping only monthly snapshots. A currently TUF-authorized archive catalog binds their original digests and lengths; selecting history downloads those immutable targets under current authorization without lowering TUF high-water state. Expired historical metadata is evidence, not current authority. Revoked artifacts stay in the audit record but are unavailable for ordinary installation. Vendor-direct availability cannot be guaranteed; a missing vendor artifact is an explicit failure. An old lock requests exact content, not permission to bypass revocation.
+
+<a id="certificate-trust-lifecycle"></a>
 
 ## 9. Certificate trust lifecycle
 
@@ -100,6 +122,8 @@ The private CA bundle and System-keychain import have different contracts. A PEM
 System import requires a signed certificate-policy inventory recording fingerprint, certificate role, permitted purposes, relevant constraints, and retirement state. The importer preserves supported constraints and refuses an entry whose required restrictions cannot be represented on that OS. It does not blanket-import the PEM bundle with unrestricted `trustRoot`. Roots and intermediates use distinct operations; importing an intermediate does not promote it to a trust anchor. Apple certificate updates require chain/purpose validation and tests for the named service; importing certificates does not guarantee that an obsolete service protocol works.
 
 The protected receipt records exactly which certificates and trust settings aslice created and their before/after values. Bundle updates preview removal or distrust of aslice-owned retired roots with per-run authorization. Existing Apple and user entries are not taken over. Rollback cannot silently restore a root now known to be distrusted. A conflicting user change stops reconciliation for that entry and reports it. `--keychain-remove` removes only unchanged aslice-owned additions or restores recorded prior settings; it does not delete a certificate merely because its fingerprint once appeared in a bundle.
+
+<a id="acceptance-and-implementation-order"></a>
 
 ## 10. Acceptance and implementation order
 
@@ -123,5 +147,6 @@ The two owned Macs do not establish complete guest coverage or independent v3 re
 |---|---|---|
 | v0.3 | September 2026 | Consolidate revision notes into a collapsible history table; no specification changes. |
 | v0.2 | September 2026 | prose rewrite of the rollback transaction explanation; no content changes. |
+| v0.4 | September 2026 | Documentation audit repairs: contract summaries aligned; owner-approved namespace, rollback, GC, naming, prefix, and graft decisions applied where relevant; semantic anchors and explicit citations added. Runtime implementation and platform acceptance remain pending. |
 
 </details>

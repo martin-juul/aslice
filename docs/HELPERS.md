@@ -1,7 +1,9 @@
 # aslice Helpers and Background Services
 
-- **Status:** Specification v0.1 — September 2026. This reference describes the client design; it does not establish completed implementation or validation on macOS.
+- **Status:** Specification v0.2 — September 2026. This reference describes the client design; it does not establish completed implementation or validation on macOS.
 - **Authority:** [DESIGN](DESIGN.md) defines the process roles. [STATE-AND-RECOVERY](STATE-AND-RECOVERY.md) owns privileged storage, authorization, transactions, and recovery; [SYSTEM-VOLUMES](SYSTEM-VOLUMES.md) owns protected-volume operations.
+
+<a id="what-runs-and-for-how-long"></a>
 
 ## 1. What runs, and for how long
 
@@ -22,6 +24,8 @@ re-executing itself with a subcommand to create the ordinary helpers. This
 reference does not assign separate installed executables or invocation syntax to
 those roles. The protected installation requirement for `aslice-system` is
 explicit and is described in §3.
+
+<a id="component-inventory"></a>
 
 ## 2. Component inventory
 
@@ -62,7 +66,11 @@ behavior. Ecosystem installs use per-stream userbases outside the immutable stor
 aslice does not audit, snapshot, or garbage-collect those contents. See the
 [runtime guide](MANUAL.md#6-managing-runtimes-php-python-ruby-node).
 
+<a id="the-privileged-helper"></a>
+
 ## 3. The privileged helper
+
+<a id="installation-and-authorization"></a>
 
 ### 3.1 Installation and authorization
 
@@ -79,6 +87,8 @@ a root daemon or kext needs `system`; replacing an Apple-provided path needs
 cannot bypass these checks. Required `--accept-system-changes` and
 `--accept-grafts` gates accumulate; neither replaces the other or grants repository
 capabilities. Elevations are logged as unsuppressible security events.
+
+<a id="protected-code-and-dependencies"></a>
 
 ### 3.2 Protected code and dependencies
 
@@ -101,6 +111,8 @@ outside the user's authority. Trust updates require authenticated transitions or
 explicit administrator rebootstrap. Root rollback changes the protected pointer
 through the helper under the same authorization as activation. These requirements
 come from [STATE-AND-RECOVERY §3](STATE-AND-RECOVERY.md#3-privileged-ownership-and-capability-checks).
+
+<a id="operations-covered-by-the-design"></a>
 
 ### 3.3 Operations covered by the design
 
@@ -128,6 +140,8 @@ enforcement and recovery acceptance gates:
   registration remain declarative helper operations. Network inputs are fetched
   and pinned before staging. See [STATE-AND-RECOVERY §4](STATE-AND-RECOVERY.md#4-graft-execution-boundary).
 
+<a id="recovery-and-removal"></a>
+
 ### 3.4 Recovery and removal
 
 Privileged operations hold the system-root lock after the prefix lock and record
@@ -150,6 +164,8 @@ references them. Pending reboot, snapshot references, or conflicts preserve the
 required recovery material. See [the removal procedure](MANUAL.md#25-removing-aslice)
 and [STATE-AND-RECOVERY §6](STATE-AND-RECOVERY.md#6-self-update-and-decommission).
 
+<a id="following-an-operation"></a>
+
 ## 4. Following an operation
 
 An ordinary binary install resolves authenticated package metadata, fetches and
@@ -158,7 +174,7 @@ the artifacts, then registers them and prepares a generation. `aslice-fetch`,
 `aslice-extract`, and `aslice-link` provide the separated process roles along that
 path. No source build helper is needed for a prebuilt payload. The transaction
 records durable intent before live changes and commits after reconciliation and
-health checks. [Manual §4.1](MANUAL.md#41-what-a-slice-is) gives the installation
+health checks. [MANUAL §4.1](MANUAL.md#41-what-a-slice-is) gives the installation
 sequence. Approved grafts add the isolated execution step described above.
 
 A source build adds the harness and `aslice-build`: fetch pinned inputs, unpack,
@@ -181,6 +197,8 @@ Protected-volume changes can remain pending through Recovery and reboot;
 [finalization](SYSTEM-VOLUMES.md#4-activation-rollback-and-os-updates) verifies the
 booted result before commit.
 
+<a id="services-that-can-remain-running"></a>
+
 ## 5. Services that can remain running
 
 Package-provided **user agents** run as the user in launchd's user domain. Any
@@ -196,13 +214,15 @@ state; `aslice service run` is the foreground, unregistered debugging case. A
 helper returning does not stop a registered service. Managed registrations and
 running-process leases retain the artifacts they need. Commands and upgrade
 failure handling are documented in [aslice-service(1)](../man/aslice-service.1.md)
-and [manual §7](MANUAL.md#7-running-services).
+and [MANUAL §7](MANUAL.md#7-running-services).
 
 The **future multi-user aslice daemon** is a different proposal for shared
 machines. [DESIGN §10.4](DESIGN.md#104-privilege-discipline) describes a launchd daemon
 accepting TUF-verified operation plans over a local socket with peer-credential
 checks. It is gated behind demand and is not required by the current client
 design. It does not describe today's privileged helper lifecycle.
+
+<a id="details-still-to-be-established"></a>
 
 ## 6. Details still to be established
 

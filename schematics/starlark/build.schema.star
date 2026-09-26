@@ -36,7 +36,7 @@ schema = {
         "ctx": {
             "kind": "object",
             "members": {
-                "prefix": "string",        # final store path this build will occupy
+                "prefix": "string",        # build-time relocation placeholder; final store path follows artifact hashing
                 "build_dir": "string",     # writable build directory
                 "staging": "string",       # DESTDIR staging directory
                 "jobs": "int",             # parallelism granted by the scheduler
