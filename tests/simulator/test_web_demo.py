@@ -370,11 +370,25 @@ class DemoConsoleTests(unittest.TestCase):
             )
             terminal = page.locator("#terminal")
             display = page.locator("#display")
+            frame = page.locator("#display-frame")
+            frame_toggle = page.locator("#display-frame-toggle")
             terminal_box = terminal.bounding_box()
             display_box = display.bounding_box()
             self.assertGreater(terminal_box["height"], 600)
-            self.assertGreater(display_box["height"], 600)
+            # The optional hardware frame includes a bezel and chin. Check the
+            # workspace allocation separately from the usable application area.
+            expect(frame_toggle).to_have_attribute("aria-pressed", "true")
+            self.assertGreater(frame.bounding_box()["height"], 600)
+            self.assertGreater(
+                display_box["height"], frame.bounding_box()["height"] * 0.8
+            )
             self.assertGreater(display_box["x"], terminal_box["x"])
+            frame_toggle.click()
+            expect(frame_toggle).to_have_attribute("aria-pressed", "false")
+            self.assertGreater(display.bounding_box()["height"], 600)
+            self.assertGreater(display.bounding_box()["height"], display_box["height"])
+            expect(field).to_have_value("Preserve application state")
+            frame_toggle.click()
 
             page.locator("#view-terminal").click()
             expect(page.locator("#display-panel")).not_to_be_visible()
@@ -382,7 +396,14 @@ class DemoConsoleTests(unittest.TestCase):
             page.locator("#view-display").click()
             expect(page.locator("#terminal-panel")).not_to_be_visible()
             expect(field).to_have_value("Preserve application state")
+            self.assertGreater(frame.bounding_box()["width"], 1500)
+            self.assertGreater(
+                display.bounding_box()["width"], frame.bounding_box()["width"] * 0.9
+            )
+            frame_toggle.click()
             self.assertGreater(display.bounding_box()["width"], 1500)
+            expect(field).to_have_value("Preserve application state")
+            frame_toggle.click()
             page.locator("#view-split").click()
             self.assertEqual(page.locator("#sessions").input_value(), session)
             expect(page.locator("#session-status")).to_have_text("Output connected.")
