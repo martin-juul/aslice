@@ -1,0 +1,10 @@
+$(document).ready(function() {
+
+	$('.checkboxes-onoff-gallery').bxSlider({
+		adaptiveHeight: false,
+		mode: 'fade',
+		pagerCustom: '#bxlabels-checkboxes-onoff-examples',
+		controls: false
+	});
+
+});

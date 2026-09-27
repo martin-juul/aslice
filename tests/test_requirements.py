@@ -264,6 +264,28 @@ class RegistryTests(unittest.TestCase):
         reference.write_bytes(b'incorporated requirement\r\n')
         self.assertFalse(self.result()['development_valid'])
 
+    def test_library_sources_bind_collections_through_exact_checksum_inventories(self):
+        library = self.root / 'docs/library'
+        originals = library / 'example/originals'
+        originals.mkdir(parents=True)
+        (library / 'README.md').write_text('How to browse the library.\n')
+        (library / 'package.json').write_text('{"private": true}\n')
+        (library / 'package-lock.json').write_text('{}\n')
+        (originals / 'page.body').write_bytes(b'Original HTML\r\n')
+        (originals / 'image.body').write_bytes(b'\xff\x00\xff')
+        checksums = library / 'example/SHA256SUMS'
+        checksums.write_bytes(b'first byte inventory\n')
+        sources = inventory(self.root)
+        self.assertIn('docs/library/README.md', sources)
+        self.assertIn('docs/library/example/SHA256SUMS', sources)
+        self.assertNotIn('docs/library/package.json', sources)
+        self.assertNotIn('docs/library/package-lock.json', sources)
+        self.assertNotIn('docs/library/example/originals/page.body', sources)
+        self.assertNotIn('docs/library/example/originals/image.body', sources)
+        self.registry['sources'] = sources
+        checksums.write_bytes(b'first byte inventory\r\n')
+        self.assertFalse(self.result()['development_valid'])
+
     def test_duplicate_ids_and_out_of_bounds_ranges_fail(self):
         self.registry['requirements'].append(copy.deepcopy(self.registry['requirements'][0]))
         self.registry['requirements'][1]['clauses'][0]['end'] = 100

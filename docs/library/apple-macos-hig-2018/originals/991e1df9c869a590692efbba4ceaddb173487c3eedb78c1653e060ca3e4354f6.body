@@ -1,0 +1,62 @@
+function setAnimation(container, path) {
+  return bodymovin.loadAnimation({
+    container: container,
+    renderer: 'svg',
+    loop: false,
+    autoplay: false,
+    path: path,
+  });
+}
+
+function setInteraction(container, animation) {
+  $(container).mouseenter(function() {
+    if (!$(container).hasClass('animating')) {
+      animation.addEventListener('complete', function() {
+        $(container).removeClass('animating');
+        animation.removeEventListener('complete');
+      });
+
+      $(container).addClass('animating');
+      animation.goToAndPlay(0, true);
+    }
+  });
+}
+
+$(document).ready(function() {
+  var progressBarContainer = document.getElementById('progress-bar-thumbnail');
+  var progressBarAnimation = setAnimation(progressBarContainer, '../../data/visual-index/ProgressBarFinal.json');
+  setInteraction($('#progress-bar'), progressBarAnimation);
+
+  var progressCircleContainer = document.getElementById('progress-circle-thumbnail');
+  var progressCircleAnimation = setAnimation(progressCircleContainer, '../../data/visual-index/ProgressCircleFinal.json');
+  setInteraction($('#progress-circle'), progressCircleAnimation);
+
+  var progressSpinnerContainer = document.getElementById('progress-spinner-thumbnail');
+  var progressSpinnerAnimation = setAnimation(progressSpinnerContainer, '../../data/visual-index/ProgressSpinner.json');
+  setInteraction($('#progress-spinner'), progressSpinnerAnimation);
+
+  var sheetContainer = document.getElementById('sheet-thumbnail');
+  var sheetAnimation = setAnimation(sheetContainer, '../../data/visual-index/SheetsFinal.json');
+  setInteraction($('#sheet'), sheetAnimation)
+  ;
+
+  // const motionQuery = matchMedia('(prefers-reduced-motion)');
+  // Set initial value
+  // handleReduceMotionChange(motionQuery, progressBarAnimation, progressCircleAnimation, sheetAnimation);
+  // motionQuery.addListener(handleReduceMotionChange);
+});
+
+// // TODO: If reduced-motion is enabled, add play button and remove trigger on hover
+//
+// function handleReduceMotionChange(prefersReducedMotion) {
+//   if (prefersReducedMotion.matches) {
+//     // display play button
+//     // remove mouseenter interaction
+//     console.log('on');
+//   } else {
+//     console.log('off');
+//     // setInteraction($('#progressbar'), progressBarAnimation);
+//     // setInteraction($('#progresscircle'), progressCircleAnimation);
+//     // setInteraction($('#sheet'), sheetAnimation);
+//   }
+// }

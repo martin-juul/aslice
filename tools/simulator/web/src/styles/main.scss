@@ -1,0 +1,26 @@
+@use 'palette';
+@use 'base';
+@use 'controls';
+@use '../features/workspace/workspace';
+@use '../features/machines/machines';
+
+@include base.layout;
+@include controls.layout;
+@include workspace.layout;
+@include machines.layout;
+
+:root {
+  color-scheme: light;
+  @include base.appearance(palette.$light);
+  @include controls.appearance(palette.$light);
+  @include workspace.appearance(palette.$light);
+  @include machines.appearance(palette.$light);
+}
+
+:root[data-appearance='dark'] {
+  color-scheme: dark;
+  @include base.appearance(palette.$dark);
+  @include controls.appearance(palette.$dark);
+  @include workspace.appearance(palette.$dark);
+  @include machines.appearance(palette.$dark);
+}

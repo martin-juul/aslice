@@ -1,0 +1,71 @@
+HTTP/1.1 302
+Server: nginx
+Date: Sun, 27 Sep 2026 14:12:53 GMT
+Content-Type: text/plain; charset=utf-8
+Content-Length: 0
+Connection: keep-alive
+x-archive-redirect-reason: found capture at 20191019133046
+location: https://web.archive.org/web/20191019133046id_/https://developer.apple.com/design/human-interface-guidelines/macos/images/TB_layout_1principal3.png
+server-timing: captures_list;dur=0.422382, exclusion.robots;dur=0.061076, exclusion.robots.policy;dur=0.054444, esindex;dur=0.007239, cdx.remote;dur=27.091656, LoadShardBlock;dur=183.838046, PetaboxLoader3.datanode;dur=134.626363, PetaboxLoader3.resolve;dur=29.458304
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=4
+server-timing: MISS
+x-app-server: wwwb-app263-dc8
+x-ts: 302
+x-tr: 226
+set-cookie: wb-p-SERVER=wwwb-app263; path=/
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+
+HTTP/1.1 200
+Server: nginx
+Date: Sun, 27 Sep 2026 14:12:57 GMT
+Content-Type: image/png
+Content-Length: 4042
+Connection: keep-alive
+x-archive-orig-server: Apple
+x-archive-orig-date: Sat, 19 Oct 2019 13:30:46 GMT
+x-archive-orig-content-length: 4042
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-strict-transport-security: max-age=31536000; includeSubDomains
+x-archive-orig-last-modified: Mon, 03 Jun 2019 18:09:01 GMT
+x-archive-orig-accept-ranges: bytes
+x-archive-orig-x-xss-protection: 1; mode=block
+x-archive-orig-access-control-allow-origin: https://developer2.apple.com
+x-archive-orig-cache-control: max-age=600, public
+x-archive-orig-host: developer.apple.com
+x-archive-orig-age: 0
+x-archive-orig-via: https/1.1 usscz2-edge-bx-039.ts.apple.com (ApacheTrafficServer/8.0.5)
+x-archive-orig-cdnuuid: 4dd8c649-5d82-4647-b7bd-28a8eedd12cc-1343299005
+x-archive-orig-x-cache: miss
+cache-control: max-age=1800
+cache-control: private
+accept-ranges: bytes
+memento-datetime: Sat, 19 Oct 2019 13:30:46 GMT
+link: <https://developer.apple.com/design/human-interface-guidelines/macos/images/TB_layout_1principal3.png>; rel="original", <https://web.archive.org/web/timemap/link/https://developer.apple.com/design/human-interface-guidelines/macos/images/TB_layout_1principal3.png>; rel="timemap"; type="application/link-format", <https://web.archive.org/web/https://developer.apple.com/design/human-interface-guidelines/macos/images/TB_layout_1principal3.png>; rel="timegate", <https://web.archive.org/web/20191019133046/https://developer.apple.com/design/human-interface-guidelines/macos/images/TB_layout_1principal3.png>; rel="first memento"; datetime="Sat, 19 Oct 2019 13:30:46 GMT", <https://web.archive.org/web/20191019133046/https://developer.apple.com/design/human-interface-guidelines/macos/images/TB_layout_1principal3.png>; rel="memento"; datetime="Sat, 19 Oct 2019 13:30:46 GMT", <https://web.archive.org/web/20191019133046/https://developer.apple.com/design/human-interface-guidelines/macos/images/TB_layout_1principal3.png>; rel="last memento"; datetime="Sat, 19 Oct 2019 13:30:46 GMT"
+content-security-policy: default-src 'self' 'unsafe-eval' 'unsafe-inline' data: blob: archive.org web.archive.org web-static.archive.org wayback-api.archive.org athena.archive.org analytics.archive.org pragma.archivelab.org wwwb-events.archive.org
+x-archive-src: NO404-GDELT-20191019125004-crawl853/NO404-GDELT-20191019131106-04503.warc.gz
+server-timing: captures_list;dur=0.512941, exclusion.robots;dur=0.088814, exclusion.robots.policy;dur=0.064114, esindex;dur=0.006120, cdx.remote;dur=18.968474, LoadShardBlock;dur=110.723748, PetaboxLoader3.datanode;dur=71.258198, PetaboxLoader3.resolve;dur=89.533354, load_resource;dur=96.788728
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=1
+server-timing: MISS
+x-app-server: wwwb-app247-dc8
+x-ts: 200
+x-tr: 246
+set-cookie: wb-p-SERVER=wwwb-app247; path=/
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+

@@ -12,6 +12,7 @@ is organized. Paths marked planned below do not yet exist in the tracked tree.
 | `docs/sqlite/` | Existing | Executable SQLite schema companions owned by [DATABASE](docs/DATABASE.md); these are specification assets, not runtime services. |
 | `docs/runbooks/` | Existing | Standalone operational runbooks for project bring-up, signing, and recovery. See the [runbooks index](docs/runbooks/README.md). |
 | `docs/refs/` | Existing | Supporting source archive, with captured references, provenance, licenses, and checksums. See the [archive guide](docs/refs/README.MD). |
+| `docs/library/` | Existing | Captured documentation sites with original resources, provenance, checksums, and local replay. See the [library guide](docs/library/README.md). |
 | `man/` | Existing | Command manuals. See the [manual index](man/README.md). |
 | `schematics/` | Existing | Machine-readable contracts for project formats and build interfaces. See the [schematics guide](schematics/README.md). |
 | `tests/` | Existing | Validation code, regression tests, and fixtures. |

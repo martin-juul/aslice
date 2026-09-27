@@ -1,0 +1,319 @@
+.video-play, .video-replay {
+display: block !important;
+}
+.video-play {
+  top:-5px;
+  font-size:14px;
+}
+.video-replay {
+  top:-36px;
+  font-size:14px;
+}
+
+/* Images */
+
+/* 
+.scroll-image {
+  overflow-x:auto;
+  -webkit-overflow-scrolling: touch;
+  -ms-overflow-style: none;
+}
+
+img.pad-image {
+  margin-top:2em;
+  margin-bottom:2em;
+}
+
+
+*/
+
+.video {
+  position: relative;
+  margin-bottom: -1.5em;
+}
+
+.video video {
+  width: 100%;
+  height: auto;
+}
+
+.device-frame-mac {
+  display: block;
+  position: relative;
+  margin-top: 0;
+  margin-bottom: 1em;
+  max-width: 768px;
+  width: 100%;
+  height: auto;
+  background-image: url('/design/human-interface-guidelines/macos/images/MackBookPro_DeviceFrame.png');
+  background-repeat: no-repeat;
+  background-size: 100% auto;
+  background-position: left top;
+}
+
+img.device-frame-mac,
+.device-frame-mac img,
+.device-frame-mac video {
+  width: 100%;
+  height: auto;
+  padding: 3.9% 11.97% 7% 11.97%;
+}
+
+.video-frame-poster {
+  position: absolute;
+  width: 100%;
+  height: auto;
+  top: 0px;
+  left: 0px;
+  cursor: pointer;
+  transition: opacity: 200ms linear;
+}
+/*.touch-bar-controls-and-views */
+/*.touch-bar-architecture*/
+@media all and (max-width: 1068px) { 
+  .touch-bar-architecture .video-frame-poster {
+    display: none;
+    opacity: 0;
+  }
+  .touch-bar-controls-and-views .video {
+    position: relative;
+    margin-bottom: 0;
+  }
+  .touch-bar-controls-and-views .video video {
+    position: absolute;
+  }
+  .touch-bar-controls-and-views .video .video-play {
+    top: 28px;
+    font-size: 14px;
+  }
+  .touch-bar-controls-and-views .video .video-replay {
+    top: -4px;
+    font-size: 14px;
+  }
+
+
+  
+}
+
+
+/*
+
+
+.screenshot-border {
+  border: 1px solid #e6e6e6;
+  -webkit-box-sizing:content-box;
+  -moz-box-sizing:content-box;
+  box-sizing:content-box;
+}
+
+.video-standard {
+  position: relative;
+  /*margin: 0 auto 3em;*/
+/* 
+  padding: 0px 0px 0px 0px;
+  width: auto;
+  height: auto;
+}
+
+.video-standard-poster {
+    position: absolute;
+    width: 100%;
+    height: auto;
+    top: 0;
+    left: 0;
+    opacity: 1;
+}
+
+.video-hero {
+  position: relative;
+  margin: 0 auto 4em;
+  padding: 0px 0px 0px 0px;
+  width: 768px;
+  height: 450px;
+  background-size: 768px 450 fdpx;
+  background-position: left top
+}
+
+.video-touch-bar {
+  position: relative;
+  margin: 0 auto 4em;
+  padding: 0px 0px 0px 0px;
+  width: 768px;
+  height: 27px;
+  background-size: 768px 27px;
+  background-position: left top
+}
+
+.video-touch-bar-poster {
+    position: absolute;
+    width: 100%;
+    height: auto;
+    top: 0;
+    left: 0;
+    opacity: 1;
+}
+
+.video-mac-frame {
+  display:block;
+  position: relative;
+  margin: 0 auto 4em;
+  padding: 30px 92px 54px 92px;
+  width: 768px;
+  height: 449px;
+  background-image: url('/design/human-interface-guidelines/macos/images/MackBookPro_DeviceFrame.png');
+  background-repeat: no-repeat;
+  background-size: 768px 449px;
+  background-position: 0 top;
+}
+
+.video-mac-frame-poster {
+    position: absolute;
+    top: 30px;
+    left: 92px;
+    opacity: 1;
+}
+
+.video-mac-hero {
+  position: relative;
+  margin: 0 auto 4em;
+  padding: 0px 0px 0px 0px;
+  width: 768px;
+  height: 450px;
+  background-size: 768px 450px;
+  background-position: left top
+}
+
+.video-mac-hero-poster {
+    position: absolute;
+    width: 100%;
+    height: auto;
+    top: 0;
+    left: 0;
+    opacity: 1;
+}
+ */
+
+
+/* COLOR PALLETTES */
+.swatch {
+  display: inline-block;
+  width: 75px;
+  height: 75px;
+  font-family: -apple-system, "Myriad Set Pro", "Lucida Grande", "Helvetica Neue", "Helvetica", "Arial", "Verdana", "sans-serif";
+}
+
+@media all and (min-width: 768px) and (max-width: 1023px) {
+  .swatch {
+    width: 75px;
+    height: 75px;
+  }
+}
+
+@media all and (max-width: 735px) {
+  .swatch {
+    width: 75px;
+    height: 75px;
+  }
+}
+
+.swatch .swatch-color {
+  margin-left: 6px;
+  margin-right: 6px;
+  height: 75px;
+  width: 75px;
+  border-radius: 10px;
+  padding: 0.8em 1em;
+}
+
+.swatch .swatch-color.color-blue { background-color: rgb(0,122,255);}
+.swatch .swatch-color.color-brown { background-color: rgb(162,132,94);}
+.swatch .swatch-color.color-gray { background-color: rgb(142,142,147);}
+.swatch .swatch-color.color-green { background-color: rgb(40,205,65);}
+.swatch .swatch-color.color-orange { background-color: rgb(255,149,0);}
+.swatch .swatch-color.color-pink { background-color: rgb(255,45,85);}
+.swatch .swatch-color.color-purple { background-color: rgb(175,82,222);}
+.swatch .swatch-color.color-red { background-color: rgb(255,59,48);}
+.swatch .swatch-color.color-yellow { background-color: rgb(255,204,0);}
+
+.swatch .swatch-color.color-dark-blue { background-color: rgb(10,132,255);}
+.swatch .swatch-color.color-dark-brown { background-color: rgb(172,142,104);}
+.swatch .swatch-color.color-dark-gray { background-color: rgb(152,152,157);}
+.swatch .swatch-color.color-dark-green { background-color: rgb(50,215,75);}
+.swatch .swatch-color.color-dark-orange { background-color: rgb(255,159,10);}
+.swatch .swatch-color.color-dark-pink { background-color: rgb(255,55,95);}
+.swatch .swatch-color.color-dark-purple { background-color: rgb(191,90,242);}
+.swatch .swatch-color.color-dark-red { background-color: rgb(255,69,58);}
+.swatch .swatch-color.color-dark-yellow { background-color: rgb(255,214,10);}
+
+
+.swatch .swatch-color.color-vibrant-blue { background-color: rgb(0,112,245);}
+.swatch .swatch-color.color-vibrant-brown { background-color: rgb(152,122,84);}
+.swatch .swatch-color.color-vibrant-gray { background-color: rgb(132,132,137);}
+.swatch .swatch-color.color-vibrant-green { background-color: rgb(30,195,55);}
+.swatch .swatch-color.color-vibrant-orange { background-color: rgb(245,139,0);}
+.swatch .swatch-color.color-vibrant-pink { background-color: rgb(245,35,75);}
+.swatch .swatch-color.color-vibrant-purple { background-color: rgb(159,75,201);}
+.swatch .swatch-color.color-vibrant-red { background-color: rgb(245,49,38);}
+.swatch .swatch-color.color-vibrant-yellow { background-color: rgb(245,194,0);}
+
+.swatch .swatch-color.color-vibrant-dark-blue { background-color: rgb(20,142,255);}
+.swatch .swatch-color.color-vibrant-dark-brown { background-color: rgb(182,152,114);}
+.swatch .swatch-color.color-vibrant-dark-gray { background-color: rgb(162,162,167);}
+.swatch .swatch-color.color-vibrant-dark-green { background-color: rgb(60,225,85);}
+.swatch .swatch-color.color-vibrant-dark-orange { background-color: rgb(255,169,20);}
+.swatch .swatch-color.color-vibrant-dark-pink { background-color: rgb(255,65,105);}
+.swatch .swatch-color.color-vibrant-dark-purple { background-color: rgb(204,101,255);}
+.swatch .swatch-color.color-vibrant-dark-red { background-color: rgb(255,79,68);}
+.swatch .swatch-color.color-vibrant-dark-yellow { background-color: rgb(255,224,20);}
+
+
+
+.swatch .swatch-color.color-ax-blue { background-color: rgb(0,64,221);}
+.swatch .swatch-color.color-ax-brown { background-color: rgb(127,101,69);}
+.swatch .swatch-color.color-ax-gray { background-color: rgb(105,105,110);}
+.swatch .swatch-color.color-ax-green { background-color: rgb(0,125,27);}
+.swatch .swatch-color.color-ax-orange { background-color: rgb(201,52,0);}
+.swatch .swatch-color.color-ax-pink { background-color: rgb(211,15,69);}
+.swatch .swatch-color.color-ax-purple { background-color: rgb(137,68,171);}
+.swatch .swatch-color.color-ax-red { background-color: rgb(215,0,21);}
+.swatch .swatch-color.color-ax-yellow { background-color: rgb(160,90,0);}
+
+.swatch .swatch-color.color-ax-dark-blue { background-color: rgb(64,156,255);}
+.swatch .swatch-color.color-ax-dark-brown { background-color: rgb(181,148,105);}
+.swatch .swatch-color.color-ax-dark-gray { background-color: rgb(152,152,157);}
+.swatch .swatch-color.color-ax-dark-green { background-color: rgb(40,205,65);}
+.swatch .swatch-color.color-ax-dark-orange { background-color: rgb(255,149,0);}
+.swatch .swatch-color.color-ax-dark-pink { background-color: rgb(255,100,130);}
+.swatch .swatch-color.color-ax-dark-purple { background-color: rgb(218,143,255);}
+.swatch .swatch-color.color-ax-dark-red { background-color: rgb(255,105,97);}
+.swatch .swatch-color.color-ax-dark-yellow { background-color: rgb(255,204,0);}
+
+
+.swatch .swatch-color.color-ax-vibrant-blue { background-color: rgb(0,64,221);}
+.swatch .swatch-color.color-ax-vibrant-brown { background-color: rgb(119,93,59);}
+.swatch .swatch-color.color-ax-vibrant-gray { background-color: rgb(97,97,101);}
+.swatch .swatch-color.color-ax-vibrant-green { background-color: rgb(0,112,24);}
+.swatch .swatch-color.color-ax-vibrant-orange { background-color: rgb(173,58,0);}
+.swatch .swatch-color.color-ax-vibrant-pink { background-color: rgb(193,16,50);}
+.swatch .swatch-color.color-ax-vibrant-purple { background-color: rgb(137,68,171);}
+.swatch .swatch-color.color-ax-vibrant-red { background-color: rgb(194,6,24);}
+.swatch .swatch-color.color-ax-vibrant-yellow { background-color: rgb(146,81,0);}
+
+.swatch .swatch-color.color-ax-vibrant-dark-blue { background-color: rgb(64,156,255);}
+.swatch .swatch-color.color-ax-vibrant-dark-brown { background-color: rgb(181,148,105);}
+.swatch .swatch-color.color-ax-vibrant-dark-gray { background-color: rgb(152,152,157);}
+.swatch .swatch-color.color-ax-vibrant-dark-green { background-color: rgb(40,205,65);}
+.swatch .swatch-color.color-ax-vibrant-dark-orange { background-color: rgb(255,149,0);}
+.swatch .swatch-color.color-ax-vibrant-dark-pink { background-color: rgb(255,58,95);}
+.swatch .swatch-color.color-ax-vibrant-dark-purple { background-color: rgb(218,143,255);}
+.swatch .swatch-color.color-ax-vibrant-dark-red { background-color: rgb(255,65,54);}
+.swatch .swatch-color.color-ax-vibrant-dark-yellow { background-color: rgb(255,204,0);}
+
+
+
+
+
+
+
+
+

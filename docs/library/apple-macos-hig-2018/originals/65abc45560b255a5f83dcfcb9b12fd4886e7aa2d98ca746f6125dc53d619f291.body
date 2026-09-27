@@ -1,0 +1,19 @@
+.video {
+  position: relative;
+  width: 368px;
+  margin: auto;
+}
+
+.video video {
+  display: block;
+  width: 368px;
+  height: 186px;
+  margin: auto;
+}
+
+.poster-frame {
+  display: block;
+  width: 368px;
+  height: 186px;
+  margin: auto;
+}

@@ -1,0 +1,11 @@
+$(document).ready(function() {
+
+	$('.system-color-gallery').bxSlider({
+		adaptiveHeight: false,
+		mode: 'fade',
+		speed: 0,
+		pagerCustom: '#bxlabels-system-color-examples',
+		controls: false
+	});
+
+});

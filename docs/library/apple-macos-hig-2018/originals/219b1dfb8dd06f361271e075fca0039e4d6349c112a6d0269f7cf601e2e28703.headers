@@ -1,0 +1,134 @@
+HTTP/1.1 302 FOUND
+Server: nginx
+Date: Sun, 27 Sep 2026 13:53:09 GMT
+Content-Type: text/plain; charset=utf-8
+Content-Length: 0
+Connection: keep-alive
+x-archive-redirect-reason: found capture at 20181208190828
+location: https://web.archive.org/web/20181208190828id_/https://developer.apple.com/design/human-interface-guidelines/macos/buttons/
+server-timing: captures_list;dur=0.551392, exclusion.robots;dur=0.070200, exclusion.robots.policy;dur=0.062168, esindex;dur=0.021436, cdx.remote;dur=42.606971, LoadShardBlock;dur=79.865688, PetaboxLoader3.datanode;dur=76.073425
+x-app-server: wwwb-app204-dc6
+x-ts: 302
+x-tr: 520
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=0
+set-cookie: wb-p-SERVER=wwwb-app204; path=/
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+Server-Timing: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+
+HTTP/1.1 302 Found
+Server: nginx
+Date: Sun, 27 Sep 2026 13:53:10 GMT
+Content-Type: text/html
+Content-Length: 0
+Connection: keep-alive
+x-archive-orig-server: Apple
+x-archive-orig-date: Sat, 08 Dec 2018 19:08:28 GMT
+x-archive-orig-content-length: 0
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-strict-transport-security: max-age=31536000; includeSubDomains
+location: /web/20181208190828id_/https://developer.apple.com/design/human-interface-guidelines/macos/buttons/checkboxes/
+x-archive-orig-x-xss-protection: 1; mode=block
+x-archive-orig-access-control-allow-origin: https://developer2.apple.com
+x-archive-orig-host: developer.apple.com
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-age: 0
+x-archive-orig-via: https/1.1 ussjc2-edge-bx-006.ts.apple.com (ApacheTrafficServer/7.1.5)
+x-archive-orig-cdnuuid: f44f6ebc-5daa-454b-9ee1-1d4c79fbf87f-214206184
+x-archive-orig-x-cache: miss
+cache-control: max-age=1800
+memento-datetime: Sat, 08 Dec 2018 19:08:28 GMT
+link: <https://developer.apple.com/design/human-interface-guidelines/macos/buttons/>; rel="original", <https://web.archive.org/web/timemap/link/https://developer.apple.com/design/human-interface-guidelines/macos/buttons/>; rel="timemap"; type="application/link-format", <https://web.archive.org/web/https://developer.apple.com/design/human-interface-guidelines/macos/buttons/>; rel="timegate"
+content-security-policy: default-src 'self' 'unsafe-eval' 'unsafe-inline' data: blob: archive.org web.archive.org web-static.archive.org wayback-api.archive.org athena.archive.org analytics.archive.org pragma.archivelab.org wwwb-events.archive.org
+x-archive-src: WIDE-20181208153216-crawl811/WIDE-20181208153216-08598.warc.gz
+server-timing: captures_list;dur=1.080651, exclusion.robots;dur=0.156574, exclusion.robots.policy;dur=0.145518, esindex;dur=0.010054, cdx.remote;dur=8.396903, LoadShardBlock;dur=100.971552, PetaboxLoader3.datanode;dur=141.763580, load_resource;dur=504.048862, PetaboxLoader3.resolve;dur=419.269466
+x-app-server: wwwb-app244-dc8
+x-ts: 302
+x-tr: 645
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=0
+set-cookie: wb-p-SERVER=wwwb-app244; path=/
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+Server-Timing: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+
+HTTP/1.1 302 FOUND
+Server: nginx
+Date: Sun, 27 Sep 2026 13:53:10 GMT
+Content-Type: text/plain; charset=utf-8
+Content-Length: 0
+Connection: keep-alive
+x-archive-redirect-reason: found capture at 20181208172042
+location: https://web.archive.org/web/20181208172042id_/https://developer.apple.com/design/human-interface-guidelines/macos/buttons/checkboxes/
+server-timing: captures_list;dur=0.394493, exclusion.robots;dur=0.062981, exclusion.robots.policy;dur=0.056545, esindex;dur=0.005673, cdx.remote;dur=79.596933, LoadShardBlock;dur=50.941719, PetaboxLoader3.datanode;dur=48.357110
+x-app-server: wwwb-app267-dc8
+x-ts: 302
+x-tr: 146
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=0
+set-cookie: wb-p-SERVER=wwwb-app267; path=/
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+Server-Timing: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+
+HTTP/1.1 200 OK
+Server: nginx
+Date: Sun, 27 Sep 2026 13:53:11 GMT
+Content-Type: text/html
+Transfer-Encoding: chunked
+Connection: keep-alive
+x-archive-orig-server: Apple
+x-archive-orig-date: Sat, 08 Dec 2018 17:20:42 GMT
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-strict-transport-security: max-age=31536000; includeSubDomains
+x-archive-orig-x-xss-protection: 1; mode=block
+x-archive-orig-access-control-allow-origin: https://developer2.apple.com
+x-archive-orig-host: developer.apple.com
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-age: 0
+x-archive-orig-via: https/1.1 ussjc2-edge-bx-028.ts.apple.com (ApacheTrafficServer/8.0.1)
+x-archive-orig-cdnuuid: dd2a2054-ae4b-4eaf-b408-f2adf4ee3395-635838941
+x-archive-orig-x-cache: miss
+cache-control: max-age=1800
+accept-ranges: bytes
+memento-datetime: Sat, 08 Dec 2018 17:20:42 GMT
+link: <https://developer.apple.com/design/human-interface-guidelines/macos/buttons/checkboxes/>; rel="original", <https://web.archive.org/web/timemap/link/https://developer.apple.com/design/human-interface-guidelines/macos/buttons/checkboxes/>; rel="timemap"; type="application/link-format", <https://web.archive.org/web/https://developer.apple.com/design/human-interface-guidelines/macos/buttons/checkboxes/>; rel="timegate"
+content-security-policy: default-src 'self' 'unsafe-eval' 'unsafe-inline' data: blob: archive.org web.archive.org web-static.archive.org wayback-api.archive.org athena.archive.org analytics.archive.org pragma.archivelab.org wwwb-events.archive.org
+x-archive-src: WIDE-20181208110821-crawl811/WIDE-20181208150200-08597.warc.gz
+server-timing: captures_list;dur=0.722583, exclusion.robots;dur=0.101735, exclusion.robots.policy;dur=0.085143, esindex;dur=0.012540, cdx.remote;dur=101.389664, LoadShardBlock;dur=104.100072, PetaboxLoader3.datanode;dur=103.962257, load_resource;dur=217.573350, PetaboxLoader3.resolve;dur=49.822588
+x-app-server: wwwb-app206-dc6
+x-ts: 200
+x-tr: 438
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=0
+set-cookie: wb-p-SERVER=wwwb-app206; path=/
+cache-control: private
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+Server-Timing: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+

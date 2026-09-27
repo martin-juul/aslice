@@ -1,0 +1,199 @@
+@use 'sass:map';
+
+@mixin layout {
+  * {
+    box-sizing: border-box;
+  }
+  [hidden] {
+    display: none !important;
+  }
+  body {
+    font:
+      13px 'Geist',
+      sans-serif;
+    margin: 0;
+    height: 100vh;
+    min-height: 580px;
+    display: flex;
+    flex-direction: column;
+  }
+  header {
+    padding: 8px 12px;
+    display: flex;
+    flex: 0 0 auto;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid;
+  }
+  header strong {
+    font:
+      600 20px 'Space Grotesk',
+      sans-serif;
+    margin-right: 20px;
+  }
+  h2 {
+    font:
+      600 14px 'Space Grotesk',
+      sans-serif;
+    margin: 0 0 8px;
+  }
+  main {
+    display: flex;
+    flex: 1 1 0;
+    min-height: 0;
+    padding: 8px;
+  }
+  article {
+    padding: 10px;
+    border: 1px solid;
+    border-radius: 3px;
+    min-width: 0;
+  }
+  #download-ready,
+  #notice,
+  #development-banner {
+    padding: 4px 12px;
+    flex: 0 0 auto;
+  }
+  #notice {
+    min-height: 24px;
+  }
+  #development-banner {
+    font-weight: 600;
+  }
+  .appearance-controls {
+    display: flex;
+    align-items: center;
+  }
+  .appearance-controls > * + * {
+    margin-left: 12px;
+  }
+  details {
+    margin-top: 8px;
+  }
+  summary {
+    cursor: pointer;
+  }
+  pre {
+    white-space: pre-wrap;
+    overflow: auto;
+    max-height: 330px;
+    font:
+      12px 'Geist Mono',
+      monospace;
+    padding: 10px;
+  }
+  #selected-machine,
+  #runtime-health,
+  #session-status,
+  #display-status,
+  #terminal-renderer,
+  #terminal-image-status,
+  #terminal-progress-label,
+  #processes,
+  input[type='number'],
+  #command,
+  #transfer-path,
+  #debug-program,
+  #debug-pid,
+  #source-map,
+  #breakpoint {
+    font:
+      12px 'Geist Mono',
+      monospace;
+  }
+  #identity {
+    word-break: break-word;
+    margin-top: 20px;
+    line-height: 1.6;
+  }
+  #selected-machine {
+    word-wrap: break-word;
+  }
+  #processes {
+    max-height: 280px;
+    overflow: auto;
+  }
+  #timeline {
+    max-height: 400px;
+  }
+  table {
+    width: 100%;
+    font-size: 12px;
+    border-collapse: collapse;
+  }
+  td,
+  th {
+    text-align: left;
+    padding: 5px;
+    border-bottom: 1px solid;
+  }
+  td:last-child {
+    word-break: break-word;
+  }
+  @media (max-width: 900px) {
+    body {
+      height: auto;
+      min-height: 100vh;
+    }
+    main {
+      display: block;
+      flex: none;
+    }
+    header small {
+      display: none;
+    }
+  }
+  @media (max-width: 600px) {
+    header {
+      flex-wrap: wrap;
+    }
+    .appearance-controls {
+      margin-top: 8px;
+    }
+  }
+}
+
+@mixin appearance($colors) {
+  color: map.get($colors, 'text');
+  background: map.get($colors, 'window');
+  header {
+    background: linear-gradient(
+      map.get($colors, 'chrome-top'),
+      map.get($colors, 'chrome-bottom')
+    );
+    border-color: map.get($colors, 'separator');
+  }
+  header span,
+  small,
+  label {
+    color: map.get($colors, 'secondary-text');
+  }
+  article,
+  #notice {
+    background: map.get($colors, 'panel');
+    border-color: map.get($colors, 'separator');
+  }
+  #notice {
+    color: map.get($colors, 'secondary-text');
+  }
+  #notice.error {
+    color: map.get($colors, 'danger');
+    background: map.get($colors, 'error-surface');
+  }
+  #development-banner {
+    color: map.get($colors, 'demo-text');
+    background: map.get($colors, 'demo-surface');
+  }
+  pre {
+    background: map.get($colors, 'content');
+  }
+  td,
+  th {
+    border-color: map.get($colors, 'separator');
+  }
+  :focus {
+    outline: 2px solid map.get($colors, 'focus');
+    outline-offset: 2px;
+  }
+}

@@ -1,0 +1,48 @@
+HTTP/1.1 200
+Server: nginx
+Date: Sun, 27 Sep 2026 14:27:43 GMT
+Content-Type: image/png
+Content-Length: 426090
+Connection: keep-alive
+x-archive-orig-server: Apple
+x-archive-orig-date: Mon, 22 Jun 2020 18:46:46 GMT
+x-archive-orig-content-length: 426090
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-strict-transport-security: max-age=31536000; includeSubDomains
+x-archive-orig-last-modified: Mon, 03 Jun 2019 18:09:01 GMT
+x-archive-orig-accept-ranges: bytes
+x-archive-orig-x-xss-protection: 1; mode=block
+x-archive-orig-access-control-allow-origin: https://developer2.apple.com
+x-archive-orig-cache-control: max-age=600, public
+x-archive-orig-host: developer.apple.com
+x-archive-orig-rqid: de31c92e9fe6e12cc002bf0ee58a02a0
+x-archive-orig-age: 0
+x-archive-orig-via: https/1.1 usscz2-edge-lx-008.ts.apple.com (ApacheTrafficServer/8.0.8), https/1.1 usscz2-edge-bx-028.ts.apple.com (ApacheTrafficServer/8.0.8)
+x-archive-orig-cdnuuid: 18336ec0-d5c9-4b50-b369-8aa4be805815-45546970
+x-archive-orig-x-cache: miss, miss
+x-archive-orig-connection: close
+cache-control: max-age=1800
+cache-control: private
+accept-ranges: bytes
+memento-datetime: Mon, 22 Jun 2020 18:46:46 GMT
+link: <https://developer.apple.com/design/human-interface-guidelines/macos/images/Sidebar_2x.png>; rel="original", <https://web.archive.org/web/timemap/link/https://developer.apple.com/design/human-interface-guidelines/macos/images/Sidebar_2x.png>; rel="timemap"; type="application/link-format", <https://web.archive.org/web/https://developer.apple.com/design/human-interface-guidelines/macos/images/Sidebar_2x.png>; rel="timegate", <https://web.archive.org/web/20200622184646/https://developer.apple.com/design/human-interface-guidelines/macos/images/Sidebar_2x.png>; rel="first memento"; datetime="Mon, 22 Jun 2020 18:46:46 GMT", <https://web.archive.org/web/20200622184646/https://developer.apple.com/design/human-interface-guidelines/macos/images/Sidebar_2x.png>; rel="memento"; datetime="Mon, 22 Jun 2020 18:46:46 GMT", <https://web.archive.org/web/20200622184646/https://developer.apple.com/design/human-interface-guidelines/macos/images/Sidebar_2x.png>; rel="last memento"; datetime="Mon, 22 Jun 2020 18:46:46 GMT"
+content-security-policy: default-src 'self' 'unsafe-eval' 'unsafe-inline' data: blob: archive.org web.archive.org web-static.archive.org wayback-api.archive.org athena.archive.org analytics.archive.org pragma.archivelab.org wwwb-events.archive.org
+x-archive-src: liveweb-20200622181805/live-20200622183942-wwwb-app52.us.archive.org.warc.gz
+server-timing: captures_list;dur=0.476637, exclusion.robots;dur=0.061205, exclusion.robots.policy;dur=0.051942, esindex;dur=0.006961, cdx.remote;dur=13.005625, LoadShardBlock;dur=63.679547, PetaboxLoader3.datanode;dur=55.608663, load_resource;dur=89.752969, PetaboxLoader3.resolve;dur=56.800250
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=0
+server-timing: MISS
+x-app-server: wwwb-app222-dc8
+x-ts: 200
+x-tr: 184
+set-cookie: wb-p-SERVER=wwwb-app222; path=/
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+

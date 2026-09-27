@@ -1,0 +1,74 @@
+HTTP/1.1 302
+Server: nginx
+Date: Sun, 27 Sep 2026 14:27:38 GMT
+Content-Type: text/plain; charset=utf-8
+Content-Length: 0
+Connection: keep-alive
+x-archive-redirect-reason: found capture at 20221122135708
+location: https://web.archive.org/web/20221122135708id_/https://developer.apple.com/design/human-interface-guidelines/macos/images/shareExtensionsModal_2x.png
+server-timing: captures_list;dur=0.470155, exclusion.robots;dur=0.069193, exclusion.robots.policy;dur=0.058971, esindex;dur=0.007008, cdx.remote;dur=20.957504, LoadShardBlock;dur=49.877984, PetaboxLoader3.datanode;dur=37.404344
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=1
+server-timing: MISS
+x-app-server: wwwb-app241-dc8
+x-ts: 302
+x-tr: 85
+set-cookie: wb-p-SERVER=wwwb-app241; path=/
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+
+HTTP/1.1 200
+Server: nginx
+Date: Sun, 27 Sep 2026 14:27:40 GMT
+Content-Type: image/png
+Content-Length: 613502
+Connection: keep-alive
+x-archive-orig-server: Apple
+x-archive-orig-date: Tue, 22 Nov 2022 13:57:08 GMT
+x-archive-orig-content-length: 613502
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-strict-transport-security: max-age=31536000; includeSubDomains
+x-archive-orig-x-content-type-options: nosniff
+x-archive-orig-last-modified: Tue, 12 Jul 2022 17:06:07 GMT
+x-archive-orig-accept-ranges: bytes
+x-archive-orig-x-xss-protection: 1; mode=block
+x-archive-orig-content-security-policy: default-src 'self' data: blob: 'unsafe-inline' 'unsafe-eval' https://*.apple.com http://*.apple.com https://*.mzstatic.com https://*.apple-mapkit.com https://p-events-delivery.akamaized.net http://p-events-delivery.akamaized.net https://apple-events.akamaized.net https://mediaservices.cdn-apple.com http://mediaservices.cdn-apple.com
+x-archive-orig-cache-control: max-age=600, public
+x-archive-orig-host: developer.apple.com
+x-archive-orig-rqid: f1c974d87dffda52463176abf3e7cf1f
+x-archive-orig-age: 0
+x-archive-orig-via: https/1.1 usscz2-edge-lx-009.ts.apple.com (acdn/176.13298), https/1.1 usscz2-edge-bx-019.ts.apple.com (acdn/176.13298)
+x-archive-orig-x-cache: miss, miss
+x-archive-orig-cdnuuid: bb571442-ba25-47d5-834b-ff888f30fa36-328135268
+x-archive-orig-connection: keep-alive
+cache-control: max-age=1800
+cache-control: private
+accept-ranges: bytes
+memento-datetime: Tue, 22 Nov 2022 13:57:08 GMT
+link: <https://developer.apple.com/design/human-interface-guidelines/macos/images/shareExtensionsModal_2x.png>; rel="original", <https://web.archive.org/web/timemap/link/https://developer.apple.com/design/human-interface-guidelines/macos/images/shareExtensionsModal_2x.png>; rel="timemap"; type="application/link-format", <https://web.archive.org/web/https://developer.apple.com/design/human-interface-guidelines/macos/images/shareExtensionsModal_2x.png>; rel="timegate", <https://web.archive.org/web/20221122135707/https://developer.apple.com/design/human-interface-guidelines/macos/images/ShareExtensionsModal_2x.png>; rel="first memento"; datetime="Tue, 22 Nov 2022 13:57:07 GMT", <https://web.archive.org/web/20221122135707/https://developer.apple.com/design/human-interface-guidelines/macos/images/ShareExtensionsModal_2x.png>; rel="prev memento"; datetime="Tue, 22 Nov 2022 13:57:07 GMT", <https://web.archive.org/web/20221122135708/https://developer.apple.com/design/human-interface-guidelines/macos/images/shareExtensionsModal_2x.png>; rel="memento"; datetime="Tue, 22 Nov 2022 13:57:08 GMT", <https://web.archive.org/web/20221122135708/https://developer.apple.com/design/human-interface-guidelines/macos/images/shareExtensionsModal_2x.png>; rel="last memento"; datetime="Tue, 22 Nov 2022 13:57:08 GMT"
+content-security-policy: default-src 'self' 'unsafe-eval' 'unsafe-inline' data: blob: archive.org web.archive.org web-static.archive.org wayback-api.archive.org athena.archive.org analytics.archive.org pragma.archivelab.org wwwb-events.archive.org
+x-archive-src: spn2-20221122143319/spn2-20221122135519-wwwb-app33.us.archive.org-8000.warc.gz
+server-timing: captures_list;dur=0.621549, exclusion.robots;dur=0.093315, exclusion.robots.policy;dur=0.080108, esindex;dur=0.008258, cdx.remote;dur=6.896066, LoadShardBlock;dur=49.974994, PetaboxLoader3.datanode;dur=75.634870, load_resource;dur=96.677315, PetaboxLoader3.resolve;dur=36.308970
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=1
+server-timing: MISS
+x-app-server: wwwb-app266-dc8
+x-ts: 200
+x-tr: 181
+set-cookie: wb-p-SERVER=wwwb-app266; path=/
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+

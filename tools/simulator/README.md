@@ -1,4 +1,8 @@
-# macOS platform simulator
+# Modeled platform simulator
+
+This is the **modeled platform** backend. The separate
+[Darwin compatibility environment](DARWIN.md) runs binaries in persistent VMs;
+CLI execution is demonstrated, while GUI and full debugger acceptance remain pending.
 
 The harness exercises the real C++ fixture lifecycle through a persistent
 filesystem model, fault injection, evidence capture, and replay. It does **not**

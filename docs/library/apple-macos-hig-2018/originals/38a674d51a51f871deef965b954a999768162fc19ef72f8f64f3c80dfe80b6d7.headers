@@ -1,0 +1,48 @@
+HTTP/1.1 200
+Server: nginx
+Date: Sun, 27 Sep 2026 14:37:24 GMT
+Content-Type: image/png
+Content-Length: 671
+Connection: keep-alive
+x-archive-orig-server: Apple
+x-archive-orig-date: Mon, 22 Jun 2020 21:23:15 GMT
+x-archive-orig-content-length: 671
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-strict-transport-security: max-age=31536000; includeSubDomains
+x-archive-orig-last-modified: Mon, 03 Jun 2019 18:08:56 GMT
+x-archive-orig-accept-ranges: bytes
+x-archive-orig-x-xss-protection: 1; mode=block
+x-archive-orig-access-control-allow-origin: https://developer2.apple.com
+x-archive-orig-cache-control: max-age=600, public
+x-archive-orig-host: developer.apple.com
+x-archive-orig-rqid: f1f9a9f2a318ea77e8dba81491db855b
+x-archive-orig-age: 0
+x-archive-orig-via: https/1.1 ussjc2-edge-lx-003.ts.apple.com (ApacheTrafficServer/8.0.8), https/1.1 ussjc2-edge-bx-019.ts.apple.com (ApacheTrafficServer/8.0.8)
+x-archive-orig-cdnuuid: b3cd80f3-77ab-4fde-93c9-a4f996dd7fe5-134505479
+x-archive-orig-x-cache: miss, miss
+x-archive-orig-connection: close
+cache-control: max-age=1800
+cache-control: private
+accept-ranges: bytes
+memento-datetime: Mon, 22 Jun 2020 21:23:15 GMT
+link: <https://developer.apple.com/design/human-interface-guidelines/macos/images/icons/touch_bar_icons/TB_skipback15seconds_2x.png>; rel="original", <https://web.archive.org/web/timemap/link/https://developer.apple.com/design/human-interface-guidelines/macos/images/icons/touch_bar_icons/TB_skipback15seconds_2x.png>; rel="timemap"; type="application/link-format", <https://web.archive.org/web/https://developer.apple.com/design/human-interface-guidelines/macos/images/icons/touch_bar_icons/TB_skipback15seconds_2x.png>; rel="timegate", <https://web.archive.org/web/20200622212315/https://developer.apple.com/design/human-interface-guidelines/macos/images/icons/touch_bar_icons/TB_skipback15seconds_2x.png>; rel="first memento"; datetime="Mon, 22 Jun 2020 21:23:15 GMT", <https://web.archive.org/web/20200622212315/https://developer.apple.com/design/human-interface-guidelines/macos/images/icons/touch_bar_icons/TB_skipback15seconds_2x.png>; rel="memento"; datetime="Mon, 22 Jun 2020 21:23:15 GMT", <https://web.archive.org/web/20200622212315/https://developer.apple.com/design/human-interface-guidelines/macos/images/icons/touch_bar_icons/TB_skipback15seconds_2x.png>; rel="last memento"; datetime="Mon, 22 Jun 2020 21:23:15 GMT"
+content-security-policy: default-src 'self' 'unsafe-eval' 'unsafe-inline' data: blob: archive.org web.archive.org web-static.archive.org wayback-api.archive.org athena.archive.org analytics.archive.org pragma.archivelab.org wwwb-events.archive.org
+x-archive-src: liveweb-20200622205451/live-20200622212218-wwwb-app53.us.archive.org.warc.gz
+server-timing: captures_list;dur=0.415932, exclusion.robots;dur=0.071500, exclusion.robots.policy;dur=0.063782, esindex;dur=0.007505, cdx.remote;dur=18.445715, LoadShardBlock;dur=187.501627, PetaboxLoader3.datanode;dur=193.916600, load_resource;dur=55.635729, PetaboxLoader3.resolve;dur=38.298026
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=0
+server-timing: MISS
+x-app-server: wwwb-app204-dc6
+x-ts: 200
+x-tr: 275
+set-cookie: wb-p-SERVER=wwwb-app204; path=/
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+

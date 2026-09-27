@@ -5,6 +5,7 @@ archive hashes retain exact bytes. Review ranges use one-based inclusive lines.
 """
 import hashlib
 import json
+import os
 from pathlib import Path, PurePosixPath
 import re
 import unicodedata
@@ -20,19 +21,36 @@ def digest(data):
 
 def source_bytes(path, relative):
     data = path.read_bytes()
-    return data if relative.startswith("docs/refs/") else data.replace(b"\r\n", b"\n")
+    if relative.startswith(("docs/refs/", "docs/library/")):
+        return data
+    return data.replace(b"\r\n", b"\n")
 
 
 def inventory(root):
     paths = set(root.glob("*.md"))
-    paths.update((root / "tools").rglob("*.md"))
+    for current, directories, files in os.walk(root / "tools"):
+        directories[:] = [
+            name for name in directories if name not in ("__pycache__", "node_modules")
+        ]
+        paths.update(Path(current) / name for name in files if name.endswith(".md"))
     for directory in ("docs", "man", "schematics"):
         paths.update((root / directory).rglob("*"))
     result = {}
     for path in sorted(paths, key=lambda item: item.relative_to(root).as_posix()):
-        if not path.is_file() or "__pycache__" in path.parts:
+        if not path.is_file() or any(
+            part in ("__pycache__", "node_modules") for part in path.parts
+        ):
             continue
         relative = path.relative_to(root).as_posix()
+        if relative.startswith("docs/library/"):
+            parts = path.relative_to(root / "docs/library").parts
+            # Bind each source collection through its complete byte inventory.
+            # Original websites are evidence, not project requirement clauses.
+            # Root package files configure the viewer, not its source contracts.
+            if len(parts) == 1 and path.suffix.lower() != ".md":
+                continue
+            if len(parts) > 1 and parts != (parts[0], "SHA256SUMS"):
+                continue
         data = source_bytes(path, relative)
         result[relative] = {"sha256": digest(data), "lines": len(data.splitlines())}
     return result

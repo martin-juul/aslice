@@ -1,0 +1,229 @@
+@use 'sass:map';
+
+@mixin layout {
+  #workspace {
+    display: flex;
+    flex: 1 1 0;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+  }
+  #workspace > * + * {
+    margin-top: 8px;
+  }
+  .machine-bar {
+    position: relative;
+    display: flex;
+    flex: 0 0 auto;
+    flex-wrap: wrap;
+    align-items: center;
+    margin: -4px;
+  }
+  .machine-bar > * {
+    margin: 4px;
+  }
+  .machine-bar > .view-controls {
+    margin-left: auto;
+  }
+  .machine-panel > summary,
+  .secondary-panel > summary {
+    padding: 5px 8px;
+  }
+  .machine-panel > .panel-content {
+    position: absolute;
+    top: 100%;
+    left: 4px;
+    z-index: 10;
+    width: 520px;
+    max-width: calc(100vw - 32px);
+    max-height: 70vh;
+    overflow: auto;
+    padding: 16px;
+    margin-top: 6px;
+    border: 1px solid;
+    border-radius: 6px;
+  }
+  .panels {
+    display: flex;
+  }
+  .panels > article {
+    flex: 1 1 0;
+  }
+  .secondary-panel .panels > article + article {
+    margin-left: 8px;
+  }
+  .primary-panels {
+    flex: 1 1 0;
+    min-height: 420px;
+    border: 1px solid;
+  }
+  .primary-panels > article {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+  }
+  .pane-header {
+    padding: 7px 8px 3px;
+    border-bottom: 1px solid;
+  }
+  .pane-header h2 {
+    font:
+      600 12px 'Geist',
+      sans-serif;
+    margin-bottom: 6px;
+  }
+  .pane-header .toolbar {
+    margin-bottom: 0;
+  }
+  #terminal-panel > .toolbar,
+  #terminal-panel > .terminal-tools {
+    padding: 0 8px;
+    margin-left: 0;
+    margin-right: 0;
+  }
+  #workspace-divider {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex: 0 0 1px;
+    align-items: center;
+    justify-content: center;
+    cursor: col-resize;
+    touch-action: none;
+  }
+  #workspace-divider::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: -2px;
+    right: -2px;
+  }
+  #workspace-divider::before {
+    content: '';
+    width: 1px;
+    height: 100%;
+  }
+  #workspace:not([data-view='split']) #workspace-divider {
+    display: none;
+  }
+  .primary-panels.resizing {
+    user-select: none;
+  }
+  #workspace[data-tools-open='true']:not([data-view='display'])
+    .primary-panels {
+    flex: none;
+  }
+  #terminal {
+    height: 0;
+    flex: 1 1 0;
+    min-height: 240px;
+    overflow: auto;
+    padding: 6px;
+    border: 0;
+  }
+  #display {
+    flex: 1 1 0;
+    min-height: 240px;
+    overflow: auto;
+    border: 0;
+  }
+  #display canvas {
+    max-width: 100%;
+  }
+  #terminal-progress-area,
+  #terminal-progress-area + .toolbar {
+    margin-top: 6px;
+  }
+  #session-status {
+    margin-right: auto;
+  }
+  .terminal-tools {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    margin: -3px -8px;
+  }
+  .terminal-tools > details {
+    margin: 3px 8px;
+  }
+  .terminal-tools > details[open] {
+    flex-basis: 100%;
+  }
+  .terminal-tools > details[open] > summary {
+    margin-bottom: 8px;
+  }
+  .secondary-panel {
+    flex: 0 0 auto;
+    margin: 0;
+  }
+  .secondary-panel[open] > summary {
+    margin-bottom: 8px;
+  }
+  @media (max-width: 900px) {
+    #workspace {
+      display: block;
+    }
+    .panels {
+      display: block;
+    }
+    .primary-panels > article {
+      height: 65vh;
+      min-height: 560px;
+    }
+    #display-panel {
+      border-top: 1px solid;
+    }
+    .panels > article + article,
+    #display-panel {
+      margin-top: 8px;
+    }
+    .secondary-panel .panels > article + article {
+      margin-left: 0;
+    }
+    #workspace[data-tools-open='true'] #terminal-panel {
+      height: auto;
+    }
+    #workspace-divider {
+      display: none;
+    }
+  }
+}
+
+@mixin appearance($colors) {
+  .primary-panels,
+  .pane-header,
+  #display-panel {
+    border-color: map.get($colors, 'separator');
+  }
+  .pane-header {
+    background: linear-gradient(
+      map.get($colors, 'chrome-top'),
+      map.get($colors, 'chrome-bottom')
+    );
+  }
+  .machine-panel > .panel-content {
+    background: map.get($colors, 'panel');
+    border-color: map.get($colors, 'control-border');
+    box-shadow: 0 12px 32px map.get($colors, 'shadow');
+  }
+  #workspace-divider::before {
+    background: map.get($colors, 'control-border');
+  }
+  #workspace-divider:hover::before,
+  #workspace-divider:focus::before {
+    background: map.get($colors, 'focus');
+  }
+  #terminal {
+    background: map.get($colors, 'terminal-background');
+    color: map.get($colors, 'terminal-foreground');
+    border-color: map.get($colors, 'separator');
+  }
+  #display {
+    background: map.get($colors, 'display-surround');
+    border-color: map.get($colors, 'separator');
+  }
+}

@@ -1,0 +1,172 @@
+@use 'sass:map';
+
+@mixin layout {
+  button,
+  select,
+  input {
+    font: inherit;
+    color: inherit;
+    border: 1px solid;
+    border-radius: 4px;
+    padding: 3px 8px;
+    min-height: 24px;
+  }
+  button {
+    cursor: pointer;
+  }
+  button:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+  input:not([type='checkbox']):not([type='file']) {
+    min-width: 80px;
+    max-width: 100%;
+    flex: 1 1 0;
+  }
+  select,
+  input[type='file'] {
+    min-width: 0;
+    max-width: 100%;
+  }
+  select {
+    appearance: none;
+    padding-right: 26px;
+    background-repeat: no-repeat;
+    background-position:
+      right 12px top calc(50% - 3px),
+      right 9px top calc(50% - 3px),
+      right 12px top calc(50% + 3px),
+      right 9px top calc(50% + 3px),
+      center;
+    background-size:
+      3px 3px,
+      3px 3px,
+      3px 3px,
+      3px 3px,
+      100% 100%;
+  }
+  label {
+    display: block;
+    margin: 7px 0;
+  }
+  label input:not([type='checkbox']) {
+    display: block;
+    width: 100%;
+    margin-top: 4px;
+  }
+  nav,
+  .toolbar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    margin: 0 -4px 4px;
+  }
+  nav > *,
+  .toolbar > * {
+    margin: 0 4px 4px;
+  }
+  .view-controls {
+    display: flex;
+    margin-left: auto;
+  }
+  .view-controls button {
+    border-radius: 0;
+    width: 76px;
+    flex: 1 1 0;
+  }
+  .view-controls button + button {
+    border-left: 0;
+  }
+  .view-controls button:first-child {
+    border-radius: 4px 0 0 4px;
+  }
+  .view-controls button:last-child {
+    border-radius: 0 4px 4px 0;
+  }
+  input[type='checkbox'] {
+    min-height: 0;
+  }
+  .demo-window {
+    margin: 2rem;
+    padding: 1rem;
+    border: 1px solid;
+    border-radius: 4px;
+  }
+  .demo-window output {
+    display: block;
+    padding: 1rem 0;
+  }
+}
+
+@mixin appearance($colors) {
+  input {
+    background: map.get($colors, 'content');
+    border-color: map.get($colors, 'control-border');
+  }
+  button,
+  select {
+    color: map.get($colors, 'text');
+    background-color: map.get($colors, 'control-bottom');
+    background-image: linear-gradient(
+      map.get($colors, 'control-top'),
+      map.get($colors, 'control-bottom')
+    );
+    border-color: map.get($colors, 'control-border');
+    box-shadow: 0 1px 1px map.get($colors, 'shadow');
+  }
+  select {
+    background-image:
+      linear-gradient(135deg, transparent 50%, map.get($colors, 'text') 50%),
+      linear-gradient(45deg, map.get($colors, 'text') 50%, transparent 50%),
+      linear-gradient(45deg, transparent 50%, map.get($colors, 'text') 50%),
+      linear-gradient(135deg, map.get($colors, 'text') 50%, transparent 50%),
+      linear-gradient(
+        map.get($colors, 'control-top'),
+        map.get($colors, 'control-bottom')
+      );
+  }
+  option,
+  optgroup {
+    color: map.get($colors, 'text');
+    background-color: map.get($colors, 'content');
+  }
+  button:hover:not(:disabled),
+  button:active:not(:disabled) {
+    background: map.get($colors, 'control-hover');
+  }
+  input::placeholder {
+    color: map.get($colors, 'secondary-text');
+    opacity: 1;
+  }
+  button.danger {
+    border-color: map.get($colors, 'danger');
+  }
+  .view-controls [aria-pressed='true'] {
+    background: map.get($colors, 'toolbar-selection');
+    color: map.get($colors, 'selected-text');
+    box-shadow: inset 0 1px 2px map.get($colors, 'shadow');
+  }
+  #dark-appearance[aria-pressed='true'],
+  #machines button.selected {
+    border-color: map.get($colors, 'accent');
+    background: map.get($colors, 'accent');
+    color: map.get($colors, 'selected-text');
+  }
+  // The sample guest application has its own appearance, like a real VNC image.
+  .demo-window {
+    background: #f6f6f6;
+    color: #242424;
+    border-color: #a6a6a6;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.13);
+    input {
+      background: #fff;
+      color: #242424;
+      border-color: #a6a6a6;
+    }
+    button {
+      background: linear-gradient(#fff, #f0f0f0);
+      color: #242424;
+      border-color: #a6a6a6;
+    }
+  }
+}

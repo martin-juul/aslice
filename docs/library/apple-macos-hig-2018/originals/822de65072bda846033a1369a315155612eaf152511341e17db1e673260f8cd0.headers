@@ -1,0 +1,72 @@
+HTTP/1.1 302
+Server: nginx
+Date: Sun, 27 Sep 2026 14:09:04 GMT
+Content-Type: text/plain; charset=utf-8
+Content-Length: 0
+Connection: keep-alive
+x-archive-redirect-reason: found capture at 20181208135242
+location: https://web.archive.org/web/20181208135242id_/https://developer.apple.com/design/human-interface-guidelines/macos/images/DarkMode_Calendar_light_small.png
+server-timing: captures_list;dur=0.835521, exclusion.robots;dur=0.122960, exclusion.robots.policy;dur=0.115064, esindex;dur=0.006253, cdx.remote;dur=5.533535, LoadShardBlock;dur=67.518047, PetaboxLoader3.datanode;dur=56.369886, PetaboxLoader3.resolve;dur=10.388196
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=1
+server-timing: MISS
+x-app-server: wwwb-app253-dc8
+x-ts: 302
+x-tr: 90
+set-cookie: wb-p-SERVER=wwwb-app253; path=/
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+
+HTTP/1.1 200
+Server: nginx
+Date: Sun, 27 Sep 2026 14:09:08 GMT
+Content-Type: image/png
+Content-Length: 59524
+Connection: keep-alive
+x-archive-orig-server: Apple
+x-archive-orig-date: Sat, 08 Dec 2018 13:52:42 GMT
+x-archive-orig-content-length: 59524
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-strict-transport-security: max-age=31536000; includeSubDomains
+x-archive-orig-last-modified: Mon, 04 Jun 2018 16:41:08 GMT
+x-archive-orig-etag: "e884-56dd399b73100"
+x-archive-orig-accept-ranges: bytes
+x-archive-orig-x-xss-protection: 1; mode=block
+x-archive-orig-access-control-allow-origin: https://developer2.apple.com
+x-archive-orig-cache-control: max-age=600, public
+x-archive-orig-host: developer.apple.com
+x-archive-orig-age: 0
+x-archive-orig-via: https/1.1 ussjc2-edge-bx-024.ts.apple.com (ApacheTrafficServer/8.0.1)
+x-archive-orig-cdnuuid: 859626e0-bf79-480a-a00f-32b262124ce0-1090102997
+x-archive-orig-x-cache: miss
+cache-control: max-age=1800
+cache-control: private
+accept-ranges: bytes
+memento-datetime: Sat, 08 Dec 2018 13:52:42 GMT
+link: <https://developer.apple.com/design/human-interface-guidelines/macos/images/DarkMode_Calendar_light_small.png>; rel="original", <https://web.archive.org/web/timemap/link/https://developer.apple.com/design/human-interface-guidelines/macos/images/DarkMode_Calendar_light_small.png>; rel="timemap"; type="application/link-format", <https://web.archive.org/web/https://developer.apple.com/design/human-interface-guidelines/macos/images/DarkMode_Calendar_light_small.png>; rel="timegate", <https://web.archive.org/web/20180626211713/https://developer.apple.com/design/human-interface-guidelines/macos/images/DarkMode_Calendar_light_small.png>; rel="first memento"; datetime="Tue, 26 Jun 2018 21:17:13 GMT", <https://web.archive.org/web/20180712005102/https://developer.apple.com/design/human-interface-guidelines/macos/images/DarkMode_Calendar_light_small.png>; rel="prev memento"; datetime="Thu, 12 Jul 2018 00:51:02 GMT", <https://web.archive.org/web/20181208135242/https://developer.apple.com/design/human-interface-guidelines/macos/images/DarkMode_Calendar_light_small.png>; rel="memento"; datetime="Sat, 08 Dec 2018 13:52:42 GMT", <https://web.archive.org/web/20190417224523/https://developer.apple.com/design/human-interface-guidelines/macos/images/DarkMode_Calendar_light_small.png>; rel="next memento"; datetime="Wed, 17 Apr 2019 22:45:23 GMT", <https://web.archive.org/web/20220319042903/https://developer.apple.com/design/human-interface-guidelines/macos/images/DarkMode_Calendar_light_small.png>; rel="last memento"; datetime="Sat, 19 Mar 2022 04:29:03 GMT"
+content-security-policy: default-src 'self' 'unsafe-eval' 'unsafe-inline' data: blob: archive.org web.archive.org web-static.archive.org wayback-api.archive.org athena.archive.org analytics.archive.org pragma.archivelab.org wwwb-events.archive.org
+x-archive-src: MEDIACLOUD-20181208133005-crawl851/MEDIACLOUD-20181208135103-15167.warc.gz
+server-timing: captures_list;dur=0.574060, exclusion.robots;dur=0.090683, exclusion.robots.policy;dur=0.081291, esindex;dur=0.007843, cdx.remote;dur=10.248399, LoadShardBlock;dur=66.729190, PetaboxLoader3.datanode;dur=82.851742, load_resource;dur=118.505989, PetaboxLoader3.resolve;dur=80.996696
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=1
+server-timing: MISS
+x-app-server: wwwb-app265-dc8
+x-ts: 200
+x-tr: 215
+set-cookie: wb-p-SERVER=wwwb-app265; path=/
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+

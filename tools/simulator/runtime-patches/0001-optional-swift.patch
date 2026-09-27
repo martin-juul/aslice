@@ -1,0 +1,15 @@
+diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -234,7 +234,10 @@
+ 	add_subdirectory(external/tcsh)
+ 	add_subdirectory(external/files)
+ 	add_subdirectory(external/crontabs)
+-	add_subdirectory(external/swift)
++	option(ASLICE_INCLUDE_SWIFT "Install optional prebuilt Swift runtime" OFF)
++	if (ASLICE_INCLUDE_SWIFT)
++		add_subdirectory(external/swift)
++	endif()
+ endif()
+ 
+ if (COMPONENT_cli)

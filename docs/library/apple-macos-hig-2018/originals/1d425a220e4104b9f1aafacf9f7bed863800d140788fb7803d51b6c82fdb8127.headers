@@ -1,0 +1,48 @@
+HTTP/1.1 200
+Server: nginx
+Date: Sun, 27 Sep 2026 14:29:04 GMT
+Content-Type: image/png
+Content-Length: 62904
+Connection: keep-alive
+x-archive-orig-server: Apple
+x-archive-orig-date: Mon, 09 Sep 2019 10:58:42 GMT
+x-archive-orig-content-length: 62904
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-strict-transport-security: max-age=31536000; includeSubDomains
+x-archive-orig-last-modified: Mon, 03 Jun 2019 18:09:02 GMT
+x-archive-orig-etag: "f5b8-58a6f424e8b80"
+x-archive-orig-accept-ranges: bytes
+x-archive-orig-x-xss-protection: 1; mode=block
+x-archive-orig-access-control-allow-origin: https://developer2.apple.com
+x-archive-orig-cache-control: max-age=600, public
+x-archive-orig-host: developer.apple.com
+x-archive-orig-age: 0
+x-archive-orig-connection: close
+x-archive-orig-via: https/1.1 usscz2-edge-bx-017.ts.apple.com (ApacheTrafficServer/8.0.5)
+x-archive-orig-cdnuuid: e387cb6f-0863-4491-a240-eaf091197547-405723965
+x-archive-orig-x-cache: miss
+cache-control: max-age=1800
+cache-control: private
+accept-ranges: bytes
+memento-datetime: Mon, 09 Sep 2019 10:58:42 GMT
+link: <https://developer.apple.com/design/human-interface-guidelines/macos/images/Windows-bottombar_2x.png>; rel="original", <https://web.archive.org/web/timemap/link/https://developer.apple.com/design/human-interface-guidelines/macos/images/Windows-bottombar_2x.png>; rel="timemap"; type="application/link-format", <https://web.archive.org/web/https://developer.apple.com/design/human-interface-guidelines/macos/images/Windows-bottombar_2x.png>; rel="timegate", <https://web.archive.org/web/20190909105842/https://developer.apple.com/design/human-interface-guidelines/macos/images/Windows-bottombar_2x.png>; rel="first memento"; datetime="Mon, 09 Sep 2019 10:58:42 GMT", <https://web.archive.org/web/20190909105842/https://developer.apple.com/design/human-interface-guidelines/macos/images/Windows-bottombar_2x.png>; rel="memento"; datetime="Mon, 09 Sep 2019 10:58:42 GMT", <https://web.archive.org/web/20190909105842/https://developer.apple.com/design/human-interface-guidelines/macos/images/Windows-bottombar_2x.png>; rel="last memento"; datetime="Mon, 09 Sep 2019 10:58:42 GMT"
+content-security-policy: default-src 'self' 'unsafe-eval' 'unsafe-inline' data: blob: archive.org web.archive.org web-static.archive.org wayback-api.archive.org athena.archive.org analytics.archive.org pragma.archivelab.org wwwb-events.archive.org
+x-archive-src: liveweb-20190909103840/live-20190909103045-wwwb-app6.us.archive.org.warc.gz
+server-timing: captures_list;dur=0.630364, exclusion.robots;dur=0.109768, exclusion.robots.policy;dur=0.098198, esindex;dur=0.010272, cdx.remote;dur=14.044592, LoadShardBlock;dur=98.913608, PetaboxLoader3.datanode;dur=123.447882, load_resource;dur=285.744598, PetaboxLoader3.resolve;dur=210.976410
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=0
+server-timing: MISS
+x-app-server: wwwb-app54-dc6
+x-ts: 200
+x-tr: 416
+set-cookie: wb-p-SERVER=wwwb-app54; path=/
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+

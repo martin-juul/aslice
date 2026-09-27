@@ -1,0 +1,46 @@
+HTTP/1.1 200
+Server: nginx
+Date: Sun, 27 Sep 2026 14:30:30 GMT
+Content-Type: image/png
+Content-Length: 1693999
+Connection: keep-alive
+x-archive-orig-server: Apple
+x-archive-orig-date: Mon, 07 Oct 2019 03:52:06 GMT
+x-archive-orig-content-length: 1693999
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-strict-transport-security: max-age=31536000; includeSubDomains
+x-archive-orig-last-modified: Mon, 03 Jun 2019 18:09:01 GMT
+x-archive-orig-accept-ranges: bytes
+x-archive-orig-x-xss-protection: 1; mode=block
+x-archive-orig-access-control-allow-origin: https://developer2.apple.com
+x-archive-orig-cache-control: max-age=600, public
+x-archive-orig-host: developer.apple.com
+x-archive-orig-age: 1
+x-archive-orig-via: https/1.1 uklon5-edge-bx-027.ts.apple.com (ApacheTrafficServer/8.0.5)
+x-archive-orig-cdnuuid: c21c1c01-930a-4582-9aa2-d5b4e611f216-4132266475
+x-archive-orig-x-cache: miss
+cache-control: max-age=1800
+cache-control: private
+accept-ranges: bytes
+memento-datetime: Mon, 07 Oct 2019 03:52:05 GMT
+link: <https://developer.apple.com/design/human-interface-guidelines/macos/images/disclosureButtonBefore_2x.png>; rel="original", <https://web.archive.org/web/timemap/link/https://developer.apple.com/design/human-interface-guidelines/macos/images/disclosureButtonBefore_2x.png>; rel="timemap"; type="application/link-format", <https://web.archive.org/web/https://developer.apple.com/design/human-interface-guidelines/macos/images/disclosureButtonBefore_2x.png>; rel="timegate", <https://web.archive.org/web/20191007035205/https://developer.apple.com/design/human-interface-guidelines/macos/images/disclosureButtonBefore_2x.png>; rel="first memento"; datetime="Mon, 07 Oct 2019 03:52:05 GMT", <https://web.archive.org/web/20191007035205/https://developer.apple.com/design/human-interface-guidelines/macos/images/disclosureButtonBefore_2x.png>; rel="memento"; datetime="Mon, 07 Oct 2019 03:52:05 GMT", <https://web.archive.org/web/20200622195012/https://developer.apple.com/design/human-interface-guidelines/macos/images/disclosureButtonBefore_2x.png>; rel="next memento"; datetime="Mon, 22 Jun 2020 19:50:12 GMT", <https://web.archive.org/web/20200622195012/https://developer.apple.com/design/human-interface-guidelines/macos/images/disclosureButtonBefore_2x.png>; rel="last memento"; datetime="Mon, 22 Jun 2020 19:50:12 GMT"
+content-security-policy: default-src 'self' 'unsafe-eval' 'unsafe-inline' data: blob: archive.org web.archive.org web-static.archive.org wayback-api.archive.org athena.archive.org analytics.archive.org pragma.archivelab.org wwwb-events.archive.org
+x-archive-src: portuguese-web-archive-AWP30-2019-3363/WEB-20191007035203625-p83.arquivo.pt.warc.gz
+server-timing: captures_list;dur=0.440077, exclusion.robots;dur=0.063335, exclusion.robots.policy;dur=0.054591, esindex;dur=0.007810, cdx.remote;dur=6.453970, LoadShardBlock;dur=56.565859, PetaboxLoader3.datanode;dur=51.278906, load_resource;dur=152.277249, PetaboxLoader3.resolve;dur=89.018233
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=1
+server-timing: MISS
+x-app-server: wwwb-app264-dc8
+x-ts: 200
+x-tr: 229
+set-cookie: wb-p-SERVER=wwwb-app264; path=/
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+

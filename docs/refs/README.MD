@@ -14,6 +14,7 @@ Each source has one primary entry. Related records link across subjects; origina
 
 - [Apple Configuring System Integrity Protection](APPLE_CONFIGURING_SYSTEM_INTEGRITY_PROTECTION.MD) — NVRAM scope, Recovery changes, and limits of the 2015 SIP guide.
 - [Apple default login shell](APPLE_DEFAULT_LOGIN_SHELL.MD) — OS defaults, account state, and separate Terminal settings.
+- [Apple macOS Human Interface Guidelines (Mojave, 2018)](APPLE_MACOS_HIG_2018.MD) — Historical website capture, original assets, and local replay in the documentation library.
 - [Apple Signed System Volume Security](APPLE_SIGNED_SYSTEM_VOLUME_SECURITY.MD) — Hash-tree integrity, boot snapshots, T2 boundaries, and FileVault prerequisites.
 - [Apple Writable Root Volume Discussion](APPLE_WRITABLE_ROOT_VOLUME_DISCUSSION.MD) — Big Sur failures, snapshot reports, and the writable-data alternative.
 
@@ -66,7 +67,7 @@ Each source has one primary entry. Related records link across subjects; origina
 
 ## Coverage
 
-The catalog contains 33 records. Thirteen have complete source assets: eight retained standards/manuals and five Homebrew release/policy originals added in the 2026-09-26 review. The other twenty are attributed technical or discussion accounts, including the SQLite documentation account added for DATABASE. Complete assets retain their notices; [the inventory](SOURCE-INVENTORY.MD) names uncaptured dependencies and unresolved evidence.
+The catalog contains 34 records. Thirteen have complete source assets: eight retained standards/manuals and five Homebrew release/policy originals added in the 2026-09-26 review. Twenty are attributed technical or discussion accounts, including the SQLite documentation account added for DATABASE. The Mojave HIG record adds a historical website capture in [the documentation library](../library/README.md), with per-resource coverage. Complete assets retain their notices; [the inventory](SOURCE-INVENTORY.MD) names uncaptured dependencies and unresolved evidence.
 
 The review recovered content from every primary source using direct HTTP or the web reader. Direct HTTP recovered Homebrew 6 after the web reader failed; Apple's forum returned an HTTP security challenge, so its account uses the web reader's visible thread. All eight existing complete assets matched fresh downloads byte for byte. Live branch/page accounts without immutable revision IDs remain dated snapshots, not evidence of earlier content. Discussion pages with collapsed comments remain partial even when their opening page loads successfully.
 

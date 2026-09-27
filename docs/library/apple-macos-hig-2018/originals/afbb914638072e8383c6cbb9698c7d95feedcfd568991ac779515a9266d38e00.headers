@@ -1,0 +1,67 @@
+HTTP/1.1 302 FOUND
+Server: nginx
+Date: Sun, 27 Sep 2026 13:55:02 GMT
+Content-Type: text/plain; charset=utf-8
+Content-Length: 0
+Connection: keep-alive
+x-archive-redirect-reason: found capture at 20181208203421
+location: https://web.archive.org/web/20181208203421id_/https://developer.apple.com/design/human-interface-guidelines/macos/buttons/round-buttons/
+server-timing: captures_list;dur=0.591240, exclusion.robots;dur=0.076832, exclusion.robots.policy;dur=0.067556, esindex;dur=0.009367, cdx.remote;dur=11.280126, LoadShardBlock;dur=167.756977, PetaboxLoader3.datanode;dur=83.037470, PetaboxLoader3.resolve;dur=22.896930
+x-app-server: wwwb-app241-dc8
+x-ts: 302
+x-tr: 202
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=0
+set-cookie: wb-p-SERVER=wwwb-app241; path=/
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+Server-Timing: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+
+HTTP/1.1 200 OK
+Server: nginx
+Date: Sun, 27 Sep 2026 13:55:03 GMT
+Content-Type: text/html
+Transfer-Encoding: chunked
+Connection: keep-alive
+x-archive-orig-server: Apple
+x-archive-orig-date: Sat, 08 Dec 2018 20:34:21 GMT
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-strict-transport-security: max-age=31536000; includeSubDomains
+x-archive-orig-x-xss-protection: 1; mode=block
+x-archive-orig-access-control-allow-origin: https://developer2.apple.com
+x-archive-orig-host: developer.apple.com
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-age: 0
+x-archive-orig-via: https/1.1 usscz2-edge-bx-031.ts.apple.com (ApacheTrafficServer/8.0.1)
+x-archive-orig-cdnuuid: d62b9a11-d527-4513-a0fb-520847665e5d-217203744
+x-archive-orig-x-cache: miss
+cache-control: max-age=1800
+accept-ranges: bytes
+memento-datetime: Sat, 08 Dec 2018 20:34:21 GMT
+link: <https://developer.apple.com/design/human-interface-guidelines/macos/buttons/round-buttons/>; rel="original", <https://web.archive.org/web/timemap/link/https://developer.apple.com/design/human-interface-guidelines/macos/buttons/round-buttons/>; rel="timemap"; type="application/link-format", <https://web.archive.org/web/https://developer.apple.com/design/human-interface-guidelines/macos/buttons/round-buttons/>; rel="timegate"
+content-security-policy: default-src 'self' 'unsafe-eval' 'unsafe-inline' data: blob: archive.org web.archive.org web-static.archive.org wayback-api.archive.org athena.archive.org analytics.archive.org pragma.archivelab.org wwwb-events.archive.org
+x-archive-src: WIDE-20181208180340-crawl802/WIDE-20181208200211-01441.warc.gz
+server-timing: captures_list;dur=0.445008, exclusion.robots;dur=0.064803, exclusion.robots.policy;dur=0.055985, esindex;dur=0.006945, cdx.remote;dur=7.699387, LoadShardBlock;dur=147.025897, PetaboxLoader3.resolve;dur=404.747630, PetaboxLoader3.datanode;dur=108.452397, load_resource;dur=459.874629
+x-app-server: wwwb-app247-dc8
+x-ts: 200
+x-tr: 635
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=1
+set-cookie: wb-p-SERVER=wwwb-app247; path=/
+cache-control: private
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+Server-Timing: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+

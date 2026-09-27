@@ -1,0 +1,21 @@
+name: Mac-built Intel compatibility corpus
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build-corpus:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python tests/simulator/corpus/build.py --output build/mac-corpus
+      - run: python -m tools.simulator machine corpus build/mac-corpus/corpus.json
+      - name: Check native null-environment execve behavior
+        run: test "$(build/mac-corpus/execve-empty-environment)" = empty-environment
+      - uses: actions/upload-artifact@v4
+        with:
+          name: intel-macos-corpus-and-symbols
+          path: build/mac-corpus

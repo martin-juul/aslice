@@ -1,0 +1,16 @@
+"""Capture image URLs observed during original-script browser replay."""
+
+import json
+from pathlib import Path
+import runpy
+from urllib.parse import urlsplit
+
+root = Path(__file__).resolve().parent
+report = json.loads((root / 'all-pages-check.json').read_text())
+urls = {
+    'https://developer.apple.com' + urlsplit(image).path
+    for page in report['pages']
+    for image in page['missing_images']
+}
+capture = runpy.run_path(str(root / 'capture.py'))
+capture['batch'](urls, 'asset')
