@@ -34,7 +34,17 @@ def inventory(root):
         ]
         paths.update(Path(current) / name for name in files if name.endswith(".md"))
     for directory in ("docs", "man", "schematics"):
-        paths.update((root / directory).rglob("*"))
+        for current, directories, files in os.walk(root / directory):
+            current = Path(current)
+            if current == root / "docs/library":
+                paths.update(current / name for name in files if name.endswith(".md"))
+                paths.update(current / name / "SHA256SUMS" for name in directories
+                             if name not in (".harness", "node_modules", "__pycache__"))
+                directories[:] = []
+                continue
+            directories[:] = [name for name in directories
+                              if name not in ("__pycache__", "node_modules")]
+            paths.update(current / name for name in files)
     result = {}
     for path in sorted(paths, key=lambda item: item.relative_to(root).as_posix()):
         if not path.is_file() or any(

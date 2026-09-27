@@ -102,6 +102,36 @@ class FixtureLifecycleTests(unittest.TestCase):
         self.assertTrue(all(item["version"] == "2.0.0" for item in self.command("list")["packages"]))
         self.assertFalse(self.command("upgrade", version=2)["changed"])
 
+    def test_variant_selection_survives_upgrade_power_loss_and_rollback(self):
+        app = dict(name='core:app', version='1.0.0', min_os='10.11', flavor='v1',
+                   dependencies={'core:dep': '* +metal'}, files={})
+        provider = dict(name='core:dep', version='1.0.0', min_os='10.11', flavor='v1',
+                        dependencies={}, variants={'metal': True}, revision=1,
+                        files={'lib/dep.txt': {'text': 'revision one', 'executable': False}})
+        newer = copy.deepcopy(provider)
+        newer.update(revision=2, files={'lib/dep.txt': {'text': 'revision two', 'executable': False}})
+        incompatible = copy.deepcopy(newer)
+        incompatible.update(revision=9, variants={'metal': False})
+        model = Model(self.workspace)
+        for version, packages in ((1, [app, provider]), (2, [app, newer, incompatible])):
+            seed_input(model, f'/inputs/catalog-v{version}.json', json.dumps({
+                'format': 'aslice-prototype-1', 'packages': packages}).encode())
+        first = self.command('install', 'app')['generation']
+        # An ordinary install keeps the exact installed artifact when still eligible.
+        self.assertFalse(self.command('install', 'app', version=2)['changed'])
+        self.assertEqual(self.command('list')['packages'][1]['revision'], 1)
+        second = self.command('upgrade', version=2)['generation']
+        self.assertNotEqual(first, second)
+        Model(self.workspace).power_loss()
+        self.assertTrue(self.command('verify')['verified'])
+        selected = self.command('list')['packages'][1]
+        self.assertEqual(selected['revision'], 2)
+        self.assertEqual(selected['variants'], {'metal': True})
+        self.command('uninstall', 'dep', code=2)
+        self.command('rollback', first)
+        self.assertEqual(self.command('list')['packages'][1]['revision'], 1)
+        self.assertTrue(self.command('verify')['verified'])
+
     def test_real_process_termination_and_power_loss_have_distinct_evidence(self):
         original = self.command("list")["generation"]
         for kind in ("terminate", "power_loss"):

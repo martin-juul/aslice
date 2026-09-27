@@ -5,12 +5,49 @@
 #include "tl/expected.hpp"
 #include <algorithm>
 #include <array>
+#include <cstdint>
 #include <filesystem>
 #include <set>
+#include <sstream>
 #include <string>
 #include <utility>
 namespace aslice::package {
 using core::require;
+bool variant_valid(const std::string& name) {
+    return !name.empty() &&
+           name.find_first_not_of("abcdefghijklmnopqrstuvwxyz0123456789-_") == std::string::npos;
+}
+
+core::Result<Dependency> Dependency::parse(const std::string& text) {
+    return core::capture([&] {
+        std::istringstream input(text);
+        std::string token;
+        std::string constraint;
+        std::set<std::string> required;
+        while (input >> token) {
+            if (token.front() == '+') {
+                const auto name = token.substr(1);
+                require(variant_valid(name), "invalid required variant: " + token);
+                require(required.insert(name).second, "duplicate required variant: " + name);
+            } else {
+                if (!constraint.empty()) {
+                    constraint += ' ';
+                }
+                constraint += token;
+            }
+        }
+        require(!constraint.empty() || !required.empty(), "empty dependency requirement");
+        return Dependency(core::take(Constraint::parse(constraint.empty() ? "*" : constraint)),
+                          std::move(required));
+    });
+}
+
+bool Dependency::accepts(const Variants& variants) const {
+    return std::all_of(required_.begin(), required_.end(), [&](const auto& name) {
+        const auto found = variants.find(name);
+        return found != variants.end() && found->second;
+    });
+}
 bool name_valid(const std::string& name) {
     return !name.empty() && name.size() <= 64 && name.front() != '-' &&
            name.find_first_not_of("abcdefghijklmnopqrstuvwxyz0123456789-") == std::string::npos;
@@ -53,10 +90,15 @@ core::Result<Target> Target::create(std::string os, std::string flavor) {
 }
 core::Result<Candidate> Candidate::create(std::string name, std::string release, Target target,
                                           Dependencies dependencies, std::set<std::string> paths,
-                                          std::string artifact) {
+                                          std::string artifact, Variants variants,
+                                          std::uint64_t revision) {
     try {
         name = core::take(key(std::move(name)));
         core::take(version(release));
+        for (const auto& [variant, enabled] : variants) {
+            (void)enabled;
+            require(variant_valid(variant), "invalid variant name: " + variant);
+        }
         require(dependencies.size() <= 64, "invalid dependency map");
         for (const auto& [dependency, constraint] : dependencies) {
             require(core::take(key(dependency)) == dependency, "unnormalized dependency");
@@ -77,7 +119,7 @@ core::Result<Candidate> Candidate::create(std::string name, std::string release,
         }
         return Candidate(core::take(Identity::parse(std::move(name))), std::move(release),
                          std::move(target), std::move(dependencies), std::move(paths),
-                         std::move(artifact));
+                         std::move(artifact), std::move(variants), revision);
     } catch (const core::Error& error) {
         return tl::unexpected(core::Failure{"invalid_candidate", error.what()});
     }

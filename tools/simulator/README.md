@@ -85,10 +85,15 @@ streamed chunks and checks relocations in the same pass. Simulator checks POSIX
 modes even when the harness host is Windows. Native Windows inspection reports
 that POSIX modes were not verified.
 
-The separate `solver-oracle` CTest enumerates every assignment for 100 small
+The separate `solver-oracle` CTest enumerates every assignment for 164 small
 catalogs, then checks the real C++ resolver's satisfiability result and selected
 closure. It covers exact/wildcard constraints, missing dependencies, target
-filtering and cycles. It does not qualify provider, revision or variant semantics.
+filtering, cycles, required variants, and profile path collisions. It compares exact
+selected fixture artifact identities against the feasible assignments. Separate
+package tests check revision preference and refusal of malformed assignments; the
+simulated lifecycle checks variant selection through upgrade, power loss, and
+rollback. These bounded checks do not qualify full variant planning, virtual
+providers, source builds, or production package installation.
 The coverage report maps these bounded scenarios to their C++ components;
 declared mappings are separate from execution evidence.
 

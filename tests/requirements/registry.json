@@ -322,8 +322,8 @@
       "lines": 209
     },
     "docs/runbooks/PROTOTYPE.md": {
-      "sha256": "f7cc777972728a3bff717b188431428cb3998ad0d2d82183443fd2af8cf2ecb8",
-      "lines": 269
+      "sha256": "a3f0aa2d506bf63822a399f732f53afe53e3accbbe1725e01a3fbc613dfcb646",
+      "lines": 282
     },
     "docs/runbooks/README.md": {
       "sha256": "76f5687689be862c8a2b7db4228e9ac8b65f805d3a48a49dd50c374d862a3268",
@@ -610,8 +610,8 @@
       "lines": 392
     },
     "tools/simulator/README.md": {
-      "sha256": "146e34a3bc030acdc74efc137875228e518b024b7accb6164a55e9c16a265c8a",
-      "lines": 270
+      "sha256": "5ff1e13894744ad6ae0efa737f213b8b126f23c16f65cf6338f34b8d05cde6f7",
+      "lines": 275
     },
     "tools/simulator/web/README.md": {
       "sha256": "e15b5b55d13595d6cbb19ea9e7a7497f543ee3dfe5abd47c8056ea7f26db5c5e",
