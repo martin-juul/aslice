@@ -21,6 +21,10 @@ is organized. Paths marked planned below do not yet exist in the tracked tree.
 | `include/aslice/` | Planned | Headers deliberately exposed to consumers outside the implementation. |
 | `.github/workflows/` | Existing | Required Linux quality/sanitizer, native Windows analysis/test, and documentation CI gates. |
 | `tools/` | Existing | Reusable developer utilities, including Windows dependency bootstrap; the Homebrew formula importer remains planned. |
+| `tools/dev/` | Existing | Recipes behind the root `dev.py` entrypoint and optional Makefile: builds, tests, quality tools, packaging, and read-only build audits. |
+| `tools/simulator/` | Existing | Modeled-platform services, Darwin compatibility runtime, and simulator application; these are development infrastructure, not package-manager implementation. |
+| `tools/simulator/web/` | Existing | Feature-based TypeScript console and browser compatibility build. |
+| `tests/dev/` | Existing | Developer entrypoint, packaging, and application lifecycle tests. |
 
 ## Durable documentation and work records
 
@@ -58,6 +62,12 @@ and activation currently require POSIX. These are internal interfaces, not a
 public SDK or completed production installer. CMake follows those dependencies: core
 package and resolver libraries do not link the fixture adapter; store and profile
 libraries use it explicitly.
+
+The `src/platform/*simulator*` implementations link only into modeled executables
+and test peers. They share production-directed subsystem code through explicit
+platform interfaces. CTest labels distinguish core, modeled, runtime, requirements,
+library, and developer tests. The [developer guide](docs/DEVELOPING.md) maps the
+current boundaries, application entrypoints, and persistent state locations.
 
 Organize `src/` by subsystem, keeping implementation files and private headers
 together. Place a header under `include/aslice/` only when it is deliberately

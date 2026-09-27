@@ -13,6 +13,7 @@ import { mountDisplay } from './features/display/feature';
 import { mountInspection } from './features/inspection/feature';
 import { mountTransfers } from './features/transfers/feature';
 import { mountDiagnostics } from './features/diagnostics/feature';
+import { mountConsole } from './features/console/feature';
 import { mountWorkspace } from './features/workspace/feature';
 import { mountAppearance } from './features/appearance/feature';
 import { Gateway } from './shared/protocol';
@@ -60,6 +61,7 @@ async function start(): Promise<void> {
     mountInspection(context);
     mountTransfers(context);
     mountDiagnostics(context);
+    mountConsole(context);
     await machines.refresh();
     notice(
       transport.kind === 'demo'

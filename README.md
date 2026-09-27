@@ -62,6 +62,7 @@ Original project material is licensed under [Apache-2.0](LICENSE). Third-party m
 ## Documents
 
 - [Complete documentation index](docs/README.md) — reading paths and the full catalog.
+- [Developer guide](docs/DEVELOPING.md) — the development CLI, simulator application, tests, packaging, and build-state preservation.
 - [User manual](docs/MANUAL.md) — installing and using aslice.
 - [Authoring guide](docs/AUTHORING.md) — writing, testing, and shipping packages.
 - [Architecture and design](docs/DESIGN.md) — platform, architecture, security model, and roadmap.

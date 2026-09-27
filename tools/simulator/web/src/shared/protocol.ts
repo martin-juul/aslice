@@ -14,11 +14,13 @@ import type {
 import { inspectionSchema } from '../features/inspection/model';
 import type { Fault } from '../features/inspection/model';
 import { exportSchema } from '../features/transfers/model';
+import { logsSchema } from '../features/console/model';
 
 type MachineTarget = { name: string };
 type SessionTarget = MachineTarget & { session: string };
 
 export interface Parameters {
+  logs: MachineTarget & { source: string };
   status: { name: null };
   create: CreateMachine;
   start: MachineTarget & { acceleration: Acceleration; network: boolean };
@@ -61,6 +63,7 @@ export interface Parameters {
 const acknowledgment = z.record(z.string(), z.unknown());
 
 const responses = {
+  logs: logsSchema,
   status: z.object({ machines: z.array(machineSchema) }),
   create: acknowledgment,
   start: z.object({ accelerator: z.string() }),

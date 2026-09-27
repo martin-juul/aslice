@@ -6,6 +6,28 @@ export function mountDisplay(context: FeatureContext): void {
   const { root, selection, signal, gateway } = context;
   const container = element(root, 'display', HTMLDivElement);
   const status = element(root, 'display-status', HTMLSpanElement);
+  const frame = element(root, 'display-frame', HTMLDivElement);
+  const frameToggle = element(root, 'display-frame-toggle', HTMLButtonElement);
+  let framed = true;
+  try {
+    framed = localStorage.getItem('aslice-display-frame') !== 'off';
+  } catch {
+    // Storage may be unavailable in a restricted browser profile.
+  }
+  function showFrame(): void {
+    frame.classList.toggle('unframed', !framed);
+    frameToggle.setAttribute('aria-pressed', String(framed));
+  }
+  showFrame();
+  bindAction(context, 'display-frame-toggle', () => {
+    framed = !framed;
+    showFrame();
+    try {
+      localStorage.setItem('aslice-display-frame', framed ? 'on' : 'off');
+    } catch {
+      // The current window still retains the selected presentation.
+    }
+  });
   let connection: RFB | undefined;
   let revision = 0;
 

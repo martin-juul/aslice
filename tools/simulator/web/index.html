@@ -282,12 +282,78 @@
               <div class="toolbar">
                 <button id="display-connect">Connect display</button
                 ><button id="display-disconnect">Disconnect display</button
+                ><button id="display-frame-toggle" aria-pressed="true">
+                  iMac frame</button
                 ><span id="display-status">Disconnected</span>
               </div>
             </div>
-            <div id="display"></div>
+            <div id="display-frame" class="imac-frame">
+              <div class="imac-bezel"><div id="display"></div></div>
+              <div class="imac-chin" aria-hidden="true"></div>
+            </div>
           </article>
         </div>
+        <details id="console-panel" class="secondary-panel">
+          <summary>Console</summary>
+          <div class="console-toolbar toolbar">
+            <button id="console-refresh">Refresh</button>
+            <button id="console-pause" aria-pressed="false">Pause</button>
+            <button
+              id="console-clear"
+              title="Clear this view; guest logs are preserved"
+            >
+              Clear view
+            </button>
+            <label
+              >Messages
+              <select id="console-type">
+                <option value="all">All messages</option>
+                <option value="errors">Errors and faults</option>
+                <option value="info">Info</option>
+                <option value="debug">Debug</option>
+              </select></label
+            >
+            <label
+              >Search
+              <input
+                id="console-search"
+                type="search"
+                placeholder='process:SampleApp message:"permission denied"'
+            /></label>
+            <span id="console-count" aria-live="polite"></span>
+          </div>
+          <div class="console-layout">
+            <aside class="console-sources">
+              <label for="console-source">Guest log sources</label>
+              <select id="console-source" size="3">
+                <option value="asl" selected>All Messages (ASL)</option>
+                <option value="unified">Unified Log</option>
+                <option value="system">system.log</option>
+              </select>
+            </aside>
+            <div class="console-content">
+              <div id="console-status" role="status"></div>
+              <div class="console-table">
+                <table aria-label="Console messages">
+                  <thead>
+                    <tr>
+                      <th>Type</th>
+                      <th>Time</th>
+                      <th>Process</th>
+                      <th>Message</th>
+                    </tr>
+                  </thead>
+                  <tbody id="console-messages"></tbody>
+                </table>
+              </div>
+              <pre
+                id="console-detail"
+                tabindex="0"
+                aria-label="Selected log message details"
+              ></pre>
+            </div>
+          </div>
+        </details>
         <details class="secondary-panel">
           <summary>Inspectors, files &amp; timeline</summary>
           <div class="panels">
