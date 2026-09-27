@@ -62,8 +62,8 @@
       "lines": 873
     },
     "docs/README.md": {
-      "sha256": "c448c4ba5ee0c99f80ce49eb5bac7c87177b47b3f6f505a994a6c0072e127507",
-      "lines": 64
+      "sha256": "118895103800de9cb245d6472932b7436eeb4dc2dc77ba25d62d6f800516c2a3",
+      "lines": 65
     },
     "docs/REPOSITORIES.md": {
       "sha256": "65783996f84198ce4c7503a98aa80616440356eed34de7a3106a7c21fd34b05d",
@@ -608,6 +608,14 @@
     "schematics/toml/sources.tosd": {
       "sha256": "49fa73ef0e5ba6dc94dd4a3cc4f5e1a3fbcec3d1cee3b4f5bf5fceb3533ee6e6",
       "lines": 79
+    },
+    "tools/pages/README.md": {
+      "sha256": "53c478689b2f7c77c89f91464c056edd4eb8f079549ea4c64b54017451579444",
+      "lines": 68
+    },
+    "tools/pages/simulator.md": {
+      "sha256": "e4aaaa6f3db6488835e232e5fcf37bbb68fcfc32ced401c9c59b72d7f4e18ecf",
+      "lines": 38
     },
     "tools/simulator/DARWIN.md": {
       "sha256": "d2fc6bd25735443076a4e1991f7e2852b196945e3e57b31cda5955feb24ab7f0",
