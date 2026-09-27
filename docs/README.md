@@ -56,6 +56,7 @@ See the [runbooks index](runbooks/README.md) for reading guidance and procedure 
 
 ## Supporting resources
 
+- [GitHub Pages portal tooling](../tools/pages/README.md) — static documentation, archive reader, local preview, and publishing checks.
 - [Command manuals](../man/) — command syntax, options, examples, and exit statuses.
 - [Machine-readable schematics](../schematics/README.md) — schemas and examples for data contracts.
 - [Reference archive](refs/README.MD) — locally preserved sources and their catalog.
