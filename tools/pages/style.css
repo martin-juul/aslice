@@ -39,6 +39,40 @@ summary:focus {
   outline: 3px solid #77aee8;
   outline-offset: 3px;
 }
+.diagram {
+  margin: 24px 0;
+}
+.diagram-viewport {
+  overflow: auto;
+  padding: 16px;
+  border: 1px solid #ddd;
+  background: #fff;
+}
+.diagram-viewport:focus {
+  outline: 3px solid #77aee8;
+  outline-offset: 3px;
+}
+.diagram-viewport img {
+  display: block;
+  max-width: none;
+}
+.diagram-viewport .diagram-dark {
+  display: none;
+}
+.diagram summary {
+  cursor: pointer;
+  margin-top: 8px;
+}
+.dark .diagram-viewport {
+  background: #303030;
+  border-color: #555;
+}
+.dark .diagram-light {
+  display: none;
+}
+.dark .diagram-dark {
+  display: block;
+}
 .toolbar {
   background: linear-gradient(#f4f4f4, #dedede);
   border-bottom: 1px solid #aaa;
@@ -55,6 +89,18 @@ summary:focus {
 .toolbar strong {
   font-family: 'Space Grotesk', sans-serif;
   font-size: 21px;
+}
+.toolbar nav .brand {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 21px;
+}
+.brand img {
+  width: 32px;
+  height: 32px;
+  margin-right: 6px;
 }
 .toolbar button {
   margin-left: auto;

@@ -37,11 +37,11 @@ jobs:
       - run: npm ci --prefix tools/pages --ignore-scripts
       - run: npm run build --prefix tools/pages
       - run: npm run format:check --prefix tools/pages
+      - run: npx playwright install --with-deps chromium
+        working-directory: tools/pages
       - run: python tools/pages/build.py
       - run: python -m unittest discover -s tools/pages/tests -p 'test_*.py'
       - run: python tools/pages/check.py
-      - run: npx playwright install --with-deps chromium
-        working-directory: tools/pages
       - run: npm run test:browser --prefix tools/pages
       - uses: actions/upload-pages-artifact@v3
         with:

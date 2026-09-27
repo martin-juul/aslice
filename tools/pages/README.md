@@ -10,6 +10,7 @@ From the repository root, using Python 3.10+ and Node.js 24.15+:
 python -m pip install -r tools/pages/requirements.txt
 npm ci --prefix tools/pages --ignore-scripts
 npm run build --prefix tools/pages
+npm exec --prefix tools/pages -- playwright install chromium
 python tools/pages/build.py
 python tools/pages/check.py
 python tools/pages/preview.py
@@ -52,6 +53,12 @@ local font licenses.
 It defaults to light appearance and saves explicit dark selection. Tests cover
 both appearances, keyboard navigation, narrow layouts, archive isolation, and
 project-prefix routing. These browser checks are not Safari 9 qualification.
+
+Mermaid fences render to local SVG images during the Python build, using Mermaid
+and Playwright Chromium. Both appearances use embedded Geist fonts; wide diagrams
+scroll within a keyboard-focusable pane. Each diagram retains its original text
+under **Diagram source**. Rendering errors fail the build. Published diagrams need
+no Mermaid runtime or external requests, and remain visible without JavaScript.
 
 ## Refresh simulator screenshots
 

@@ -2,10 +2,29 @@
 
 import unittest
 from bs4 import BeautifulSoup
-from tools.pages.build import clean_html, clean_svg
+from tools.pages.build import clean_html, clean_svg, prepare_diagrams
 
 
 class ExportTests(unittest.TestCase):
+    def test_diagrams_keep_source_and_use_relative_assets(self):
+        soup = BeautifulSoup(
+            '<h2>Data flow</h2><pre><code class="language-mermaid">'
+            'graph LR\n A[&lt;owner&gt;] --&gt; B\n</code></pre>'
+            '<pre><code class="language-python">print(1)</code></pre>',
+            "html.parser",
+        )
+        original = soup.code.get_text()
+        diagrams = {}
+        prepare_diagrams(soup, "docs/nested/example.html", diagrams)
+        self.assertEqual(list(diagrams.values()), [original])
+        self.assertEqual(soup.details.code.get_text(), original)
+        self.assertEqual(soup.summary.get_text(), "Diagram source")
+        self.assertEqual(soup.select_one(".diagram-viewport")["tabindex"], "0")
+        for image in soup.find_all("img"):
+            self.assertTrue(image["src"].startswith("../../assets/diagrams/"))
+            self.assertEqual(image["alt"], "Diagram 1: Data flow")
+        self.assertEqual(soup.select_one("code.language-python").get_text(), "print(1)")
+
     def test_html_removes_active_content_and_routes_resources(self):
         source = """<html><head><base href="https://example.com/">
         <meta http-equiv="refresh" content="0;url=https://example.com">

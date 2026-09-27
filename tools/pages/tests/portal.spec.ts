@@ -1,5 +1,73 @@
 import { expect, test } from '@playwright/test';
 
+test('Mermaid diagrams render locally in both appearances and preserve source', async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  page.on('console', (message) => {
+    if (message.type() === 'error') errors.push(message.text());
+  });
+  for (const [path, count] of [
+    ['docs/DATABASE.html', 10],
+    ['docs/BUILD-INFRA.html', 1],
+  ] as const) {
+    await page.goto(path);
+    await expect(page.locator('figure.diagram')).toHaveCount(count);
+    for (const image of await page.locator('.diagram img').all()) {
+      await expect
+        .poll(() =>
+          image.evaluate(
+            (el: HTMLImageElement) => el.complete && el.naturalWidth > 0,
+          ),
+        )
+        .toBe(true);
+    }
+  }
+  await page.goto('docs/DATABASE.html');
+  const diagram = page.locator('.diagram').first();
+  const source = await diagram.locator('code').textContent();
+  await expect(diagram.locator('.diagram-light')).toBeVisible();
+  await expect(diagram.locator('.diagram-dark')).toBeHidden();
+  await page.getByRole('button', { name: 'Dark appearance' }).click();
+  await expect(diagram.locator('.diagram-dark')).toBeVisible();
+  await expect(diagram.locator('.diagram-light')).toBeHidden();
+  await page.reload();
+  await expect(diagram.locator('.diagram-dark')).toBeVisible();
+  await diagram.locator('summary').focus();
+  await page.keyboard.press('Enter');
+  await expect(diagram.locator('code')).toBeVisible();
+  expect(await diagram.locator('code').textContent()).toBe(source);
+  await page.setViewportSize({ width: 375, height: 812 });
+  const viewport = diagram.locator('.diagram-viewport');
+  await viewport.focus();
+  await expect(viewport).toBeFocused();
+  await page.keyboard.press('ArrowRight');
+  await expect
+    .poll(() => viewport.evaluate((el) => el.scrollLeft))
+    .toBeGreaterThan(0);
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+  await page.getByRole('button', { name: 'Dark appearance' }).click();
+  await expect(diagram.locator('.diagram-light')).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
+test('Mermaid images remain available without JavaScript', async ({
+  browser,
+}) => {
+  const context = await browser.newContext({ javaScriptEnabled: false });
+  const page = await context.newPage();
+  await page.goto('http://127.0.0.1:8768/aslice/docs/BUILD-INFRA.html');
+  await expect(page.locator('.diagram-light')).toBeVisible();
+  await page.locator('.diagram summary').click();
+  await expect(page.locator('.diagram code')).toBeVisible();
+  await context.close();
+});
+
 test('navigation, keyboard, appearance persistence and narrow reading', async ({
   page,
 }) => {

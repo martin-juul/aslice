@@ -41,6 +41,35 @@ def relative(target, page):
     return quote(posixpath.relpath(target, posixpath.dirname(page) or "."), safe="/#")
 
 
+def prepare_diagrams(soup, page, diagrams):
+    """Replace Mermaid fences with local images while retaining exact source text."""
+    for index, code in enumerate(soup.select("pre > code.language-mermaid"), 1):
+        definition = code.get_text()
+        key = hashlib.sha256(definition.encode()).hexdigest()
+        diagrams[key] = definition
+        heading = code.find_previous(re.compile("^h[1-6]$"))
+        label = f"Diagram {index}: {heading.get_text() if heading else 'Document diagram'}"
+        figure = soup.new_tag("figure", attrs={"class": "diagram"})
+        viewport = soup.new_tag("div", attrs={
+            "class": "diagram-viewport", "tabindex": "0",
+            "role": "region", "aria-label": label,
+        })
+        for appearance in ("light", "dark"):
+            viewport.append(soup.new_tag("img", attrs={
+                "class": f"diagram-{appearance}", "alt": label,
+                "src": relative(f"assets/diagrams/{key}-{appearance}.svg", page),
+            }))
+        figure.append(viewport)
+        details = soup.new_tag("details")
+        summary = soup.new_tag("summary")
+        summary.string = "Diagram source"
+        details.append(summary)
+        pre = code.parent
+        pre.replace_with(figure)
+        details.append(pre)
+        figure.append(details)
+
+
 def shell(page, title, content, reader=False):
     links = [
         ("index.html", "aslice"),
@@ -49,8 +78,13 @@ def shell(page, title, content, reader=False):
         ("library/index.html", "Library"),
         ("simulator/index.html", "Simulator"),
     ]
+    logo = relative("assets/aslice-logo.svg", page)
     nav = "".join(
-        f'<a href="{relative(path, page)}">{label}</a>' for path, label in links
+        f'<a href="{relative(path, page)}"'
+        + (' class="brand"' if label == "aslice" else '')
+        + '>'
+        + (f'<img src="{logo}" width="32" height="32" alt="">' if label == "aslice" else '')
+        + f'{label}</a>' for path, label in links
     )
     css = relative("assets/style.css", page)
     js = relative("assets/portal.js", page)
@@ -59,6 +93,7 @@ def shell(page, title, content, reader=False):
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="{policy}">
 <title>{escape(title)} · aslice</title><link rel="stylesheet" href="{css}">
+<link rel="icon" href="{logo}" type="image/svg+xml">
 <script defer src="{js}"></script></head><body><a class="skip" href="#main">Skip to content</a>
 <header class="toolbar"><nav aria-label="Main navigation">{nav}</nav>
 <button id="appearance" aria-pressed="false">Dark appearance</button></header>
@@ -323,6 +358,7 @@ def main():
                     tag[attr] = mapped(tag[attr], source, page)
         return soup
 
+    diagrams = {}
     for source in sorted(documents):
         text = (ROOT / source).read_text(encoding="utf-8")
         page = source[:-3] + ".html"
@@ -346,6 +382,7 @@ def main():
                 heading.insert_before(soup.new_tag("span", id=slug))
                 ids.add(slug)
         rewrite_links(soup, source, page)
+        prepare_diagrams(soup, page, diagrams)
         title = soup.h1.get_text() if soup.h1 else source
         write(
             page,
@@ -410,6 +447,12 @@ def main():
     )
     shutil.copytree(HERE / "screenshots", OUT / "assets/screenshots")
     shutil.copytree(ROOT / "build/pages-assets", OUT / "assets", dirs_exist_ok=True)
+    shutil.copyfile(ROOT / "docs/assets/aslice-logo.svg", OUT / "assets/aslice-logo.svg")
+    if diagrams:
+        subprocess.run(
+            ["node", str(HERE / "tooling/render-diagrams.mjs"), str(OUT / "assets/diagrams")],
+            input=json.dumps(diagrams), text=True, encoding="utf-8", check=True,
+        )
     fonts = OUT / "assets/fonts"
     fonts.mkdir()
     for family in ("geist", "geist-mono", "space-grotesk"):

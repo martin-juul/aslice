@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" fill="none" role="img" aria-labelledby="title desc">
+  <title id="title">aslice</title>
+  <desc id="desc">A fresh-cut Granny Smith apple slice with bright green peel, ivory flesh, two chestnut seeds, and a softly browned core.</desc>
+  <defs>
+    <linearGradient id="peel" x1="55" y1="46" x2="192" y2="231" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#B6D947"/>
+      <stop offset=".38" stop-color="#80B52D"/>
+      <stop offset="1" stop-color="#39742A"/>
+    </linearGradient>
+    <linearGradient id="rind" x1="39" y1="80" x2="201" y2="211" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#DAE998"/>
+      <stop offset="1" stop-color="#AFC759"/>
+    </linearGradient>
+    <linearGradient id="flesh" x1="75" y1="61" x2="159" y2="221" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFEEB"/>
+      <stop offset=".56" stop-color="#F7F3D5"/>
+      <stop offset="1" stop-color="#EAE4BB"/>
+    </linearGradient>
+    <radialGradient id="browning" cx="0" cy="0" r="1" gradientTransform="translate(128 146) rotate(90) scale(64 33)" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#B98246" stop-opacity=".48"/>
+      <stop offset=".47" stop-color="#C69656" stop-opacity=".27"/>
+      <stop offset="1" stop-color="#D4AD70" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="seed" x1="113" y1="126" x2="139" y2="164" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#89532E"/>
+      <stop offset="1" stop-color="#402A20"/>
+    </linearGradient>
+    <linearGradient id="stem" x1="128" y1="31" x2="143" y2="64" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#876440"/>
+      <stop offset="1" stop-color="#4B4828"/>
+    </linearGradient>
+  </defs>
+  <!-- A longitudinal slice: the green perimeter is peel, not an uncut apple. -->
+  <path d="M125 66C125 50 130 37 140 28C143 26 148 29 146 33C138 45 135 55 136 67Z" fill="url(#stem)"/>
+  <path d="M127 65C113 65 103 49 80 49C45 49 24 79 26 116C28 160 57 211 91 227C105 234 116 225 128 225C141 225 150 234 166 226C199 209 227 158 230 115C233 78 211 49 178 49C155 49 144 65 127 65Z" fill="url(#peel)"/>
+  <path d="M127 70C111 70 101 56 81 56C50 56 31 82 33 115C35 154 62 204 94 220C106 226 117 218 128 218C140 218 151 226 163 219C194 203 220 154 223 115C226 82 207 56 177 56C156 56 143 70 127 70Z" fill="url(#rind)"/>
+  <path d="M127 74C109 74 101 61 81 61C54 61 37 85 39 116C42 153 67 200 96 214C108 220 117 212 128 212C140 212 149 220 161 213C190 198 215 152 217 115C219 85 203 61 177 61C157 61 145 74 127 74Z" fill="url(#flesh)"/>
+  <!-- Oxidation stays translucent and local to the exposed center. -->
+  <path d="M128 82C142 101 160 119 162 142C164 166 147 187 129 207C110 190 94 168 95 146C96 122 115 101 128 82Z" fill="url(#browning)"/>
+  <path d="M127 90C122 110 118 118 109 132C102 144 105 154 114 166C122 177 126 186 128 197C131 184 134 176 142 165C151 151 153 142 146 131C136 116 131 107 129 90" stroke="#C7A46D" stroke-opacity=".33" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M116 128C111 135 108 144 110 150C112 158 120 160 122 152C124 146 119 136 116 128Z" fill="url(#seed)"/>
+  <path d="M140 129C134 137 130 147 133 153C136 160 143 156 145 150C147 143 143 134 140 129Z" fill="url(#seed)"/>
+  <path d="M114 139C113 143 113 147 115 149M140 140C138 143 137 147 138 149" stroke="#D5AC79" stroke-opacity=".65" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M50 94C54 78 65 68 79 67" stroke="#FFFFFF" stroke-opacity=".6" stroke-width="3" stroke-linecap="round"/>
+  <path d="M43 143C52 173 70 201 90 214" stroke="#D3E77C" stroke-opacity=".65" stroke-width="2" stroke-linecap="round"/>
+</svg>
