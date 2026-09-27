@@ -89,6 +89,10 @@
       "sha256": "d3e761490c0397a34b444cc4682f5bbc478250681f313b65ce6d6c47b0b2b62c",
       "lines": 186
     },
+    "docs/assets/aslice-logo.svg": {
+      "sha256": "672469c51a24c1f0ff70c078fd7377b726cecf931487b7308761261f8fcc59ac",
+      "lines": 46
+    },
     "docs/library/README.md": {
       "sha256": "00628d15342cee859bc385271d0901d760dc7447a73400b8bcde331aca5417e5",
       "lines": 158
@@ -610,8 +614,8 @@
       "lines": 79
     },
     "tools/pages/README.md": {
-      "sha256": "53c478689b2f7c77c89f91464c056edd4eb8f079549ea4c64b54017451579444",
-      "lines": 68
+      "sha256": "5331f7267f3fcfe3aabf440edca0c813401f01c7a79d177931e51c513ce416e5",
+      "lines": 75
     },
     "tools/pages/simulator.md": {
       "sha256": "e4aaaa6f3db6488835e232e5fcf37bbb68fcfc32ced401c9c59b72d7f4e18ecf",
