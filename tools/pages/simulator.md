@@ -11,7 +11,7 @@ sessions and the application display priority, with configuration and inspection
 in adjoining panes. Terminal, application, and combined views keep the working
 area useful at different window sizes.
 
-![The actual simulator console in light appearance, with a sample machine and terminal](../assets/screenshots/console-light.png)
+![The actual simulator console in light appearance, with a sample machine and terminal](screenshots/console-light.png)
 
 These screenshots were captured directly from the repository's compiled console
 using its development sample transport. The visible sample machine and terminal
@@ -24,15 +24,15 @@ Light is the default. The Dark appearance button saves your choice; it does not
 follow the operating system. Appearance changes affect the surrounding controls
 and leave guest application images unchanged. Keyboard focus stays visible.
 
-![The same simulator console in dark appearance](../assets/screenshots/console-dark.png)
+![The same simulator console in dark appearance](screenshots/console-dark.png)
 
 ## Use it locally
 
-Read the [simulator guide](../tools/simulator/README.html) for the controller,
+Read the [simulator guide](../simulator/README.md) for the controller,
 runtime prerequisites, machine lifecycle, and known limitations. The
-[console build guide](../tools/simulator/web/README.html) covers installation,
+[console build guide](../simulator/web/README.md) covers installation,
 local development, and compiled preview. The compiled console targets Safari 9
 on OS X 10.11; automated compatibility checks do not replace testing on that platform.
 
-For the system behind the console, see [Developing](../docs/DEVELOPING.html)
-and the [design specification](../docs/DESIGN.html).
+For the system behind the console, see [Developing](../../docs/DEVELOPING.md)
+and the [design specification](../../docs/DESIGN.md).

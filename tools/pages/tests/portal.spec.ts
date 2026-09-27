@@ -92,6 +92,17 @@ test('simulator introduction contains static screenshots only', async ({
   page,
 }) => {
   await page.goto('simulator/');
+  for (const [name, href] of [
+    ['simulator guide', '../tools/simulator/README.html'],
+    ['console build guide', '../tools/simulator/web/README.html'],
+    ['Developing', '../docs/DEVELOPING.html'],
+    ['design specification', '../docs/DESIGN.html'],
+  ]) {
+    await expect(page.getByRole('link', { name, exact: true })).toHaveAttribute(
+      'href',
+      href,
+    );
+  }
   await expect(page.locator('main img')).toHaveCount(2);
   for (const img of await page.locator('main img').all()) {
     expect(

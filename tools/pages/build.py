@@ -281,6 +281,12 @@ def main():
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(ROOT / path, target)
 
+    screenshot_routes = {
+        path.relative_to(ROOT).as_posix(): "assets/screenshots/" + path.name
+        for path in (HERE / "screenshots").iterdir()
+        if path.is_file()
+    }
+
     def mapped(value, source, page):
         parsed = urlsplit(value)
         if parsed.scheme or parsed.netloc or not parsed.path:
@@ -304,9 +310,18 @@ def main():
         )
         if target in documents:
             return relative(target[:-3] + ".html", page) + suffix
+        if target in screenshot_routes:
+            return relative(screenshot_routes[target], page) + suffix
         if target in files:
             return relative(target, page) + suffix
         return SOURCE + quote(target, safe="/") + suffix
+
+    def rewrite_links(soup, source, page):
+        for tag in soup.find_all(True):
+            for attr in ("href", "src"):
+                if tag.has_attr(attr):
+                    tag[attr] = mapped(tag[attr], source, page)
+        return soup
 
     for source in sorted(documents):
         text = (ROOT / source).read_text(encoding="utf-8")
@@ -330,10 +345,7 @@ def main():
             if slug and slug not in ids:
                 heading.insert_before(soup.new_tag("span", id=slug))
                 ids.add(slug)
-        for tag in soup.find_all(True):
-            for attr in ("href", "src"):
-                if tag.has_attr(attr):
-                    tag[attr] = mapped(tag[attr], source, page)
+        rewrite_links(soup, source, page)
         title = soup.h1.get_text() if soup.h1 else source
         write(
             page,
@@ -385,6 +397,13 @@ def main():
     home += '</div><h2>Start reading</h2><p><a href="docs/MANUAL.html">User manual</a> · <a href="docs/AUTHORING.html">Package authoring</a> · <a href="docs/DESIGN.html">System design</a> · <a href="README.html">Project overview</a></p>'
     write("index.html", shell("index.html", "Documentation", home))
     intro = markdown.markdown((HERE / "simulator.md").read_text(encoding="utf-8"))
+    intro = str(
+        rewrite_links(
+            BeautifulSoup(intro, "html.parser"),
+            "tools/pages/simulator.md",
+            "simulator/index.html",
+        )
+    )
     write(
         "simulator/index.html",
         shell("simulator/index.html", "Simulator introduction", intro),
