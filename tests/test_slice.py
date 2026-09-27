@@ -85,6 +85,24 @@ class SliceTests(unittest.TestCase):
             self.reject(blob=blob)
         self.reject(blob=self.codec('compress', bytes(64 * 1024 * 1024 + 1)))
 
+    def test_set_order_is_normalized_by_packer_but_refused_in_archive(self):
+        data = json.loads(self.manifest.read_text())
+        data['cpu_features'] = ['sse2', 'avx']
+        self.manifest.write_text(json.dumps(data))
+        first = self.directory / 'first.slice'
+        self.call('slice', 'pack', self.manifest, self.payload, first)
+        data['cpu_features'].reverse()
+        self.manifest.write_text(json.dumps(data))
+        second = self.directory / 'second.slice'
+        self.call('slice', 'pack', self.manifest, self.payload, second)
+        self.assertEqual(first.read_bytes(), second.read_bytes())
+        inspected = self.call('slice', 'inspect', first)
+        self.assertEqual(inspected['manifest']['cpu_features'], ['avx', 'sse2'])
+        tar = self.codec('decompress', first.read_bytes())
+        self.assertIn(b'"cpu_features":["avx","sse2"]', tar)
+        altered = tar.replace(b'"cpu_features":["avx","sse2"]', b'"cpu_features":["sse2","avx"]')
+        self.reject(tar=altered)
+
     def test_tar_header_refusals(self):
         payload = self.headers(self.tar)[-1]
         for start, value in ((0, b'../escape\0'), (156, b'1'), (156, b'x'), (156, b'g'),

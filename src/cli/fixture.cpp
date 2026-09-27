@@ -3,10 +3,10 @@
 #include "adapters/fixture.hpp"
 #include "core/support.hpp"
 #include "package/candidate.hpp"
-#include "platform/filesystem.hpp"
+#include "platform/paths.hpp"
+#include "platform/target_filesystem.hpp"
 #include "profile/generation.hpp"
 #include "resolver/solver.hpp"
-#include <filesystem>
 #include <functional>
 #include <iostream>
 #include <set>
@@ -14,7 +14,6 @@
 #include <vector>
 
 namespace aslice::cli {
-namespace fs = std::filesystem;
 using adapters::fixture::candidates;
 using adapters::fixture::catalog;
 using adapters::fixture::format;
@@ -25,17 +24,12 @@ using adapters::fixture::serialize;
 using adapters::fixture::summary;
 using core::fields;
 using core::Json;
-using core::no_symlinks;
-using core::read_json;
 using core::require;
 using package::flavor_rank;
 using package::key;
 using package::os_rank;
 using package::Target;
-using platform::Lock;
-using platform::private_umask;
-using platform::sync_directory;
-using platform::write_new;
+using platform::NodeKind;
 using profile::check_prefix;
 using profile::commit;
 using profile::current_id;
@@ -44,26 +38,27 @@ using profile::switch_to;
 using profile::verify_generation;
 using resolver::consistent;
 namespace {
-int initialize_fixture(const fs::path& prefix, const std::string& target_os,
-                       const std::string& flavor) {
+int initialize_fixture(platform::FileSystem& filesystem, const platform::TargetPath& prefix,
+                       const std::string& target_os, const std::string& flavor) {
     const std::string command = "init";
 
     core::take(os_rank(target_os));
     core::take(flavor_rank(flavor));
-    require(!fs::exists(prefix),
+    require(!filesystem.exists(prefix),
             "prototype init requires a new prefix; existing paths are never adopted");
-    require(fs::is_directory(prefix.parent_path()), "prefix parent must already exist");
-    fs::create_directory(prefix);
-    fs::permissions(prefix, fs::perms::owner_all);
-    fs::create_directory(prefix / "store");
-    fs::create_directories(prefix / "profiles/generations");
-    core::take(write_new(prefix / ".prototype.json",
-                         Json{{"format", format}, {"os", target_os}, {"flavor", flavor}}.dump()));
-    core::take(write_new(prefix / ".lock", ""));
-    core::take(sync_directory(prefix));
-    core::take(sync_directory(prefix.parent_path()));
-    auto lock = core::take(Lock::acquire(prefix));
-    const auto id = aslice::core::take(commit(prefix, {}, {}, ""));
+    require(filesystem.status(prefix.parent_path()).kind == NodeKind::directory,
+            "prefix parent must already exist");
+    filesystem.mkdir(prefix);
+    filesystem.permissions(prefix, 0700);
+    filesystem.mkdir(prefix / "store");
+    filesystem.create_directories(prefix / "profiles/generations");
+    filesystem.write_new(prefix / ".prototype.json",
+                         Json{{"format", format}, {"os", target_os}, {"flavor", flavor}}.dump());
+    filesystem.write_new(prefix / ".lock", "");
+    filesystem.sync_directory(prefix);
+    filesystem.sync_directory(prefix.parent_path());
+    auto lock = filesystem.lock(prefix);
+    const auto id = aslice::core::take(commit(filesystem, prefix, {}, {}, ""));
     std::cout << Json{{"format", format},
                       {"command", command},
                       {"generation", id},
@@ -74,24 +69,24 @@ int initialize_fixture(const fs::path& prefix, const std::string& target_os,
 }
 } // namespace
 int fixture(const Invocation& invocation) {
-    fs::path prefix = invocation.option("--prefix");
-    fs::path catalog = invocation.option("--catalog");
+    auto& filesystem = invocation.filesystem;
+    const auto prefix = filesystem.absolute(invocation.option("--prefix"));
+    const auto catalog = invocation.option("--catalog");
     const auto command = invocation.command.substr(invocation.command.find_last_of(' ') + 1);
     const auto target_os = invocation.option("--target-os", "10.11");
     const auto flavor = invocation.option("--flavor", "v1");
     const auto& arguments = invocation.arguments;
     const bool dry = invocation.options.contains("--dry-run");
-    prefix = fs::absolute(prefix).lexically_normal();
-    aslice::core::take(no_symlinks(prefix));
-    core::take(private_umask());
+    filesystem.no_symlinks(prefix);
+    filesystem.private_umask();
     if (command == "init") {
-        return initialize_fixture(prefix, target_os, flavor);
+        return initialize_fixture(filesystem, prefix, target_os, flavor);
     }
 
-    aslice::core::take(check_prefix(prefix));
-    auto lock = core::take(Lock::acquire(prefix));
-    const auto id = aslice::core::take(current_id(prefix));
-    const auto old = aslice::core::take(state(prefix, id));
+    aslice::core::take(check_prefix(filesystem, prefix));
+    auto lock = filesystem.lock(prefix);
+    const auto id = aslice::core::take(current_id(filesystem, prefix));
+    const auto old = aslice::core::take(state(filesystem, prefix, id));
     auto installed = old.selected();
     auto roots = old.roots();
     for (const auto& name : roots) {
@@ -102,10 +97,10 @@ int fixture(const Invocation& invocation) {
         output["packages"] = summary(installed, roots);
     } else if (command == "history") {
         output["generations"] = Json::array();
-        for (const auto& entry : fs::directory_iterator(prefix / "profiles/generations")) {
-            const auto name = entry.path().filename().string();
+        for (const auto& entry : filesystem.list(prefix / "profiles/generations")) {
+            const auto name = entry.filename();
             if (!name.empty() && name.find_first_not_of("0123456789") == std::string::npos) {
-                const auto data = aslice::core::take(state(prefix, name));
+                const auto data = aslice::core::take(state(filesystem, prefix, name));
                 output["generations"].push_back(
                     {{"id", name},
                      {"active", name == id},
@@ -113,7 +108,7 @@ int fixture(const Invocation& invocation) {
             }
         }
     } else if (command == "verify") {
-        aslice::core::take(verify_generation(prefix, id, installed));
+        aslice::core::take(verify_generation(filesystem, prefix, id, installed));
         output["verified"] = true;
     } else if (command == "why" || command == "leaves") {
         std::set<std::string> dependencies;
@@ -143,13 +138,13 @@ int fixture(const Invocation& invocation) {
             }
         }
     } else if (command == "rollback") {
-        const auto previous = aslice::core::take(state(prefix, arguments[0]));
+        const auto previous = aslice::core::take(state(filesystem, prefix, arguments[0]));
         const auto& chosen = previous.selected();
-        aslice::core::take(verify_generation(prefix, arguments[0], chosen));
+        aslice::core::take(verify_generation(filesystem, prefix, arguments[0], chosen));
         output["target_generation"] = arguments[0];
         output["dry_run"] = dry;
         if (!dry) {
-            aslice::core::take(switch_to(prefix, arguments[0]));
+            aslice::core::take(switch_to(filesystem, prefix, arguments[0]));
             output["generation"] = arguments[0];
         }
     } else {
@@ -183,8 +178,8 @@ int fixture(const Invocation& invocation) {
             });
         } else {
             require(!catalog.empty(), "--catalog is required for this fixture operation");
-            auto packages =
-                core::take(adapters::fixture::catalog(core::take(core::read_json(catalog))));
+            auto packages = core::take(
+                adapters::fixture::catalog(filesystem.read_json(filesystem.absolute(catalog))));
             std::set<std::string> identities;
             for (const auto& package : packages) {
                 identities.insert(package.candidate().artifact());
@@ -215,14 +210,20 @@ int fixture(const Invocation& invocation) {
                 command == "upgrade" ? resolver::Preference::newest
                                      : resolver::Preference::installed,
                 core::take(Target::create(
-                    aslice::core::take(read_json(prefix / ".prototype.json")).at("os"),
-                    aslice::core::take(read_json(prefix / ".prototype.json")).at("flavor")))));
+                    filesystem.read_json(prefix / ".prototype.json").at("os"),
+                    filesystem.read_json(prefix / ".prototype.json").at("flavor")))));
         }
         output["packages"] = summary(chosen, roots);
         output["dry_run"] = dry || command == "plan";
         output["changed"] = serialize(chosen) != serialize(installed) || roots != old.roots();
         if (!output["dry_run"].get<bool>() && output["changed"].get<bool>()) {
-            output["generation"] = aslice::core::take(commit(prefix, chosen, roots, id));
+            output["generation"] =
+                aslice::core::take(commit(filesystem, prefix, chosen, roots, id));
+        } else if (!output["dry_run"].get<bool>()) {
+            // Activation may have changed the live link but lost its acknowledgement
+            // before the directory flush. Verify before confirming a durable no-op.
+            aslice::core::take(verify_generation(filesystem, prefix, id, installed));
+            filesystem.sync_directory(prefix / "profiles");
         }
     }
     std::cout << output.dump(2) << '\n';

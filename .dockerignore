@@ -6,4 +6,3 @@ build
 out
 cmake-build-*
 **/__pycache__
-docs/refs

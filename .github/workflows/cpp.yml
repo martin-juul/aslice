@@ -18,6 +18,14 @@ jobs:
         run: |
           docker run --rm --network none --entrypoint sh aslice-check /src/tools/demo-prototype.sh
           docker run --rm --network none --entrypoint python3 aslice-check /src/tools/demo-slice.py /build/aslice
+      - name: Rehearsal fixture evidence
+        run: |
+          mkdir -p build/rehearsal-evidence
+          docker run --rm --network none -v "$PWD/build/rehearsal-evidence:/evidence" --entrypoint python3 aslice-check -m tools.rehearsal run --suite fixture --workspace /evidence --seed 17 --aslice /build/aslice-rehearsal
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rehearsal-linux-sanitizers-${{ matrix.sanitizers }}
+          path: build/rehearsal-evidence/evidence
   windows:
     runs-on: windows-latest
     defaults:
@@ -43,6 +51,12 @@ jobs:
         run: cmake --build build/native --target tidy
       - name: Portable demonstration
         run: python tools/demo-slice.py build/native/aslice.exe
+      - name: Rehearsal fixture evidence
+        run: python -m tools.rehearsal run --suite fixture --workspace build/rehearsal-evidence --seed 17 --aslice build/native/aslice-rehearsal.exe
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rehearsal-windows
+          path: build/rehearsal-evidence/evidence
   documentation:
     runs-on: ubuntu-24.04
     steps:
@@ -53,4 +67,6 @@ jobs:
       - run: python -m pip install -r tests/requirements.txt
       - run: python tests/check_docs.py
       - run: python tests/check_contracts.py
+      - run: python -m tools.rehearsal coverage --gate development --output build/requirement-coverage.json
+      - run: python -m unittest discover -s tests -p test_requirements.py
       - run: python -m unittest discover -s tests -p test_docs.py

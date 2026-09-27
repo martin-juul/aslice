@@ -66,6 +66,37 @@ class ManifestTests(unittest.TestCase):
         canonical = json.dumps(ordered(self.data), ensure_ascii=False, separators=(',', ':')).encode()
         self.assertEqual(self.call()['artifact_id'], 'sha256:' + hashlib.sha256(canonical).hexdigest())
 
+    def test_set_permutations_have_one_canonical_identity(self):
+        self.data['cpu_features'] = ['sse2', 'avx']
+        self.data['files'].append(dict(path='bin/alias', kind='symlink', mode='0777', target='example'))
+        self.data['dependencies'] = [dict(repository=repo, name=name, artifact_id='sha256:'+'a'*64)
+                                     for repo, name in [('z', 'a'), ('a', 'z'), ('a', 'a')]]
+        self.data['files'][0]['size'] = 2
+        self.data['relocations'] = [dict(path='bin/example', offset=offset, width=1,
+                                         expected_hex='78', replacement='self') for offset in (1, 0)]
+        self.data['abi']['requires'] = [dict(install_name=name, arch='x86_64', min_compat='1.0.0',
+                                             symbols=['z', 'a']) for name in ('z.dylib', 'a.dylib')]
+        self.data['abi']['provides'] = [dict(install_name=name, arch='x86_64', current_version='1.0.0',
+                                             compatibility_version='1.0.0', evidence='c-interface',
+                                             symbols=['z', 'a']) for name in ('z.dylib', 'a.dylib')]
+        expected = deepcopy(self.data)
+        expected['cpu_features'] = ['avx', 'sse2']
+        expected['files'].reverse()
+        expected['dependencies'].reverse()
+        expected['relocations'].reverse()
+        for category in ('provides', 'requires'):
+            expected['abi'][category].reverse()
+            for record in expected['abi'][category]:
+                record['symbols'] = ['a', 'z']
+        result = self.call()
+        self.assertEqual(result['manifest'], expected)
+        canonical = json.dumps(expected, sort_keys=True, separators=(',', ':')).encode()
+        self.assertEqual(result['artifact_id'], 'sha256:' + hashlib.sha256(canonical).hexdigest())
+        self.data = expected
+        self.assertEqual(self.call()['artifact_id'], result['artifact_id'])
+        self.data['cpu_features'].append('avx')
+        self.call(code=2)  # Normalization must not erase duplicate declarations.
+
     def test_shape_and_semantic_refusals(self):
         baseline = deepcopy(self.data)
         mutations = [lambda d: d.update(extra=True), lambda d: d.pop('epoch'),
@@ -137,6 +168,23 @@ class ManifestTests(unittest.TestCase):
             (self.payload / 'bin/alias').unlink()
             (self.payload / 'bin/alias').symlink_to('missing')
             self.call(payload=True, code=2)
+
+    def test_symlinks_resolve_before_parent_components(self):
+        self.data['files'] += [
+            dict(path='dir', kind='directory', mode='0755'),
+            dict(path='dir/up', kind='symlink', mode='0777', target='..'),
+            dict(path='alias', kind='symlink', mode='0777', target='dir/up/../bin/example')]
+        # Lexical collapse looks internal, but up resolves to root before '..'.
+        self.call(code=2)
+        alias = self.data['files'][-1]
+        for target in ('bin/example/../example', 'missing/../bin/example', 'alias/../bin/example'):
+            alias['target'] = target
+            self.call(code=2)
+        # Revisiting the same symlink need not form a cycle.
+        alias['target'] = 'dir/up/dir/up/bin/example'
+        self.call()
+        alias['target'] = 'bin/example/'
+        self.call(code=2)
 
 
 if __name__ == '__main__':

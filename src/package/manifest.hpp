@@ -2,9 +2,9 @@
 #define ASLICE_PACKAGE_MANIFEST_HPP
 #include "core/result.hpp"
 #include "core/support.hpp"
+#include "platform/target_filesystem.hpp"
 #include <cstddef>
 #include <cstdint>
-#include <filesystem>
 #include <string>
 #include <vector>
 
@@ -42,10 +42,12 @@ class Manifest {
         return payload_bytes_;
     }
     core::Json inspect() const;
-    core::Result<core::Json> verify_payload(const core::fs::path& root) const;
+    core::Result<core::Json> verify_payload(platform::FileSystem& filesystem,
+                                            const platform::TargetPath& root) const;
 
   private:
-    core::Json verify_payload_impl(const core::fs::path& input) const;
+    core::Json verify_payload_impl(platform::FileSystem& filesystem,
+                                   const platform::TargetPath& input) const;
     core::Json document_;
     std::vector<InventoryEntry> inventory_;
     std::vector<Relocation> relocations_;

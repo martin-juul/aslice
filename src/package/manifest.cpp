@@ -3,15 +3,16 @@
 #include "core/support.hpp"
 #include "package/candidate.hpp"
 #include "package/version.hpp"
+#include "platform/paths.hpp"
+#include "platform/target_filesystem.hpp"
 #include "tl/expected.hpp"
 #include <algorithm>
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <deque>
 #include <exception>
 #include <filesystem>
-#include <fstream>
-#include <ios>
 #include <map>
 #include <memory>
 #include <openssl/evp.h>
@@ -29,7 +30,6 @@ namespace fs = std::filesystem;
 using core::digest;
 using core::fields;
 using core::Json;
-using core::no_symlinks;
 using core::require;
 constexpr std::size_t metadata_list_limit = 10000;
 constexpr std::size_t inventory_entry_limit = 100000;
@@ -194,25 +194,46 @@ void abi(const Json& value) {
         }
     }
 }
-std::string file_digest(const fs::path& file, std::uint64_t size) {
-    require(fs::file_size(file) == size, "payload size mismatch: " + file.string());
-    std::ifstream input(file, std::ios::binary);
-    require(input.good(), "cannot read payload file");
+std::string file_digest(platform::FileSystem& filesystem, const platform::TargetPath& file,
+                        std::uint64_t size, const std::vector<Relocation>& relocations,
+                        const std::string& name, unsigned expected_mode) {
     std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)> context(EVP_MD_CTX_new(),
                                                                     EVP_MD_CTX_free);
     require(context && EVP_DigestInit_ex(context.get(), EVP_sha256(), nullptr) == 1,
             "cannot initialize SHA-256");
-    std::array<char, 65536> buffer{};
     std::uint64_t count = 0;
-    while (input) {
-        input.read(buffer.data(), buffer.size());
-        const auto bytes = static_cast<std::size_t>(input.gcount());
-        count += bytes;
-        require(count <= size, "payload file grew during verification");
-        require(EVP_DigestUpdate(context.get(), buffer.data(), bytes) == 1,
-                "SHA-256 update failed");
-    }
-    require(!input.bad() && count == size, "payload read failed or size changed");
+    filesystem.stream(
+        file, static_cast<std::size_t>(size),
+        [&](std::string_view bytes) {
+            require(EVP_DigestUpdate(context.get(), bytes.data(), bytes.size()) == 1,
+                    "SHA-256 update failed");
+            for (const auto& relocation : relocations) {
+                if (relocation.path != name) {
+                    continue;
+                }
+                const auto start = std::max<std::uint64_t>(count, relocation.offset);
+                const auto end = std::min<std::uint64_t>(
+                    count + bytes.size(), relocation.offset + relocation.expected_hex.size() / 2);
+                for (auto offset = start; offset < end; ++offset) {
+                    require(
+                        static_cast<unsigned char>(
+                            bytes[static_cast<std::size_t>(offset - count)]) ==
+                            std::stoul(
+                                relocation.expected_hex.substr(
+                                    static_cast<std::size_t>(offset - relocation.offset) * 2, 2),
+                                nullptr, 16),
+                        "relocation expected bytes mismatch");
+                }
+            }
+            count += bytes.size();
+        },
+        [&](const platform::NodeStatus& metadata) {
+            require(metadata.kind == platform::NodeKind::file && metadata.links == 1,
+                    "opened payload must be a regular file with one link");
+            require(!filesystem.supports_posix_modes() || metadata.mode == expected_mode,
+                    "opened payload mode mismatch: " + name);
+        });
+    require(count == size, "payload read failed or size changed");
     std::array<unsigned char, EVP_MAX_MD_SIZE> hash{};
     unsigned length = 0;
     require(EVP_DigestFinal_ex(context.get(), hash.data(), &length) == 1,
@@ -312,38 +333,48 @@ std::map<std::string, Json> validate_inventory(const Json& document, std::uint64
         if (file.at("kind") != "symlink") {
             continue;
         }
-        auto target = (fs::path(name).parent_path() / string(file, "target")).lexically_normal();
-        std::set<std::string> visited{name};
-        for (;;) {
-            path(target.generic_string());
-            bool redirected = false;
-            fs::path walked;
-            for (auto it = target.begin(); it != target.end(); ++it) {
-                walked /= *it;
-                const auto found = files.find(walked.generic_string());
-                if (found == files.end() || found->second.at("kind") != "symlink") {
-                    continue;
-                }
-                require(visited.insert(walked.generic_string()).second, "symlink cycle");
-                auto replacement = walked.parent_path() / string(found->second, "target");
-                for (++it; it != target.end(); ++it) {
-                    replacement /= *it;
-                }
-                target = replacement.lexically_normal();
-                redirected = true;
-                break;
+        // Resolve components in traversal order: lexical normalization would
+        // erase a symlink (or regular file) immediately before a parent step.
+        std::deque<std::string> pending;
+        auto prepend = [&](const std::string& target) {
+            std::vector<std::string> parts;
+            for (const auto& component : fs::path(target)) {
+                parts.push_back(component.generic_string());
             }
-            if (redirected) {
+            pending.insert(pending.begin(), parts.begin(), parts.end());
+        };
+        prepend(string(file, "target"));
+        auto resolved = fs::path(name).parent_path();
+        unsigned expansions = 0;
+        while (!pending.empty()) {
+            const auto component = pending.front();
+            pending.pop_front();
+            if (component.empty() || component == ".") {
                 continue;
             }
-            const auto normalized = target.generic_string();
-            require(files.contains(normalized) ||
-                        std::any_of(files.begin(), files.end(),
-                                    [&](const auto& entry) {
-                                        return entry.first.starts_with(normalized + '/');
-                                    }),
-                    "dangling inventory symlink");
-            break;
+            if (component == "..") {
+                require(!resolved.empty(), "symlink escapes payload root");
+                resolved = resolved.parent_path();
+                continue;
+            }
+            const auto next = resolved / component;
+            const auto spelling = next.generic_string();
+            path(spelling);
+            const auto found = files.find(spelling);
+            if (found != files.end() && found->second.at("kind") == "symlink") {
+                require(++expansions <= 32, "symlink cycle or expansion limit exceeded");
+                prepend(string(found->second, "target"));
+                continue;
+            }
+            if (found == files.end()) {
+                const auto child = files.lower_bound(spelling + '/');
+                require(child != files.end() && child->first.starts_with(spelling + '/'),
+                        "dangling inventory symlink");
+            } else {
+                require(pending.empty() || found->second.at("kind") == "directory",
+                        "symlink traverses a non-directory");
+            }
+            resolved = next;
         }
     }
     return files;
@@ -378,6 +409,39 @@ void validate_relocations(const Json& document, const std::map<std::string, Json
         }
     }
 }
+void canonical_sets(Json& document) {
+    auto strings = [](Json& values) {
+        std::sort(values.begin(), values.end(), [](const Json& left, const Json& right) {
+            return utf16(left.get_ref<const std::string&>()) <
+                   utf16(right.get_ref<const std::string&>());
+        });
+    };
+    strings(document.at("cpu_features"));
+    auto& files = document.at("files");
+    std::sort(files.begin(), files.end(), [](const Json& left, const Json& right) {
+        return string(left, "path") < string(right, "path");
+    });
+    auto& dependencies = document.at("dependencies");
+    std::sort(dependencies.begin(), dependencies.end(), [](const Json& left, const Json& right) {
+        return std::pair{string(left, "repository"), string(left, "name")} <
+               std::pair{string(right, "repository"), string(right, "name")};
+    });
+    for (const auto* category : {"provides", "requires"}) {
+        auto& records = document.at("abi").at(category);
+        for (auto& record : records) {
+            strings(record.at("symbols"));
+        }
+        std::sort(records.begin(), records.end(), [](const Json& left, const Json& right) {
+            return std::pair{utf16(string(left, "install_name")), string(left, "arch")} <
+                   std::pair{utf16(string(right, "install_name")), string(right, "arch")};
+        });
+    }
+    auto& relocations = document.at("relocations");
+    std::sort(relocations.begin(), relocations.end(), [](const Json& left, const Json& right) {
+        return std::pair{string(left, "path"), integer(left, "offset")} <
+               std::pair{string(right, "path"), integer(right, "offset")};
+    });
+}
 } // namespace
 
 core::Result<Manifest> Manifest::parse(core::Json value) {
@@ -392,13 +456,13 @@ Manifest::Manifest(Json value) : document_(std::move(value)) {
     using core::digest;
     using core::fields;
     using core::Json;
-    using core::no_symlinks;
     using core::require;
     validate_header(document_);
     const auto dependencies = validate_dependencies(document_);
     const auto files = validate_inventory(document_, payload_bytes_);
     validate_relocations(document_, files, dependencies);
     abi(document_.at("abi"));
+    canonical_sets(document_);
     for (const auto& file : document_.at("files")) {
         inventory_.push_back(
             {file.at("path"), file.at("kind"),
@@ -420,78 +484,62 @@ core::Json Manifest::inspect() const {
             {"authenticated", false},          {"manifest", document_}};
 }
 
-core::Json Manifest::verify_payload_impl(const core::fs::path& input) const {
+core::Json Manifest::verify_payload_impl(platform::FileSystem& filesystem,
+                                         const platform::TargetPath& root) const {
     namespace fs = std::filesystem;
     using core::digest;
     using core::fields;
     using core::Json;
-    using core::no_symlinks;
     using core::require;
-    const auto root = fs::absolute(input).lexically_normal();
-    aslice::core::take(no_symlinks(root));
-    require(fs::is_directory(root), "payload root must be a directory");
+    filesystem.no_symlinks(root);
+    require(filesystem.status(root).kind == platform::NodeKind::directory,
+            "payload root must be a directory");
     std::set<std::string> entries;
     for (const auto& file : document_.at("files")) {
         const auto name = string(file, "path");
         const auto kind = string(file, "kind");
         const auto full = root / name;
-        aslice::core::take(no_symlinks(full.parent_path()));
-        const auto status = fs::symlink_status(full);
+        filesystem.no_symlinks(full.parent_path());
+        const auto status = filesystem.status(full);
         if (kind == "file") {
-            require(fs::is_regular_file(status), "payload is not a regular file: " + name);
-            require(fs::hard_link_count(full) == 1, "hard-linked payload file refused");
-            require(file_digest(full, integer(file, "size")) == string(file, "sha256"),
+            require(status.kind == platform::NodeKind::file,
+                    "payload is not a regular file: " + name);
+            require(status.links == 1, "hard-linked payload file refused");
+            require(file_digest(filesystem, full, integer(file, "size"), relocations_, name,
+                                static_cast<unsigned>(std::stoul(string(file, "mode"), nullptr,
+                                                                 8))) == string(file, "sha256"),
                     "payload digest mismatch: " + name);
         } else if (kind == "directory") {
-            require(fs::is_directory(status), "missing payload directory: " + name);
+            require(status.kind == platform::NodeKind::directory,
+                    "missing payload directory: " + name);
         } else {
-            require(fs::is_symlink(status) &&
-                        fs::read_symlink(full).generic_string() == string(file, "target"),
+            require(status.kind == platform::NodeKind::symlink &&
+                        filesystem.read_symlink(full) == string(file, "target"),
                     "payload symlink mismatch: " + name);
         }
-#ifndef _WIN32
-        if (kind != "symlink") {
-            require((static_cast<unsigned>(status.permissions()) & 07777) ==
-                        std::stoul(string(file, "mode"), nullptr, 8),
+        if (kind != "symlink" && filesystem.supports_posix_modes()) {
+            require((status.mode & 07777) == std::stoul(string(file, "mode"), nullptr, 8),
                     "payload mode mismatch: " + name);
         }
-#endif
         entries.insert(name);
         for (auto parent = fs::path(name).parent_path(); !parent.empty();
              parent = parent.parent_path()) {
             entries.insert(parent.generic_string());
         }
     }
-    for (const auto& entry : fs::recursive_directory_iterator(root)) {
-        require(entries.contains(entry.path().lexically_relative(root).generic_string()),
-                "unlisted payload entry");
-    }
-    for (const auto& relocation : document_.at("relocations")) {
-        const auto full = root / string(relocation, "path");
-        std::ifstream input_file(full, std::ios::binary);
-        input_file.seekg(static_cast<std::streamoff>(integer(relocation, "offset")));
-        const auto expected = string(relocation, "expected_hex");
-        for (std::size_t i = 0; i < expected.size(); i += 2) {
-            const auto byte = input_file.get();
-            require(byte != std::char_traits<char>::eof() &&
-                        static_cast<unsigned>(byte) ==
-                            std::stoul(expected.substr(i, 2), nullptr, 16),
-                    "relocation expected bytes mismatch");
-        }
+    for (const auto& entry : filesystem.walk(root)) {
+        require(entries.contains(entry.relative_to(root)), "unlisted payload entry");
     }
     auto result = inspect();
     result["payload_verified"] = true;
-#ifdef _WIN32
-    result["posix_modes_verified"] = false;
-#else
-    result["posix_modes_verified"] = true;
-#endif
+    result["posix_modes_verified"] = filesystem.supports_posix_modes();
     return result;
 }
 
-core::Result<core::Json> Manifest::verify_payload(const core::fs::path& input) const {
+core::Result<core::Json> Manifest::verify_payload(platform::FileSystem& filesystem,
+                                                  const platform::TargetPath& input) const {
     return core::capture([&] {
-        return Manifest::verify_payload_impl(input);
+        return Manifest::verify_payload_impl(filesystem, input);
     });
 }
 } // namespace aslice::package
