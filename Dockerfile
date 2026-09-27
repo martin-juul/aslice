@@ -1,6 +1,6 @@
 FROM ubuntu:26.04
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    ca-certificates clang-20 clang-format-20 clang-tidy-20 libclang-rt-20-dev libc++-20-dev libc++abi-20-dev cmake ninja-build python3 \
+    ca-certificates clang-22 clang-format-22 clang-tidy-22 libclang-rt-22-dev libc++-22-dev libc++abi-22-dev cmake ninja-build python3 \
     nlohmann-json3-dev libssl-dev libzstd-dev \
     && rm -rf /var/lib/apt/lists/*
 WORKDIR /src
@@ -11,7 +11,7 @@ ARG ASLICE_SANITIZERS=OFF
 # the sanitizer matrix with libstdc++; no sanitizer diagnostics are disabled.
 RUN if [ "$ASLICE_SANITIZERS" = ON ]; then standard_library=libstdc++; else standard_library=libc++; fi \
     && cmake -S . -B /build -G Ninja \
-    -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=clang-20 -DCMAKE_CXX_COMPILER=clang++-20 \
+    -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=clang-22 -DCMAKE_CXX_COMPILER=clang++-22 \
     -DASLICE_SANITIZERS=${ASLICE_SANITIZERS} \
     -DCMAKE_CXX_FLAGS=-stdlib=$standard_library \
     && cmake --build /build \

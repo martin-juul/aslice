@@ -133,10 +133,10 @@ std::string Version::string() const {
 }
 
 std::strong_ordering Version::operator<=>(const Version& other) const {
-    if (auto order = epoch_ <=> other.epoch_; order != 0) {
+    if (auto order = epoch_ <=> other.epoch_; std::is_neq(order)) {
         return order;
     }
-    if (auto order = parts_ <=> other.parts_; order != 0) {
+    if (auto order = parts_ <=> other.parts_; std::is_neq(order)) {
         return order;
     }
     if (pre_.empty() != other.pre_.empty()) {
@@ -153,14 +153,14 @@ std::strong_ordering Version::operator<=>(const Version& other) const {
         if (an && a.size() != b.size()) {
             return a.size() <=> b.size();
         }
-        if (auto order = a <=> b; order != 0) {
+        if (auto order = a <=> b; std::is_neq(order)) {
             return order;
         }
     }
     return pre_.size() <=> other.pre_.size();
 }
 bool Version::operator==(const Version& other) const {
-    return (*this <=> other) == 0;
+    return std::is_eq(*this <=> other);
 }
 
 Constraint Constraint::parse_impl(std::string_view text) {
@@ -246,19 +246,19 @@ bool Constraint::matches(const Version& value, PrereleasePolicy prereleases) con
             const auto order = value <=> term.bound;
             switch (term.op) {
             case Op::equal:
-                matched &= order == 0;
+                matched &= std::is_eq(order);
                 break;
             case Op::less:
-                matched &= order < 0;
+                matched &= std::is_lt(order);
                 break;
             case Op::less_equal:
-                matched &= order <= 0;
+                matched &= std::is_lteq(order);
                 break;
             case Op::greater:
-                matched &= order > 0;
+                matched &= std::is_gt(order);
                 break;
             case Op::greater_equal:
-                matched &= order >= 0;
+                matched &= std::is_gteq(order);
                 break;
             }
         }

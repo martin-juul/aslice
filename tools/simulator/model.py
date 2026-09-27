@@ -9,6 +9,7 @@ import os
 from pathlib import PurePosixPath
 import threading
 import unicodedata
+from .credentials import Credentials
 
 
 class Refusal(Exception):
@@ -43,7 +44,12 @@ class Model:
         self.locks = {}
         self.handles = {}
         self.masks = {}
+        self.process_credentials = {}
+        self.issued_processes = set()
         self.next_handle = 1
+        # Imported here to keep Refusal shared without application dependencies.
+        from .channels import Channels
+        self.channels = Channels()
         self.stop_kind = None
         if self.path.exists():
             self.state = json.loads(self.path.read_text(encoding="utf-8"))
@@ -58,7 +64,7 @@ class Model:
                           "durable_dirs": {"1": {"work": "2"}, "2": {}},
                           "outcomes": {}, "faults": [], "quota": 8 * 1024 * 1024,
                           "target": {"os": "10.11", "cpu": "x86_64-v1",
-                                     "volume": "rehearsal-volume-1",
+                                     "volume": "simulator-volume-1",
                                      "filesystem": "nfd-casefold-approximation",
                                      "execution": "simulated", "apple_execution": False}}
             self.save()
@@ -66,8 +72,8 @@ class Model:
         self.state.setdefault("durable_names", {})
 
     @staticmethod
-    def node(kind, mode, uid=501):
-        return {"kind": kind, "mode": mode, "uid": uid, "gid": 20, "xattrs": {}, "acl": []}
+    def node(kind, mode, uid=501, gid=20):
+        return {"kind": kind, "mode": mode, "uid": uid, "gid": gid, "xattrs": {}, "acl": []}
 
     def save(self):
         atomic_json(self.path, self.state)
@@ -85,7 +91,7 @@ class Model:
                 names[destination] = self.state["durable_names"].get(inode, {}).get(name, name)
                 if child not in nodes:
                     old = self.state["nodes"][child]
-                    nodes[child] = self.node(old["kind"], old["mode"], old["uid"])
+                    nodes[child] = self.node(old["kind"], old["mode"], old["uid"], old['gid'])
                     if old["kind"] == "file":
                         nodes[child]["hex"] = ""
                 if nodes[child]["kind"] == "directory":
@@ -96,15 +102,36 @@ class Model:
         self.locks.clear()
         self.handles.clear()
         self.masks.clear()
+        self.process_credentials.clear()
+        self.channels.power_loss()
         self.save()
 
-    def disconnect(self, identity):
+    def process_exited(self, identity):
         with self.mutex:
             self.locks = {path: owner for path, owner in self.locks.items() if owner != identity}
             self.handles = {handle: value for handle, value in self.handles.items() if value["owner"] != identity}
             self.masks.pop(identity, None)
+            self.process_credentials.pop(identity, None)
+            self.channels.process_exited(identity)
 
-    def lookup(self, path):
+    def credentials(self, identity):
+        # Direct fixture construction keeps the historical default. Registered
+        # transport callers are always assigned immutable credentials by Server.
+        if identity in self.issued_processes and identity not in self.process_credentials:
+            raise Refusal('process', 'process credentials have expired')
+        return self.process_credentials.get(identity, Credentials())
+
+    def access(self, identity, node, permissions):
+        if node.get('acl') or node.get('flags', 0):
+            raise Refusal('unsupported-metadata', 'ACL and file-flag authorization is not modeled')
+        if node['mode'] & ~0o777:
+            raise Refusal('unsupported-metadata', 'special mode semantics are not modeled')
+        if self.credentials(identity).permissions(node) & permissions != permissions:
+            raise Refusal('permission', 'effective credentials do not permit access')
+
+    def lookup(self, path, identity='setup'):
+        if path != '/':
+            self.access(identity, self.state['nodes'][self.state['paths']['/']], 1)
         walked = ""
         for part in PurePosixPath(path).parts[1:-1]:
             walked += "/" + part
@@ -114,19 +141,20 @@ class Model:
             parent = self.state["nodes"][inode]
             if parent["kind"] != "directory":
                 raise Refusal("not-directory", "symlink traversal refused")
-            if not parent["mode"] & (0o100 if parent["uid"] == 501 else 0o001):
-                raise Refusal("permission", "parent is not searchable")
+            self.access(identity, parent, 1)
         inode = self.state["paths"].get(path)
         if inode is None:
             raise Refusal("not-found", "target does not exist")
         return inode, self.state["nodes"][inode]
 
-    def writable(self, path):
+    def writable(self, path, identity):
         if not path.startswith("/work/"):
             raise Refusal("protected", "target is outside the writable volume subtree")
-        _, parent = self.lookup(str(PurePosixPath(path).parent))
-        if parent["kind"] != "directory" or parent["uid"] != 501 or parent["mode"] & 0o300 != 0o300:
+        _, parent = self.lookup(str(PurePosixPath(path).parent), identity)
+        if parent["kind"] != "directory":
             raise Refusal("permission", "parent does not permit mutation")
+        self.access(identity, parent, 3)
+        return parent
 
     def filesystem(self, identity, operation, args):
         if operation in ("write_handle", "read_handle", "flush_handle", "close"):
@@ -138,6 +166,8 @@ class Model:
             if operation == "close":
                 del self.handles[args["handle"]]
                 return None, [{"operation": "close", "inode": inode}]
+            if node.get('flags', 0):
+                raise Refusal('unsupported-metadata', 'file-flag semantics are not modeled')
             if operation == "read_handle":
                 if handle["access"] != "read":
                     raise Refusal("permission", "handle does not permit reading")
@@ -150,22 +180,22 @@ class Model:
             return self.write_bytes(node, path, args)
         path = canonical(args["path"])
         if operation == "stat":
-            inode, node = self.lookup(path)
+            inode, node = self.lookup(path, identity)
             metadata = {key: copy.deepcopy(value) for key, value in node.items() if key != "hex"}
             return {"inode": inode, "size": len(node.get("hex", "")) // 2, **metadata,
                     "links": sum(value == inode for value in self.state["paths"].values())}, []
         if operation == "list":
-            _, node = self.lookup(path)
+            _, node = self.lookup(path, identity)
             if node["kind"] != "directory":
                 raise Refusal("not-directory", "cannot list this node")
-            if not node["mode"] & (0o400 if node["uid"] == 501 else 0o004):
-                raise Refusal("permission", "directory is not readable")
+            self.access(identity, node, 4)
             return sorted(self.state["names"].get(child, PurePosixPath(child).name) for child in self.state["paths"]
                           if child != path and str(PurePosixPath(child).parent) == path), []
         if operation in ("read", "open_read"):
-            inode, node = self.lookup(path)
-            if node["kind"] != "file" or node["uid"] != 501 or not node["mode"] & 0o400:
+            inode, node = self.lookup(path, identity)
+            if node["kind"] != "file":
                 raise Refusal("permission", "file cannot be read")
+            self.access(identity, node, 4)
             if operation == "open_read":
                 handle = str(self.next_handle)
                 self.next_handle += 1
@@ -174,14 +204,15 @@ class Model:
                         "links": sum(value == inode for value in self.state["paths"].values())}, [{"operation": "open_read", "inode": inode}]
             return self.read_bytes(node, args), []
         if operation in ("mkdir", "create", "open_new", "symlink"):
-            self.writable(path)
+            parent = self.writable(path, identity)
             if path in self.state["paths"]:
                 raise Refusal("exists", "target name or normalized alias already exists")
             mode = args.get("mode", 0o700 if operation == "mkdir" else 0o600)
             if type(mode) is not int or not 0 <= mode <= 0o777:
                 raise Refusal("mode", "unsupported mode")
             kind = {"mkdir": "directory", "create": "file", "open_new": "file", "symlink": "symlink"}[operation]
-            node = self.node(kind, mode & ~self.masks.get(identity, 0))
+            node = self.node(kind, mode & ~self.masks.get(identity, 0),
+                             self.credentials(identity).uid, parent['gid'])
             if kind == "file":
                 node["hex"] = ""
             if operation == "symlink":
@@ -202,29 +233,34 @@ class Model:
         if operation == "write":
             if not path.startswith("/work/"):
                 raise Refusal("protected", "target is outside the writable volume subtree")
-            _, node = self.lookup(path)
-            if node["kind"] != "file" or node["uid"] != 501 or not node["mode"] & 0o200:
+            _, node = self.lookup(path, identity)
+            if node["kind"] != "file":
                 raise Refusal("permission", "file cannot be written")
+            self.access(identity, node, 2)
             return self.write_bytes(node, path, args)
         if operation == "chmod":
             if not path.startswith("/work/"):
                 raise Refusal("protected", "target is outside the writable volume subtree")
-            _, node = self.lookup(path)
+            _, node = self.lookup(path, identity)
             mode = args["mode"]
-            if node["uid"] != 501 or node["kind"] == "symlink" or type(mode) is not int or not 0 <= mode <= 0o777:
+            if (self.credentials(identity).uid not in (0, node['uid']) or node["kind"] == "symlink"
+                    or type(mode) is not int or not 0 <= mode <= 0o777):
                 raise Refusal("permission", "mode change refused")
+            if node.get('acl') or node.get('flags', 0) or node['mode'] & ~0o777:
+                raise Refusal('unsupported-metadata', 'mode change with unsupported metadata refused')
             node["mode"] = mode
             return None, [{"operation": "chmod", "path": path, "mode": mode}]
         if operation == "readlink":
-            _, node = self.lookup(path)
+            _, node = self.lookup(path, identity)
             if node["kind"] != "symlink":
                 raise Refusal("kind", "not a symbolic link")
             return {"target": node["target"]}, []
         if operation == "rename":
             destination = canonical(args["destination"])
-            self.writable(path)
-            self.writable(destination)
-            inode, node = self.lookup(path)
+            self.writable(path, identity)
+            self.writable(destination, identity)
+            inode, node = self.lookup(path, identity)
+            self.access(identity, node, 0)
             if destination.startswith(path + "/"):
                 raise Refusal("path", "cannot move a directory into itself")
             if path == destination:
@@ -233,6 +269,7 @@ class Model:
             replaced = self.state["paths"].get(destination)
             if replaced is not None:
                 old = self.state["nodes"][replaced]
+                self.access(identity, old, 0)
                 if (node["kind"] == "directory") != (old["kind"] == "directory"):
                     raise Refusal("kind", "rename replacement kind mismatch")
                 if any(child.startswith(destination + "/") for child in self.state["paths"]):
@@ -248,9 +285,10 @@ class Model:
             self.state["names"][destination] = PurePosixPath(args["destination"]).name
             return None, [{"operation": "rename", "source": path, "destination": destination, "inode": inode}]
         if operation in ("flush_file", "flush_directory"):
-            inode, node = self.lookup(path)
+            inode, node = self.lookup(path, identity)
             if node["kind"] != ("file" if operation == "flush_file" else "directory"):
                 raise Refusal("kind", "flush kind mismatch")
+            self.access(identity, node, 4)
             self.state["durable_nodes"][inode] = copy.deepcopy(node)
             if operation == "flush_directory":
                 self.state["durable_dirs"][inode] = {
@@ -264,8 +302,9 @@ class Model:
                         self.state["durable_nodes"][child] = copy.deepcopy(self.state["nodes"][child])
             return None, [{"operation": operation, "path": path, "durable": True}]
         if operation == "unlink":
-            self.writable(path)
-            _, node = self.lookup(path)
+            self.writable(path, identity)
+            _, node = self.lookup(path, identity)
+            self.access(identity, node, 0)
             if node["kind"] == "directory" and any(
                     child.startswith(path + "/") for child in self.state["paths"]):
                 raise Refusal("not-empty", "directory is not empty")
@@ -273,11 +312,16 @@ class Model:
             self.state["names"].pop(path, None)
             return None, [{"operation": operation, "path": path}]
         if operation in ("lock", "unlock"):
-            inode, node = self.lookup(path)
+            inode, node = self.lookup(path, identity)
             if node["kind"] != "file":
                 raise Refusal("kind", "lock requires a regular file")
-            if operation == "lock" and (node["uid"] != 501 or node["mode"] & 0o600 != 0o600):
-                raise Refusal("permission", "lock file is not readable and writable by this process")
+            if operation == "lock":
+                # This operation mirrors the native aslice lock adapter, which
+                # requires a private, single-link file owned by its caller.
+                if (node['uid'] != self.credentials(identity).uid
+                        or sum(value == inode for value in self.state['paths'].values()) != 1):
+                    raise Refusal('permission', 'lock requires a caller-owned single-link file')
+                self.access(identity, node, 6)
             if self.locks.get(inode) not in (None, identity):
                 raise Refusal("busy", "lock held by another process")
             if operation == "lock":
@@ -319,7 +363,7 @@ class Model:
     def execute(self, identity, capabilities, request):
         with self.mutex:
             if (set(request) != {"version", "id", "capability", "operation", "arguments", "preconditions"}
-                    or request["version"] != 1 or type(request["id"]) is not int
+                    or type(request["version"]) is not int or request["version"] != 1 or type(request["id"]) is not int
                     or not 0 < request["id"] < 2**53 or not isinstance(request["arguments"], dict)
                     or not isinstance(request["preconditions"], dict)
                     or not isinstance(request["capability"], str) or not isinstance(request["operation"], str)):
@@ -338,6 +382,7 @@ class Model:
             response = {"version": 1, "id": request["id"], "result": None, "effects": [],
                         "receipt": {"identity": identity, "tick": tick}, "failure": None}
             try:
+                self.credentials(identity)  # Refuse revoked sessions before any OS operation.
                 capability, operation = request["capability"], request["operation"]
                 if capability not in capabilities:
                     raise Refusal("capability", "process lacks requested capability")
@@ -347,12 +392,23 @@ class Model:
                     raise Refusal("injected", "failure before operation")
                 if capability == "filesystem":
                     response["result"], response["effects"] = self.filesystem(identity, operation, request["arguments"])
+                elif capability == "channel":
+                    response["result"], response["effects"] = self.channels.execute(identity, operation, request["arguments"])
                 elif capability == "machine" and operation == "observe":
                     response["result"] = copy.deepcopy(self.state["target"])
                 elif capability == "clock" and operation == "observe":
-                    response["result"] = {"tick": tick}
+                    response["result"] = {"tick": tick, "monotonic_ms": self.state.get("monotonic_ms", 0)}
+                elif capability == "clock" and operation == "wait":
+                    duration = request["arguments"].get("milliseconds")
+                    if type(duration) is not int or not 0 <= duration <= 30000:
+                        raise Refusal("clock", "wait duration must be an integer from 0 through 30000 ms")
+                    now = self.state.get("monotonic_ms", 0)
+                    if type(now) is not int or not 0 <= now <= 2**63 - 1 - duration:
+                        raise Refusal("clock", "monotonic clock overflow or invalid state")
+                    self.state["monotonic_ms"] = now + duration
+                    response["result"] = {"monotonic_ms": now + duration}
                 elif capability == "process" and operation == "observe":
-                    response["result"] = {"uid": 501, "gid": 20, "identity": identity}
+                    response["result"] = {**self.credentials(identity).record(), "identity": identity}
                 elif capability == "process" and operation == "umask":
                     mask = request["arguments"]["mask"]
                     if type(mask) is not int or not 0 <= mask <= 0o777:

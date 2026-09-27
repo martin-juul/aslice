@@ -10,11 +10,11 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
-from tools.rehearsal.fixtures import seed_catalogs, seed_input
-from tools.rehearsal.harness import Workspace, launch, replay
-from tools.rehearsal.model import Model
-from tools.rehearsal.protocol import receive, send
-from tools.rehearsal.server import Server
+from tools.simulator.fixtures import seed_catalogs, seed_input
+from tools.simulator.harness import Workspace, launch, replay
+from tools.simulator.model import Model
+from tools.simulator.protocol import receive, send
+from tools.simulator.server import Server
 
 BINARY = Path(sys.argv.pop(1)).resolve() if __name__ == "__main__" else None
 
@@ -173,6 +173,9 @@ class FixtureLifecycleTests(unittest.TestCase):
         server = Server(model)
         self.addCleanup(server.close)
         descriptor = server.issue("external-owner", ["filesystem"])
+        owner = subprocess.Popen([sys.executable, '-c', 'import sys; sys.stdin.read()'], stdin=subprocess.PIPE)
+        self.addCleanup(owner.stdin.close)
+        server.attach_process("external-owner", owner)
         with socket.create_connection(server.server_address, timeout=5) as holder:
             send(holder, {"version": 1, "operation": "hello", "identity": "external-owner", "token": descriptor["token"]})
             self.assertTrue(receive(holder)["authenticated"])
@@ -181,11 +184,13 @@ class FixtureLifecycleTests(unittest.TestCase):
             self.assertIsNone(receive(holder)["failure"])
             session = self.workspace / "sessions/contender.json"
             session.write_text(json.dumps(server.issue("contender", ["machine", "filesystem", "process"])))
-            result = subprocess.run([str(BINARY), "--session", str(session), "dev", "fixture", "install", "hello",
+            contender = subprocess.Popen([str(BINARY), "--session", str(session), "dev", "fixture", "install", "hello",
                                       "--prefix", "/work/prefix", "--catalog", "/inputs/catalog-v1.json"],
-                                     capture_output=True, timeout=30)
+                                        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            server.attach_process("contender", contender)
+            _, stderr = contender.communicate(timeout=30)
             session.unlink()
-            self.assertEqual(result.returncode, 4, result.stderr)
+            self.assertEqual(contender.returncode, 4, stderr)
             self.assertEqual(model.state["paths"], before)
         server.close()
         self.command("install", "hello")

@@ -9,7 +9,7 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-from tools.rehearsal.requirements import (
+from tools.simulator.requirements import (
     REGISTRY, contract_anchors, documented_commands, documented_synopses, evaluate, inventory, load_json, native_evidence,
 )
 
@@ -426,7 +426,7 @@ class RepositoryTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             output = Path(directory) / 'report.json'
             for gate, expected in [('development', 0), ('release', 1)]:
-                process = subprocess.run([sys.executable, '-m', 'tools.rehearsal', 'coverage',
+                process = subprocess.run([sys.executable, '-m', 'tools.simulator', 'coverage',
                     '--gate', gate, '--output', str(output)], cwd=ROOT, capture_output=True)
                 self.assertEqual(process.returncode, expected, process.stderr)
                 self.assertFalse(json.loads(output.read_text())['complete'])
@@ -466,7 +466,7 @@ class NativeEvidenceTests(unittest.TestCase):
     def test_bad_native_input_fails_before_workspace_creation_or_launch(self):
         self.write({'version': 1, 'receipts': [{'qualification': 'simulated'}]})
         workspace = self.root / 'workspace'
-        process = subprocess.run([sys.executable, '-m', 'tools.rehearsal', 'run', '--suite', 'full',
+        process = subprocess.run([sys.executable, '-m', 'tools.simulator', 'run', '--suite', 'full',
             '--aslice', 'does-not-exist', '--workspace', str(workspace),
             '--native-evidence', str(self.path)], cwd=ROOT, capture_output=True)
         self.assertEqual(process.returncode, 2, process.stderr)

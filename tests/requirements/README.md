@@ -4,7 +4,7 @@
 claim. Records have stable IDs, an owning contract, reviewed source ranges,
 implementation paths, platform dependencies, required environments, four kinds
 of test scenarios, and evidence links. Empty implementation and evidence lists
-mean work remains. Existing bounded rehearsal mappings are retained separately
+mean work remains. Existing bounded simulator mappings are retained separately
 in `bounded_scenarios`; they do not satisfy production requirements.
 
 Source discovery includes specifications, manuals, schemas, runbooks, and the
@@ -37,7 +37,7 @@ record; a status flag cannot override contradictory requirements.
 Run the metadata validator during development:
 
 ```sh
-python -m tools.rehearsal coverage --gate development --output build/coverage-development.json
+python -m tools.simulator coverage --gate development --output build/coverage-development.json
 python -m unittest discover -s tests -p test_requirements.py
 ```
 

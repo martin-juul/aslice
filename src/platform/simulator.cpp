@@ -19,7 +19,7 @@
 #include "core/result.hpp"
 #include "core/support.hpp"
 #include "platform/paths.hpp"
-#include "platform/rehearsal.hpp"
+#include "platform/simulator.hpp"
 #include <array>
 #include <cstddef>
 #include <cstdint>
@@ -78,7 +78,7 @@ void transfer(Socket socket, char* data, std::size_t size, bool writing) {
 #endif
         const auto done = writing ? send(socket, data, count, flags) : recv(socket, data, count, 0);
         if (done <= 0) {
-            throw core::Error("rehearsal transport closed or timed out; outcome may be unknown",
+            throw core::Error("simulator transport closed or timed out; outcome may be unknown",
                               "transport");
         }
         data += done;
@@ -87,7 +87,7 @@ void transfer(Socket socket, char* data, std::size_t size, bool writing) {
 }
 core::Json exchange(Socket socket, const core::Json& value) {
     auto payload = value.dump();
-    core::require(payload.size() <= maximum_frame, "rehearsal frame exceeds limit");
+    core::require(payload.size() <= maximum_frame, "simulator frame exceeds limit");
     const auto size = static_cast<std::uint32_t>(payload.size());
     std::array<char, 4> header{static_cast<char>(size >> 24), static_cast<char>(size >> 16),
                                static_cast<char>(size >> 8), static_cast<char>(size)};
@@ -98,14 +98,14 @@ core::Json exchange(Socket socket, const core::Json& value) {
     for (const auto byte : header) {
         length = (length << 8) | static_cast<unsigned char>(byte);
     }
-    core::require(length != 0 && length <= maximum_frame, "invalid rehearsal response length");
+    core::require(length != 0 && length <= maximum_frame, "invalid simulator response length");
     payload.resize(length);
     transfer(socket, payload.data(), payload.size(), false);
     return core::take(core::parse_json(payload));
 }
 } // namespace
 
-struct Rehearsal::Impl {
+struct Simulator::Impl {
     [[maybe_unused]] Network network;
     Connection connection;
     std::uint64_t sequence = 0;
@@ -113,17 +113,17 @@ struct Rehearsal::Impl {
         const auto descriptor = core::take(core::read_json(session.path()));
         sequence = descriptor.value("sequence", std::uint64_t{0});
         core::require(descriptor.at("version") == 1 && descriptor.at("host") == "127.0.0.1",
-                      "unsupported rehearsal endporeloadint");
+                      "unsupported simulator endporeloadint");
         const auto port = descriptor.at("port").get<unsigned>();
-        core::require(port > 0 && port <= 65535, "invalid rehearsal port");
+        core::require(port > 0 && port <= 65535, "invalid simulator port");
         connection.value = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
         if (connection.value == invalid_socket) {
-            throw core::Error("cannot create rehearsal socket", "transport");
+            throw core::Error("cannot create simulator socket", "transport");
         }
         const int no_delay = 1;
         core::require(setsockopt(connection.value, IPPROTO_TCP, TCP_NODELAY,
                                  reinterpret_cast<const char*>(&no_delay), sizeof(no_delay)) == 0,
-                      "cannot configure rehearsal framing latency");
+                      "cannot configure simulator framing latency");
 #ifdef _WIN32
         const DWORD timeout = 10000;
         const auto* timeout_data = reinterpret_cast<const char*>(&timeout);
@@ -138,7 +138,7 @@ struct Rehearsal::Impl {
                                  sizeof(timeout)) == 0 &&
                           setsockopt(connection.value, SOL_SOCKET, SO_SNDTIMEO, timeout_data,
                                      sizeof(timeout)) == 0,
-                      "cannot configure rehearsal timeout");
+                      "cannot configure simulator timeout");
         // NOLINTEND(misc-include-cleaner)
         // NOLINTNEXTLINE(misc-include-cleaner)
         sockaddr_in address{};
@@ -148,18 +148,18 @@ struct Rehearsal::Impl {
         // NOLINTNEXTLINE(misc-include-cleaner)
         core::require(connect(connection.value, reinterpret_cast<const sockaddr*>(&address),
                               sizeof(address)) == 0,
-                      "cannot connect to rehearsal server");
+                      "cannot connect to simulator server");
         const auto response = exchange(connection.value, {{"version", 1},
                                                           {"operation", "hello"},
                                                           {"identity", descriptor.at("identity")},
                                                           {"token", descriptor.at("token")}});
         core::require(response == core::Json{{"version", 1}, {"authenticated", true}},
-                      "rehearsal authentication refused");
+                      "simulator authentication refused");
     }
 };
-Rehearsal::Rehearsal(const HostPath& session) : implementation_(std::make_unique<Impl>(session)) {}
-Rehearsal::~Rehearsal() = default;
-core::Result<core::Json> Rehearsal::request(const std::string& capability,
+Simulator::Simulator(const HostPath& session) : implementation_(std::make_unique<Impl>(session)) {}
+Simulator::~Simulator() = default;
+core::Result<core::Json> Simulator::request(const std::string& capability,
                                             const std::string& operation,
                                             const core::Json& arguments,
                                             const core::Json& preconditions) {
@@ -173,16 +173,16 @@ core::Result<core::Json> Rehearsal::request(const std::string& capability,
                                                          {"arguments", arguments},
                                                          {"preconditions", preconditions}});
         core::require(response.at("version") == 1 && response.at("id") == id,
-                      "mismatched rehearsal response");
+                      "mismatched simulator response");
         // An OS failure can accompany effects. Preserve the whole envelope so
         // recovery callers can inspect receipts rather than infer no mutation.
         core::require(response.contains("failure") && response.contains("effects") &&
                           response.contains("receipt") && response.contains("result"),
-                      "incomplete rehearsal response");
+                      "incomplete simulator response");
         return response;
     });
 }
-core::Result<core::Json> Rehearsal::filesystem(const std::string& operation, const TargetPath& path,
+core::Result<core::Json> Simulator::filesystem(const std::string& operation, const TargetPath& path,
                                                core::Json arguments) {
     arguments["path"] = path.string();
     return request("filesystem", operation, arguments);

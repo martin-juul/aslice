@@ -10,10 +10,10 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
-from tools.rehearsal.harness import Workspace, launch, replay
-from tools.rehearsal.model import Model, Refusal, canonical
-from tools.rehearsal.protocol import MAX_FRAME, receive, send
-from tools.rehearsal.server import Server
+from tools.simulator.harness import Workspace, launch, replay
+from tools.simulator.model import Model, Refusal, canonical
+from tools.simulator.protocol import MAX_FRAME, receive, send
+from tools.simulator.server import Server
 
 BINARIES = [Path(arg).resolve() for arg in sys.argv[1:4]] if __name__ == "__main__" else []
 if BINARIES:
@@ -26,9 +26,9 @@ def action(operation, path="/work/file", **arguments):
 
 
 @unittest.skipUnless(BINARIES, "run through CTest")
-class RehearsalTests(unittest.TestCase):
+class SimulatorTests(unittest.TestCase):
     def setUp(self):
-        self.temporary = tempfile.TemporaryDirectory(prefix="aslice-rehearsal-")
+        self.temporary = tempfile.TemporaryDirectory(prefix="aslice-simulator-")
         self.addCleanup(self.temporary.cleanup)
         self.parent = Path(self.temporary.name)
         self.context = Workspace(self.parent / "workspace")
@@ -155,7 +155,7 @@ class RehearsalTests(unittest.TestCase):
             self.assertEqual(replay(fresh, BINARIES[1], altered), 1)
 
     def test_full_suite_reports_missing_coverage(self):
-        process = subprocess.run([sys.executable, "-m", "tools.rehearsal", "run", "--suite", "full",
+        process = subprocess.run([sys.executable, "-m", "tools.simulator", "run", "--suite", "full",
                                   "--workspace", str(self.parent / "full"), "--seed", "17",
                                   "--aslice", str(BINARIES[0])], cwd=ROOT, capture_output=True)
         self.assertEqual(process.returncode, 1, process.stderr)
@@ -168,6 +168,9 @@ class RehearsalTests(unittest.TestCase):
         server = Server(Model(self.workspace))
         self.addCleanup(server.close)
         descriptor = server.issue("p1", ["machine"])
+        owner = subprocess.Popen([sys.executable, '-c', 'import sys; sys.stdin.read()'], stdin=subprocess.PIPE)
+        self.addCleanup(owner.stdin.close)
+        server.attach_process("p1", owner)
         for token in ("wrong", descriptor["token"]):
             with socket.create_connection(server.server_address, timeout=2) as connection:
                 send(connection, {"version": 1, "operation": "hello", "identity": "p1", "token": token})
@@ -184,14 +187,14 @@ class RehearsalTests(unittest.TestCase):
             with self.assertRaises(EOFError):
                 receive(connection)
 
-    def test_concurrent_lock_ownership_and_disconnect(self):
+    def test_concurrent_lock_ownership_and_process_exit(self):
         model = Model(self.workspace)
         model.filesystem("a", "create", {"path": "/work/lock"})
         model.filesystem("a", "lock", {"path": "/work/lock"})
         with self.assertRaises(Refusal) as refused:
             model.filesystem("b", "lock", {"path": "/work/lock"})
         self.assertEqual(refused.exception.code, "busy")
-        model.disconnect("a")
+        model.process_exited("a")
         model.filesystem("b", "lock", {"path": "/work/lock"})
 
     def test_path_and_workspace_refusals(self):

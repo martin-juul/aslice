@@ -2,7 +2,7 @@
   "version": 2,
   "sources": {
     "CONTRIBUTING.md": {
-      "sha256": "c031be33a6a53882c80014a4ca583e6ab2cc30d15a29449b8e8299a71b221275",
+      "sha256": "481c9feccc0bb769afbc157d32e38a01bbc6397ec667882f2d9b48470618f038",
       "lines": 230
     },
     "docs/AUTHORING.md": {
@@ -274,7 +274,7 @@
       "lines": 209
     },
     "docs/runbooks/PROTOTYPE.md": {
-      "sha256": "2277a3e018a21a173d7dcc5e24c14c5ecbc12df42e387fd6c3ab16a054288d53",
+      "sha256": "f7cc777972728a3bff717b188431428cb3998ad0d2d82183443fd2af8cf2ecb8",
       "lines": 269
     },
     "docs/runbooks/README.md": {
@@ -430,7 +430,7 @@
       "lines": 71
     },
     "README.md": {
-      "sha256": "e7adfc5b3cd03dcae77123b2dbc99c303e30c3282be701cbe9aed9a368a25083",
+      "sha256": "518ac8b1f2ad42750c98b70872c9eb0ee9e3593371044eb60ba6525ed811ce77",
       "lines": 109
     },
     "schematics/json/advisory.schema.json": {
@@ -589,9 +589,9 @@
       "sha256": "07571e3f88d400093bb88899ddf240a68195c27e4995a59997fe928cfcc5ab78",
       "lines": 82
     },
-    "tools/rehearsal/README.md": {
-      "sha256": "0aa331c58b0645d95fa78bc84b3dbbc3206e6d6f862fa53e7272856bb9bfe4c5",
-      "lines": 164
+    "tools/simulator/README.md": {
+      "sha256": "df1250d9c7db7b68ab1fd7176fde0903298a84410e744984ab73608565038cea",
+      "lines": 266
     }
   },
   "requirements": [
@@ -12764,9 +12764,9 @@
         "filesystem",
         "process"
       ],
-      "positive": "tests/rehearsal/test_fixture_lifecycle.py::test_install_upgrade_rollback_remove_and_power_loss",
-      "refusal": "tests/rehearsal/test_fixture_lifecycle.py::test_malicious_catalog_and_external_edits_are_refused",
-      "recovery": "tests/rehearsal/test_fixture_lifecycle.py::test_lost_activation_acknowledgement_is_reconciled_by_cpp",
+      "positive": "tests/simulator/test_fixture_lifecycle.py::test_install_upgrade_rollback_remove_and_power_loss",
+      "refusal": "tests/simulator/test_fixture_lifecycle.py::test_malicious_catalog_and_external_edits_are_refused",
+      "recovery": "tests/simulator/test_fixture_lifecycle.py::test_lost_activation_acknowledgement_is_reconciled_by_cpp",
       "status": "defined; execution evidence is recorded separately"
     },
     {
@@ -12810,7 +12810,7 @@
       "components": [
         "src/platform/filesystem_posix.cpp",
         "src/platform/filesystem_windows.cpp",
-        "src/platform/target_filesystem_rehearsal.cpp"
+        "src/platform/target_filesystem_simulator.cpp"
       ],
       "platform": [
         "filesystem"
@@ -12818,6 +12818,113 @@
       "positive": "tests/test_platform_read.py::test_opened_descriptor_keeps_original_file",
       "refusal": "tests/test_platform_read.py::test_no_symlink_parent_leaf_or_fifo",
       "scope": "POSIX read and namespace primitives; production extraction and full ownership policy remain missing",
+      "status": "defined; execution evidence is recorded separately"
+    },
+    {
+      "id": "cumulative-lock-wait",
+      "source": "docs/DATABASE.md",
+      "components": [
+        "src/core/lock_wait.cpp",
+        "src/platform/wait_clock.cpp",
+        "src/platform/wait_clock_simulator.cpp",
+        "src/platform/target_filesystem.cpp"
+      ],
+      "platform": [
+        "monotonic-clock",
+        "cancellation",
+        "filesystem-locks"
+      ],
+      "positive": "tests/simulator/test_lock_wait.py::test_acquisition_after_owner_exit_stops_retrying",
+      "refusal": "tests/simulator/test_lock_wait.py::test_configured_timeout_without_permission_never_waits",
+      "recovery": "tests/lock_wait_tests.cpp",
+      "scope": "Shared C++ cumulative wait and recovery allowances; no production command wiring, SQL contention classification or durable-phase recovery",
+      "status": "defined; execution evidence is recorded separately"
+    },
+    {
+      "id": "helper-message-admission",
+      "source": "docs/HELPERS.md",
+      "components": [
+        "src/helper/protocol.cpp"
+      ],
+      "platform": [
+        "authenticated-channel-interface"
+      ],
+      "positive_and_refusal": "tests/helper_protocol_tests.cpp",
+      "scope": "Bounded C++ framing, injected grant binding, serialized sequence admission and outcome validation; no native helper launch, OS authentication, sandbox or durable outcome lookup",
+      "status": "defined; execution evidence is recorded separately"
+    },
+    {
+      "id": "native-read-only-helper",
+      "source": "docs/HELPERS.md",
+      "components": [
+        "src/platform/helper_process.cpp",
+        "src/helper/protocol.cpp",
+        "src/cli/main.cpp"
+      ],
+      "platform": [
+        "process-launch",
+        "inherited-channels",
+        "caller-identity",
+        "monotonic-clock",
+        "cancellation"
+      ],
+      "positive_and_refusal": "tests/helper_process_tests.cpp",
+      "refusal": "tests/test_helper_process.py",
+      "scope": "Windows/Linux development-only manifest inspection; no sandbox, mutation, production grant issuance, macOS qualification or durable outcome recovery",
+      "status": "defined; execution evidence is recorded separately"
+    },
+    {
+      "id": "simulated-inherited-helper-channels",
+      "source": "docs/HELPERS.md",
+      "components": [
+        "src/helper/inspection.cpp",
+        "tools/simulator/channels.py",
+        "tools/simulator/server.py"
+      ],
+      "platform": [
+        "process-identity",
+        "inherited-byte-channels",
+        "termination",
+        "power-loss"
+      ],
+      "positive_and_refusal": "tests/simulator/test_helper_channels.py",
+      "scope": "Deterministically scheduled read-only C++ inspection over bounded volatile simulated channels; no general helper launch, sandbox, durable outcomes or generic harness replay",
+      "status": "defined; execution evidence is recorded separately"
+    },
+    {
+      "id": "helper-scenario-evidence-replay",
+      "source": "docs/HELPERS.md",
+      "components": [
+        "tools/simulator/helper_runner.py",
+        "tools/simulator/harness.py"
+      ],
+      "platform": [
+        "process-launch",
+        "inherited-byte-channels",
+        "termination"
+      ],
+      "positive_and_refusal": "tests/simulator/test_helper_replay.py",
+      "scope": "Bounded read-only two-peer inspection suite and real C++ replay including transfer failure; no application-driven helper launch, production authority or durable outcome recovery",
+      "status": "defined; execution evidence is recorded separately"
+    },
+    {
+      "id": "simulated-process-credentials",
+      "source": "docs/HELPERS.md",
+      "components": [
+        "tools/simulator/credentials.py",
+        "tools/simulator/model.py",
+        "tools/simulator/server.py",
+        "src/platform/target_filesystem_simulator.cpp"
+      ],
+      "platform": [
+        "process-identity",
+        "filesystem-permissions",
+        "termination",
+        "power-loss"
+      ],
+      "positive_and_refusal": "tests/simulator/test_credentials.py",
+      "recovery": "tests/simulator/test_process_lifetime.py",
+      "scope": "Harness-issued identities, basic mode access, descriptor authority and credential replay; no ACL evaluation, special modes, host credential changes or native macOS qualification",
       "status": "defined; execution evidence is recorded separately"
     }
   ]

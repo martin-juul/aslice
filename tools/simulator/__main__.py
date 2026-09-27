@@ -16,13 +16,15 @@ def main():
         command.add_argument("--workspace", type=Path, required=True)
         command.add_argument("--aslice", type=Path, required=True)
         if name == "run":
-            command.add_argument("--suite", choices=("foundation", "fixture", "full"), default="full")
+            command.add_argument("--suite", choices=("foundation", "fixture", "helper", "full"), default="full")
             command.add_argument("--seed", type=int, default=0)
             command.add_argument("--native-evidence", type=Path)
+            command.add_argument("--helper-driver", type=Path)
         elif name == "client":
             command.add_argument("command", nargs=argparse.REMAINDER)
         else:
             command.add_argument("--trace", type=Path, required=True)
+            command.add_argument("--helper-driver", type=Path)
     coverage = commands.add_parser("coverage")
     coverage.add_argument("--json", action="store_true")
     coverage.add_argument("--gate", choices=("development", "release"), default="release")
@@ -38,6 +40,10 @@ def main():
             print(encoded, end="")
         return 0 if result["development_valid" if args.gate == "development" else "complete"] else 1
     supplied_evidence = None
+    if args.action == 'run' and args.suite == 'helper' and args.helper_driver is None:
+        parser.error('--suite helper requires --helper-driver')
+    if args.action == 'run' and args.helper_driver is not None and args.suite not in ('helper', 'full'):
+        parser.error('--helper-driver applies only to helper/full suites')
     if args.action == "run" and args.native_evidence:
         if args.suite != "full":
             parser.error("--native-evidence applies only to --suite full")
@@ -45,9 +51,9 @@ def main():
         supplied_evidence = native_evidence(args.native_evidence)
     with Workspace(args.workspace) as workspace:
         if args.action == "run":
-            return run(workspace, args.aslice, args.suite, args.seed, supplied_evidence)
+            return run(workspace, args.aslice, args.suite, args.seed, supplied_evidence, args.helper_driver)
         if args.action == "replay":
-            return replay(workspace, args.aslice, args.trace)
+            return replay(workspace, args.aslice, args.trace, args.helper_driver)
         command = args.command[1:] if args.command[:1] == ["--"] else args.command
         if not command:
             parser.error("client requires a command after --")
@@ -61,5 +67,5 @@ if __name__ == "__main__":
     try:
         sys.exit(main())
     except (OSError, ValueError, KeyError) as error:
-        print(f"rehearsal: {error}", file=sys.stderr)
+        print(f"simulator: {error}", file=sys.stderr)
         sys.exit(2)

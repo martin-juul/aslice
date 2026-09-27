@@ -1,6 +1,6 @@
 #include "core/support.hpp"
 #include "platform/paths.hpp"
-#include "platform/rehearsal.hpp"
+#include "platform/simulator.hpp"
 #include <exception>
 #include <iostream>
 #include <string>
@@ -10,7 +10,7 @@ int main(int argc, char** argv) {
         aslice::core::require(argc == 5 && std::string(argv[1]) == "--session" &&
                                   std::string(argv[3]) == "--script",
                               "expected --session FILE --script FILE");
-        aslice::platform::Rehearsal platform{aslice::platform::HostPath{argv[2]}};
+        aslice::platform::Simulator platform{aslice::platform::HostPath{argv[2]}};
         const auto script = aslice::core::take(aslice::core::read_json(argv[4]));
         for (const auto& action : script) {
             const auto capability = action.at("capability").get<std::string>();
