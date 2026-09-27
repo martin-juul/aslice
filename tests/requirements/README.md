@@ -17,8 +17,14 @@ requirements remain unimplemented and lack acceptance evidence. The helper
 document's explicitly deferred multi-user daemon is classified as future context;
 current per-operation helpers and persistent package services remain requirements.
 
-Source SHA-256 values normalize CRLF to LF except in `docs/refs`, whose bytes are
-preserved. Adding, deleting, or changing a source invalidates the development
+Captured websites in `docs/library` are represented by each collection's
+`SHA256SUMS`, alongside the library guide. Their original pages and binary assets
+are source evidence, not project requirement clauses. The separate
+`documentation-library-integrity` test verifies those files against the collection
+checksums; project interpretations remain in `docs/refs`.
+
+Source SHA-256 values normalize CRLF to LF except in `docs/refs` and `docs/library`,
+whose bytes are preserved. Adding, deleting, or changing a source invalidates the development
 gate. Each requirement separately binds its clause sources and owning contract in
 `reviewed_sources`; each context/history classification binds its own source hash.
 Refreshing the inventory never refreshes those review decisions. Review the

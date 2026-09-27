@@ -73,8 +73,14 @@ def source_identity():
             dirty = bool(status.stdout) if status.returncode == 0 else None
     digest = hashlib.sha256()
     for directory in ("src", "tools/simulator", "tests", "docs/sqlite"):
-        for path in sorted((ROOT / directory).rglob("*")):
-            if path.is_file() and "__pycache__" not in path.parts:
+        paths = []
+        for current, directories, files in os.walk(ROOT / directory):
+            directories[:] = [
+                name for name in directories if name not in ("__pycache__", "node_modules")
+            ]
+            paths.extend(Path(current) / name for name in files)
+        for path in sorted(paths):
+            if path.is_file():
                 digest.update(path.relative_to(ROOT).as_posix().encode())
                 digest.update(b"\0")
                 digest.update(hashlib.sha256(path.read_bytes()).digest())

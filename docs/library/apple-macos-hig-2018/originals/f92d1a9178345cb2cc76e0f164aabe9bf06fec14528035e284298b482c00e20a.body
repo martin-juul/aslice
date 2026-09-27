@@ -1,0 +1,10 @@
+$(document).ready(function() {
+
+	$('.pull-down-buttons-gallery').bxSlider({
+		adaptiveHeight: false,
+		mode: 'fade',
+		pagerCustom: '#bxlabels-pull-down-buttons-examples',
+		controls: false
+	});
+
+});

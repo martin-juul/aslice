@@ -1,9 +1,25 @@
 {
   "version": 2,
   "sources": {
+    "AGENTS.md": {
+      "sha256": "af087dc6fded5ec072cd69c5fd3d71066a0291d56c3717c3d230b258ebe0e97a",
+      "lines": 43
+    },
     "CONTRIBUTING.md": {
       "sha256": "481c9feccc0bb769afbc157d32e38a01bbc6397ec667882f2d9b48470618f038",
       "lines": 230
+    },
+    "README.md": {
+      "sha256": "518ac8b1f2ad42750c98b70872c9eb0ee9e3593371044eb60ba6525ed811ce77",
+      "lines": 109
+    },
+    "SECURITY.md": {
+      "sha256": "21d21762ff4299797fc385827de5d738f276ee97052e8ba53f994bffa2e8be0c",
+      "lines": 85
+    },
+    "STRUCTURE.md": {
+      "sha256": "b8b0863459f9b7126f4f840c71266156c2b1412fdf67559443d454ebf0321f3a",
+      "lines": 83
     },
     "docs/AUTHORING.md": {
       "sha256": "54767236ef3ab718b43a060bec68240b5aa940627d4a2ee4d641df132fa8ea35",
@@ -45,6 +61,38 @@
       "sha256": "4a3f61ca8c73b22bb6e020526657f0845abd31f58155700ab1afe2302d87148a",
       "lines": 63
     },
+    "docs/REPOSITORIES.md": {
+      "sha256": "65783996f84198ce4c7503a98aa80616440356eed34de7a3106a7c21fd34b05d",
+      "lines": 343
+    },
+    "docs/SETUP.md": {
+      "sha256": "bcd9da79d04f7c6b424edc0f0ed88650b19eb8599f2036c116b8fe83dd465028",
+      "lines": 372
+    },
+    "docs/SLICE-FORMAT.md": {
+      "sha256": "b73e2574b989ac133cc4e56f563a6352d1a8e6877884870deedc51d890ff64f5",
+      "lines": 68
+    },
+    "docs/STATE-AND-RECOVERY.md": {
+      "sha256": "3a1c45d4c1c666f065f71b4831f9bd0b85f999cea7d36f5f2cbb494f8f437d18",
+      "lines": 623
+    },
+    "docs/SYSTEM-VOLUMES.md": {
+      "sha256": "d890001fa6f4718f6fe71a83320ae8e16313ce34286d00f9914ee9f6cd22aefc",
+      "lines": 72
+    },
+    "docs/TOOLCHAIN.md": {
+      "sha256": "d3e761490c0397a34b444cc4682f5bbc478250681f313b65ce6d6c47b0b2b62c",
+      "lines": 186
+    },
+    "docs/library/README.md": {
+      "sha256": "00628d15342cee859bc385271d0901d760dc7447a73400b8bcde331aca5417e5",
+      "lines": 158
+    },
+    "docs/library/apple-macos-hig-2018/SHA256SUMS": {
+      "sha256": "3d8309e733dfede8340999c1e638710f559f4026949b0793e71aef185195698b",
+      "lines": 2784
+    },
     "docs/refs/APPLE_CONFIGURING_SYSTEM_INTEGRITY_PROTECTION.MD": {
       "sha256": "6ff689e85b4bfe9728f9bc2d9c3717aa56e2a08515801c1687c170a2a4ee1cef",
       "lines": 43
@@ -56,6 +104,10 @@
     "docs/refs/APPLE_DYNAMIC_LIBRARY_DESIGN_GUIDELINES.MD": {
       "sha256": "57a5d61f1ed1eeca43dc4693f57ec3906daba50213fdcaead3683307026da7f2",
       "lines": 45
+    },
+    "docs/refs/APPLE_MACOS_HIG_2018.MD": {
+      "sha256": "a941c17ced5271c5bdee066cc67c3af7b2be597fef4a8d32d2b582a1234dbdbb",
+      "lines": 59
     },
     "docs/refs/APPLE_SIGNED_SYSTEM_VOLUME_SECURITY.MD": {
       "sha256": "9dbdbb83c2092f111fc42161253dd02cc0b11925d7d674d10dd3a22768e6981e",
@@ -178,8 +230,8 @@
       "lines": 43
     },
     "docs/refs/README.MD": {
-      "sha256": "9f31adc46de1d669d4a24eefbedae01587e38098e95764c40f90dbfcba8a4156",
-      "lines": 81
+      "sha256": "2d2f4a6912e13d7b07d919f8916fdc15b5af764680639b1fc85a55a50cbb876d",
+      "lines": 82
     },
     "docs/refs/RFC_8785_JSON_CANONICALIZATION_SCHEME.MD": {
       "sha256": "4a5c91172a32c715ebacfd495b712448effd24332b62de43934a9e918e3d98db",
@@ -198,16 +250,16 @@
       "lines": 2457
     },
     "docs/refs/SHA256SUMS": {
-      "sha256": "bf995fc2a8c88db2236c4937092cefb8f46e0be00c7204b963a9871f6a3d2768",
-      "lines": 53
+      "sha256": "877b4c2737368a4c4f86d75bf5c4a6d45b2a4e43e47bd1f7027bca7422a23c77",
+      "lines": 54
     },
     "docs/refs/SMARTCARD_HSM_ALGORITHMS.MD": {
       "sha256": "3ad1a3ec1fe476cb502c2ae2882f2ca69fc35884e33e258c4ef92fcbfb9387c9",
       "lines": 42
     },
     "docs/refs/SOURCE-INVENTORY.MD": {
-      "sha256": "b15ddb51296f0d8efe6700c1d86f428de528c04ec10517d1301dda1af5ad18d9",
-      "lines": 87
+      "sha256": "d689f62e853ea1c4c9a3c501e0c344e43205a64f289f7c2823408be74875609a",
+      "lines": 88
     },
     "docs/refs/SQLITE_STORAGE_AND_RECOVERY.MD": {
       "sha256": "5f1153e400f773d73a866ca7dd2565724c00004d63d38e170d9dd7fb5ad06300",
@@ -261,10 +313,6 @@
       "sha256": "adde4a1872a28d337e33fa6bf023eb33df53eee495c5a10975e125b30373ee3a",
       "lines": 42
     },
-    "docs/REPOSITORIES.md": {
-      "sha256": "65783996f84198ce4c7503a98aa80616440356eed34de7a3106a7c21fd34b05d",
-      "lines": 343
-    },
     "docs/runbooks/GENESIS.md": {
       "sha256": "1875236d2fb381d29703f5a17f8c24350fc6553aee838881f1f2646a63888309",
       "lines": 128
@@ -280,14 +328,6 @@
     "docs/runbooks/README.md": {
       "sha256": "76f5687689be862c8a2b7db4228e9ac8b65f805d3a48a49dd50c374d862a3268",
       "lines": 16
-    },
-    "docs/SETUP.md": {
-      "sha256": "bcd9da79d04f7c6b424edc0f0ed88650b19eb8599f2036c116b8fe83dd465028",
-      "lines": 372
-    },
-    "docs/SLICE-FORMAT.md": {
-      "sha256": "b73e2574b989ac133cc4e56f563a6352d1a8e6877884870deedc51d890ff64f5",
-      "lines": 68
     },
     "docs/sqlite/client-cache.sql": {
       "sha256": "be253eb137a7f00ea1a90a1bc1639a7de42b4882ab7191f674e086d6f00f4e34",
@@ -313,17 +353,9 @@
       "sha256": "41c0f89172445d7d29a707c3743418237df90bce29e5480e7992030b4cfae3ec",
       "lines": 100
     },
-    "docs/STATE-AND-RECOVERY.md": {
-      "sha256": "3a1c45d4c1c666f065f71b4831f9bd0b85f999cea7d36f5f2cbb494f8f437d18",
-      "lines": 623
-    },
-    "docs/SYSTEM-VOLUMES.md": {
-      "sha256": "d890001fa6f4718f6fe71a83320ae8e16313ce34286d00f9914ee9f6cd22aefc",
-      "lines": 72
-    },
-    "docs/TOOLCHAIN.md": {
-      "sha256": "d3e761490c0397a34b444cc4682f5bbc478250681f313b65ce6d6c47b0b2b62c",
-      "lines": 186
+    "man/README.md": {
+      "sha256": "60c211870fa4d6b71c9933c33ba25183050e79e5b0a032c2051c983f2e19c6b2",
+      "lines": 71
     },
     "man/aslice-adopt.1.md": {
       "sha256": "e2bf3d9000ebdf981096b3694e536e88cd7d8b5f9d546bfd426c0545c02a6cea",
@@ -425,13 +457,9 @@
       "sha256": "706300102dd53ba56907eff8465c76e25bc35cc6d74c7c8eb69fc11add27ea00",
       "lines": 203
     },
-    "man/README.md": {
-      "sha256": "60c211870fa4d6b71c9933c33ba25183050e79e5b0a032c2051c983f2e19c6b2",
-      "lines": 71
-    },
-    "README.md": {
-      "sha256": "518ac8b1f2ad42750c98b70872c9eb0ee9e3593371044eb60ba6525ed811ce77",
-      "lines": 109
+    "schematics/README.md": {
+      "sha256": "b8fa2412c9dbb48125991b3650277db46e69380812a356a8dfa8115546c278fa",
+      "lines": 192
     },
     "schematics/json/advisory.schema.json": {
       "sha256": "b27ca2c18e0dc985f0d6763b4f68c7b47e9b269246a4592b91c223fa00002c0a",
@@ -541,10 +569,6 @@
       "sha256": "f7a35aec45dd5f8aa16dba746dc305cda0e5ef61c45124e765284548a9f1566f",
       "lines": 328
     },
-    "schematics/README.md": {
-      "sha256": "b8fa2412c9dbb48125991b3650277db46e69380812a356a8dfa8115546c278fa",
-      "lines": 192
-    },
     "schematics/starlark/build.schema.star": {
       "sha256": "eb49b0bbcd0b802260d00e49d786217e3d684c9513c50e02b2d3a3bffcca526d",
       "lines": 123
@@ -581,17 +605,17 @@
       "sha256": "49fa73ef0e5ba6dc94dd4a3cc4f5e1a3fbcec3d1cee3b4f5bf5fceb3533ee6e6",
       "lines": 79
     },
-    "SECURITY.md": {
-      "sha256": "21d21762ff4299797fc385827de5d738f276ee97052e8ba53f994bffa2e8be0c",
-      "lines": 85
-    },
-    "STRUCTURE.md": {
-      "sha256": "07571e3f88d400093bb88899ddf240a68195c27e4995a59997fe928cfcc5ab78",
-      "lines": 82
+    "tools/simulator/DARWIN.md": {
+      "sha256": "d2fc6bd25735443076a4e1991f7e2852b196945e3e57b31cda5955feb24ab7f0",
+      "lines": 392
     },
     "tools/simulator/README.md": {
-      "sha256": "df1250d9c7db7b68ab1fd7176fde0903298a84410e744984ab73608565038cea",
-      "lines": 266
+      "sha256": "146e34a3bc030acdc74efc137875228e518b024b7accb6164a55e9c16a265c8a",
+      "lines": 270
+    },
+    "tools/simulator/web/README.md": {
+      "sha256": "e15b5b55d13595d6cbb19ea9e7a7497f543ee3dfe5abd47c8056ea7f26db5c5e",
+      "lines": 96
     }
   },
   "requirements": [
@@ -10320,6 +10344,611 @@
         }
       },
       "evidence": []
+    },
+    {
+      "id": "ASLICE-DARWIN-001",
+      "statement": "Darwin execution and the modeled platform remain distinct; preparation grants no execution acceptance.",
+      "owner": "tools/simulator/DARWIN.md#darwin-compatibility-environment",
+      "review": "Reviewed persistent infrastructure, unchanged upstream CLI execution, runtime execve fix and measured address breakpoint/instruction step/stack. Cocoa rendering, source/child debugging, isolation and lifecycle acceptance remain pending; full implementation credit is not granted.",
+      "reviewed_sources": {
+        "tools/simulator/DARWIN.md": "d2fc6bd25735443076a4e1991f7e2852b196945e3e57b31cda5955feb24ab7f0"
+      },
+      "clauses": [
+        {
+          "path": "tools/simulator/DARWIN.md",
+          "start": 1,
+          "end": 11
+        }
+      ],
+      "implementation": [
+        "tools/simulator/darwin.py",
+        "tools/simulator/corpus.py"
+      ],
+      "implemented": false,
+      "platform_dependencies": [
+        "QEMU",
+        "Ubuntu 26.04 x86-64",
+        "pinned Darling",
+        "Mac-built artifacts and matching symbols"
+      ],
+      "environments": [
+        "windows-host",
+        "linux-host",
+        "darling-vm"
+      ],
+      "tests": {
+        "positive": {
+          "scenario": "Host preparation probes are bounded infrastructure tests; execute the owning requirement in a dedicated VM before acceptance.",
+          "links": [
+            "tests/simulator/test_darwin.py"
+          ]
+        },
+        "refusal": {
+          "scenario": "Refuse unavailable capabilities, altered artifacts and unsupported input without modeled fallback.",
+          "links": [
+            "tests/simulator/test_darwin.py"
+          ]
+        },
+        "concurrency": {
+          "scenario": "Exercise independent controllers and guest parent/child behavior under concurrent ownership attempts.",
+          "links": [
+            "tests/simulator/test_darwin.py"
+          ]
+        },
+        "recovery": {
+          "scenario": "Interrupt the owning operation and verify durable identity, retained state and explicitly uncertain outcomes.",
+          "links": [
+            "tests/simulator/test_darwin.py"
+          ]
+        }
+      },
+      "evidence": []
+    },
+    {
+      "id": "ASLICE-DARWIN-002",
+      "statement": "Pin the Ubuntu/Darling build inputs and explicitly report host prerequisites, acceleration and pending feasibility gates.",
+      "owner": "tools/simulator/DARWIN.md#feasibility-gate",
+      "review": "Reviewed persistent infrastructure, unchanged upstream CLI execution, runtime execve fix and measured address breakpoint/instruction step/stack. Cocoa rendering, source/child debugging, isolation and lifecycle acceptance remain pending; full implementation credit is not granted.",
+      "reviewed_sources": {
+        "tools/simulator/DARWIN.md": "d2fc6bd25735443076a4e1991f7e2852b196945e3e57b31cda5955feb24ab7f0"
+      },
+      "clauses": [
+        {
+          "path": "tools/simulator/DARWIN.md",
+          "start": 13,
+          "end": 48
+        }
+      ],
+      "implementation": [
+        "tools/simulator/darwin.py",
+        "tools/simulator/corpus.py"
+      ],
+      "implemented": false,
+      "platform_dependencies": [
+        "QEMU",
+        "Ubuntu 26.04 x86-64",
+        "pinned Darling",
+        "Mac-built artifacts and matching symbols"
+      ],
+      "environments": [
+        "windows-host",
+        "linux-host",
+        "darling-vm"
+      ],
+      "tests": {
+        "positive": {
+          "scenario": "Host preparation probes are bounded infrastructure tests; execute the owning requirement in a dedicated VM before acceptance.",
+          "links": [
+            "tests/simulator/test_darwin.py"
+          ]
+        },
+        "refusal": {
+          "scenario": "Refuse unavailable capabilities, altered artifacts and unsupported input without modeled fallback.",
+          "links": [
+            "tests/simulator/test_darwin.py"
+          ]
+        },
+        "concurrency": {
+          "scenario": "Exercise independent controllers and guest parent/child behavior under concurrent ownership attempts.",
+          "links": [
+            "tests/simulator/test_darwin.py"
+          ]
+        },
+        "recovery": {
+          "scenario": "Interrupt the owning operation and verify durable identity, retained state and explicitly uncertain outcomes.",
+          "links": [
+            "tests/simulator/test_darwin.py"
+          ]
+        }
+      },
+      "evidence": []
+    },
+    {
+      "id": "ASLICE-DARWIN-003",
+      "statement": "Qualify unchanged Mac-built CLI, Cocoa, document and parent/child debugger artifacts with source, license, hashes and matching symbols.",
+      "owner": "tools/simulator/DARWIN.md#checked-corpus",
+      "review": "Reviewed persistent infrastructure, unchanged upstream CLI execution, runtime execve fix and measured address breakpoint/instruction step/stack. Cocoa rendering, source/child debugging, isolation and lifecycle acceptance remain pending; full implementation credit is not granted.",
+      "reviewed_sources": {
+        "tools/simulator/DARWIN.md": "d2fc6bd25735443076a4e1991f7e2852b196945e3e57b31cda5955feb24ab7f0"
+      },
+      "clauses": [
+        {
+          "path": "tools/simulator/DARWIN.md",
+          "start": 69,
+          "end": 101
+        },
+        {
+          "path": "tools/simulator/DARWIN.md",
+          "start": 310,
+          "end": 335
+        }
+      ],
+      "implementation": [
+        "tools/simulator/darwin.py",
+        "tools/simulator/corpus.py",
+        "tools/simulator/corpus_fetch.py"
+      ],
+      "implemented": false,
+      "platform_dependencies": [
+        "QEMU",
+        "Ubuntu 26.04 x86-64",
+        "pinned Darling",
+        "Mac-built artifacts and matching symbols"
+      ],
+      "environments": [
+        "windows-host",
+        "linux-host",
+        "darling-vm"
+      ],
+      "tests": {
+        "positive": {
+          "scenario": "Host preparation probes are bounded infrastructure tests; execute the owning requirement in a dedicated VM before acceptance.",
+          "links": [
+            "tests/simulator/test_darwin.py"
+          ]
+        },
+        "refusal": {
+          "scenario": "Refuse unavailable capabilities, altered artifacts and unsupported input without modeled fallback.",
+          "links": [
+            "tests/simulator/test_darwin.py"
+          ]
+        },
+        "concurrency": {
+          "scenario": "Exercise independent controllers and guest parent/child behavior under concurrent ownership attempts.",
+          "links": [
+            "tests/simulator/test_darwin.py"
+          ]
+        },
+        "recovery": {
+          "scenario": "Interrupt the owning operation and verify durable identity, retained state and explicitly uncertain outcomes.",
+          "links": [
+            "tests/simulator/test_darwin.py"
+          ]
+        }
+      },
+      "evidence": []
+    },
+    {
+      "id": "ASLICE-DARWIN-004",
+      "statement": "Create configurable persistent machines from immutable base images with complete runtime identities and private overlays.",
+      "owner": "tools/simulator/DARWIN.md#stopped-image-management",
+      "review": "Reviewed persistent infrastructure, unchanged upstream CLI execution, runtime execve fix and measured address breakpoint/instruction step/stack. Cocoa rendering, source/child debugging, isolation and lifecycle acceptance remain pending; full implementation credit is not granted.",
+      "reviewed_sources": {
+        "tools/simulator/DARWIN.md": "d2fc6bd25735443076a4e1991f7e2852b196945e3e57b31cda5955feb24ab7f0"
+      },
+      "clauses": [
+        {
+          "path": "tools/simulator/DARWIN.md",
+          "start": 103,
+          "end": 138
+        }
+      ],
+      "implementation": [
+        "tools/simulator/darwin.py",
+        "tools/simulator/corpus.py"
+      ],
+      "implemented": false,
+      "platform_dependencies": [
+        "QEMU",
+        "Ubuntu 26.04 x86-64",
+        "pinned Darling",
+        "Mac-built artifacts and matching symbols"
+      ],
+      "environments": [
+        "windows-host",
+        "linux-host",
+        "darling-vm"
+      ],
+      "tests": {
+        "positive": {
+          "scenario": "Host preparation probes are bounded infrastructure tests; execute the owning requirement in a dedicated VM before acceptance.",
+          "links": [
+            "tests/simulator/test_darwin.py"
+          ]
+        },
+        "refusal": {
+          "scenario": "Refuse unavailable capabilities, altered artifacts and unsupported input without modeled fallback.",
+          "links": [
+            "tests/simulator/test_darwin.py"
+          ]
+        },
+        "concurrency": {
+          "scenario": "Exercise independent controllers and guest parent/child behavior under concurrent ownership attempts.",
+          "links": [
+            "tests/simulator/test_darwin.py"
+          ]
+        },
+        "recovery": {
+          "scenario": "Interrupt the owning operation and verify durable identity, retained state and explicitly uncertain outcomes.",
+          "links": [
+            "tests/simulator/test_darwin.py"
+          ]
+        }
+      },
+      "evidence": []
+    },
+    {
+      "id": "ASLICE-DARWIN-005",
+      "statement": "Serialize machine ownership, journal mutations, refuse live snapshots and retain pre-restore and interrupted state.",
+      "owner": "tools/simulator/DARWIN.md#stopped-image-management",
+      "review": "Reviewed persistent infrastructure, unchanged upstream CLI execution, runtime execve fix and measured address breakpoint/instruction step/stack. Cocoa rendering, source/child debugging, isolation and lifecycle acceptance remain pending; full implementation credit is not granted.",
+      "reviewed_sources": {
+        "tools/simulator/DARWIN.md": "d2fc6bd25735443076a4e1991f7e2852b196945e3e57b31cda5955feb24ab7f0"
+      },
+      "clauses": [
+        {
+          "path": "tools/simulator/DARWIN.md",
+          "start": 140,
+          "end": 155
+        }
+      ],
+      "implementation": [
+        "tools/simulator/darwin.py",
+        "tools/simulator/corpus.py"
+      ],
+      "implemented": false,
+      "platform_dependencies": [
+        "QEMU",
+        "Ubuntu 26.04 x86-64",
+        "pinned Darling",
+        "Mac-built artifacts and matching symbols"
+      ],
+      "environments": [
+        "windows-host",
+        "linux-host",
+        "darling-vm"
+      ],
+      "tests": {
+        "positive": {
+          "scenario": "Host preparation probes are bounded infrastructure tests; execute the owning requirement in a dedicated VM before acceptance.",
+          "links": [
+            "tests/simulator/test_darwin.py"
+          ]
+        },
+        "refusal": {
+          "scenario": "Refuse unavailable capabilities, altered artifacts and unsupported input without modeled fallback.",
+          "links": [
+            "tests/simulator/test_darwin.py"
+          ]
+        },
+        "concurrency": {
+          "scenario": "Exercise independent controllers and guest parent/child behavior under concurrent ownership attempts.",
+          "links": [
+            "tests/simulator/test_darwin.py"
+          ]
+        },
+        "recovery": {
+          "scenario": "Interrupt the owning operation and verify durable identity, retained state and explicitly uncertain outcomes.",
+          "links": [
+            "tests/simulator/test_darwin.py"
+          ]
+        }
+      },
+      "evidence": []
+    },
+    {
+      "id": "ASLICE-DARWIN-006",
+      "statement": "Authenticate one shared controller API and isolate host authority, storage, credentials, network and bounded transfers from guest applications.",
+      "owner": "tools/simulator/DARWIN.md#remaining-implementation-and-acceptance",
+      "review": "Reviewed persistent infrastructure, unchanged upstream CLI execution, runtime execve fix and measured address breakpoint/instruction step/stack. Cocoa rendering, source/child debugging, isolation and lifecycle acceptance remain pending; full implementation credit is not granted.",
+      "reviewed_sources": {
+        "tools/simulator/DARWIN.md": "d2fc6bd25735443076a4e1991f7e2852b196945e3e57b31cda5955feb24ab7f0"
+      },
+      "clauses": [
+        {
+          "path": "tools/simulator/DARWIN.md",
+          "start": 159,
+          "end": 165
+        }
+      ],
+      "implementation": [],
+      "implemented": false,
+      "platform_dependencies": [
+        "QEMU",
+        "Ubuntu 26.04 x86-64",
+        "pinned Darling",
+        "Mac-built artifacts and matching symbols"
+      ],
+      "environments": [
+        "windows-host",
+        "linux-host",
+        "darling-vm"
+      ],
+      "tests": {
+        "positive": {
+          "scenario": "Host preparation probes are bounded infrastructure tests; execute the owning requirement in a dedicated VM before acceptance.",
+          "links": []
+        },
+        "refusal": {
+          "scenario": "Refuse unavailable capabilities, altered artifacts and unsupported input without modeled fallback.",
+          "links": []
+        },
+        "concurrency": {
+          "scenario": "Exercise independent controllers and guest parent/child behavior under concurrent ownership attempts.",
+          "links": []
+        },
+        "recovery": {
+          "scenario": "Interrupt the owning operation and verify durable identity, retained state and explicitly uncertain outcomes.",
+          "links": []
+        }
+      },
+      "evidence": []
+    },
+    {
+      "id": "ASLICE-DARWIN-007",
+      "statement": "Recover live VM lifecycle operations and controller restarts without duplicate launches; test actual transfers and restoration.",
+      "owner": "tools/simulator/DARWIN.md#remaining-implementation-and-acceptance",
+      "review": "Reviewed persistent infrastructure, unchanged upstream CLI execution, runtime execve fix and measured address breakpoint/instruction step/stack. Cocoa rendering, source/child debugging, isolation and lifecycle acceptance remain pending; full implementation credit is not granted.",
+      "reviewed_sources": {
+        "tools/simulator/DARWIN.md": "d2fc6bd25735443076a4e1991f7e2852b196945e3e57b31cda5955feb24ab7f0"
+      },
+      "clauses": [
+        {
+          "path": "tools/simulator/DARWIN.md",
+          "start": 167,
+          "end": 170
+        }
+      ],
+      "implementation": [],
+      "implemented": false,
+      "platform_dependencies": [
+        "QEMU",
+        "Ubuntu 26.04 x86-64",
+        "pinned Darling",
+        "Mac-built artifacts and matching symbols"
+      ],
+      "environments": [
+        "windows-host",
+        "linux-host",
+        "darling-vm"
+      ],
+      "tests": {
+        "positive": {
+          "scenario": "Host preparation probes are bounded infrastructure tests; execute the owning requirement in a dedicated VM before acceptance.",
+          "links": []
+        },
+        "refusal": {
+          "scenario": "Refuse unavailable capabilities, altered artifacts and unsupported input without modeled fallback.",
+          "links": []
+        },
+        "concurrency": {
+          "scenario": "Exercise independent controllers and guest parent/child behavior under concurrent ownership attempts.",
+          "links": []
+        },
+        "recovery": {
+          "scenario": "Interrupt the owning operation and verify durable identity, retained state and explicitly uncertain outcomes.",
+          "links": []
+        }
+      },
+      "evidence": []
+    },
+    {
+      "id": "ASLICE-DARWIN-008",
+      "statement": "Provide a loopback graphical console, persistent terminal and application sessions, inspectors and real interactive debugging.",
+      "owner": "tools/simulator/DARWIN.md#remaining-implementation-and-acceptance",
+      "review": "Reviewed persistent infrastructure, unchanged upstream CLI execution, runtime execve fix and measured address breakpoint/instruction step/stack. Cocoa rendering, source/child debugging, isolation and lifecycle acceptance remain pending; full implementation credit is not granted.",
+      "reviewed_sources": {
+        "tools/simulator/DARWIN.md": "d2fc6bd25735443076a4e1991f7e2852b196945e3e57b31cda5955feb24ab7f0"
+      },
+      "clauses": [
+        {
+          "path": "tools/simulator/DARWIN.md",
+          "start": 172,
+          "end": 179
+        },
+        {
+          "path": "tools/simulator/DARWIN.md",
+          "start": 337,
+          "end": 392
+        }
+      ],
+      "implementation": [],
+      "implemented": false,
+      "platform_dependencies": [
+        "QEMU",
+        "Ubuntu 26.04 x86-64",
+        "pinned Darling",
+        "Mac-built artifacts and matching symbols"
+      ],
+      "environments": [
+        "windows-host",
+        "linux-host",
+        "darling-vm"
+      ],
+      "tests": {
+        "positive": {
+          "scenario": "Host preparation probes are bounded infrastructure tests; execute the owning requirement in a dedicated VM before acceptance.",
+          "links": []
+        },
+        "refusal": {
+          "scenario": "Refuse unavailable capabilities, altered artifacts and unsupported input without modeled fallback.",
+          "links": []
+        },
+        "concurrency": {
+          "scenario": "Exercise independent controllers and guest parent/child behavior under concurrent ownership attempts.",
+          "links": []
+        },
+        "recovery": {
+          "scenario": "Interrupt the owning operation and verify durable identity, retained state and explicitly uncertain outcomes.",
+          "links": []
+        }
+      },
+      "evidence": []
+    },
+    {
+      "id": "ASLICE-DARWIN-009",
+      "statement": "Record fault placement and uncertain outcomes; keep binary re-execution distinct from deterministic modeled replay and macOS power-loss qualification.",
+      "owner": "tools/simulator/DARWIN.md#remaining-implementation-and-acceptance",
+      "review": "Reviewed persistent infrastructure, unchanged upstream CLI execution, runtime execve fix and measured address breakpoint/instruction step/stack. Cocoa rendering, source/child debugging, isolation and lifecycle acceptance remain pending; full implementation credit is not granted.",
+      "reviewed_sources": {
+        "tools/simulator/DARWIN.md": "d2fc6bd25735443076a4e1991f7e2852b196945e3e57b31cda5955feb24ab7f0"
+      },
+      "clauses": [
+        {
+          "path": "tools/simulator/DARWIN.md",
+          "start": 181,
+          "end": 187
+        }
+      ],
+      "implementation": [],
+      "implemented": false,
+      "platform_dependencies": [
+        "QEMU",
+        "Ubuntu 26.04 x86-64",
+        "pinned Darling",
+        "Mac-built artifacts and matching symbols"
+      ],
+      "environments": [
+        "windows-host",
+        "linux-host",
+        "darling-vm"
+      ],
+      "tests": {
+        "positive": {
+          "scenario": "Host preparation probes are bounded infrastructure tests; execute the owning requirement in a dedicated VM before acceptance.",
+          "links": []
+        },
+        "refusal": {
+          "scenario": "Refuse unavailable capabilities, altered artifacts and unsupported input without modeled fallback.",
+          "links": []
+        },
+        "concurrency": {
+          "scenario": "Exercise independent controllers and guest parent/child behavior under concurrent ownership attempts.",
+          "links": []
+        },
+        "recovery": {
+          "scenario": "Interrupt the owning operation and verify durable identity, retained state and explicitly uncertain outcomes.",
+          "links": []
+        }
+      },
+      "evidence": []
+    },
+    {
+      "id": "ASLICE-DARWIN-010",
+      "statement": "Require exact VM execution evidence and actual aslice artifacts; keep physical qualification and application gaps separate.",
+      "owner": "tools/simulator/DARWIN.md#remaining-implementation-and-acceptance",
+      "review": "Reviewed persistent infrastructure, unchanged upstream CLI execution, runtime execve fix and measured address breakpoint/instruction step/stack. Cocoa rendering, source/child debugging, isolation and lifecycle acceptance remain pending; full implementation credit is not granted.",
+      "reviewed_sources": {
+        "tools/simulator/DARWIN.md": "d2fc6bd25735443076a4e1991f7e2852b196945e3e57b31cda5955feb24ab7f0"
+      },
+      "clauses": [
+        {
+          "path": "tools/simulator/DARWIN.md",
+          "start": 189,
+          "end": 196
+        }
+      ],
+      "implementation": [],
+      "implemented": false,
+      "platform_dependencies": [
+        "QEMU",
+        "Ubuntu 26.04 x86-64",
+        "pinned Darling",
+        "Mac-built artifacts and matching symbols"
+      ],
+      "environments": [
+        "windows-host",
+        "linux-host",
+        "darling-vm"
+      ],
+      "tests": {
+        "positive": {
+          "scenario": "Host preparation probes are bounded infrastructure tests; execute the owning requirement in a dedicated VM before acceptance.",
+          "links": []
+        },
+        "refusal": {
+          "scenario": "Refuse unavailable capabilities, altered artifacts and unsupported input without modeled fallback.",
+          "links": []
+        },
+        "concurrency": {
+          "scenario": "Exercise independent controllers and guest parent/child behavior under concurrent ownership attempts.",
+          "links": []
+        },
+        "recovery": {
+          "scenario": "Interrupt the owning operation and verify durable identity, retained state and explicitly uncertain outcomes.",
+          "links": []
+        }
+      },
+      "evidence": []
+    },
+    {
+      "id": "ASLICE-DARWIN-011",
+      "statement": "Preserve diagnostic state and report unavailable image integration tests without treating host fixtures as Darwin evidence.",
+      "owner": "tools/simulator/DARWIN.md#troubleshooting-and-tests",
+      "review": "Reviewed persistent infrastructure, unchanged upstream CLI execution, runtime execve fix and measured address breakpoint/instruction step/stack. Cocoa rendering, source/child debugging, isolation and lifecycle acceptance remain pending; full implementation credit is not granted.",
+      "reviewed_sources": {
+        "tools/simulator/DARWIN.md": "d2fc6bd25735443076a4e1991f7e2852b196945e3e57b31cda5955feb24ab7f0"
+      },
+      "clauses": [
+        {
+          "path": "tools/simulator/DARWIN.md",
+          "start": 198,
+          "end": 219
+        }
+      ],
+      "implementation": [
+        "tools/simulator/darwin.py",
+        "tools/simulator/corpus.py"
+      ],
+      "implemented": false,
+      "platform_dependencies": [
+        "QEMU",
+        "Ubuntu 26.04 x86-64",
+        "pinned Darling",
+        "Mac-built artifacts and matching symbols"
+      ],
+      "environments": [
+        "windows-host",
+        "linux-host",
+        "darling-vm"
+      ],
+      "tests": {
+        "positive": {
+          "scenario": "Host preparation probes are bounded infrastructure tests; execute the owning requirement in a dedicated VM before acceptance.",
+          "links": [
+            "tests/simulator/test_darwin.py"
+          ]
+        },
+        "refusal": {
+          "scenario": "Refuse unavailable capabilities, altered artifacts and unsupported input without modeled fallback.",
+          "links": [
+            "tests/simulator/test_darwin.py"
+          ]
+        },
+        "concurrency": {
+          "scenario": "Exercise independent controllers and guest parent/child behavior under concurrent ownership attempts.",
+          "links": [
+            "tests/simulator/test_darwin.py"
+          ]
+        },
+        "recovery": {
+          "scenario": "Interrupt the owning operation and verify durable identity, retained state and explicitly uncertain outcomes.",
+          "links": [
+            "tests/simulator/test_darwin.py"
+          ]
+        }
+      },
+      "evidence": []
     }
   ],
   "classifications": [
@@ -10674,6 +11303,14 @@
       "kind": "context",
       "reason": "Related-contract navigation.",
       "sha256": "cfd0645c18eb01590b11b62f1300322fe4f16fa7f9acefc29b722ceafd8a8856"
+    },
+    {
+      "path": "tools/simulator/DARWIN.md",
+      "start": 157,
+      "end": 157,
+      "kind": "context",
+      "reason": "Section heading only; the following requirements retain their individual acceptance records.",
+      "sha256": "d2fc6bd25735443076a4e1991f7e2852b196945e3e57b31cda5955feb24ab7f0"
     }
   ],
   "commands": {

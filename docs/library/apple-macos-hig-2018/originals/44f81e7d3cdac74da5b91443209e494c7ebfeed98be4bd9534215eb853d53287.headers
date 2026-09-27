@@ -1,0 +1,72 @@
+HTTP/1.1 302
+Server: nginx
+Date: Sun, 27 Sep 2026 14:40:10 GMT
+Content-Type: text/plain; charset=utf-8
+Content-Length: 0
+Connection: keep-alive
+x-archive-redirect-reason: found capture at 20180919155251
+location: https://web.archive.org/web/20180919155251id_/https://developer.apple.com/design/human-interface-guidelines/macos/images/pointers_ResizeLeftRight.svg
+server-timing: captures_list;dur=0.611772, exclusion.robots;dur=0.102050, exclusion.robots.policy;dur=0.090587, esindex;dur=0.008776, cdx.remote;dur=9.954044, LoadShardBlock;dur=114.118855, PetaboxLoader3.datanode;dur=49.361699, PetaboxLoader3.resolve;dur=52.219141
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=0
+server-timing: MISS
+x-app-server: wwwb-app253-dc8
+x-ts: 302
+x-tr: 144
+set-cookie: wb-p-SERVER=wwwb-app253; path=/
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+
+HTTP/1.1 200
+Server: nginx
+Date: Sun, 27 Sep 2026 14:40:14 GMT
+Content-Type: image/svg+xml
+Content-Length: 1205
+Connection: keep-alive
+x-archive-orig-date: Wed, 19 Sep 2018 15:52:51 GMT
+x-archive-orig-content-length: 1205
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-strict-transport-security: max-age=31536000; includeSubDomains
+x-archive-orig-last-modified: Mon, 04 Jun 2018 16:41:08 GMT
+x-archive-orig-etag: "4b5-56dd399b73100"
+x-archive-orig-accept-ranges: bytes
+x-archive-orig-x-xss-protection: 1; mode=block
+x-archive-orig-access-control-allow-origin: https://developer2.apple.com
+x-archive-orig-cache-control: max-age=600, public
+x-archive-orig-server: ATS/7.1.4
+x-archive-orig-host: developer.apple.com
+x-archive-orig-age: 0
+x-archive-orig-via: https/1.1 usscz2-edge-bx-005.ts.apple.com (ApacheTrafficServer/7.1.4)
+x-archive-orig-cdnuuid: d9c43413-16d5-40ff-966d-a7a0e42e96cd-321489928
+x-archive-orig-x-cache: miss
+cache-control: max-age=1800
+cache-control: private
+accept-ranges: bytes
+memento-datetime: Wed, 19 Sep 2018 15:52:51 GMT
+link: <https://developer.apple.com/design/human-interface-guidelines/macos/images/pointers_ResizeLeftRight.svg>; rel="original", <https://web.archive.org/web/timemap/link/https://developer.apple.com/design/human-interface-guidelines/macos/images/pointers_ResizeLeftRight.svg>; rel="timemap"; type="application/link-format", <https://web.archive.org/web/https://developer.apple.com/design/human-interface-guidelines/macos/images/pointers_ResizeLeftRight.svg>; rel="timegate", <https://web.archive.org/web/20180919155251/https://developer.apple.com/design/human-interface-guidelines/macos/images/pointers_ResizeLeftRight.svg>; rel="first memento"; datetime="Wed, 19 Sep 2018 15:52:51 GMT", <https://web.archive.org/web/20180919155251/https://developer.apple.com/design/human-interface-guidelines/macos/images/pointers_ResizeLeftRight.svg>; rel="memento"; datetime="Wed, 19 Sep 2018 15:52:51 GMT", <https://web.archive.org/web/20190224231211/https://developer.apple.com/design/human-interface-guidelines/macos/images/pointers_ResizeLeftRight.svg>; rel="next memento"; datetime="Sun, 24 Feb 2019 23:12:11 GMT", <https://web.archive.org/web/20220528173528/https://developer.apple.com/design/human-interface-guidelines/macos/images/pointers_ResizeLeftRight.svg>; rel="last memento"; datetime="Sat, 28 May 2022 17:35:28 GMT"
+content-security-policy: default-src 'self' 'unsafe-eval' 'unsafe-inline' data: blob: archive.org web.archive.org web-static.archive.org wayback-api.archive.org athena.archive.org analytics.archive.org pragma.archivelab.org wwwb-events.archive.org
+x-archive-src: WIDE-20180919113841-crawl802/WIDE-20180919144202-01391.warc.gz
+server-timing: captures_list;dur=0.436762, exclusion.robots;dur=0.063884, exclusion.robots.policy;dur=0.054906, esindex;dur=0.008330, cdx.remote;dur=67.659044, LoadShardBlock;dur=62.165646, PetaboxLoader3.datanode;dur=98.634983, load_resource;dur=1085.294783, PetaboxLoader3.resolve;dur=1019.554587
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=1
+server-timing: MISS
+x-app-server: wwwb-app262-dc8
+x-ts: 200
+x-tr: 1231
+set-cookie: wb-p-SERVER=wwwb-app262; path=/
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+

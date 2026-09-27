@@ -1,0 +1,71 @@
+HTTP/1.1 302
+Server: nginx
+Date: Sun, 27 Sep 2026 14:44:36 GMT
+Content-Type: text/plain; charset=utf-8
+Content-Length: 0
+Connection: keep-alive
+x-archive-redirect-reason: found capture at 20181119041257
+location: https://web.archive.org/web/20181119041257id_/https://developer.apple.com/favicon.ico
+server-timing: captures_list;dur=0.436513, exclusion.robots;dur=0.041363, exclusion.robots.policy;dur=0.034997, esindex;dur=0.005462, cdx.remote;dur=23.486505, LoadShardBlock;dur=386.093399, PetaboxLoader3.resolve;dur=36.931610, PetaboxLoader3.datanode;dur=101.196969
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=0
+server-timing: MISS
+x-app-server: wwwb-app267-dc8
+x-ts: 302
+x-tr: 452
+set-cookie: wb-p-SERVER=wwwb-app267; path=/
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+
+HTTP/1.1 200
+Server: nginx
+Date: Sun, 27 Sep 2026 14:44:38 GMT
+Content-Type: image/vnd.microsoft.icon
+Content-Length: 9062
+Connection: keep-alive
+x-archive-orig-date: Mon, 19 Nov 2018 04:12:57 GMT
+x-archive-orig-content-length: 9062
+x-archive-orig-strict-transport-security: max-age=31536000; includeSubDomains
+x-archive-orig-last-modified: Mon, 08 Jun 2015 08:55:03 GMT
+x-archive-orig-accept-ranges: bytes
+x-archive-orig-x-xss-protection: 1; mode=block
+x-archive-orig-access-control-allow-origin: https://developer2.apple.com
+x-archive-orig-cache-control: max-age=600, public
+x-archive-orig-server: Apple
+x-archive-orig-host: developer.apple.com
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-etag: "2366-517fdcc29a7c0"
+x-archive-orig-age: 0
+x-archive-orig-via: https/1.1 usscz2-edge-bx-029.ts.apple.com (ApacheTrafficServer/7.1.4)
+x-archive-orig-cdnuuid: 2288b677-f255-47ed-bbc1-b695f548b7f2-1777364586
+x-archive-orig-x-cache: hit-stale
+cache-control: max-age=1800
+cache-control: private
+accept-ranges: bytes
+memento-datetime: Mon, 19 Nov 2018 04:12:57 GMT
+link: <https://developer.apple.com/favicon.ico>; rel="original", <https://web.archive.org/web/timemap/link/https://developer.apple.com/favicon.ico>; rel="timemap"; type="application/link-format", <https://web.archive.org/web/https://developer.apple.com/favicon.ico>; rel="timegate", <https://web.archive.org/web/20100409051345/http://developer.apple.com/favicon.ico>; rel="first memento"; datetime="Fri, 09 Apr 2010 05:13:45 GMT", <https://web.archive.org/web/20181119033654/https://developer.apple.com/favicon.ico>; rel="prev memento"; datetime="Mon, 19 Nov 2018 03:36:54 GMT", <https://web.archive.org/web/20181119041257/https://developer.apple.com/favicon.ico>; rel="memento"; datetime="Mon, 19 Nov 2018 04:12:57 GMT", <https://web.archive.org/web/20181119161825/https://developer.apple.com/favicon.ico>; rel="next memento"; datetime="Mon, 19 Nov 2018 16:18:25 GMT", <https://web.archive.org/web/20260926200627/https://developer.apple.com/favicon.ico>; rel="last memento"; datetime="Sat, 26 Sep 2026 20:06:27 GMT"
+content-security-policy: default-src 'self' 'unsafe-eval' 'unsafe-inline' data: blob: archive.org web.archive.org web-static.archive.org wayback-api.archive.org athena.archive.org analytics.archive.org pragma.archivelab.org wwwb-events.archive.org
+x-archive-src: top_domains-00500-20181118-032349/IA-FOC-top_domains-00500-20181119035602-00001.warc.gz
+server-timing: captures_list;dur=5.101014, exclusion.robots;dur=0.363125, exclusion.robots.policy;dur=0.312116, esindex;dur=0.039882, cdx.remote;dur=98.290106, LoadShardBlock;dur=739.323107, PetaboxLoader3.datanode;dur=547.341195, PetaboxLoader3.resolve;dur=180.993437, load_resource;dur=168.589528
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=0
+server-timing: MISS
+x-app-server: wwwb-app233-dc8
+x-ts: 200
+x-tr: 1185
+set-cookie: wb-p-SERVER=wwwb-app233; path=/
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+

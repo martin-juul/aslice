@@ -184,6 +184,13 @@ if(BUILD_TESTING)
   add_test(NAME requirements COMMAND "${Python3_EXECUTABLE}" -m unittest discover
     -s "${CMAKE_CURRENT_SOURCE_DIR}/tests" -p test_requirements.py)
   set_tests_properties(requirements PROPERTIES TIMEOUT 45)
+  add_test(NAME documentation-library COMMAND "${Python3_EXECUTABLE}"
+    "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_library.py")
+  set_tests_properties(documentation-library PROPERTIES TIMEOUT 30)
+  add_test(NAME documentation-library-integrity COMMAND "${Python3_EXECUTABLE}"
+    -m tools.library verify apple-macos-hig-2018)
+  set_tests_properties(documentation-library-integrity PROPERTIES
+    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}" TIMEOUT 60)
   add_test(NAME requirement-inventory COMMAND "${Python3_EXECUTABLE}" -m tools.simulator
     coverage --gate development --output "${CMAKE_CURRENT_BINARY_DIR}/requirement-coverage.json")
   set_tests_properties(requirement-inventory PROPERTIES
@@ -241,6 +248,15 @@ if(BUILD_TESTING)
   add_test(NAME simulator-process COMMAND "${Python3_EXECUTABLE}"
     "${CMAKE_CURRENT_SOURCE_DIR}/tests/simulator/test_process_lifetime.py")
   set_tests_properties(simulator-process PROPERTIES TIMEOUT 60)
+  add_test(NAME simulator-darwin-preparation COMMAND "${Python3_EXECUTABLE}"
+    "${CMAKE_CURRENT_SOURCE_DIR}/tests/simulator/test_darwin.py")
+  set_tests_properties(simulator-darwin-preparation PROPERTIES TIMEOUT 120)
+  add_test(NAME simulator-darwin-runtime COMMAND "${Python3_EXECUTABLE}"
+    "${CMAKE_CURRENT_SOURCE_DIR}/tests/simulator/test_runtime.py")
+  set_tests_properties(simulator-darwin-runtime PROPERTIES TIMEOUT 120)
+  add_test(NAME simulator-darwin-guest COMMAND "${Python3_EXECUTABLE}"
+    "${CMAKE_CURRENT_SOURCE_DIR}/tests/simulator/test_guest_agent.py")
+  set_tests_properties(simulator-darwin-guest PROPERTIES TIMEOUT 120)
   add_test(NAME simulator-credentials COMMAND "${Python3_EXECUTABLE}"
     "${CMAKE_CURRENT_SOURCE_DIR}/tests/simulator/test_credentials.py"
     "$<TARGET_FILE:simulator_driver>" "$<TARGET_FILE:aslice-simulator>")

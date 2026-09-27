@@ -1,0 +1,201 @@
+HTTP/1.1 302 FOUND
+Server: nginx
+Date: Sun, 27 Sep 2026 13:53:02 GMT
+Content-Type: text/plain; charset=utf-8
+Content-Length: 0
+Connection: keep-alive
+x-archive-redirect-reason: found capture at 20181119085425
+location: https://web.archive.org/web/20181119085425id_/https://developer.apple.com/design/human-interface-guidelines/macos/
+server-timing: captures_list;dur=0.601385, exclusion.robots;dur=0.098736, exclusion.robots.policy;dur=0.081196, esindex;dur=0.011192, cdx.remote;dur=7.114896, LoadShardBlock;dur=92.522611, PetaboxLoader3.datanode;dur=48.077319
+x-app-server: wwwb-app233-dc8
+x-ts: 302
+x-tr: 144
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=1
+set-cookie: wb-p-SERVER=wwwb-app233; path=/
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+Server-Timing: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+
+HTTP/1.1 302 Found
+Server: nginx
+Date: Sun, 27 Sep 2026 13:53:03 GMT
+Content-Type: text/html
+Content-Length: 0
+Connection: keep-alive
+x-archive-orig-date: Mon, 19 Nov 2018 08:54:25 GMT
+x-archive-orig-content-length: 0
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-strict-transport-security: max-age=31536000; includeSubDomains
+location: /web/20181119085425id_/https://developer.apple.com/design/human-interface-guidelines/macos/overview/
+x-archive-orig-x-xss-protection: 1; mode=block
+x-archive-orig-access-control-allow-origin: https://developer2.apple.com
+x-archive-orig-server: Apple
+x-archive-orig-host: developer.apple.com
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-age: 0
+x-archive-orig-via: https/1.1 ussjc2-edge-bx-005.ts.apple.com (ApacheTrafficServer/7.1.4)
+x-archive-orig-cdnuuid: 7234b055-f55c-4e93-972f-be04223823a0--411006857
+x-archive-orig-x-cache: miss
+cache-control: max-age=1800
+memento-datetime: Mon, 19 Nov 2018 08:54:25 GMT
+link: <https://developer.apple.com/design/human-interface-guidelines/macos/>; rel="original", <https://web.archive.org/web/timemap/link/https://developer.apple.com/design/human-interface-guidelines/macos/>; rel="timemap"; type="application/link-format", <https://web.archive.org/web/https://developer.apple.com/design/human-interface-guidelines/macos/>; rel="timegate"
+content-security-policy: default-src 'self' 'unsafe-eval' 'unsafe-inline' data: blob: archive.org web.archive.org web-static.archive.org wayback-api.archive.org athena.archive.org analytics.archive.org pragma.archivelab.org wwwb-events.archive.org
+x-archive-src: NO404-WKP-20181119005537-crawl898/NO404-WKP-20181119015144-00009.warc.gz
+server-timing: captures_list;dur=0.408130, exclusion.robots;dur=0.056337, exclusion.robots.policy;dur=0.049163, esindex;dur=0.006632, cdx.remote;dur=9.300217, LoadShardBlock;dur=51.997893, PetaboxLoader3.datanode;dur=61.383977, load_resource;dur=246.968805, PetaboxLoader3.resolve;dur=200.331499
+x-app-server: wwwb-app267-dc8
+x-ts: 302
+x-tr: 336
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=1
+set-cookie: wb-p-SERVER=wwwb-app267; path=/
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+Server-Timing: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+
+HTTP/1.1 302 FOUND
+Server: nginx
+Date: Sun, 27 Sep 2026 13:53:03 GMT
+Content-Type: text/plain; charset=utf-8
+Content-Length: 0
+Connection: keep-alive
+x-archive-redirect-reason: found capture at 20181119085427
+location: https://web.archive.org/web/20181119085427id_/https://developer.apple.com/design/human-interface-guidelines/macos/overview/
+server-timing: captures_list;dur=0.373036, exclusion.robots;dur=0.051298, exclusion.robots.policy;dur=0.045038, esindex;dur=0.006364, cdx.remote;dur=20.893078, LoadShardBlock;dur=78.695402, PetaboxLoader3.datanode;dur=76.294959
+x-app-server: wwwb-app219-dc8
+x-ts: 302
+x-tr: 114
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=1
+set-cookie: wb-p-SERVER=wwwb-app219; path=/
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+Server-Timing: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+
+HTTP/1.1 302 Found
+Server: nginx
+Date: Sun, 27 Sep 2026 13:53:04 GMT
+Content-Type: text/html
+Content-Length: 0
+Connection: keep-alive
+x-archive-orig-date: Mon, 19 Nov 2018 08:54:27 GMT
+x-archive-orig-content-length: 0
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-strict-transport-security: max-age=31536000; includeSubDomains
+location: /web/20181119085427id_/https://developer.apple.com/design/human-interface-guidelines/macos/overview/themes/
+x-archive-orig-x-xss-protection: 1; mode=block
+x-archive-orig-access-control-allow-origin: https://developer2.apple.com
+x-archive-orig-server: Apple
+x-archive-orig-host: developer.apple.com
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-age: 0
+x-archive-orig-via: https/1.1 ussjc2-edge-bx-005.ts.apple.com (ApacheTrafficServer/7.1.4)
+x-archive-orig-cdnuuid: 7234b055-f55c-4e93-972f-be04223823a0--411005957
+x-archive-orig-x-cache: miss
+cache-control: max-age=1800
+memento-datetime: Mon, 19 Nov 2018 08:54:27 GMT
+link: <https://developer.apple.com/design/human-interface-guidelines/macos/overview/>; rel="original", <https://web.archive.org/web/timemap/link/https://developer.apple.com/design/human-interface-guidelines/macos/overview/>; rel="timemap"; type="application/link-format", <https://web.archive.org/web/https://developer.apple.com/design/human-interface-guidelines/macos/overview/>; rel="timegate"
+content-security-policy: default-src 'self' 'unsafe-eval' 'unsafe-inline' data: blob: archive.org web.archive.org web-static.archive.org wayback-api.archive.org athena.archive.org analytics.archive.org pragma.archivelab.org wwwb-events.archive.org
+x-archive-src: NO404-WKP-20181119005537-crawl898/NO404-WKP-20181119051643-00013.warc.gz
+server-timing: captures_list;dur=0.378033, exclusion.robots;dur=0.051654, exclusion.robots.policy;dur=0.044389, esindex;dur=0.005937, cdx.remote;dur=5.576210, LoadShardBlock;dur=102.387335, PetaboxLoader3.datanode;dur=108.440774, PetaboxLoader3.resolve;dur=166.829528, load_resource;dur=195.578651
+x-app-server: wwwb-app218-dc8
+x-ts: 302
+x-tr: 319
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=0
+set-cookie: wb-p-SERVER=wwwb-app218; path=/
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+Server-Timing: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+
+HTTP/1.1 302 FOUND
+Server: nginx
+Date: Sun, 27 Sep 2026 13:53:04 GMT
+Content-Type: text/plain; charset=utf-8
+Content-Length: 0
+Connection: keep-alive
+x-archive-redirect-reason: found capture at 20181119085428
+location: https://web.archive.org/web/20181119085428id_/https://developer.apple.com/design/human-interface-guidelines/macos/overview/themes/
+server-timing: captures_list;dur=0.661527, exclusion.robots;dur=0.092605, exclusion.robots.policy;dur=0.080390, esindex;dur=0.009590, cdx.remote;dur=6.166994, LoadShardBlock;dur=76.551049, PetaboxLoader3.resolve;dur=21.026962, PetaboxLoader3.datanode;dur=45.108452
+x-app-server: wwwb-app247-dc8
+x-ts: 302
+x-tr: 113
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=0
+set-cookie: wb-p-SERVER=wwwb-app247; path=/
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+Server-Timing: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+
+HTTP/1.1 200 OK
+Server: nginx
+Date: Sun, 27 Sep 2026 13:53:08 GMT
+Content-Type: text/html
+Transfer-Encoding: chunked
+Connection: keep-alive
+x-archive-orig-date: Mon, 19 Nov 2018 08:54:28 GMT
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-strict-transport-security: max-age=31536000; includeSubDomains
+x-archive-orig-x-xss-protection: 1; mode=block
+x-archive-orig-access-control-allow-origin: https://developer2.apple.com
+x-archive-orig-server: Apple
+x-archive-orig-host: developer.apple.com
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-age: 0
+x-archive-orig-via: https/1.1 ussjc2-edge-bx-005.ts.apple.com (ApacheTrafficServer/7.1.4)
+x-archive-orig-cdnuuid: 7234b055-f55c-4e93-972f-be04223823a0--411005138
+x-archive-orig-x-cache: miss
+cache-control: max-age=1800
+accept-ranges: bytes
+memento-datetime: Mon, 19 Nov 2018 08:54:28 GMT
+link: <https://developer.apple.com/design/human-interface-guidelines/macos/overview/themes/>; rel="original", <https://web.archive.org/web/timemap/link/https://developer.apple.com/design/human-interface-guidelines/macos/overview/themes/>; rel="timemap"; type="application/link-format", <https://web.archive.org/web/https://developer.apple.com/design/human-interface-guidelines/macos/overview/themes/>; rel="timegate"
+content-security-policy: default-src 'self' 'unsafe-eval' 'unsafe-inline' data: blob: archive.org web.archive.org web-static.archive.org wayback-api.archive.org athena.archive.org analytics.archive.org pragma.archivelab.org wwwb-events.archive.org
+x-archive-src: NO404-WKP-20181119005537-crawl898/NO404-WKP-20181119015144-00009.warc.gz
+server-timing: captures_list;dur=0.753581, exclusion.robots;dur=0.103399, exclusion.robots.policy;dur=0.089715, esindex;dur=0.009807, cdx.remote;dur=13.149263, LoadShardBlock;dur=87.084472, PetaboxLoader3.datanode;dur=3734.221172, PetaboxLoader3.resolve;dur=249.844662, load_resource;dur=3914.552573
+x-app-server: wwwb-app206-dc6
+x-ts: 200
+x-tr: 4039
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=0
+set-cookie: wb-p-SERVER=wwwb-app206; path=/
+cache-control: private
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+Server-Timing: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+

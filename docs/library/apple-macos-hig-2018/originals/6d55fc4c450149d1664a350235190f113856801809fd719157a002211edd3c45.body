@@ -1,0 +1,10 @@
+$(document).ready(function() {
+
+	$('.pop-up-buttons-gallery').bxSlider({
+		adaptiveHeight: false,
+		mode: 'fade',
+		pagerCustom: '#bxlabels-pop-up-buttons-examples',
+		controls: false
+	});
+
+});

@@ -1,0 +1,32 @@
+table:nth-of-type(1) thead tr th:nth-of-type(1) {
+  width: 30%;
+}
+table:nth-of-type(1) thead tr th:nth-of-type(2) {
+  width: 40%;
+}
+table:nth-of-type(1) thead tr th:nth-of-type(3) {
+  width: 15%;
+}
+table:nth-of-type(1) thead tr th:nth-of-type(4) {
+  width: 15%;
+}
+
+table:nth-of-type(2) thead tr th:nth-of-type(1) {
+  width: 10%;
+}
+table:nth-of-type(2) thead tr th:nth-of-type(2) {
+  width: 20%;
+}
+table:nth-of-type(2) thead tr th:nth-of-type(3) {
+  width: 50%;
+}
+table:nth-of-type(2) thead tr th:nth-of-type(4) {
+  width: 20%;
+}
+
+table:nth-of-type(3) thead tr th:nth-of-type(1) {
+  width: 25%;
+}
+table:nth-of-type(3) thead tr th:nth-of-type(2) {
+  width: 75%;
+}

@@ -1,0 +1,48 @@
+HTTP/1.1 200
+Server: nginx
+Date: Sun, 27 Sep 2026 14:31:26 GMT
+Content-Type: image/png
+Content-Length: 488
+Connection: keep-alive
+x-archive-orig-server: Apple
+x-archive-orig-date: Thu, 06 Jun 2019 21:57:57 GMT
+x-archive-orig-content-length: 488
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-strict-transport-security: max-age=31536000; includeSubDomains
+x-archive-orig-last-modified: Mon, 03 Jun 2019 18:08:55 GMT
+x-archive-orig-etag: "1e8-58a6f41e3bbc0"
+x-archive-orig-accept-ranges: bytes
+x-archive-orig-x-xss-protection: 1; mode=block
+x-archive-orig-access-control-allow-origin: https://developer2.apple.com
+x-archive-orig-cache-control: max-age=600, public
+x-archive-orig-host: developer.apple.com
+x-archive-orig-age: 0
+x-archive-orig-connection: close
+x-archive-orig-via: https/1.1 ussjc2-edge-bx-001.ts.apple.com (ApacheTrafficServer/8.0.4)
+x-archive-orig-cdnuuid: c25f25f2-9cea-4b01-8ecd-78069cc281cb-28358714
+x-archive-orig-x-cache: miss
+cache-control: max-age=1800
+cache-control: private
+accept-ranges: bytes
+memento-datetime: Thu, 06 Jun 2019 21:57:57 GMT
+link: <https://developer.apple.com/design/human-interface-guidelines/macos/images/icons/SystemIcons/Control/Control_FlowView_2x.png>; rel="original", <https://web.archive.org/web/timemap/link/https://developer.apple.com/design/human-interface-guidelines/macos/images/icons/SystemIcons/Control/Control_FlowView_2x.png>; rel="timemap"; type="application/link-format", <https://web.archive.org/web/https://developer.apple.com/design/human-interface-guidelines/macos/images/icons/SystemIcons/Control/Control_FlowView_2x.png>; rel="timegate", <https://web.archive.org/web/20190606215757/https://developer.apple.com/design/human-interface-guidelines/macos/images/icons/SystemIcons/Control/Control_FlowView_2x.png>; rel="first memento"; datetime="Thu, 06 Jun 2019 21:57:57 GMT", <https://web.archive.org/web/20190606215757/https://developer.apple.com/design/human-interface-guidelines/macos/images/icons/SystemIcons/Control/Control_FlowView_2x.png>; rel="memento"; datetime="Thu, 06 Jun 2019 21:57:57 GMT", <https://web.archive.org/web/20190606215757/https://developer.apple.com/design/human-interface-guidelines/macos/images/icons/SystemIcons/Control/Control_FlowView_2x.png>; rel="last memento"; datetime="Thu, 06 Jun 2019 21:57:57 GMT"
+content-security-policy: default-src 'self' 'unsafe-eval' 'unsafe-inline' data: blob: archive.org web.archive.org web-static.archive.org wayback-api.archive.org athena.archive.org analytics.archive.org pragma.archivelab.org wwwb-events.archive.org
+x-archive-src: liveweb-20190606220629/live-20190606214421-wwwb-app4.us.archive.org.warc.gz
+server-timing: captures_list;dur=0.451901, exclusion.robots;dur=0.086674, exclusion.robots.policy;dur=0.078369, esindex;dur=0.006313, cdx.remote;dur=6.259512, LoadShardBlock;dur=304.955728, PetaboxLoader3.datanode;dur=340.356153, load_resource;dur=151.053087, PetaboxLoader3.resolve;dur=78.227300
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=1
+server-timing: MISS
+x-app-server: wwwb-app233-dc8
+x-ts: 200
+x-tr: 479
+set-cookie: wb-p-SERVER=wwwb-app233; path=/
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+

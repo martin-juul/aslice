@@ -1,0 +1,70 @@
+HTTP/1.1 302
+Server: nginx
+Date: Sun, 27 Sep 2026 14:42:11 GMT
+Content-Type: text/plain; charset=utf-8
+Content-Length: 0
+Connection: keep-alive
+x-archive-redirect-reason: found capture at 20190527183628
+location: https://web.archive.org/web/20190527183628id_/https://developer.apple.com/design/human-interface-guidelines/macos/images/templateImages.mp4
+server-timing: captures_list;dur=0.367788, exclusion.robots;dur=0.053165, exclusion.robots.policy;dur=0.047354, esindex;dur=0.006651, cdx.remote;dur=20.264666, LoadShardBlock;dur=78.355304, PetaboxLoader3.datanode;dur=65.308737
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=0
+server-timing: BYPASS
+x-app-server: wwwb-app204-dc6
+x-ts: 302
+x-tr: 110
+set-cookie: wb-p-SERVER=wwwb-app204; path=/
+X-RL: 0
+X-NA: 0
+X-Page-Cache: BYPASS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+X-location: mp4
+
+HTTP/1.1 200
+Server: nginx
+Date: Sun, 27 Sep 2026 14:42:14 GMT
+Content-Type: video/mp4
+Content-Length: 43481
+Connection: keep-alive
+x-archive-orig-server: Apple
+x-archive-orig-date: Mon, 27 May 2019 18:36:28 GMT
+x-archive-orig-content-length: 43481
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-strict-transport-security: max-age=31536000; includeSubDomains
+x-archive-orig-last-modified: Mon, 04 Jun 2018 16:41:09 GMT
+x-archive-orig-etag: "a9d9-56dd399c67340"
+x-archive-orig-accept-ranges: bytes
+x-archive-orig-x-xss-protection: 1; mode=block
+x-archive-orig-access-control-allow-origin: https://developer2.apple.com
+x-archive-orig-host: developer.apple.com
+x-archive-orig-age: 0
+x-archive-orig-connection: close
+x-archive-orig-via: https/1.1 ussjc2-edge-bx-016.ts.apple.com (ApacheTrafficServer/8.0.4)
+x-archive-orig-cdnuuid: f2d0d6e1-e19f-4436-bd6d-64391654e114-494604735
+x-archive-orig-x-cache: miss
+cache-control: max-age=1800
+cache-control: private
+accept-ranges: bytes
+memento-datetime: Mon, 27 May 2019 18:36:28 GMT
+link: <https://developer.apple.com/design/human-interface-guidelines/macos/images/templateImages.mp4>; rel="original", <https://web.archive.org/web/timemap/link/https://developer.apple.com/design/human-interface-guidelines/macos/images/templateImages.mp4>; rel="timemap"; type="application/link-format", <https://web.archive.org/web/https://developer.apple.com/design/human-interface-guidelines/macos/images/templateImages.mp4>; rel="timegate", <https://web.archive.org/web/20190527183628/https://developer.apple.com/design/human-interface-guidelines/macos/images/templateImages.mp4>; rel="first memento"; datetime="Mon, 27 May 2019 18:36:28 GMT", <https://web.archive.org/web/20190527183628/https://developer.apple.com/design/human-interface-guidelines/macos/images/templateImages.mp4>; rel="memento"; datetime="Mon, 27 May 2019 18:36:28 GMT", <https://web.archive.org/web/20191019153843/https://developer.apple.com/design/human-interface-guidelines/macos/images/templateImages.mp4>; rel="next memento"; datetime="Sat, 19 Oct 2019 15:38:43 GMT", <https://web.archive.org/web/20201210234523/https://developer.apple.com/design/human-interface-guidelines/macos/images/templateImages.mp4>; rel="last memento"; datetime="Thu, 10 Dec 2020 23:45:23 GMT"
+content-security-policy: default-src 'self' 'unsafe-eval' 'unsafe-inline' data: blob: archive.org web.archive.org web-static.archive.org wayback-api.archive.org athena.archive.org analytics.archive.org pragma.archivelab.org wwwb-events.archive.org
+x-archive-src: liveweb-20190527184747/live-20190527183325-wwwb-app4.us.archive.org.warc.gz
+server-timing: captures_list;dur=0.440553, exclusion.robots;dur=0.070237, exclusion.robots.policy;dur=0.061846, esindex;dur=0.006395, cdx.remote;dur=123.965683, LoadShardBlock;dur=248.898157, PetaboxLoader3.datanode;dur=116.244759, PetaboxLoader3.resolve;dur=57.440085, load_resource;dur=98.848574
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=1
+server-timing: BYPASS
+x-app-server: wwwb-app222-dc8
+x-ts: 200
+x-tr: 489
+set-cookie: wb-p-SERVER=wwwb-app222; path=/
+X-RL: 0
+X-NA: 0
+X-Page-Cache: BYPASS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+X-location: mp4
+

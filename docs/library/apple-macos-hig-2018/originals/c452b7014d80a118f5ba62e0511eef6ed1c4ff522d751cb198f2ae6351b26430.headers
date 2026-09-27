@@ -1,0 +1,72 @@
+HTTP/1.1 302
+Server: nginx
+Date: Sun, 27 Sep 2026 14:34:16 GMT
+Content-Type: text/plain; charset=utf-8
+Content-Length: 0
+Connection: keep-alive
+x-archive-redirect-reason: found capture at 20190311081017
+location: https://web.archive.org/web/20190311081017id_/https://developer.apple.com/design/human-interface-guidelines/macos/images/icons/appIcons/AppIcon_Mail.png
+server-timing: captures_list;dur=0.728063, exclusion.robots;dur=0.150258, exclusion.robots.policy;dur=0.137093, esindex;dur=0.009203, cdx.remote;dur=56.432229, LoadShardBlock;dur=398.478705, PetaboxLoader3.datanode;dur=397.682838
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=1
+server-timing: MISS
+x-app-server: wwwb-app28-dc8
+x-ts: 302
+x-tr: 475
+set-cookie: wb-p-SERVER=wwwb-app28; path=/
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+
+HTTP/1.1 200
+Server: nginx
+Date: Sun, 27 Sep 2026 14:34:19 GMT
+Content-Type: image/png
+Content-Length: 18475
+Connection: keep-alive
+x-archive-orig-server: Apple
+x-archive-orig-date: Mon, 11 Mar 2019 08:10:17 GMT
+x-archive-orig-content-length: 18475
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-strict-transport-security: max-age=31536000; includeSubDomains
+x-archive-orig-last-modified: Wed, 06 Feb 2019 16:48:12 GMT
+x-archive-orig-etag: "482b-5813c7dca8b00"
+x-archive-orig-accept-ranges: bytes
+x-archive-orig-x-xss-protection: 1; mode=block
+x-archive-orig-access-control-allow-origin: https://developer2.apple.com
+x-archive-orig-cache-control: max-age=600, public
+x-archive-orig-host: developer.apple.com
+x-archive-orig-age: 0
+x-archive-orig-via: https/1.1 ussjc2-edge-bx-027.ts.apple.com (ApacheTrafficServer/8.0.3)
+x-archive-orig-cdnuuid: 3fe430db-074b-487f-8eec-2fd5b518ac16-2317966881
+x-archive-orig-x-cache: miss
+cache-control: max-age=1800
+cache-control: private
+accept-ranges: bytes
+memento-datetime: Mon, 11 Mar 2019 08:10:17 GMT
+link: <https://developer.apple.com/design/human-interface-guidelines/macos/images/icons/appIcons/AppIcon_Mail.png>; rel="original", <https://web.archive.org/web/timemap/link/https://developer.apple.com/design/human-interface-guidelines/macos/images/icons/appIcons/AppIcon_Mail.png>; rel="timemap"; type="application/link-format", <https://web.archive.org/web/https://developer.apple.com/design/human-interface-guidelines/macos/images/icons/appIcons/AppIcon_Mail.png>; rel="timegate", <https://web.archive.org/web/20180713113630/https://developer.apple.com/design/human-interface-guidelines/macos/images/icons/appIcons/AppIcon_Mail.png>; rel="first memento"; datetime="Fri, 13 Jul 2018 11:36:30 GMT", <https://web.archive.org/web/20180713113630/https://developer.apple.com/design/human-interface-guidelines/macos/images/icons/appIcons/AppIcon_Mail.png>; rel="prev memento"; datetime="Fri, 13 Jul 2018 11:36:30 GMT", <https://web.archive.org/web/20190311081017/https://developer.apple.com/design/human-interface-guidelines/macos/images/icons/appIcons/AppIcon_Mail.png>; rel="memento"; datetime="Mon, 11 Mar 2019 08:10:17 GMT", <https://web.archive.org/web/20190514223800/https://developer.apple.com/design/human-interface-guidelines/macos/images/icons/appIcons/AppIcon_Mail.png>; rel="next memento"; datetime="Tue, 14 May 2019 22:38:00 GMT", <https://web.archive.org/web/20200629031514/https://developer.apple.com/design/human-interface-guidelines/macos/images/icons/appIcons/AppIcon_Mail.png>; rel="last memento"; datetime="Mon, 29 Jun 2020 03:15:14 GMT"
+content-security-policy: default-src 'self' 'unsafe-eval' 'unsafe-inline' data: blob: archive.org web.archive.org web-static.archive.org wayback-api.archive.org athena.archive.org analytics.archive.org pragma.archivelab.org wwwb-events.archive.org
+x-archive-src: WIDE-20190311060159-crawl811/WIDE-20190311065302-02550.warc.gz
+server-timing: captures_list;dur=0.418384, exclusion.robots;dur=0.064998, exclusion.robots.policy;dur=0.058000, esindex;dur=0.005931, cdx.remote;dur=9.179021, LoadShardBlock;dur=90.796363, PetaboxLoader3.datanode;dur=98.934243, load_resource;dur=435.242540, PetaboxLoader3.resolve;dur=395.681482
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=1
+server-timing: MISS
+x-app-server: wwwb-app266-dc8
+x-ts: 200
+x-tr: 551
+set-cookie: wb-p-SERVER=wwwb-app266; path=/
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+

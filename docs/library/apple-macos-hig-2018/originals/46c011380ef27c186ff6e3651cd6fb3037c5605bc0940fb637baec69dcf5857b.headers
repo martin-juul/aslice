@@ -1,0 +1,48 @@
+HTTP/1.1 200
+Server: nginx
+Date: Sun, 27 Sep 2026 14:31:35 GMT
+Content-Type: image/png
+Content-Length: 332
+Connection: keep-alive
+x-archive-orig-server: Apple
+x-archive-orig-date: Thu, 06 Jun 2019 21:57:57 GMT
+x-archive-orig-content-length: 332
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-strict-transport-security: max-age=31536000; includeSubDomains
+x-archive-orig-last-modified: Mon, 03 Jun 2019 18:08:55 GMT
+x-archive-orig-etag: "14c-58a6f41e3bbc0"
+x-archive-orig-accept-ranges: bytes
+x-archive-orig-x-xss-protection: 1; mode=block
+x-archive-orig-access-control-allow-origin: https://developer2.apple.com
+x-archive-orig-cache-control: max-age=600, public
+x-archive-orig-host: developer.apple.com
+x-archive-orig-age: 0
+x-archive-orig-connection: close
+x-archive-orig-via: https/1.1 ussjc2-edge-bx-015.ts.apple.com (ApacheTrafficServer/8.0.4)
+x-archive-orig-cdnuuid: 12835e89-bf73-4a5a-9ef3-ffa76ac9a02a-1501711216
+x-archive-orig-x-cache: miss
+cache-control: max-age=1800
+cache-control: private
+accept-ranges: bytes
+memento-datetime: Thu, 06 Jun 2019 21:57:57 GMT
+link: <https://developer.apple.com/design/human-interface-guidelines/macos/images/icons/SystemIcons/Control/Control_GoLeft_2x.png>; rel="original", <https://web.archive.org/web/timemap/link/https://developer.apple.com/design/human-interface-guidelines/macos/images/icons/SystemIcons/Control/Control_GoLeft_2x.png>; rel="timemap"; type="application/link-format", <https://web.archive.org/web/https://developer.apple.com/design/human-interface-guidelines/macos/images/icons/SystemIcons/Control/Control_GoLeft_2x.png>; rel="timegate", <https://web.archive.org/web/20190606215757/https://developer.apple.com/design/human-interface-guidelines/macos/images/icons/SystemIcons/Control/Control_GoLeft_2x.png>; rel="first memento"; datetime="Thu, 06 Jun 2019 21:57:57 GMT", <https://web.archive.org/web/20190606215757/https://developer.apple.com/design/human-interface-guidelines/macos/images/icons/SystemIcons/Control/Control_GoLeft_2x.png>; rel="memento"; datetime="Thu, 06 Jun 2019 21:57:57 GMT", <https://web.archive.org/web/20190606215757/https://developer.apple.com/design/human-interface-guidelines/macos/images/icons/SystemIcons/Control/Control_GoLeft_2x.png>; rel="last memento"; datetime="Thu, 06 Jun 2019 21:57:57 GMT"
+content-security-policy: default-src 'self' 'unsafe-eval' 'unsafe-inline' data: blob: archive.org web.archive.org web-static.archive.org wayback-api.archive.org athena.archive.org analytics.archive.org pragma.archivelab.org wwwb-events.archive.org
+x-archive-src: liveweb-20190606220629/live-20190606214235-wwwb-app6.us.archive.org.warc.gz
+server-timing: captures_list;dur=0.629073, exclusion.robots;dur=0.108888, exclusion.robots.policy;dur=0.097926, esindex;dur=0.011032, cdx.remote;dur=26.600093, LoadShardBlock;dur=132.331640, PetaboxLoader3.datanode;dur=157.297191, load_resource;dur=103.920891, PetaboxLoader3.resolve;dur=35.511097
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=2
+server-timing: MISS
+x-app-server: wwwb-app246-dc8
+x-ts: 200
+x-tr: 286
+set-cookie: wb-p-SERVER=wwwb-app246; path=/
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+

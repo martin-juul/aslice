@@ -1,0 +1,72 @@
+HTTP/1.1 302
+Server: nginx
+Date: Sun, 27 Sep 2026 14:26:15 GMT
+Content-Type: text/plain; charset=utf-8
+Content-Length: 0
+Connection: keep-alive
+x-archive-redirect-reason: found capture at 20181119103136
+location: https://web.archive.org/web/20181119103136id_/https://developer.apple.com/design/human-interface-guidelines/images/menu-chevron_2x.png
+server-timing: captures_list;dur=0.475201, exclusion.robots;dur=0.062680, exclusion.robots.policy;dur=0.053509, esindex;dur=0.006268, cdx.remote;dur=8.792850, LoadShardBlock;dur=50.656791, PetaboxLoader3.datanode;dur=39.876594
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=2
+server-timing: MISS
+x-app-server: wwwb-app262-dc8
+x-ts: 302
+x-tr: 77
+set-cookie: wb-p-SERVER=wwwb-app262; path=/
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+
+HTTP/1.1 200
+Server: nginx
+Date: Sun, 27 Sep 2026 14:26:19 GMT
+Content-Type: image/png
+Content-Length: 153
+Connection: keep-alive
+x-archive-orig-date: Mon, 19 Nov 2018 10:31:35 GMT
+x-archive-orig-content-length: 153
+x-archive-orig-strict-transport-security: max-age=31536000; includeSubDomains
+x-archive-orig-last-modified: Mon, 04 Jun 2018 16:41:09 GMT
+x-archive-orig-accept-ranges: bytes
+x-archive-orig-x-xss-protection: 1; mode=block
+x-archive-orig-access-control-allow-origin: https://developer2.apple.com
+x-archive-orig-cache-control: max-age=600, public
+x-archive-orig-server: Apple
+x-archive-orig-host: developer.apple.com
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-etag: "99-56dd399c67340"
+x-archive-orig-age: 0
+x-archive-orig-connection: keep-alive
+x-archive-orig-via: https/1.1 defra3-edge-bx-002.ts.apple.com (ApacheTrafficServer/8.0.1)
+x-archive-orig-cdnuuid: b5441627-c40b-4276-9f52-20fc5cbfce0e-281402701
+x-archive-orig-x-cache: hit-stale
+cache-control: max-age=1800
+cache-control: private
+accept-ranges: bytes
+memento-datetime: Mon, 19 Nov 2018 10:31:36 GMT
+link: <https://developer.apple.com/design/human-interface-guidelines/images/menu-chevron_2x.png>; rel="original", <https://web.archive.org/web/timemap/link/https://developer.apple.com/design/human-interface-guidelines/images/menu-chevron_2x.png>; rel="timemap"; type="application/link-format", <https://web.archive.org/web/https://developer.apple.com/design/human-interface-guidelines/images/menu-chevron_2x.png>; rel="timegate", <https://web.archive.org/web/20170921225631/https://developer.apple.com/design/human-interface-guidelines/images/menu-chevron_2x.png>; rel="first memento"; datetime="Thu, 21 Sep 2017 22:56:31 GMT", <https://web.archive.org/web/20181112091730/https://developer.apple.com/design/human-interface-guidelines/images/menu-chevron_2x.png>; rel="prev memento"; datetime="Mon, 12 Nov 2018 09:17:30 GMT", <https://web.archive.org/web/20181119103136/https://developer.apple.com/design/human-interface-guidelines/images/menu-chevron_2x.png>; rel="memento"; datetime="Mon, 19 Nov 2018 10:31:36 GMT", <https://web.archive.org/web/20181121053049/https://developer.apple.com/design/human-interface-guidelines/images/menu-chevron_2x.png>; rel="next memento"; datetime="Wed, 21 Nov 2018 05:30:49 GMT", <https://web.archive.org/web/20220801211800/https://developer.apple.com/design/human-interface-guidelines/images/menu-chevron_2x.png>; rel="last memento"; datetime="Mon, 01 Aug 2022 21:18:00 GMT"
+content-security-policy: default-src 'self' 'unsafe-eval' 'unsafe-inline' data: blob: archive.org web.archive.org web-static.archive.org wayback-api.archive.org athena.archive.org analytics.archive.org pragma.archivelab.org wwwb-events.archive.org
+x-archive-src: archiveteam_archivebot_go_20181119190001/www.technologyreview.com-inf-20181109-011503-6q1he-00069.warc.gz
+server-timing: captures_list;dur=0.432338, exclusion.robots;dur=0.056494, exclusion.robots.policy;dur=0.047975, esindex;dur=0.007770, cdx.remote;dur=9.222164, LoadShardBlock;dur=144.621830, PetaboxLoader3.resolve;dur=228.555929, PetaboxLoader3.datanode;dur=108.433418, load_resource;dur=194.678522
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=1
+server-timing: MISS
+x-app-server: wwwb-app218-dc8
+x-ts: 200
+x-tr: 369
+set-cookie: wb-p-SERVER=wwwb-app218; path=/
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+

@@ -1,0 +1,146 @@
+HTTP/1.1 302
+Server: nginx
+Date: Sun, 27 Sep 2026 14:15:53 GMT
+Content-Type: text/plain; charset=utf-8
+Content-Length: 0
+Connection: keep-alive
+x-archive-redirect-reason: found capture at 20210613074638
+location: https://web.archive.org/web/20210613074638id_/https://developer.apple.com/design/human-interface-guidelines/macos/system-capabilities/authentication/
+server-timing: captures_list;dur=0.680131, exclusion.robots;dur=0.124511, exclusion.robots.policy;dur=0.088559, esindex;dur=0.008711, cdx.remote;dur=8.602010, LoadShardBlock;dur=50.246877, PetaboxLoader3.datanode;dur=44.654882
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=1
+server-timing: MISS
+x-app-server: wwwb-app262-dc8
+x-ts: 302
+x-tr: 78
+set-cookie: wb-p-SERVER=wwwb-app262; path=/
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+
+HTTP/1.1 302
+Server: nginx
+Date: Sun, 27 Sep 2026 14:15:55 GMT
+Content-Type: text/html; charset=UTF-8
+Content-Length: 0
+Connection: keep-alive
+x-archive-orig-server: Apple
+x-archive-orig-date: Sun, 13 Jun 2021 07:46:39 GMT
+x-archive-orig-content-length: 0
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-strict-transport-security: max-age=31536000; includeSubDomains
+location: /web/20210613074638id_/https://developer.apple.com/design/human-interface-guidelines/macos/system-capabilities/auto-save/
+x-archive-orig-cache-control: no-store, max-age=0
+x-archive-orig-pragma: no-cache
+x-archive-orig-x-xss-protection: 1; mode=block
+x-archive-orig-content-security-policy: default-src 'self' data: blob: 'unsafe-inline' 'unsafe-eval' https://*.apple.com http://*.apple.com https://*.mzstatic.com https://*.apple-mapkit.com https://p-events-delivery.akamaized.net http://p-events-delivery.akamaized.net https://apple-events.akamaized.net https://mediaservices.cdn-apple.com http://mediaservices.cdn-apple.com
+x-archive-orig-access-control-allow-origin: https://developer2.apple.com
+x-archive-orig-host: developer.apple.com
+x-archive-orig-rqid: 29d4ff291b3150c064ae3b3de79e63d9
+x-archive-orig-age: 2
+x-archive-orig-via: https/1.1 sesto4-edge-lx-004.ts.apple.com (ApacheTrafficServer/8.1.2), https/1.1 sesto4-edge-bx-014.ts.apple.com (ApacheTrafficServer/8.1.2)
+x-archive-orig-cdnuuid: 8e93d6b5-384d-4a6a-88be-3e36fc981725-199345681
+x-archive-orig-x-cache: miss, miss
+x-archive-orig-connection: keep-alive
+cache-control: max-age=1800
+memento-datetime: Sun, 13 Jun 2021 07:46:38 GMT
+link: <https://developer.apple.com/design/human-interface-guidelines/macos/system-capabilities/authentication/>; rel="original", <https://web.archive.org/web/timemap/link/https://developer.apple.com/design/human-interface-guidelines/macos/system-capabilities/authentication/>; rel="timemap"; type="application/link-format", <https://web.archive.org/web/https://developer.apple.com/design/human-interface-guidelines/macos/system-capabilities/authentication/>; rel="timegate", <https://web.archive.org/web/20210613074638/https://developer.apple.com/design/human-interface-guidelines/macos/system-capabilities/authentication/>; rel="first memento"; datetime="Sun, 13 Jun 2021 07:46:38 GMT", <https://web.archive.org/web/20210613074638/https://developer.apple.com/design/human-interface-guidelines/macos/system-capabilities/authentication/>; rel="memento"; datetime="Sun, 13 Jun 2021 07:46:38 GMT", <https://web.archive.org/web/20210613074638/https://developer.apple.com/design/human-interface-guidelines/macos/system-capabilities/authentication/>; rel="last memento"; datetime="Sun, 13 Jun 2021 07:46:38 GMT"
+content-security-policy: default-src 'self' 'unsafe-eval' 'unsafe-inline' data: blob: archive.org web.archive.org web-static.archive.org wayback-api.archive.org athena.archive.org analytics.archive.org pragma.archivelab.org wwwb-events.archive.org
+x-archive-src: archiveteam_urls_20210613080157_0b064104/urls_20210613080157_0b064104.1606352862.megawarc.warc.zst
+server-timing: captures_list;dur=0.621637, exclusion.robots;dur=0.115985, exclusion.robots.policy;dur=0.103970, esindex;dur=0.007572, cdx.remote;dur=22.857735, LoadShardBlock;dur=217.991764, PetaboxLoader3.datanode;dur=286.720170, load_resource;dur=131.052051, PetaboxLoader3.resolve;dur=34.588139, loaddict;dur=40.674006
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=1
+server-timing: MISS
+x-app-server: wwwb-app266-dc8
+x-ts: 302
+x-tr: 390
+set-cookie: wb-p-SERVER=wwwb-app266; path=/
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+
+HTTP/1.1 302
+Server: nginx
+Date: Sun, 27 Sep 2026 14:15:57 GMT
+Content-Type: text/plain; charset=utf-8
+Content-Length: 0
+Connection: keep-alive
+x-archive-redirect-reason: found capture at 20210613074639
+location: https://web.archive.org/web/20210613074639id_/https://developer.apple.com/design/human-interface-guidelines/macos/system-capabilities/auto-save/
+server-timing: captures_list;dur=0.783443, exclusion.robots;dur=0.131996, exclusion.robots.policy;dur=0.116346, esindex;dur=0.010343, cdx.remote;dur=24.474594, LoadShardBlock;dur=500.661166, PetaboxLoader3.datanode;dur=224.870542, PetaboxLoader3.resolve;dur=227.463457
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=1
+server-timing: MISS
+x-app-server: wwwb-app247-dc8
+x-ts: 302
+x-tr: 546
+set-cookie: wb-p-SERVER=wwwb-app247; path=/
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+
+HTTP/1.1 200
+Server: nginx
+Date: Sun, 27 Sep 2026 14:16:00 GMT
+Content-Type: text/html; charset=UTF-8
+Transfer-Encoding: chunked
+Connection: keep-alive
+x-archive-orig-server: Apple
+x-archive-orig-date: Sun, 13 Jun 2021 07:46:39 GMT
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-strict-transport-security: max-age=31536000; includeSubDomains
+x-archive-orig-last-modified: Mon, 07 Jun 2021 06:42:51 GMT
+x-archive-orig-cache-control: no-store, max-age=0
+x-archive-orig-pragma: no-cache
+x-archive-orig-x-xss-protection: 1; mode=block
+x-archive-orig-content-security-policy: default-src 'self' data: blob: 'unsafe-inline' 'unsafe-eval' https://*.apple.com http://*.apple.com https://*.mzstatic.com https://*.apple-mapkit.com https://p-events-delivery.akamaized.net http://p-events-delivery.akamaized.net https://apple-events.akamaized.net https://mediaservices.cdn-apple.com http://mediaservices.cdn-apple.com
+x-archive-orig-access-control-allow-origin: https://developer2.apple.com
+x-archive-orig-host: developer.apple.com
+x-archive-orig-rqid: d411a616ee32e13ff9aa0cb309d0f6f3
+x-archive-orig-age: 0
+x-archive-orig-via: https/1.1 sesto4-edge-lx-008.ts.apple.com (ApacheTrafficServer/8.1.2), https/1.1 sesto4-edge-bx-014.ts.apple.com (ApacheTrafficServer/8.1.2)
+x-archive-orig-cdnuuid: 452580a0-94e3-44a0-99ea-e58465225a90-409024292
+x-archive-orig-x-cache: miss, miss
+x-archive-orig-transfer-encoding: chunked
+x-archive-orig-connection: keep-alive
+cache-control: max-age=1800
+cache-control: private
+accept-ranges: bytes
+memento-datetime: Sun, 13 Jun 2021 07:46:39 GMT
+link: <https://developer.apple.com/design/human-interface-guidelines/macos/system-capabilities/auto-save/>; rel="original", <https://web.archive.org/web/timemap/link/https://developer.apple.com/design/human-interface-guidelines/macos/system-capabilities/auto-save/>; rel="timemap"; type="application/link-format", <https://web.archive.org/web/https://developer.apple.com/design/human-interface-guidelines/macos/system-capabilities/auto-save/>; rel="timegate", <https://web.archive.org/web/20180618155439/https://developer.apple.com/design/human-interface-guidelines/macos/system-capabilities/auto-save/>; rel="first memento"; datetime="Mon, 18 Jun 2018 15:54:39 GMT", <https://web.archive.org/web/20210512174057/https://developer.apple.com/design/human-interface-guidelines/macos/system-capabilities/auto-save/>; rel="prev memento"; datetime="Wed, 12 May 2021 17:40:57 GMT", <https://web.archive.org/web/20210613074639/https://developer.apple.com/design/human-interface-guidelines/macos/system-capabilities/auto-save/>; rel="memento"; datetime="Sun, 13 Jun 2021 07:46:39 GMT", <https://web.archive.org/web/20210723151853/https://developer.apple.com/design/human-interface-guidelines/macos/system-capabilities/auto-save/>; rel="next memento"; datetime="Fri, 23 Jul 2021 15:18:53 GMT", <https://web.archive.org/web/20251203092550/https://developer.apple.com/design/human-interface-guidelines/macos/system-capabilities/auto-save/>; rel="last memento"; datetime="Wed, 03 Dec 2025 09:25:50 GMT"
+content-security-policy: default-src 'self' 'unsafe-eval' 'unsafe-inline' data: blob: archive.org web.archive.org web-static.archive.org wayback-api.archive.org athena.archive.org analytics.archive.org pragma.archivelab.org wwwb-events.archive.org
+x-archive-src: archiveteam_urls_20210613080157_0b064104/urls_20210613080157_0b064104.1606352862.megawarc.warc.zst
+server-timing: captures_list;dur=0.541598, exclusion.robots;dur=0.091548, exclusion.robots.policy;dur=0.082337, esindex;dur=0.007812, cdx.remote;dur=14.539859, LoadShardBlock;dur=80.990610, PetaboxLoader3.datanode;dur=120.522003, load_resource;dur=121.327162, PetaboxLoader3.resolve;dur=62.016108, loaddict;dur=31.704956
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=0
+server-timing: MISS
+x-app-server: wwwb-app233-dc8
+x-ts: 200
+x-tr: 236
+set-cookie: wb-p-SERVER=wwwb-app233; path=/
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+

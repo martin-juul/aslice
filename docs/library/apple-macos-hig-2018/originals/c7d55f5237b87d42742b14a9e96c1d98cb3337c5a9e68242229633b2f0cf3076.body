@@ -1,0 +1,17 @@
+$(document).ready(function() {
+
+	$('.disclosure-buttons-gallery').bxSlider({
+		adaptiveHeight: false,
+		mode: 'fade',
+		pagerCustom: '#bxlabels-disclosure-buttons-examples',
+		controls: false
+	});
+
+	$('.disclosure-triangles-gallery').bxSlider({
+		adaptiveHeight: false,
+		mode: 'fade',
+		pagerCustom: '#bxlabels-disclosure-triangles-examples',
+		controls: false
+	});
+
+});

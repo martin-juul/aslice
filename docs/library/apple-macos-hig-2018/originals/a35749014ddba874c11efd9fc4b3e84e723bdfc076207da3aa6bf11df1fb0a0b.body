@@ -1,0 +1,28 @@
+table thead tr th:nth-of-type(1) {
+  width: 30%;
+}
+table thead tr th:nth-of-type(2) {
+	width:70%;
+}      
+
+/* Slideshows */
+.scroll-views  .bx-viewport {
+    max-height: 504px;
+}
+
+
+@media only screen and (max-width: 1068px) {
+    .scroll-views .tabnav .tabnav-item {
+      padding-left: 22px; 
+    }
+
+	.scroll-views  .bx-viewport {
+	    max-height: 331px;
+	}
+}
+@media only screen and (max-width: 735px) {
+    .scroll-views  .bx-viewport {
+	    max-height: 415px;
+	}
+ }
+

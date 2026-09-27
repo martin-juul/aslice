@@ -1,0 +1,96 @@
+HTTP/1.1 302
+Server: nginx
+Date: Sun, 27 Sep 2026 14:34:38 GMT
+Content-Type: text/plain; charset=utf-8
+Content-Length: 0
+Connection: keep-alive
+x-archive-redirect-reason: found capture at 20190310175742
+location: https://web.archive.org/web/20190310175742id_/https://developer.apple.com/design/human-interface-guidelines/macos/images/icons/appIcons/AppIcon_systemPreferences.png
+server-timing: captures_list;dur=0.500492, exclusion.robots;dur=0.088879, exclusion.robots.policy;dur=0.079521, esindex;dur=0.007253, cdx.remote;dur=13.258370, LoadShardBlock;dur=107.985944, PetaboxLoader3.datanode;dur=73.434813, PetaboxLoader3.resolve;dur=12.313209
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=0
+server-timing: MISS
+x-app-server: wwwb-app262-dc8
+x-ts: 302
+x-tr: 137
+set-cookie: wb-p-SERVER=wwwb-app262; path=/
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+
+HTTP/1.1 302
+Server: nginx
+Date: Sun, 27 Sep 2026 14:34:40 GMT
+Content-Type: text/plain; charset=utf-8
+Content-Length: 0
+Connection: keep-alive
+x-archive-redirect-reason: found capture at 20190310175745
+location: https://web.archive.org/web/20190310175745id_/https://developer.apple.com/design/human-interface-guidelines/macos/images/icons/appIcons/AppIcon_SystemPreferences.png
+server-timing: captures_list;dur=0.541397, exclusion.robots;dur=0.090148, exclusion.robots.policy;dur=0.081725, esindex;dur=0.007696, cdx.remote;dur=12.936962, LoadShardBlock;dur=70.748339, PetaboxLoader3.datanode;dur=86.911199, PetaboxLoader3.resolve;dur=62.544428, load_resource;dur=130.291056
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=1
+server-timing: MISS
+x-app-server: wwwb-app233-dc8
+x-ts: 302
+x-tr: 231
+set-cookie: wb-p-SERVER=wwwb-app233; path=/
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+
+HTTP/1.1 200
+Server: nginx
+Date: Sun, 27 Sep 2026 14:34:43 GMT
+Content-Type: image/png
+Content-Length: 14533
+Connection: keep-alive
+x-archive-orig-server: Apple
+x-archive-orig-date: Sun, 10 Mar 2019 17:57:45 GMT
+x-archive-orig-content-length: 14533
+x-archive-orig-strict-transport-security: max-age=31536000; includeSubDomains
+x-archive-orig-last-modified: Wed, 06 Feb 2019 16:51:16 GMT
+x-archive-orig-accept-ranges: bytes
+x-archive-orig-x-xss-protection: 1; mode=block
+x-archive-orig-access-control-allow-origin: https://developer2.apple.com
+x-archive-orig-cache-control: max-age=600, public
+x-archive-orig-host: developer.apple.com
+x-archive-orig-etag: "38c5-5813c88c22900"
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-age: 0
+x-archive-orig-via: https/1.1 usscz2-edge-bx-002.ts.apple.com (ApacheTrafficServer/8.0.3)
+x-archive-orig-cdnuuid: afc6daf5-7484-4eb3-bcee-3c592603c04e-22805595
+x-archive-orig-x-cache: hit-stale
+cache-control: max-age=1800
+cache-control: private
+accept-ranges: bytes
+memento-datetime: Sun, 10 Mar 2019 17:57:45 GMT
+link: <https://developer.apple.com/design/human-interface-guidelines/macos/images/icons/appIcons/AppIcon_SystemPreferences.png>; rel="original", <https://web.archive.org/web/timemap/link/https://developer.apple.com/design/human-interface-guidelines/macos/images/icons/appIcons/AppIcon_SystemPreferences.png>; rel="timemap"; type="application/link-format", <https://web.archive.org/web/https://developer.apple.com/design/human-interface-guidelines/macos/images/icons/appIcons/AppIcon_SystemPreferences.png>; rel="timegate", <https://web.archive.org/web/20180713113634/https://developer.apple.com/design/human-interface-guidelines/macos/images/icons/appIcons/AppIcon_systemPreferences.png>; rel="first memento"; datetime="Fri, 13 Jul 2018 11:36:34 GMT", <https://web.archive.org/web/20190310175742/https://developer.apple.com/design/human-interface-guidelines/macos/images/icons/appIcons/AppIcon_systemPreferences.png>; rel="prev memento"; datetime="Sun, 10 Mar 2019 17:57:42 GMT", <https://web.archive.org/web/20190310175745/https://developer.apple.com/design/human-interface-guidelines/macos/images/icons/appIcons/AppIcon_SystemPreferences.png>; rel="memento"; datetime="Sun, 10 Mar 2019 17:57:45 GMT", <https://web.archive.org/web/20190514093040/https://developer.apple.com/design/human-interface-guidelines/macos/images/icons/appIcons/AppIcon_systemPreferences.png>; rel="next memento"; datetime="Tue, 14 May 2019 09:30:40 GMT", <https://web.archive.org/web/20200816230315/https://developer.apple.com/design/human-interface-guidelines/macos/images/icons/appIcons/AppIcon_SystemPreferences.png>; rel="last memento"; datetime="Sun, 16 Aug 2020 23:03:15 GMT"
+content-security-policy: default-src 'self' 'unsafe-eval' 'unsafe-inline' data: blob: archive.org web.archive.org web-static.archive.org wayback-api.archive.org athena.archive.org analytics.archive.org pragma.archivelab.org wwwb-events.archive.org
+x-archive-src: WIDE-20190310101636-crawl420/WIDE-20190310141224-09019.warc.gz
+server-timing: captures_list;dur=0.665025, exclusion.robots;dur=0.112494, exclusion.robots.policy;dur=0.101055, esindex;dur=0.010198, cdx.remote;dur=5.333375, LoadShardBlock;dur=125.649794, PetaboxLoader3.datanode;dur=138.135308, PetaboxLoader3.resolve;dur=89.052388, load_resource;dur=105.421731
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=1
+server-timing: MISS
+x-app-server: wwwb-app264-dc8
+x-ts: 200
+x-tr: 256
+set-cookie: wb-p-SERVER=wwwb-app264; path=/
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+
