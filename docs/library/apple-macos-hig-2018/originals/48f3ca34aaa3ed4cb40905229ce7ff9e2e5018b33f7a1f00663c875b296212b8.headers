@@ -1,0 +1,136 @@
+HTTP/1.1 302
+Server: nginx
+Date: Sun, 27 Sep 2026 14:15:53 GMT
+Content-Type: text/plain; charset=utf-8
+Content-Length: 0
+Connection: keep-alive
+x-archive-redirect-reason: found capture at 20200930021939
+location: https://web.archive.org/web/20200930021939id_/https://developer.apple.com/design/human-interface-guidelines/macos/app-architecture/tabbed-windows/
+server-timing: captures_list;dur=0.801600, exclusion.robots;dur=0.167712, exclusion.robots.policy;dur=0.152961, esindex;dur=0.011169, cdx.remote;dur=39.609614, LoadShardBlock;dur=102.622160, PetaboxLoader3.datanode;dur=59.630647
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=1
+server-timing: MISS
+x-app-server: wwwb-app246-dc8
+x-ts: 302
+x-tr: 161
+set-cookie: wb-p-SERVER=wwwb-app246; path=/
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+
+HTTP/1.1 302
+Server: nginx
+Date: Sun, 27 Sep 2026 14:15:54 GMT
+Content-Type: text/html
+Content-Length: 0
+Connection: keep-alive
+x-archive-orig-server: Apple
+x-archive-orig-date: Wed, 30 Sep 2020 02:19:40 GMT
+x-archive-orig-content-length: 0
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-strict-transport-security: max-age=31536000; includeSubDomains
+location: /web/20200930021939id_/https://developer.apple.com/design/human-interface-guidelines/macos/app-architecture/fullscreen-mode/
+x-archive-orig-x-xss-protection: 1; mode=block
+x-archive-orig-access-control-allow-origin: https://developer2.apple.com
+x-archive-orig-host: developer.apple.com
+x-archive-orig-rqid: a9e6612559279fc25d6940f4efd3f7d7
+x-archive-orig-age: 0
+x-archive-orig-via: https/1.1 usscz2-edge-lx-004.ts.apple.com (ApacheTrafficServer/8.1.0), https/1.1 usscz2-edge-bx-002.ts.apple.com (ApacheTrafficServer/8.1.0)
+x-archive-orig-cdnuuid: 908eacb5-351a-4ce1-9201-3267b0c7aaab-651290237
+x-archive-orig-x-cache: miss, miss
+cache-control: max-age=1800
+memento-datetime: Wed, 30 Sep 2020 02:19:39 GMT
+link: <https://developer.apple.com/design/human-interface-guidelines/macos/app-architecture/tabbed-windows/>; rel="original", <https://web.archive.org/web/timemap/link/https://developer.apple.com/design/human-interface-guidelines/macos/app-architecture/tabbed-windows/>; rel="timemap"; type="application/link-format", <https://web.archive.org/web/https://developer.apple.com/design/human-interface-guidelines/macos/app-architecture/tabbed-windows/>; rel="timegate", <https://web.archive.org/web/20200930021939/https://developer.apple.com/design/human-interface-guidelines/macos/app-architecture/tabbed-windows/>; rel="first memento"; datetime="Wed, 30 Sep 2020 02:19:39 GMT", <https://web.archive.org/web/20200930021939/https://developer.apple.com/design/human-interface-guidelines/macos/app-architecture/tabbed-windows/>; rel="memento"; datetime="Wed, 30 Sep 2020 02:19:39 GMT", <https://web.archive.org/web/20201108105129/https://developer.apple.com/design/human-interface-guidelines/macos/app-architecture/tabbed-windows/>; rel="next memento"; datetime="Sun, 08 Nov 2020 10:51:29 GMT", <https://web.archive.org/web/20201108105129/https://developer.apple.com/design/human-interface-guidelines/macos/app-architecture/tabbed-windows/>; rel="last memento"; datetime="Sun, 08 Nov 2020 10:51:29 GMT"
+content-security-policy: default-src 'self' 'unsafe-eval' 'unsafe-inline' data: blob: archive.org web.archive.org web-static.archive.org wayback-api.archive.org athena.archive.org analytics.archive.org pragma.archivelab.org wwwb-events.archive.org
+x-archive-src: TWITTER-OUTLINKS-20200930014735-crawl423/TWITTER-OUTLINKS-20200930021041-00770.warc.gz
+server-timing: captures_list;dur=0.744755, exclusion.robots;dur=0.131015, exclusion.robots.policy;dur=0.116931, esindex;dur=0.008673, cdx.remote;dur=14.967360, LoadShardBlock;dur=270.351005, PetaboxLoader3.datanode;dur=272.209667, PetaboxLoader3.resolve;dur=157.699390, load_resource;dur=162.114209
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=3
+server-timing: MISS
+x-app-server: wwwb-app244-dc8
+x-ts: 302
+x-tr: 471
+set-cookie: wb-p-SERVER=wwwb-app244; path=/
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+
+HTTP/1.1 302
+Server: nginx
+Date: Sun, 27 Sep 2026 14:15:56 GMT
+Content-Type: text/plain; charset=utf-8
+Content-Length: 0
+Connection: keep-alive
+x-archive-redirect-reason: found capture at 20200915050142
+location: https://web.archive.org/web/20200915050142id_/https://developer.apple.com/design/human-interface-guidelines/macos/app-architecture/fullscreen-mode/
+server-timing: captures_list;dur=0.420949, exclusion.robots;dur=0.063560, exclusion.robots.policy;dur=0.056568, esindex;dur=0.008952, cdx.remote;dur=12.366621, LoadShardBlock;dur=134.258618, PetaboxLoader3.datanode;dur=122.240358
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=1
+server-timing: MISS
+x-app-server: wwwb-app266-dc8
+x-ts: 302
+x-tr: 161
+set-cookie: wb-p-SERVER=wwwb-app266; path=/
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+
+HTTP/1.1 200
+Server: nginx
+Date: Sun, 27 Sep 2026 14:15:59 GMT
+Content-Type: text/html
+Transfer-Encoding: chunked
+Connection: keep-alive
+x-archive-orig-server: Apple
+x-archive-orig-date: Tue, 15 Sep 2020 05:01:42 GMT
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-strict-transport-security: max-age=31536000; includeSubDomains
+x-archive-orig-x-xss-protection: 1; mode=block
+x-archive-orig-access-control-allow-origin: https://developer2.apple.com
+x-archive-orig-host: developer.apple.com
+x-archive-orig-rqid: 1300c14cd8a61c4feedb191c048d4279
+x-archive-orig-age: 0
+x-archive-orig-via: https/1.1 usscz2-edge-lx-002.ts.apple.com (ApacheTrafficServer/8.1.0), https/1.1 usscz2-edge-bx-021.ts.apple.com (ApacheTrafficServer/8.1.0)
+x-archive-orig-cdnuuid: 83a6f3ce-20fc-4433-a0ac-2ac005788386-455309204
+x-archive-orig-x-cache: miss, miss
+cache-control: max-age=1800
+cache-control: private
+accept-ranges: bytes
+memento-datetime: Tue, 15 Sep 2020 05:01:42 GMT
+link: <https://developer.apple.com/design/human-interface-guidelines/macos/app-architecture/fullscreen-mode/>; rel="original", <https://web.archive.org/web/timemap/link/https://developer.apple.com/design/human-interface-guidelines/macos/app-architecture/fullscreen-mode/>; rel="timemap"; type="application/link-format", <https://web.archive.org/web/https://developer.apple.com/design/human-interface-guidelines/macos/app-architecture/fullscreen-mode/>; rel="timegate", <https://web.archive.org/web/20180618155441/https://developer.apple.com/design/human-interface-guidelines/macos/app-architecture/fullscreen-mode/>; rel="first memento"; datetime="Mon, 18 Jun 2018 15:54:41 GMT", <https://web.archive.org/web/20200803095524/https://developer.apple.com/design/human-interface-guidelines/macos/app-architecture/fullscreen-mode/>; rel="prev memento"; datetime="Mon, 03 Aug 2020 09:55:24 GMT", <https://web.archive.org/web/20200915050142/https://developer.apple.com/design/human-interface-guidelines/macos/app-architecture/fullscreen-mode/>; rel="memento"; datetime="Tue, 15 Sep 2020 05:01:42 GMT", <https://web.archive.org/web/20201022155334/https://developer.apple.com/design/human-interface-guidelines/macos/app-architecture/fullscreen-mode/>; rel="next memento"; datetime="Thu, 22 Oct 2020 15:53:34 GMT", <https://web.archive.org/web/20260424003528/https://developer.apple.com/design/human-interface-guidelines/macos/app-architecture/fullscreen-mode/>; rel="last memento"; datetime="Fri, 24 Apr 2026 00:35:28 GMT"
+content-security-policy: default-src 'self' 'unsafe-eval' 'unsafe-inline' data: blob: archive.org web.archive.org web-static.archive.org wayback-api.archive.org athena.archive.org analytics.archive.org pragma.archivelab.org wwwb-events.archive.org
+x-archive-src: TWITTER-OUTLINKS-20200915045051-crawl505/TWITTER-OUTLINKS-20200915050111-03486.warc.gz
+server-timing: captures_list;dur=0.639677, exclusion.robots;dur=0.108778, exclusion.robots.policy;dur=0.096714, esindex;dur=0.009411, cdx.remote;dur=11.402395, LoadShardBlock;dur=120.011473, PetaboxLoader3.datanode;dur=551.839943, load_resource;dur=745.133106, PetaboxLoader3.resolve;dur=293.869074
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=0
+server-timing: MISS
+x-app-server: wwwb-app54-dc6
+x-ts: 200
+x-tr: 896
+set-cookie: wb-p-SERVER=wwwb-app54; path=/
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+

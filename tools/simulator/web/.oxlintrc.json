@@ -1,0 +1,14 @@
+{
+  "plugins": ["typescript", "unicorn", "oxc"],
+  "jsPlugins": [
+    { "name": "aslice-style", "specifier": "./tooling/style-plugin.ts" }
+  ],
+  "categories": { "correctness": "error" },
+  "rules": {
+    "aslice-style/no-hash-private": "error",
+    "typescript/no-explicit-any": "error",
+    "typescript/no-floating-promises": "error",
+    "typescript/no-misused-promises": "error"
+  },
+  "ignorePatterns": ["node_modules", "coverage"]
+}

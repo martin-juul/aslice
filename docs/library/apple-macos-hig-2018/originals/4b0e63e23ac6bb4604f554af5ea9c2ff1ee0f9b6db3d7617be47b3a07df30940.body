@@ -1,0 +1,17 @@
+$(document).ready(function() {
+
+	$('.open-dialog-gallery').bxSlider({
+		adaptiveHeight: false,
+		mode: 'fade',
+		pagerCustom: '#bxlabels-open-dialog-examples',
+		controls: false
+	});
+
+	$('.save-dialog-gallery').bxSlider({
+		adaptiveHeight: false,
+		mode: 'fade',
+		pagerCustom: '#bxlabels-save-dialog-examples',
+		controls: false
+	});
+
+});

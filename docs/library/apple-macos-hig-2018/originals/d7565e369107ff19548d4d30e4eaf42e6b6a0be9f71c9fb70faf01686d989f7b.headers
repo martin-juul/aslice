@@ -1,0 +1,67 @@
+HTTP/1.1 302 FOUND
+Server: nginx
+Date: Sun, 27 Sep 2026 14:00:39 GMT
+Content-Type: text/plain; charset=utf-8
+Content-Length: 0
+Connection: keep-alive
+x-archive-redirect-reason: found capture at 20181208164346
+location: https://web.archive.org/web/20181208164346id_/https://developer.apple.com/design/human-interface-guidelines/macos/windows-and-views/placards/
+server-timing: captures_list;dur=0.612965, exclusion.robots;dur=0.100125, exclusion.robots.policy;dur=0.088177, esindex;dur=0.008815, cdx.remote;dur=11.222622, LoadShardBlock;dur=161.534047, PetaboxLoader3.datanode;dur=123.507019
+x-app-server: wwwb-app206-dc6
+x-ts: 302
+x-tr: 197
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=0
+set-cookie: wb-p-SERVER=wwwb-app206; path=/
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+Server-Timing: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+
+HTTP/1.1 200 OK
+Server: nginx
+Date: Sun, 27 Sep 2026 14:00:39 GMT
+Content-Type: text/html
+Transfer-Encoding: chunked
+Connection: keep-alive
+x-archive-orig-server: Apple
+x-archive-orig-date: Sat, 08 Dec 2018 16:43:46 GMT
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-strict-transport-security: max-age=31536000; includeSubDomains
+x-archive-orig-x-xss-protection: 1; mode=block
+x-archive-orig-access-control-allow-origin: https://developer2.apple.com
+x-archive-orig-host: developer.apple.com
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-age: 0
+x-archive-orig-via: https/1.1 usscz2-edge-bx-014.ts.apple.com (ApacheTrafficServer/8.0.1)
+x-archive-orig-cdnuuid: 86db0e4a-3112-4e93-8e74-e0594856c409-155470187
+x-archive-orig-x-cache: miss
+cache-control: max-age=1800
+accept-ranges: bytes
+memento-datetime: Sat, 08 Dec 2018 16:43:46 GMT
+link: <https://developer.apple.com/design/human-interface-guidelines/macos/windows-and-views/placards/>; rel="original", <https://web.archive.org/web/timemap/link/https://developer.apple.com/design/human-interface-guidelines/macos/windows-and-views/placards/>; rel="timemap"; type="application/link-format", <https://web.archive.org/web/https://developer.apple.com/design/human-interface-guidelines/macos/windows-and-views/placards/>; rel="timegate"
+content-security-policy: default-src 'self' 'unsafe-eval' 'unsafe-inline' data: blob: archive.org web.archive.org web-static.archive.org wayback-api.archive.org athena.archive.org analytics.archive.org pragma.archivelab.org wwwb-events.archive.org
+x-archive-src: WIDE-20181208093458-crawl806/WIDE-20181208150208-08444.warc.gz
+server-timing: captures_list;dur=0.623736, exclusion.robots;dur=0.090331, exclusion.robots.policy;dur=0.079476, esindex;dur=0.006514, cdx.remote;dur=58.146432, LoadShardBlock;dur=87.003776, PetaboxLoader3.resolve;dur=55.284030, PetaboxLoader3.datanode;dur=60.158358, load_resource;dur=115.809113
+x-app-server: wwwb-app233-dc8
+x-ts: 200
+x-tr: 279
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=1
+set-cookie: wb-p-SERVER=wwwb-app233; path=/
+cache-control: private
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+Server-Timing: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+

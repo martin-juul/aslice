@@ -1,0 +1,67 @@
+HTTP/1.1 302 FOUND
+Server: nginx
+Date: Sun, 27 Sep 2026 13:59:26 GMT
+Content-Type: text/plain; charset=utf-8
+Content-Length: 0
+Connection: keep-alive
+x-archive-redirect-reason: found capture at 20181127193814
+location: https://web.archive.org/web/20181127193814id_/https://developer.apple.com/design/human-interface-guidelines/macos/user-interaction/mouse-and-trackpad/
+server-timing: captures_list;dur=0.857563, exclusion.robots;dur=0.111873, exclusion.robots.policy;dur=0.098382, esindex;dur=0.014670, cdx.remote;dur=12.633195, LoadShardBlock;dur=47.977076, PetaboxLoader3.datanode;dur=46.232539
+x-app-server: wwwb-app204-dc6
+x-ts: 302
+x-tr: 82
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=0
+set-cookie: wb-p-SERVER=wwwb-app204; path=/
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+Server-Timing: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+
+HTTP/1.1 200 OK
+Server: nginx
+Date: Sun, 27 Sep 2026 13:59:26 GMT
+Content-Type: text/html
+Transfer-Encoding: chunked
+Connection: keep-alive
+x-archive-orig-date: Tue, 27 Nov 2018 19:38:14 GMT
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-strict-transport-security: max-age=31536000; includeSubDomains
+x-archive-orig-x-xss-protection: 1; mode=block
+x-archive-orig-access-control-allow-origin: https://developer2.apple.com
+x-archive-orig-server: Apple
+x-archive-orig-host: developer.apple.com
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-age: 0
+x-archive-orig-via: https/1.1 usscz2-edge-bx-028.ts.apple.com (ApacheTrafficServer/7.1.4)
+x-archive-orig-cdnuuid: 8b5d972e-e749-4bbd-a85c-ab77622f4b9e-1761246398
+x-archive-orig-x-cache: miss
+cache-control: max-age=1800
+accept-ranges: bytes
+memento-datetime: Tue, 27 Nov 2018 19:38:14 GMT
+link: <https://developer.apple.com/design/human-interface-guidelines/macos/user-interaction/mouse-and-trackpad/>; rel="original", <https://web.archive.org/web/timemap/link/https://developer.apple.com/design/human-interface-guidelines/macos/user-interaction/mouse-and-trackpad/>; rel="timemap"; type="application/link-format", <https://web.archive.org/web/https://developer.apple.com/design/human-interface-guidelines/macos/user-interaction/mouse-and-trackpad/>; rel="timegate"
+content-security-policy: default-src 'self' 'unsafe-eval' 'unsafe-inline' data: blob: archive.org web.archive.org web-static.archive.org wayback-api.archive.org athena.archive.org analytics.archive.org pragma.archivelab.org wwwb-events.archive.org
+x-archive-src: NO404-WKP-20181127144044-crawl896/NO404-WKP-20181127193517-01195.warc.gz
+server-timing: captures_list;dur=0.583112, exclusion.robots;dur=0.093380, exclusion.robots.policy;dur=0.083142, esindex;dur=0.008896, cdx.remote;dur=15.290315, LoadShardBlock;dur=45.343931, PetaboxLoader3.datanode;dur=55.201513, load_resource;dur=115.458902, PetaboxLoader3.resolve;dur=68.588329
+x-app-server: wwwb-app264-dc8
+x-ts: 200
+x-tr: 191
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=1
+set-cookie: wb-p-SERVER=wwwb-app264; path=/
+cache-control: private
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+Server-Timing: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+

@@ -1,0 +1,93 @@
+HTTP/1.1 302 FOUND
+Server: nginx
+Date: Sun, 27 Sep 2026 14:06:17 GMT
+Content-Type: text/plain; charset=utf-8
+Content-Length: 0
+Connection: keep-alive
+x-archive-redirect-reason: found capture at 20190312081725
+location: https://web.archive.org/web/20190312081725id_/https://developer.apple.com/design/human-interface-guidelines/macos/images/TB_popOver.mp4
+server-timing: captures_list;dur=0.712409, exclusion.robots;dur=0.108201, exclusion.robots.policy;dur=0.094258, esindex;dur=0.008872, cdx.remote;dur=18.280464, LoadShardBlock;dur=117.033285, PetaboxLoader3.datanode;dur=58.824619
+x-app-server: wwwb-app249-dc8
+x-ts: 302
+x-tr: 157
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=2
+set-cookie: wb-p-SERVER=wwwb-app249; path=/
+X-RL: 0
+X-NA: 0
+X-Page-Cache: BYPASS
+Server-Timing: BYPASS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+X-location: mp4
+
+HTTP/1.1 302 FOUND
+Server: nginx
+Date: Sun, 27 Sep 2026 14:06:18 GMT
+Content-Type: text/plain; charset=utf-8
+Content-Length: 0
+Connection: keep-alive
+x-archive-redirect-reason: found capture at 20190312081728
+location: https://web.archive.org/web/20190312081728id_/https://developer.apple.com/design/human-interface-guidelines/macos/images/TB_PopOver.mp4
+server-timing: captures_list;dur=0.678897, exclusion.robots;dur=0.138588, exclusion.robots.policy;dur=0.124806, esindex;dur=0.007982, cdx.remote;dur=210.984732, LoadShardBlock;dur=84.914319, PetaboxLoader3.datanode;dur=128.920065, load_resource;dur=135.503831, PetaboxLoader3.resolve;dur=39.635989
+x-app-server: wwwb-app28-dc8
+x-ts: 302
+x-tr: 455
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=1
+set-cookie: wb-p-SERVER=wwwb-app28; path=/
+X-RL: 0
+X-NA: 0
+X-Page-Cache: BYPASS
+Server-Timing: BYPASS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+X-location: mp4
+
+HTTP/1.1 200 OK
+Server: nginx
+Date: Sun, 27 Sep 2026 14:06:18 GMT
+Content-Type: video/mp4
+Content-Length: 29484
+Connection: keep-alive
+x-archive-orig-server: Apple
+x-archive-orig-date: Tue, 12 Mar 2019 08:17:28 GMT
+x-archive-orig-content-length: 29484
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-strict-transport-security: max-age=31536000; includeSubDomains
+x-archive-orig-last-modified: Mon, 04 Jun 2018 16:41:08 GMT
+x-archive-orig-etag: "732c-56dd399b73100"
+x-archive-orig-accept-ranges: bytes
+x-archive-orig-x-xss-protection: 1; mode=block
+x-archive-orig-access-control-allow-origin: https://developer2.apple.com
+x-archive-orig-host: developer.apple.com
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-age: 0
+x-archive-orig-via: https/1.1 ussjc2-edge-bx-014.ts.apple.com (ApacheTrafficServer/8.0.3)
+x-archive-orig-cdnuuid: 4940e264-95da-420f-9573-142b230cf501-2496743173
+x-archive-orig-x-cache: miss
+cache-control: max-age=1800
+accept-ranges: bytes
+memento-datetime: Tue, 12 Mar 2019 08:17:28 GMT
+link: <https://developer.apple.com/design/human-interface-guidelines/macos/images/TB_PopOver.mp4>; rel="original", <https://web.archive.org/web/timemap/link/https://developer.apple.com/design/human-interface-guidelines/macos/images/TB_PopOver.mp4>; rel="timemap"; type="application/link-format", <https://web.archive.org/web/https://developer.apple.com/design/human-interface-guidelines/macos/images/TB_PopOver.mp4>; rel="timegate"
+content-security-policy: default-src 'self' 'unsafe-eval' 'unsafe-inline' data: blob: archive.org web.archive.org web-static.archive.org wayback-api.archive.org athena.archive.org analytics.archive.org pragma.archivelab.org wwwb-events.archive.org
+x-archive-src: WIDE-20190312015352-crawl420/WIDE-20190312055039-09077.warc.gz
+server-timing: captures_list;dur=0.633136, exclusion.robots;dur=0.095023, exclusion.robots.policy;dur=0.083344, esindex;dur=0.032232, cdx.remote;dur=9.125733, LoadShardBlock;dur=62.935917, PetaboxLoader3.datanode;dur=63.362677, load_resource;dur=87.208132, PetaboxLoader3.resolve;dur=72.414932
+x-app-server: wwwb-app265-dc8
+x-ts: 200
+x-tr: 178
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=1
+set-cookie: wb-p-SERVER=wwwb-app265; path=/
+cache-control: private
+X-RL: 0
+X-NA: 0
+X-Page-Cache: BYPASS
+Server-Timing: BYPASS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+X-location: mp4
+

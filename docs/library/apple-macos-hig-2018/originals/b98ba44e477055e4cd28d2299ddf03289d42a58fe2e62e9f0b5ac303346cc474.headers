@@ -1,0 +1,72 @@
+HTTP/1.1 302 FOUND
+Server: nginx
+Date: Sun, 27 Sep 2026 14:04:28 GMT
+Content-Type: text/plain; charset=utf-8
+Content-Length: 0
+Connection: keep-alive
+x-archive-redirect-reason: found capture at 20191016100425
+location: https://web.archive.org/web/20191016100425id_/https://developer.apple.com/design/human-interface-guidelines/macos/images/Keyboard_Shift.svg
+server-timing: captures_list;dur=0.363823, exclusion.robots;dur=0.055108, exclusion.robots.policy;dur=0.048450, esindex;dur=0.007295, cdx.remote;dur=6.261056, LoadShardBlock;dur=49.414491, PetaboxLoader3.datanode;dur=48.842201
+x-app-server: wwwb-app265-dc8
+x-ts: 302
+x-tr: 70
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=0
+set-cookie: wb-p-SERVER=wwwb-app265; path=/
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+Server-Timing: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+
+HTTP/1.1 200 OK
+Server: nginx
+Date: Sun, 27 Sep 2026 14:04:29 GMT
+Content-Type: image/svg+xml
+Content-Length: 334
+Connection: keep-alive
+x-archive-orig-server: Apple
+x-archive-orig-date: Wed, 16 Oct 2019 10:04:25 GMT
+x-archive-orig-content-length: 334
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-strict-transport-security: max-age=31536000; includeSubDomains
+x-archive-orig-last-modified: Mon, 03 Jun 2019 18:09:01 GMT
+x-archive-orig-accept-ranges: bytes
+x-archive-orig-x-xss-protection: 1; mode=block
+x-archive-orig-access-control-allow-origin: https://developer2.apple.com
+x-archive-orig-cache-control: max-age=600, public
+x-archive-orig-host: developer.apple.com
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-age: 0
+x-archive-orig-connection: keep-alive
+x-archive-orig-via: https/1.1 usscz2-edge-bx-017.ts.apple.com (ApacheTrafficServer/8.0.5)
+x-archive-orig-cdnuuid: e387cb6f-0863-4491-a240-eaf091197547-1249116514
+x-archive-orig-x-cache: miss
+cache-control: max-age=1800
+accept-ranges: bytes
+memento-datetime: Wed, 16 Oct 2019 10:04:25 GMT
+link: <https://developer.apple.com/design/human-interface-guidelines/macos/images/Keyboard_Shift.svg>; rel="original", <https://web.archive.org/web/timemap/link/https://developer.apple.com/design/human-interface-guidelines/macos/images/Keyboard_Shift.svg>; rel="timemap"; type="application/link-format", <https://web.archive.org/web/https://developer.apple.com/design/human-interface-guidelines/macos/images/Keyboard_Shift.svg>; rel="timegate"
+content-security-policy: default-src 'self' 'unsafe-eval' 'unsafe-inline' data: blob: archive.org web.archive.org web-static.archive.org wayback-api.archive.org athena.archive.org analytics.archive.org pragma.archivelab.org wwwb-events.archive.org
+x-archive-src: liveweb-20191016102934/liveweb-20191016094246-wwwb-spn20.us.archive.org.warc.gz
+server-timing: captures_list;dur=0.743768, exclusion.robots;dur=0.122443, exclusion.robots.policy;dur=0.106794, esindex;dur=0.011034, cdx.remote;dur=8.647657, LoadShardBlock;dur=258.504374, PetaboxLoader3.resolve;dur=130.863008, PetaboxLoader3.datanode;dur=144.391078, load_resource;dur=94.427436
+x-app-server: wwwb-app249-dc8
+x-ts: 200
+x-tr: 386
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=1
+set-cookie: wb-p-SERVER=wwwb-app249; path=/
+cache-control: private
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+Server-Timing: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+

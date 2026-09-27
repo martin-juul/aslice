@@ -1,0 +1,87 @@
+@use 'sass:map';
+
+@mixin layout {
+  #machines {
+    border: 1px solid;
+    margin: 8px 0;
+    max-height: 220px;
+    overflow: auto;
+  }
+  #machines .machine-row {
+    display: flex;
+    align-items: baseline;
+    width: 100%;
+    margin: 0;
+    padding: 6px 8px;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    text-align: left;
+  }
+  .machine-name {
+    flex: 1 1 0;
+    min-width: 0;
+    word-wrap: break-word;
+  }
+  .machine-state {
+    margin-left: 16px;
+    font:
+      12px 'Geist Mono',
+      monospace;
+  }
+  .machine-list-empty {
+    padding: 12px;
+    margin: 0;
+  }
+  #machines .machine-row:focus {
+    outline-offset: -2px;
+  }
+  #identity h3,
+  #identity h4 {
+    font-size: 12px;
+    font-weight: 600;
+    margin: 12px 0 6px;
+  }
+  .machine-properties {
+    margin: 0 0 12px;
+  }
+  .machine-properties > div {
+    display: flex;
+    align-items: baseline;
+    padding: 3px 0;
+  }
+  .machine-properties dt {
+    flex: 0 0 48%;
+    padding-right: 12px;
+  }
+  .machine-properties dd {
+    flex: 1 1 0;
+    min-width: 0;
+    margin: 0;
+    word-wrap: break-word;
+    font:
+      12px 'Geist Mono',
+      monospace;
+    user-select: text;
+  }
+}
+
+@mixin appearance($colors) {
+  #machines {
+    background: map.get($colors, 'content');
+    border-color: map.get($colors, 'separator');
+  }
+  #machines .machine-row:not(.selected) {
+    background: transparent;
+    color: map.get($colors, 'text');
+  }
+  #machines .machine-row:not(.selected):hover {
+    background: map.get($colors, 'control-hover');
+  }
+  .machine-list-empty {
+    color: map.get($colors, 'secondary-text');
+  }
+  .machine-properties dt {
+    color: map.get($colors, 'secondary-text');
+  }
+}

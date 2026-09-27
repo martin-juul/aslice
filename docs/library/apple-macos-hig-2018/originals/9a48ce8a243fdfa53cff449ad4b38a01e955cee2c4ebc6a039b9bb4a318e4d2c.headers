@@ -1,0 +1,73 @@
+HTTP/1.1 302
+Server: nginx
+Date: Sun, 27 Sep 2026 14:49:25 GMT
+Content-Type: text/plain; charset=utf-8
+Content-Length: 0
+Connection: keep-alive
+x-archive-redirect-reason: found capture at 20180821175818
+location: https://web.archive.org/web/20180821175818id_/https://developer.apple.com/design/human-interface-guidelines/macos/images/TB_gestures_multiTouch.png
+server-timing: captures_list;dur=0.691892, exclusion.robots;dur=0.109377, exclusion.robots.policy;dur=0.097641, esindex;dur=0.011149, cdx.remote;dur=87.556505, LoadShardBlock;dur=84.931245, PetaboxLoader3.datanode;dur=54.321945, PetaboxLoader3.resolve;dur=15.396342
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=0
+server-timing: MISS
+x-app-server: wwwb-app54-dc6
+x-ts: 302
+x-tr: 192
+set-cookie: wb-p-SERVER=wwwb-app54; path=/
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+
+HTTP/1.1 200
+Server: nginx
+Date: Sun, 27 Sep 2026 14:49:30 GMT
+Content-Type: image/png
+Content-Length: 8188
+Connection: keep-alive
+x-archive-orig-date: Tue, 21 Aug 2018 17:58:18 GMT
+x-archive-orig-content-length: 8188
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-strict-transport-security: max-age=31536000; includeSubDomains
+x-archive-orig-last-modified: Mon, 04 Jun 2018 16:41:08 GMT
+x-archive-orig-etag: "1ffc-56dd399b73100"
+x-archive-orig-accept-ranges: bytes
+x-archive-orig-x-xss-protection: 1; mode=block
+x-archive-orig-access-control-allow-origin: https://developer2.apple.com
+x-archive-orig-cache-control: max-age=600, public
+x-archive-orig-server: ATS/7.1.4
+x-archive-orig-host: developer.apple.com
+x-archive-orig-age: 0
+x-archive-orig-connection: close
+x-archive-orig-via: https/1.1 usscz2-edge-bx-034.ts.apple.com (ApacheTrafficServer/7.1.4)
+x-archive-orig-cdnuuid: 45759dae-0e08-4174-a8bb-f9564e352a94-328234598
+x-archive-orig-x-cache: miss
+cache-control: max-age=1800
+cache-control: private
+accept-ranges: bytes
+memento-datetime: Tue, 21 Aug 2018 17:58:18 GMT
+link: <https://developer.apple.com/design/human-interface-guidelines/macos/images/TB_gestures_multiTouch.png>; rel="original", <https://web.archive.org/web/timemap/link/https://developer.apple.com/design/human-interface-guidelines/macos/images/TB_gestures_multiTouch.png>; rel="timemap"; type="application/link-format", <https://web.archive.org/web/https://developer.apple.com/design/human-interface-guidelines/macos/images/TB_gestures_multiTouch.png>; rel="timegate", <https://web.archive.org/web/20180821175818/https://developer.apple.com/design/human-interface-guidelines/macos/images/TB_gestures_multiTouch.png>; rel="first memento"; datetime="Tue, 21 Aug 2018 17:58:18 GMT", <https://web.archive.org/web/20180821175818/https://developer.apple.com/design/human-interface-guidelines/macos/images/TB_gestures_multiTouch.png>; rel="memento"; datetime="Tue, 21 Aug 2018 17:58:18 GMT", <https://web.archive.org/web/20200622182909/https://developer.apple.com/design/human-interface-guidelines/macos/images/TB_gestures_multiTouch.png>; rel="next memento"; datetime="Mon, 22 Jun 2020 18:29:09 GMT", <https://web.archive.org/web/20211212210939/https://developer.apple.com/design/human-interface-guidelines/macos/images/TB_gestures_multiTouch.png>; rel="last memento"; datetime="Sun, 12 Dec 2021 21:09:39 GMT"
+content-security-policy: default-src 'self' 'unsafe-eval' 'unsafe-inline' data: blob: archive.org web.archive.org web-static.archive.org wayback-api.archive.org athena.archive.org analytics.archive.org pragma.archivelab.org wwwb-events.archive.org
+x-archive-src: liveweb-20180821175431/live-20180821173336-wwwb-app14.us.archive.org.warc.gz
+server-timing: captures_list;dur=0.756115, exclusion.robots;dur=0.127102, exclusion.robots.policy;dur=0.113004, esindex;dur=0.011114, cdx.remote;dur=7.899484, LoadShardBlock;dur=1433.984362, PetaboxLoader3.datanode;dur=574.507192, PetaboxLoader3.resolve;dur=90.880846, load_resource;dur=112.546646
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=0
+server-timing: MISS
+x-app-server: wwwb-app247-dc8
+x-ts: 200
+x-tr: 1580
+set-cookie: wb-p-SERVER=wwwb-app247; path=/
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+

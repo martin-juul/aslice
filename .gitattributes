@@ -36,3 +36,4 @@
 
 # Keep this after extension rules: archived hashes cover exact bytes everywhere.
 docs/refs/** -text
+docs/library/** -text

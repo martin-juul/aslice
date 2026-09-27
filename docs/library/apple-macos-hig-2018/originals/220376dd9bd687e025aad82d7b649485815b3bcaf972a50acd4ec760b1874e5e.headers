@@ -1,0 +1,72 @@
+HTTP/1.1 302
+Server: nginx
+Date: Sun, 27 Sep 2026 14:26:09 GMT
+Content-Type: text/plain; charset=utf-8
+Content-Length: 0
+Connection: keep-alive
+x-archive-redirect-reason: found capture at 20181119103136
+location: https://web.archive.org/web/20181119103136id_/https://developer.apple.com/design/human-interface-guidelines/images/iPhone6s_iOSHIG_Frame.png
+server-timing: captures_list;dur=0.408507, exclusion.robots;dur=0.059051, exclusion.robots.policy;dur=0.050872, esindex;dur=0.006973, cdx.remote;dur=8.556549, LoadShardBlock;dur=919.513700, PetaboxLoader3.datanode;dur=918.938118
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=1
+server-timing: MISS
+x-app-server: wwwb-app265-dc8
+x-ts: 302
+x-tr: 947
+set-cookie: wb-p-SERVER=wwwb-app265; path=/
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+
+HTTP/1.1 200
+Server: nginx
+Date: Sun, 27 Sep 2026 14:26:11 GMT
+Content-Type: image/png
+Content-Length: 3723
+Connection: keep-alive
+x-archive-orig-date: Mon, 19 Nov 2018 10:31:36 GMT
+x-archive-orig-content-length: 3723
+x-archive-orig-strict-transport-security: max-age=31536000; includeSubDomains
+x-archive-orig-last-modified: Mon, 04 Jun 2018 16:41:09 GMT
+x-archive-orig-accept-ranges: bytes
+x-archive-orig-x-xss-protection: 1; mode=block
+x-archive-orig-access-control-allow-origin: https://developer2.apple.com
+x-archive-orig-cache-control: max-age=600, public
+x-archive-orig-server: Apple
+x-archive-orig-host: developer.apple.com
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-etag: "e8b-56dd399c67340"
+x-archive-orig-age: 0
+x-archive-orig-connection: keep-alive
+x-archive-orig-via: https/1.1 defra3-edge-bx-007.ts.apple.com (ApacheTrafficServer/7.1.4)
+x-archive-orig-cdnuuid: 1fd04118-72c9-4935-9b95-dd82e653d8cb-1643376446
+x-archive-orig-x-cache: hit-stale
+cache-control: max-age=1800
+cache-control: private
+accept-ranges: bytes
+memento-datetime: Mon, 19 Nov 2018 10:31:36 GMT
+link: <https://developer.apple.com/design/human-interface-guidelines/images/iPhone6s_iOSHIG_Frame.png>; rel="original", <https://web.archive.org/web/timemap/link/https://developer.apple.com/design/human-interface-guidelines/images/iPhone6s_iOSHIG_Frame.png>; rel="timemap"; type="application/link-format", <https://web.archive.org/web/https://developer.apple.com/design/human-interface-guidelines/images/iPhone6s_iOSHIG_Frame.png>; rel="timegate", <https://web.archive.org/web/20180701093508/https://developer.apple.com/design/human-interface-guidelines/images/iPhone6s_iOSHIG_Frame.png>; rel="first memento"; datetime="Sun, 01 Jul 2018 09:35:08 GMT", <https://web.archive.org/web/20181112091754/https://developer.apple.com/design/human-interface-guidelines/images/iPhone6s_iOSHIG_Frame.png>; rel="prev memento"; datetime="Mon, 12 Nov 2018 09:17:54 GMT", <https://web.archive.org/web/20181119103136/https://developer.apple.com/design/human-interface-guidelines/images/iPhone6s_iOSHIG_Frame.png>; rel="memento"; datetime="Mon, 19 Nov 2018 10:31:36 GMT", <https://web.archive.org/web/20181121053050/https://developer.apple.com/design/human-interface-guidelines/images/iPhone6s_iOSHIG_Frame.png>; rel="next memento"; datetime="Wed, 21 Nov 2018 05:30:50 GMT", <https://web.archive.org/web/20230411121347/https://developer.apple.com/design/human-interface-guidelines/images/iPhone6s_iOSHIG_Frame.png>; rel="last memento"; datetime="Tue, 11 Apr 2023 12:13:47 GMT"
+content-security-policy: default-src 'self' 'unsafe-eval' 'unsafe-inline' data: blob: archive.org web.archive.org web-static.archive.org wayback-api.archive.org athena.archive.org analytics.archive.org pragma.archivelab.org wwwb-events.archive.org
+x-archive-src: archiveteam_archivebot_go_20181119190001/www.technologyreview.com-inf-20181109-011503-6q1he-00069.warc.gz
+server-timing: captures_list;dur=1.838447, exclusion.robots;dur=0.115511, exclusion.robots.policy;dur=0.102162, esindex;dur=0.009545, cdx.remote;dur=9.367916, LoadShardBlock;dur=188.860136, PetaboxLoader3.resolve;dur=180.176807, PetaboxLoader3.datanode;dur=82.600436, load_resource;dur=78.651279
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=4
+server-timing: MISS
+x-app-server: wwwb-app249-dc8
+x-ts: 200
+x-tr: 305
+set-cookie: wb-p-SERVER=wwwb-app249; path=/
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+

@@ -1,0 +1,67 @@
+HTTP/1.1 302
+Server: nginx
+Date: Sun, 27 Sep 2026 14:24:47 GMT
+Content-Type: text/plain; charset=utf-8
+Content-Length: 0
+Connection: keep-alive
+x-archive-redirect-reason: found capture at 20181118215809
+location: https://web.archive.org/web/20181118215809id_/https://developer.apple.com/assets/images/globalnav/links/ipad/image_large.svg
+server-timing: captures_list;dur=0.458694, exclusion.robots;dur=0.067765, exclusion.robots.policy;dur=0.060216, esindex;dur=0.006319, cdx.remote;dur=14.032180, LoadShardBlock;dur=93.417209, PetaboxLoader3.datanode;dur=91.709297
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=0
+server-timing: MISS
+x-app-server: wwwb-app233-dc8
+x-ts: 302
+x-tr: 122
+set-cookie: wb-p-SERVER=wwwb-app233; path=/
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+
+HTTP/1.1 404
+Server: nginx
+Date: Sun, 27 Sep 2026 14:24:50 GMT
+Content-Type: text/html
+Transfer-Encoding: chunked
+Connection: keep-alive
+x-archive-orig-date: Sun, 18 Nov 2018 21:58:09 GMT
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-strict-transport-security: max-age=31536000; includeSubDomains
+x-archive-orig-x-xss-protection: 1; mode=block
+x-archive-orig-access-control-allow-origin: https://developer2.apple.com
+x-archive-orig-server: Apple
+x-archive-orig-age: 0
+x-archive-orig-transfer-encoding: chunked
+x-archive-orig-connection: keep-alive
+x-archive-orig-via: https/1.1 usewr1-edge-bx-026.ts.apple.com (ApacheTrafficServer/7.1.4)
+x-archive-orig-cdnuuid: 54b0962d-ede9-42ae-9450-a4003e595ed0-258339254
+x-archive-orig-x-cache: miss
+cache-control: max-age=1800
+cache-control: private
+accept-ranges: bytes
+memento-datetime: Sun, 18 Nov 2018 21:58:09 GMT
+link: <https://developer.apple.com/assets/images/globalnav/links/ipad/image_large.svg>; rel="original", <https://web.archive.org/web/timemap/link/https://developer.apple.com/assets/images/globalnav/links/ipad/image_large.svg>; rel="timemap"; type="application/link-format", <https://web.archive.org/web/https://developer.apple.com/assets/images/globalnav/links/ipad/image_large.svg>; rel="timegate", <https://web.archive.org/web/20181020080229/https://developer.apple.com/assets/images/globalnav/links/ipad/image_large.svg>; rel="first memento"; datetime="Sat, 20 Oct 2018 08:02:29 GMT", <https://web.archive.org/web/20181118054147/https://developer.apple.com/assets/images/globalnav/links/ipad/image_large.svg>; rel="prev memento"; datetime="Sun, 18 Nov 2018 05:41:47 GMT", <https://web.archive.org/web/20181118215809/https://developer.apple.com/assets/images/globalnav/links/ipad/image_large.svg>; rel="memento"; datetime="Sun, 18 Nov 2018 21:58:09 GMT", <https://web.archive.org/web/20181119212739/https://developer.apple.com/assets/images/globalnav/links/ipad/image_large.svg>; rel="next memento"; datetime="Mon, 19 Nov 2018 21:27:39 GMT", <https://web.archive.org/web/20181224051421/https://developer.apple.com/assets/images/globalnav/links/ipad/image_large.svg>; rel="last memento"; datetime="Mon, 24 Dec 2018 05:14:21 GMT"
+content-security-policy: default-src 'self' 'unsafe-eval' 'unsafe-inline' data: blob: archive.org web.archive.org web-static.archive.org wayback-api.archive.org athena.archive.org analytics.archive.org pragma.archivelab.org wwwb-events.archive.org
+x-archive-src: archiveteam_archivebot_go_20181119150001/wiki.gnucash.org-inf-20181119-033024-8w5ti-00001.warc.gz
+server-timing: captures_list;dur=0.528816, exclusion.robots;dur=0.093645, exclusion.robots.policy;dur=0.059968, esindex;dur=0.007765, cdx.remote;dur=9.229716, LoadShardBlock;dur=129.890656, PetaboxLoader3.datanode;dur=116.041880, load_resource;dur=61.421230, PetaboxLoader3.resolve;dur=57.569631
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=0
+x-app-server: wwwb-app204-dc6
+x-ts: 404
+x-tr: 214
+set-cookie: wb-p-SERVER=wwwb-app204; path=/
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+

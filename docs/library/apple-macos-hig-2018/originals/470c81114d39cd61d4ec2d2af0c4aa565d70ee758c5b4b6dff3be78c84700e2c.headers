@@ -1,0 +1,42 @@
+HTTP/1.1 200 OK
+Server: nginx
+Date: Sun, 27 Sep 2026 13:53:01 GMT
+Content-Type: text/html
+Transfer-Encoding: chunked
+Connection: keep-alive
+x-archive-orig-date: Mon, 19 Nov 2018 08:54:24 GMT
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-strict-transport-security: max-age=31536000; includeSubDomains
+x-archive-orig-x-xss-protection: 1; mode=block
+x-archive-orig-access-control-allow-origin: https://developer2.apple.com
+x-archive-orig-server: Apple
+x-archive-orig-host: developer.apple.com
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-age: 0
+x-archive-orig-via: https/1.1 ussjc2-edge-bx-007.ts.apple.com (ApacheTrafficServer/7.1.4)
+x-archive-orig-cdnuuid: ca0853f1-df32-4c79-b774-178a24a99a91--409778503
+x-archive-orig-x-cache: miss
+cache-control: max-age=1800
+accept-ranges: bytes
+memento-datetime: Mon, 19 Nov 2018 08:54:24 GMT
+link: <https://developer.apple.com/design/human-interface-guidelines/macos/overview/themes/>; rel="original", <https://web.archive.org/web/timemap/link/https://developer.apple.com/design/human-interface-guidelines/macos/overview/themes/>; rel="timemap"; type="application/link-format", <https://web.archive.org/web/https://developer.apple.com/design/human-interface-guidelines/macos/overview/themes/>; rel="timegate"
+content-security-policy: default-src 'self' 'unsafe-eval' 'unsafe-inline' data: blob: archive.org web.archive.org web-static.archive.org wayback-api.archive.org athena.archive.org analytics.archive.org pragma.archivelab.org wwwb-events.archive.org
+x-archive-src: NO404-WKP-20181119005537-crawl898/NO404-WKP-20181119015144-00009.warc.gz
+server-timing: captures_list;dur=0.509127, exclusion.robots;dur=0.068735, exclusion.robots.policy;dur=0.058989, esindex;dur=0.009253, cdx.remote;dur=18.999140, LoadShardBlock;dur=102.814242, PetaboxLoader3.datanode;dur=78.154575, PetaboxLoader3.resolve;dur=122.915370, load_resource;dur=160.980555
+x-app-server: wwwb-app264-dc8
+x-ts: 200
+x-tr: 303
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=0
+set-cookie: wb-p-SERVER=wwwb-app264; path=/
+cache-control: private
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+Server-Timing: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+

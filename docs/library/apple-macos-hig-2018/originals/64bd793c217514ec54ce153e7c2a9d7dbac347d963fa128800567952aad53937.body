@@ -1,0 +1,17 @@
+$(document).ready(function() {
+
+	$('.translucency-and-vibrancy-gallery').bxSlider({
+		adaptiveHeight: false,
+		mode: 'fade',
+		pagerCustom: '#bxlabels-translucency-and-vibrancy-examples',
+		controls: false
+	});
+	
+	$('.template-images-gallery').bxSlider({
+		adaptiveHeight: false,
+		mode: 'fade',
+		pagerCustom: '#bxlabels-template-images-examples',
+		controls: false
+	});
+
+});

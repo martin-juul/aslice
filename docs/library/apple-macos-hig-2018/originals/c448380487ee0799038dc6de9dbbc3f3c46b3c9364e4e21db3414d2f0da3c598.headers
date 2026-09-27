@@ -1,0 +1,67 @@
+HTTP/1.1 302 FOUND
+Server: nginx
+Date: Sun, 27 Sep 2026 13:53:12 GMT
+Content-Type: text/plain; charset=utf-8
+Content-Length: 0
+Connection: keep-alive
+x-archive-redirect-reason: found capture at 20181127004731
+location: https://web.archive.org/web/20181127004731id_/https://developer.apple.com/design/human-interface-guidelines/macos/buttons/pop-up-buttons/
+server-timing: captures_list;dur=0.472137, exclusion.robots;dur=0.069763, exclusion.robots.policy;dur=0.059591, esindex;dur=0.008053, cdx.remote;dur=10.414483, LoadShardBlock;dur=96.777422, PetaboxLoader3.datanode;dur=76.334554, PetaboxLoader3.resolve;dur=18.052030
+x-app-server: wwwb-app206-dc6
+x-ts: 302
+x-tr: 123
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=0
+set-cookie: wb-p-SERVER=wwwb-app206; path=/
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+Server-Timing: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+
+HTTP/1.1 200 OK
+Server: nginx
+Date: Sun, 27 Sep 2026 13:53:13 GMT
+Content-Type: text/html
+Transfer-Encoding: chunked
+Connection: keep-alive
+x-archive-orig-date: Tue, 27 Nov 2018 00:47:31 GMT
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-strict-transport-security: max-age=31536000; includeSubDomains
+x-archive-orig-x-xss-protection: 1; mode=block
+x-archive-orig-access-control-allow-origin: https://developer2.apple.com
+x-archive-orig-server: Apple
+x-archive-orig-host: developer.apple.com
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-age: 0
+x-archive-orig-via: https/1.1 ussjc2-edge-bx-016.ts.apple.com (ApacheTrafficServer/7.1.6)
+x-archive-orig-cdnuuid: 11dd2268-e342-4372-bed2-7022d1c347b0-67512
+x-archive-orig-x-cache: miss
+cache-control: max-age=1800
+accept-ranges: bytes
+memento-datetime: Tue, 27 Nov 2018 00:47:31 GMT
+link: <https://developer.apple.com/design/human-interface-guidelines/macos/buttons/pop-up-buttons/>; rel="original", <https://web.archive.org/web/timemap/link/https://developer.apple.com/design/human-interface-guidelines/macos/buttons/pop-up-buttons/>; rel="timemap"; type="application/link-format", <https://web.archive.org/web/https://developer.apple.com/design/human-interface-guidelines/macos/buttons/pop-up-buttons/>; rel="timegate"
+content-security-policy: default-src 'self' 'unsafe-eval' 'unsafe-inline' data: blob: archive.org web.archive.org web-static.archive.org wayback-api.archive.org athena.archive.org analytics.archive.org pragma.archivelab.org wwwb-events.archive.org
+x-archive-src: ARCHIVEIT-9597-CRAWL_SELECTED_SEEDS-JOB713226-SEED1950316-20181127-00000/ARCHIVEIT-9597-CRAWL_SELECTED_SEEDS-JOB713226-SEED1950316-20181127003303037-00076-h3.warc.gz
+server-timing: captures_list;dur=0.405763, exclusion.robots;dur=0.068809, exclusion.robots.policy;dur=0.060608, esindex;dur=0.006207, cdx.remote;dur=5.783014, LoadShardBlock;dur=50.613274, PetaboxLoader3.datanode;dur=85.102942, load_resource;dur=346.656055, PetaboxLoader3.resolve;dur=284.868688
+x-app-server: wwwb-app267-dc8
+x-ts: 200
+x-tr: 417
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=1
+set-cookie: wb-p-SERVER=wwwb-app267; path=/
+cache-control: private
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+Server-Timing: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+

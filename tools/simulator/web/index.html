@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>aslice · Darwin compatibility environment</title>
+    <script type="module" src="/src/app.ts"></script>
+  </head>
+  <body>
+    <header>
+      <div>
+        <strong>aslice</strong><span>Darwin compatibility environment</span>
+      </div>
+      <div class="appearance-controls">
+        <small>Application display · not a macOS desktop</small>
+        <button id="dark-appearance" aria-pressed="false">
+          Dark appearance
+        </button>
+      </div>
+    </header>
+    <div id="development-banner" hidden>
+      UI demo — sample data only. No VM, Darwin runtime or debugger is
+      connected. Reload resets changes.
+    </div>
+    <div id="notice" role="status">Connecting to the local controller…</div>
+    <div id="download-ready" role="status" hidden></div>
+    <main>
+      <section id="workspace">
+        <div class="machine-bar">
+          <span id="selected-machine" role="status">No machine selected.</span>
+          <button id="start">Start</button><button id="stop">Shut down</button>
+          <details class="machine-panel" name="machine-tools">
+            <summary>Machines &amp; configuration</summary>
+            <div class="panel-content">
+              <h2>Machines</h2>
+              <button id="refresh">Refresh</button>
+              <div id="machines" role="group" aria-label="Machines"></div>
+              <details>
+                <summary>Create machine</summary>
+                <form id="create">
+                  <label
+                    >Name:<input
+                      name="name"
+                      required
+                      pattern="[a-z][a-z0-9-]{0,47}"
+                  /></label>
+                  <label
+                    >Base image (host path):<input
+                      name="image"
+                      required /></label
+                  ><label
+                    >Runtime identity (host path):<input
+                      name="runtime"
+                      required
+                  /></label>
+                  <label
+                    >CPUs:<input
+                      name="cpus"
+                      type="number"
+                      value="4"
+                      min="1"
+                      max="256"
+                  /></label>
+                  <label
+                    >Memory (MiB):<input
+                      name="memory_mib"
+                      type="number"
+                      value="8192"
+                      min="512"
+                  /></label>
+                  <label
+                    >Disk (GiB):<input
+                      name="disk_gib"
+                      type="number"
+                      value="64"
+                      min="1" /></label
+                  ><button>Create</button>
+                </form>
+              </details>
+              <div id="identity"></div>
+              <p id="runtime-health" role="status">
+                Runtime health has not been checked.
+              </p>
+            </div>
+          </details>
+          <details class="machine-panel" name="machine-tools">
+            <summary>Machine actions</summary>
+            <div class="panel-content">
+              <nav>
+                <select id="acceleration" aria-label="Acceleration">
+                  <option value="auto">WHPX / KVM</option>
+                  <option value="tcg">Software emulation</option>
+                </select>
+                <label
+                  ><input id="network" type="checkbox" />Enable network on
+                  start</label
+                >
+                <button id="force" class="danger">Force stop</button>
+                <button id="clone">Clone</button
+                ><button id="delete" class="danger">Delete</button
+                ><button id="diagnostics">Download diagnostics</button>
+              </nav>
+              <div class="toolbar">
+                <input
+                  id="snapshot-name"
+                  placeholder="Snapshot name"
+                  aria-label="Snapshot name"
+                /><button id="snapshot">Snapshot stopped machine</button
+                ><button id="restore">Restore snapshot</button
+                ><button id="network-loss">
+                  Disconnect application network
+                </button>
+              </div>
+            </div>
+          </details>
+          <div class="view-controls" role="group" aria-label="Workspace view">
+            <button
+              id="view-split"
+              aria-pressed="true"
+              title="Show Terminal and Application Display"
+            >
+              Split
+            </button>
+            <button
+              id="view-terminal"
+              aria-pressed="false"
+              title="Show Terminal"
+            >
+              Terminal
+            </button>
+            <button
+              id="view-display"
+              aria-pressed="false"
+              title="Show Application Display"
+            >
+              Display
+            </button>
+          </div>
+        </div>
+        <div id="primary-panels" class="panels primary-panels">
+          <article id="terminal-panel" aria-label="Terminal workspace">
+            <div class="pane-header">
+              <h2>Terminal</h2>
+              <div class="toolbar">
+                <select id="mode" aria-label="Execution environment">
+                  <option value="darwin">Darwin application</option>
+                  <option value="linux">Linux runtime tools</option>
+                </select>
+                <button id="shell">New terminal</button
+                ><select id="sessions" aria-label="Persistent sessions">
+                  <option value="">Choose session</option></select
+                ><button
+                  id="sessions-refresh"
+                  title="Refresh sessions"
+                  aria-label="Refresh sessions"
+                >
+                  Refresh
+                </button>
+              </div>
+            </div>
+            <div id="terminal"></div>
+            <div id="terminal-progress-area" hidden>
+              <progress
+                id="terminal-progress"
+                max="100"
+                value="0"
+                aria-labelledby="terminal-progress-label"
+              ></progress>
+              <span id="terminal-progress-label"></span>
+            </div>
+            <div class="toolbar">
+              <span id="session-status" role="status"
+                >No session selected.</span
+              >
+              <button id="session-reconnect">Reconnect output</button>
+              <button id="terminal-export">Export terminal display</button>
+            </div>
+            <div class="terminal-tools">
+              <details>
+                <summary>Run command</summary>
+                <div class="toolbar">
+                  <input
+                    id="command"
+                    placeholder="Command to run inside the selected guest environment"
+                    aria-label="Guest command"
+                  /><button id="exec">Run</button>
+                </div>
+              </details>
+              <details id="terminal-demo-lab" hidden>
+                <summary>Demo terminal samples</summary>
+                <p>
+                  Sample output only. Start a sample machine and open a
+                  terminal. Enable inline images before trying the image sample.
+                </p>
+              </details>
+              <details>
+                <summary>Terminal options</summary>
+                <label
+                  ><input type="checkbox" id="terminal-webgl" checked />Use GPU
+                  rendering when available</label
+                >
+                <span id="terminal-renderer">Standard renderer</span>
+                <label
+                  ><input type="checkbox" id="terminal-images" />Show inline
+                  terminal images</label
+                >
+                <span id="terminal-image-status">Images disabled</span>
+              </details>
+              <details>
+                <summary>Debugger</summary>
+                <div class="toolbar">
+                  <input
+                    id="debug-program"
+                    placeholder="Guest executable or core file"
+                    aria-label="Debug executable"
+                  /><input
+                    id="debug-pid"
+                    placeholder="Target PID in selected environment"
+                    aria-label="Target PID in selected execution environment"
+                    title="Darwin mode uses the PID inside Darling; Linux mode uses the guest Linux PID."
+                    type="number"
+                  /><button id="debug">Launch / attach LLDB</button
+                  ><button id="debug-core">Open core</button>
+                </div>
+                <div class="toolbar">
+                  <input
+                    id="breakpoint"
+                    placeholder="Function name"
+                    aria-label="Breakpoint function"
+                  /><button id="break">Set breakpoint</button
+                  ><input
+                    id="source-map"
+                    placeholder="Build source path → guest source path"
+                    aria-label="Source mapping"
+                  /><button id="map">Map sources</button>
+                </div>
+                <div class="toolbar" id="debug-actions">
+                  <button data-command="run">Run</button
+                  ><button data-command="continue">Continue</button
+                  ><button data-command="thread step-over">Step over</button
+                  ><button data-command="thread step-in">Step in</button
+                  ><button data-command="thread step-out">Step out</button
+                  ><button data-command="thread list">Threads</button
+                  ><button data-command="thread backtrace all">Stacks</button
+                  ><button data-command="frame variable">Variables</button
+                  ><button data-command="breakpoint list">Breakpoints</button>
+                </div>
+                <div class="toolbar">
+                  <button id="detach">Detach debugger</button
+                  ><button id="terminate" class="danger">
+                    Terminate debug target
+                  </button>
+                </div>
+              </details>
+            </div>
+          </article>
+          <div
+            id="workspace-divider"
+            touch-action="none"
+            role="separator"
+            tabindex="0"
+            aria-label="Terminal width"
+            aria-orientation="vertical"
+            aria-controls="terminal-panel display-panel"
+            aria-valuemin="30"
+            aria-valuemax="70"
+            aria-valuenow="50"
+            aria-describedby="divider-help"
+            title="Drag to resize. Arrow keys adjust; Enter resets."
+          ></div>
+          <span id="divider-help" hidden>
+            Left and right arrows resize. Hold Shift for larger steps. Home and
+            End select the minimum and maximum widths. Enter resets the split.
+            Escape cancels a drag.
+          </span>
+          <article
+            id="display-panel"
+            aria-label="Application display workspace"
+          >
+            <div class="pane-header">
+              <h2>Application display</h2>
+              <div class="toolbar">
+                <button id="display-connect">Connect display</button
+                ><button id="display-disconnect">Disconnect display</button
+                ><button id="display-frame-toggle" aria-pressed="true">
+                  iMac frame</button
+                ><span id="display-status">Disconnected</span>
+              </div>
+            </div>
+            <div id="display-frame" class="imac-frame">
+              <div class="imac-bezel"><div id="display"></div></div>
+              <div class="imac-chin" aria-hidden="true"></div>
+            </div>
+          </article>
+        </div>
+        <details id="console-panel" class="secondary-panel">
+          <summary>Console</summary>
+          <div class="console-toolbar toolbar">
+            <button id="console-refresh">Refresh</button>
+            <button id="console-pause" aria-pressed="false">Pause</button>
+            <button
+              id="console-clear"
+              title="Clear this view; guest logs are preserved"
+            >
+              Clear view
+            </button>
+            <label
+              >Messages
+              <select id="console-type">
+                <option value="all">All messages</option>
+                <option value="errors">Errors and faults</option>
+                <option value="info">Info</option>
+                <option value="debug">Debug</option>
+              </select></label
+            >
+            <label
+              >Search
+              <input
+                id="console-search"
+                type="search"
+                placeholder='process:SampleApp message:"permission denied"'
+            /></label>
+            <span id="console-count" aria-live="polite"></span>
+          </div>
+          <div class="console-layout">
+            <aside class="console-sources">
+              <label for="console-source">Guest log sources</label>
+              <select id="console-source" size="3">
+                <option value="asl" selected>All Messages (ASL)</option>
+                <option value="unified">Unified Log</option>
+                <option value="system">system.log</option>
+              </select>
+            </aside>
+            <div class="console-content">
+              <div id="console-status" role="status"></div>
+              <div class="console-table">
+                <table aria-label="Console messages">
+                  <thead>
+                    <tr>
+                      <th>Type</th>
+                      <th>Time</th>
+                      <th>Process</th>
+                      <th>Message</th>
+                    </tr>
+                  </thead>
+                  <tbody id="console-messages"></tbody>
+                </table>
+              </div>
+              <pre
+                id="console-detail"
+                tabindex="0"
+                aria-label="Selected log message details"
+              ></pre>
+            </div>
+          </div>
+        </details>
+        <details class="secondary-panel">
+          <summary>Inspectors, files &amp; timeline</summary>
+          <div class="panels">
+            <article>
+              <h2>Inspectors</h2>
+              <button id="inspect">
+                Refresh process, service, filesystem and network views
+              </button>
+              <details open>
+                <summary>Processes</summary>
+                <div id="processes"></div>
+              </details>
+              <details>
+                <summary>Services</summary>
+                <pre id="services"></pre>
+                <input
+                  id="service-name"
+                  placeholder="guest.service"
+                  aria-label="Guest service"
+                /><button id="service-stop">Interrupt service</button>
+              </details>
+              <details>
+                <summary>Filesystem changes</summary>
+                <pre id="changes"></pre>
+              </details>
+              <details>
+                <summary>Network activity</summary>
+                <pre id="network-activity"></pre>
+              </details>
+              <div class="toolbar">
+                <button id="disk-full">
+                  Create full 64 MiB fault disk in Imports/fault-disk</button
+                ><button id="disk-clear">Remove fault disk</button>
+              </div>
+            </article>
+            <article>
+              <h2>Explicit file transfer</h2>
+              <label
+                >Path relative to the guest Imports directory<input
+                  id="transfer-path"
+                  placeholder="probe" /></label
+              ><input type="file" id="file" /><label
+                ><input type="checkbox" id="executable" />Executable</label
+              >
+              <div class="toolbar">
+                <button id="import">Import (maximum 64 MiB)</button
+                ><button id="export">Export</button>
+              </div>
+              <h2>Timeline</h2>
+              <input
+                id="search"
+                placeholder="Search operations and effects"
+                aria-label="Search timeline"
+              /><button id="timeline-refresh">Search</button>
+              <pre id="timeline"></pre>
+            </article>
+          </div>
+        </details>
+      </section>
+    </main>
+  </body>
+</html>

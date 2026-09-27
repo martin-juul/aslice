@@ -1,0 +1,72 @@
+HTTP/1.1 302
+Server: nginx
+Date: Sun, 27 Sep 2026 14:23:45 GMT
+Content-Type: text/plain; charset=utf-8
+Content-Length: 0
+Connection: keep-alive
+x-archive-redirect-reason: found capture at 20181118215835
+location: https://web.archive.org/web/20181118215835id_/https://developer.apple.com/assets/elements/hardware/apple_watch_series_3_white/medium.png?156454
+server-timing: captures_list;dur=0.442083, exclusion.robots;dur=0.099253, exclusion.robots.policy;dur=0.091130, esindex;dur=0.007057, cdx.remote;dur=7.008422, LoadShardBlock;dur=189.595611, PetaboxLoader3.datanode;dur=181.378671
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=0
+server-timing: MISS
+x-app-server: wwwb-app253-dc8
+x-ts: 302
+x-tr: 232
+set-cookie: wb-p-SERVER=wwwb-app253; path=/
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+
+HTTP/1.1 200
+Server: nginx
+Date: Sun, 27 Sep 2026 14:23:48 GMT
+Content-Type: image/png
+Content-Length: 18441
+Connection: keep-alive
+x-archive-orig-date: Sun, 18 Nov 2018 21:58:35 GMT
+x-archive-orig-content-length: 18441
+x-archive-orig-strict-transport-security: max-age=31536000; includeSubDomains
+x-archive-orig-last-modified: Tue, 30 Oct 2018 15:10:12 GMT
+x-archive-orig-accept-ranges: bytes
+x-archive-orig-x-xss-protection: 1; mode=block
+x-archive-orig-access-control-allow-origin: https://developer2.apple.com
+x-archive-orig-cache-control: max-age=600, public
+x-archive-orig-server: Apple
+x-archive-orig-host: developer.apple.com
+x-archive-orig-etag: "4809-579739506bd00"
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-age: 0
+x-archive-orig-connection: keep-alive
+x-archive-orig-via: https/1.1 usewr1-edge-bx-006.ts.apple.com (ApacheTrafficServer/7.1.4)
+x-archive-orig-cdnuuid: e58d6450-bd6d-4d9a-b109-a0d56f01c7f6-261030860
+x-archive-orig-x-cache: hit-stale
+cache-control: max-age=1800
+cache-control: private
+accept-ranges: bytes
+memento-datetime: Sun, 18 Nov 2018 21:58:35 GMT
+link: <https://developer.apple.com/assets/elements/hardware/apple_watch_series_3_white/medium.png?156454>; rel="original", <https://web.archive.org/web/timemap/link/https://developer.apple.com/assets/elements/hardware/apple_watch_series_3_white/medium.png?156454>; rel="timemap"; type="application/link-format", <https://web.archive.org/web/https://developer.apple.com/assets/elements/hardware/apple_watch_series_3_white/medium.png?156454>; rel="timegate", <https://web.archive.org/web/20181031101124/https://developer.apple.com/assets/elements/hardware/apple_watch_series_3_white/medium.png?156454>; rel="first memento"; datetime="Wed, 31 Oct 2018 10:11:24 GMT", <https://web.archive.org/web/20181118054143/https://developer.apple.com/assets/elements/hardware/apple_watch_series_3_white/medium.png?156454>; rel="prev memento"; datetime="Sun, 18 Nov 2018 05:41:43 GMT", <https://web.archive.org/web/20181118215835/https://developer.apple.com/assets/elements/hardware/apple_watch_series_3_white/medium.png?156454>; rel="memento"; datetime="Sun, 18 Nov 2018 21:58:35 GMT", <https://web.archive.org/web/20181119212652/https://developer.apple.com/assets/elements/hardware/apple_watch_series_3_white/medium.png?156454>; rel="next memento"; datetime="Mon, 19 Nov 2018 21:26:52 GMT", <https://web.archive.org/web/20240709064940/https://developer.apple.com/assets/elements/hardware/apple_watch_series_3_white/medium.png?156454>; rel="last memento"; datetime="Tue, 09 Jul 2024 06:49:40 GMT"
+content-security-policy: default-src 'self' 'unsafe-eval' 'unsafe-inline' data: blob: archive.org web.archive.org web-static.archive.org wayback-api.archive.org athena.archive.org analytics.archive.org pragma.archivelab.org wwwb-events.archive.org
+x-archive-src: archiveteam_archivebot_go_20181119150001/wiki.gnucash.org-inf-20181119-033024-8w5ti-00001.warc.gz
+server-timing: captures_list;dur=0.663069, exclusion.robots;dur=0.110243, exclusion.robots.policy;dur=0.099337, esindex;dur=0.009094, cdx.remote;dur=15.849500, LoadShardBlock;dur=45.076816, PetaboxLoader3.datanode;dur=33.844384, PetaboxLoader3.resolve;dur=57.568511, load_resource;dur=54.054950
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=0
+server-timing: MISS
+x-app-server: wwwb-app267-dc8
+x-ts: 200
+x-tr: 170
+set-cookie: wb-p-SERVER=wwwb-app267; path=/
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+

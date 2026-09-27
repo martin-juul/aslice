@@ -1,0 +1,71 @@
+HTTP/1.1 302
+Server: nginx
+Date: Sun, 27 Sep 2026 14:35:24 GMT
+Content-Type: text/plain; charset=utf-8
+Content-Length: 0
+Connection: keep-alive
+x-archive-redirect-reason: found capture at 20190310015427
+location: https://web.archive.org/web/20190310015427id_/https://developer.apple.com/design/human-interface-guidelines/macos/images/icons/touch_bar_icons/TB_communicationaudio.png
+server-timing: captures_list;dur=0.694208, exclusion.robots;dur=0.096971, exclusion.robots.policy;dur=0.086229, esindex;dur=0.048757, cdx.remote;dur=6.436379, LoadShardBlock;dur=91.744259, PetaboxLoader3.datanode;dur=87.664570
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=0
+server-timing: MISS
+x-app-server: wwwb-app204-dc6
+x-ts: 302
+x-tr: 117
+set-cookie: wb-p-SERVER=wwwb-app204; path=/
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+
+HTTP/1.1 200
+Server: nginx
+Date: Sun, 27 Sep 2026 14:35:27 GMT
+Content-Type: image/png
+Content-Length: 262
+Connection: keep-alive
+x-archive-orig-server: Apple
+x-archive-orig-date: Sun, 10 Mar 2019 01:54:27 GMT
+x-archive-orig-content-length: 262
+x-archive-orig-strict-transport-security: max-age=31536000; includeSubDomains
+x-archive-orig-last-modified: Mon, 04 Jun 2018 16:41:04 GMT
+x-archive-orig-accept-ranges: bytes
+x-archive-orig-x-xss-protection: 1; mode=block
+x-archive-orig-access-control-allow-origin: https://developer2.apple.com
+x-archive-orig-cache-control: max-age=600, public
+x-archive-orig-host: developer.apple.com
+x-archive-orig-etag: "106-56dd3997a2800"
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-age: 0
+x-archive-orig-via: https/1.1 usscz2-edge-bx-020.ts.apple.com (ApacheTrafficServer/8.0.3)
+x-archive-orig-cdnuuid: 55702d48-c2f8-4ae8-bbd7-f7e2910573c2-10724783
+x-archive-orig-x-cache: hit-stale
+cache-control: max-age=1800
+cache-control: private
+accept-ranges: bytes
+memento-datetime: Sun, 10 Mar 2019 01:54:27 GMT
+link: <https://developer.apple.com/design/human-interface-guidelines/macos/images/icons/touch_bar_icons/TB_communicationaudio.png>; rel="original", <https://web.archive.org/web/timemap/link/https://developer.apple.com/design/human-interface-guidelines/macos/images/icons/touch_bar_icons/TB_communicationaudio.png>; rel="timemap"; type="application/link-format", <https://web.archive.org/web/https://developer.apple.com/design/human-interface-guidelines/macos/images/icons/touch_bar_icons/TB_communicationaudio.png>; rel="timegate", <https://web.archive.org/web/20190310015427/https://developer.apple.com/design/human-interface-guidelines/macos/images/icons/touch_bar_icons/TB_communicationaudio.png>; rel="first memento"; datetime="Sun, 10 Mar 2019 01:54:27 GMT", <https://web.archive.org/web/20190310015427/https://developer.apple.com/design/human-interface-guidelines/macos/images/icons/touch_bar_icons/TB_communicationaudio.png>; rel="memento"; datetime="Sun, 10 Mar 2019 01:54:27 GMT", <https://web.archive.org/web/20190703223358/https://developer.apple.com/design/human-interface-guidelines/macos/images/icons/touch_bar_icons/TB_communicationaudio.png>; rel="next memento"; datetime="Wed, 03 Jul 2019 22:33:58 GMT", <https://web.archive.org/web/20220528173522/https://developer.apple.com/design/human-interface-guidelines/macos/images/icons/touch_bar_icons/TB_communicationaudio.png>; rel="last memento"; datetime="Sat, 28 May 2022 17:35:22 GMT"
+content-security-policy: default-src 'self' 'unsafe-eval' 'unsafe-inline' data: blob: archive.org web.archive.org web-static.archive.org wayback-api.archive.org athena.archive.org analytics.archive.org pragma.archivelab.org wwwb-events.archive.org
+x-archive-src: WIDE-20190310001032-crawl428/WIDE-20190310012735-00078.warc.gz
+server-timing: captures_list;dur=0.767777, exclusion.robots;dur=0.150035, exclusion.robots.policy;dur=0.135221, esindex;dur=0.011632, cdx.remote;dur=14.488700, LoadShardBlock;dur=142.221435, PetaboxLoader3.datanode;dur=115.995846, PetaboxLoader3.resolve;dur=1257.687720, load_resource;dur=1287.110053
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=1
+server-timing: MISS
+x-app-server: wwwb-app245-dc8
+x-ts: 200
+x-tr: 1474
+set-cookie: wb-p-SERVER=wwwb-app245; path=/
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+

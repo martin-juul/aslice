@@ -1,0 +1,72 @@
+HTTP/1.1 302
+Server: nginx
+Date: Sun, 27 Sep 2026 14:34:33 GMT
+Content-Type: text/plain; charset=utf-8
+Content-Length: 0
+Connection: keep-alive
+x-archive-redirect-reason: found capture at 20190311162626
+location: https://web.archive.org/web/20190311162626id_/https://developer.apple.com/design/human-interface-guidelines/macos/images/icons/appIcons/AppIcon_Siri.png
+server-timing: captures_list;dur=0.401248, exclusion.robots;dur=0.064341, exclusion.robots.policy;dur=0.057144, esindex;dur=0.007007, cdx.remote;dur=7.307159, LoadShardBlock;dur=100.044698, PetaboxLoader3.datanode;dur=64.414616, PetaboxLoader3.resolve;dur=33.081285
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=0
+server-timing: MISS
+x-app-server: wwwb-app206-dc6
+x-ts: 302
+x-tr: 119
+set-cookie: wb-p-SERVER=wwwb-app206; path=/
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+
+HTTP/1.1 200
+Server: nginx
+Date: Sun, 27 Sep 2026 14:34:36 GMT
+Content-Type: image/png
+Content-Length: 16622
+Connection: keep-alive
+x-archive-orig-server: Apple
+x-archive-orig-date: Mon, 11 Mar 2019 16:26:26 GMT
+x-archive-orig-content-length: 16622
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-strict-transport-security: max-age=31536000; includeSubDomains
+x-archive-orig-last-modified: Wed, 06 Feb 2019 16:51:10 GMT
+x-archive-orig-etag: "40ee-5813c88669b80"
+x-archive-orig-accept-ranges: bytes
+x-archive-orig-x-xss-protection: 1; mode=block
+x-archive-orig-access-control-allow-origin: https://developer2.apple.com
+x-archive-orig-cache-control: max-age=600, public
+x-archive-orig-host: developer.apple.com
+x-archive-orig-age: 0
+x-archive-orig-via: https/1.1 ussjc2-edge-bx-006.ts.apple.com (ApacheTrafficServer/8.0.3)
+x-archive-orig-cdnuuid: bf91500c-9a90-4fd2-ba8d-bee35138883a-2352741520
+x-archive-orig-x-cache: miss
+cache-control: max-age=1800
+cache-control: private
+accept-ranges: bytes
+memento-datetime: Mon, 11 Mar 2019 16:26:26 GMT
+link: <https://developer.apple.com/design/human-interface-guidelines/macos/images/icons/appIcons/AppIcon_Siri.png>; rel="original", <https://web.archive.org/web/timemap/link/https://developer.apple.com/design/human-interface-guidelines/macos/images/icons/appIcons/AppIcon_Siri.png>; rel="timemap"; type="application/link-format", <https://web.archive.org/web/https://developer.apple.com/design/human-interface-guidelines/macos/images/icons/appIcons/AppIcon_Siri.png>; rel="timegate", <https://web.archive.org/web/20180713113634/https://developer.apple.com/design/human-interface-guidelines/macos/images/icons/appIcons/AppIcon_Siri.png>; rel="first memento"; datetime="Fri, 13 Jul 2018 11:36:34 GMT", <https://web.archive.org/web/20180713113634/https://developer.apple.com/design/human-interface-guidelines/macos/images/icons/appIcons/AppIcon_Siri.png>; rel="prev memento"; datetime="Fri, 13 Jul 2018 11:36:34 GMT", <https://web.archive.org/web/20190311162626/https://developer.apple.com/design/human-interface-guidelines/macos/images/icons/appIcons/AppIcon_Siri.png>; rel="memento"; datetime="Mon, 11 Mar 2019 16:26:26 GMT", <https://web.archive.org/web/20190514073008/https://developer.apple.com/design/human-interface-guidelines/macos/images/icons/appIcons/AppIcon_Siri.png>; rel="next memento"; datetime="Tue, 14 May 2019 07:30:08 GMT", <https://web.archive.org/web/20200702080024/https://developer.apple.com/design/human-interface-guidelines/macos/images/icons/appIcons/AppIcon_Siri.png>; rel="last memento"; datetime="Thu, 02 Jul 2020 08:00:24 GMT"
+content-security-policy: default-src 'self' 'unsafe-eval' 'unsafe-inline' data: blob: archive.org web.archive.org web-static.archive.org wayback-api.archive.org athena.archive.org analytics.archive.org pragma.archivelab.org wwwb-events.archive.org
+x-archive-src: WIDE-20190311133746-crawl811/WIDE-20190311153809-02573.warc.gz
+server-timing: captures_list;dur=0.433361, exclusion.robots;dur=0.070883, exclusion.robots.policy;dur=0.064288, esindex;dur=0.006870, cdx.remote;dur=8.815692, LoadShardBlock;dur=141.933808, PetaboxLoader3.datanode;dur=97.220415, PetaboxLoader3.resolve;dur=125.368515, load_resource;dur=109.578409
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=2
+server-timing: MISS
+x-app-server: wwwb-app267-dc8
+x-ts: 200
+x-tr: 276
+set-cookie: wb-p-SERVER=wwwb-app267; path=/
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+

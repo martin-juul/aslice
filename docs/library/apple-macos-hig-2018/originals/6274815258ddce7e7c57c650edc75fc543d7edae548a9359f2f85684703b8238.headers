@@ -1,0 +1,48 @@
+HTTP/1.1 200
+Server: nginx
+Date: Sun, 27 Sep 2026 14:29:27 GMT
+Content-Type: image/png
+Content-Length: 393101
+Connection: keep-alive
+x-archive-orig-server: Apple
+x-archive-orig-date: Mon, 22 Jun 2020 19:57:15 GMT
+x-archive-orig-content-length: 393101
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-strict-transport-security: max-age=31536000; includeSubDomains
+x-archive-orig-last-modified: Mon, 03 Jun 2019 18:09:01 GMT
+x-archive-orig-accept-ranges: bytes
+x-archive-orig-x-xss-protection: 1; mode=block
+x-archive-orig-access-control-allow-origin: https://developer2.apple.com
+x-archive-orig-cache-control: max-age=600, public
+x-archive-orig-host: developer.apple.com
+x-archive-orig-rqid: 1516ffec918ef98cd69b5f1dcb5e2ef9
+x-archive-orig-age: 0
+x-archive-orig-via: https/1.1 usscz2-edge-lx-011.ts.apple.com (ApacheTrafficServer/8.0.8), https/1.1 usscz2-edge-bx-001.ts.apple.com (ApacheTrafficServer/8.0.8)
+x-archive-orig-cdnuuid: f83d3297-5652-4b1f-8343-89ca9b1eae6a-46112278
+x-archive-orig-x-cache: miss, miss
+x-archive-orig-connection: close
+cache-control: max-age=1800
+cache-control: private
+accept-ranges: bytes
+memento-datetime: Mon, 22 Jun 2020 19:57:15 GMT
+link: <https://developer.apple.com/design/human-interface-guidelines/macos/images/buttonsHelp_2x.png>; rel="original", <https://web.archive.org/web/timemap/link/https://developer.apple.com/design/human-interface-guidelines/macos/images/buttonsHelp_2x.png>; rel="timemap"; type="application/link-format", <https://web.archive.org/web/https://developer.apple.com/design/human-interface-guidelines/macos/images/buttonsHelp_2x.png>; rel="timegate", <https://web.archive.org/web/20200622195715/https://developer.apple.com/design/human-interface-guidelines/macos/images/buttonsHelp_2x.png>; rel="first memento"; datetime="Mon, 22 Jun 2020 19:57:15 GMT", <https://web.archive.org/web/20200622195715/https://developer.apple.com/design/human-interface-guidelines/macos/images/buttonsHelp_2x.png>; rel="memento"; datetime="Mon, 22 Jun 2020 19:57:15 GMT", <https://web.archive.org/web/20200622195715/https://developer.apple.com/design/human-interface-guidelines/macos/images/buttonsHelp_2x.png>; rel="last memento"; datetime="Mon, 22 Jun 2020 19:57:15 GMT"
+content-security-policy: default-src 'self' 'unsafe-eval' 'unsafe-inline' data: blob: archive.org web.archive.org web-static.archive.org wayback-api.archive.org athena.archive.org analytics.archive.org pragma.archivelab.org wwwb-events.archive.org
+x-archive-src: liveweb-20200622191449/live-20200622194609-wwwb-app53.us.archive.org.warc.gz
+server-timing: captures_list;dur=0.419280, exclusion.robots;dur=0.068789, exclusion.robots.policy;dur=0.061067, esindex;dur=0.006454, cdx.remote;dur=9.696989, LoadShardBlock;dur=215.396082, PetaboxLoader3.datanode;dur=175.075315, PetaboxLoader3.resolve;dur=104.176736, load_resource;dur=885.219826
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=0
+server-timing: MISS
+x-app-server: wwwb-app54-dc6
+x-ts: 200
+x-tr: 1127
+set-cookie: wb-p-SERVER=wwwb-app54; path=/
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+

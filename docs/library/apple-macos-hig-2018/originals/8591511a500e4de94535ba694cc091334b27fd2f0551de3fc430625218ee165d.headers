@@ -1,0 +1,67 @@
+HTTP/1.1 302
+Server: nginx
+Date: Sun, 27 Sep 2026 14:44:38 GMT
+Content-Type: text/plain; charset=utf-8
+Content-Length: 0
+Connection: keep-alive
+x-archive-redirect-reason: found capture at 20181119103137
+location: https://web.archive.org/web/20181119103137id_/https://developer.apple.com/templates/human-interface-guidelines/ios/images/apple-tv-logo.png
+server-timing: captures_list;dur=0.581021, exclusion.robots;dur=0.095527, exclusion.robots.policy;dur=0.084340, esindex;dur=0.007349, cdx.remote;dur=19.250353, LoadShardBlock;dur=284.694758, PetaboxLoader3.datanode;dur=172.854214, PetaboxLoader3.resolve;dur=43.691321
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=0
+server-timing: MISS
+x-app-server: wwwb-app253-dc8
+x-ts: 302
+x-tr: 326
+set-cookie: wb-p-SERVER=wwwb-app253; path=/
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+
+HTTP/1.1 404
+Server: nginx
+Date: Sun, 27 Sep 2026 14:44:39 GMT
+Content-Type: text/html
+Transfer-Encoding: chunked
+Connection: keep-alive
+x-archive-orig-date: Mon, 19 Nov 2018 10:31:36 GMT
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-strict-transport-security: max-age=31536000; includeSubDomains
+x-archive-orig-x-xss-protection: 1; mode=block
+x-archive-orig-access-control-allow-origin: https://developer2.apple.com
+x-archive-orig-server: Apple
+x-archive-orig-age: 0
+x-archive-orig-transfer-encoding: chunked
+x-archive-orig-connection: keep-alive
+x-archive-orig-via: https/1.1 defra3-edge-bx-001.ts.apple.com (ApacheTrafficServer/7.1.4)
+x-archive-orig-cdnuuid: eff264fd-1111-4b72-88c5-fc37039a8866-1642313703
+x-archive-orig-x-cache: hit-stale
+cache-control: max-age=1800
+cache-control: private
+accept-ranges: bytes
+memento-datetime: Mon, 19 Nov 2018 10:31:37 GMT
+link: <https://developer.apple.com/templates/human-interface-guidelines/ios/images/apple-tv-logo.png>; rel="original", <https://web.archive.org/web/timemap/link/https://developer.apple.com/templates/human-interface-guidelines/ios/images/apple-tv-logo.png>; rel="timemap"; type="application/link-format", <https://web.archive.org/web/https://developer.apple.com/templates/human-interface-guidelines/ios/images/apple-tv-logo.png>; rel="timegate", <https://web.archive.org/web/20160819192625/https://developer.apple.com/templates/human-interface-guidelines/ios/images/apple-tv-logo.png>; rel="first memento"; datetime="Fri, 19 Aug 2016 19:26:25 GMT", <https://web.archive.org/web/20181115094859/https://developer.apple.com/templates/human-interface-guidelines/ios/images/apple-tv-logo.png>; rel="prev memento"; datetime="Thu, 15 Nov 2018 09:48:59 GMT", <https://web.archive.org/web/20181119103137/https://developer.apple.com/templates/human-interface-guidelines/ios/images/apple-tv-logo.png>; rel="memento"; datetime="Mon, 19 Nov 2018 10:31:37 GMT", <https://web.archive.org/web/20181120073406/https://developer.apple.com/templates/human-interface-guidelines/ios/images/apple-tv-logo.png>; rel="next memento"; datetime="Tue, 20 Nov 2018 07:34:06 GMT", <https://web.archive.org/web/20230411141919/https://developer.apple.com/templates/human-interface-guidelines/ios/images/apple-tv-logo.png>; rel="last memento"; datetime="Tue, 11 Apr 2023 14:19:19 GMT"
+content-security-policy: default-src 'self' 'unsafe-eval' 'unsafe-inline' data: blob: archive.org web.archive.org web-static.archive.org wayback-api.archive.org athena.archive.org analytics.archive.org pragma.archivelab.org wwwb-events.archive.org
+x-archive-src: archiveteam_archivebot_go_20181119190001/www.technologyreview.com-inf-20181109-011503-6q1he-00069.warc.gz
+server-timing: captures_list;dur=0.451443, exclusion.robots;dur=0.070114, exclusion.robots.policy;dur=0.060700, esindex;dur=0.006278, cdx.remote;dur=19.584515, LoadShardBlock;dur=99.593414, PetaboxLoader3.datanode;dur=88.872111, load_resource;dur=71.603340, PetaboxLoader3.resolve;dur=62.167832
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=1
+x-app-server: wwwb-app204-dc6
+x-ts: 404
+x-tr: 212
+set-cookie: wb-p-SERVER=wwwb-app204; path=/
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+

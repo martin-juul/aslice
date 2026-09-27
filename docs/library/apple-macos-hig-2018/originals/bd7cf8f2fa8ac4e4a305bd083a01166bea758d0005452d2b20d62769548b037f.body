@@ -1,0 +1,1540 @@
+<!DOCTYPE html>
+<html xmlns="https://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+	<meta charset="utf-8" />
+<meta name="Author" content="Apple Inc." />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<link rel="shortcut icon" href="/favicon.ico" />
+<link rel="icon" href="/favicon.ico" />
+<link rel="mask-icon" href="/apple-logo.svg" color="#333333">
+
+<link rel="stylesheet" href="/assets/styles/globalnav.css?1" type="text/css" />
+<link rel="stylesheet" href="/assets/styles/global.dist.css" type="text/css" />
+
+<script src="/assets/scripts/lib/jquery/jquery-1.11.0.min.js"></script>
+<script src="/assets/scripts/lib/jquery/jquery.retinate.js"></script>
+<script src="/assets/scripts/global.js"></script>
+<script src="/assets/scripts/global-logout.js"></script>
+
+	<link rel="stylesheet" href="https://www.apple.com/wss/fonts?family=SF+Pro&v=2" type="text/css" />
+<link rel="stylesheet" href="https://www.apple.com/wss/fonts?family=SF+Pro+Icons&v=1" type="text/css" />
+<link rel="stylesheet" href="https://www.apple.com/wss/fonts?family=SF+Mono&v=2" type="text/css" />
+<link rel="stylesheet" href="https://www.apple.com/wss/fonts?family=Apple+Icons&amp;v=1" type="text/css" />
+
+	<link rel="stylesheet" href="/design/human-interface-guidelines/styles/human-interface-guidelines.css" type="text/css" />
+	<link rel="stylesheet" href="/design/human-interface-guidelines/styles/app.css" type="text/css" />
+	<script src="/design/human-interface-guidelines/scripts/app.js"></script>
+	<script src="/assets/scripts/lib/jquery/jquery.bxslider.min.js"></script>
+
+	<title>Controls and Views - Touch Bar - macOS - Human Interface Guidelines - Apple Developer</title>
+	<meta name="omni_page" content="Human Interface Guidelines - (English) - macOS - Touch Bar - Controls and Views" />
+	<meta name="Description" content="Learn about designing apps for macOS.">
+	<meta name="robots" content="noodp,noydir" /> 	<link rel="stylesheet" href="/design/human-interface-guidelines/macos/styles/macos.css" type='text/css' /> 	<script src="/design/human-interface-guidelines/macos/scripts/macos.js" type='text/javascript'></script></head>
+<body data-hignav-item-name="macOS" data-hignav-is-beta="false" id="touch-bar" class="touch-bar-controls-and-views">
+
+	<aside id="ac-gn-segmentbar" class="ac-gn-segmentbar" lang="en-US" dir="ltr">
+</aside>
+<input type="checkbox" id="ac-gn-menustate" class="ac-gn-menustate" />
+<nav id="ac-globalnav" class="no-js" role="navigation" aria-label="Global Navigation" data-hires="false" data-analytics-region="global nav" lang="en-US" dir="ltr" data-store-locale="us" data-store-api="/[storefront]/shop/bag/status" data-search-locale="en_US" data-search-api="/search-services/suggestions/">
+	<div class="ac-gn-content">
+		<ul class="ac-gn-header">
+			<li class="ac-gn-item ac-gn-menuicon">
+				<label class="ac-gn-menuicon-label" for="ac-gn-menustate" aria-hidden="true">
+					<span class="ac-gn-menuicon-bread ac-gn-menuicon-bread-top">
+						<span class="ac-gn-menuicon-bread-crust ac-gn-menuicon-bread-crust-top"></span>
+					</span>
+					<span class="ac-gn-menuicon-bread ac-gn-menuicon-bread-bottom">
+						<span class="ac-gn-menuicon-bread-crust ac-gn-menuicon-bread-crust-bottom"></span>
+					</span>
+				</label>
+				<a href="#ac-gn-menustate" class="ac-gn-menuanchor ac-gn-menuanchor-open" id="ac-gn-menuanchor-open">
+					<span class="ac-gn-menuanchor-label">Open Menu</span>
+				</a>
+				<a href="#" class="ac-gn-menuanchor ac-gn-menuanchor-close" id="ac-gn-menuanchor-close">
+					<span class="ac-gn-menuanchor-label">Close Menu</span>
+				</a>
+			</li>
+			<li class="ac-gn-item ac-gn-apple">
+				<a class="ac-gn-link ac-gn-link-apple-developer" href="/" data-analytics-title="appledeveloper home" id="ac-gn-firstfocus-small">
+					<span class="ac-gn-link-text">Apple Developer</span>
+				</a>
+			</li>
+		</ul>
+		<div class="ac-gn-search-placeholder-container" role="search">
+			<div class="ac-gn-search ac-gn-search-small">
+				<a id="ac-gn-link-search-small" class="ac-gn-link" href="/search/" data-analytics-title="search" data-analytics-click="search" data-analytics-intrapage-link aria-label="Search Developer">
+					<div class="ac-gn-search-placeholder-bar">
+						<div class="ac-gn-search-placeholder-input">
+							<div class="ac-gn-search-placeholder-input-text" aria-hidden="true">
+								<div class="ac-gn-link-search ac-gn-search-placeholder-input-icon"></div>
+								<span class="ac-gn-search-placeholder">Search Developer</span>
+							</div>
+						</div>
+						<div class="ac-gn-searchview-close ac-gn-searchview-close-small ac-gn-search-placeholder-searchview-close">
+							<span class="ac-gn-searchview-close-cancel" aria-hidden="true">Cancel</span>
+						</div>
+					</div>
+				</a>
+			</div>
+		</div>
+		<ul class="ac-gn-list">
+			<li class="ac-gn-item ac-gn-apple">
+				<a class="ac-gn-link ac-gn-link-apple-developer" href="/" data-analytics-title="appledeveloper home" id="ac-gn-firstfocus">
+					<span class="ac-gn-link-text">Apple Developer</span>
+				</a>
+			</li>
+			<li class="ac-gn-item ac-gn-item-menu ac-gn-discover">
+				<a class="ac-gn-link ac-gn-link-discover" href="/discover/" data-analytics-title="discover">
+					<span class="ac-gn-link-text">Discover</span>
+				</a>
+			</li>
+			<li class="ac-gn-item ac-gn-item-menu ac-gn-design">
+				<a class="ac-gn-link ac-gn-link-design" href="/design/" data-analytics-title="design">
+					<span class="ac-gn-link-text">Design</span>
+				</a>
+			</li>
+			<li class="ac-gn-item ac-gn-item-menu ac-gn-develop">
+				<a class="ac-gn-link ac-gn-link-develop" href="/develop/" data-analytics-title="develop">
+					<span class="ac-gn-link-text">Develop</span>
+				</a>
+			</li>
+			<li class="ac-gn-item ac-gn-item-menu ac-gn-distribute">
+				<a class="ac-gn-link ac-gn-link-distribute" href="/distribute/" data-analytics-title="distribute">
+					<span class="ac-gn-link-text">Distribute</span>
+				</a>
+			</li>
+			<li class="ac-gn-item ac-gn-item-menu ac-gn-dsupport">
+				<a class="ac-gn-link ac-gn-link-dsupport" href="/support/" data-analytics-title="dsupport">
+					<span class="ac-gn-link-text">Support</span>
+				</a>
+			</li>
+			<li class="ac-gn-item ac-gn-item-menu ac-gn-account">
+				<a class="ac-gn-link ac-gn-link-account" href="/account/" data-analytics-title="account">
+					<span class="ac-gn-link-text">Account</span>
+				</a>
+			</li>
+			<li class="ac-gn-item ac-gn-item-menu ac-gn-search" role="search">
+				<a id="ac-gn-link-search" class="ac-gn-link ac-gn-link-search" href="/search/" data-analytics-title="search" data-analytics-click="search" data-analytics-intrapage-link aria-label="Search Developer"></a>
+			</li>
+		</ul>
+		<aside id="ac-gn-searchview" class="ac-gn-searchview" role="search" data-analytics-region="search">
+			<div class="ac-gn-searchview-content">
+				<div class="ac-gn-searchview-bar">
+					<div class="ac-gn-searchview-bar-wrapper">
+						<form id="ac-gn-searchform" class="ac-gn-searchform" action="/search/" method="get">
+							<div class="ac-gn-searchform-wrapper">
+								<input id="ac-gn-searchform-input" class="ac-gn-searchform-input" type="text" name="q" aria-label="Search Developer" placeholder="Search Developer" autocorrect="off" autocapitalize="off" autocomplete="off" spellcheck="false" />
+								<button id="ac-gn-searchform-submit" class="ac-gn-searchform-submit" type="submit" disabled aria-label="Submit Search"></button>
+								<button id="ac-gn-searchform-reset" class="ac-gn-searchform-reset" type="reset" disabled aria-label="Clear Search">
+									<span class="ac-gn-searchform-reset-background"></span>
+								</button>
+							</div>
+						</form>
+						<button id="ac-gn-searchview-close-small" class="ac-gn-searchview-close ac-gn-searchview-close-small" aria-label="Cancel Search">
+							<span class="ac-gn-searchview-close-cancel" aria-hidden="true">
+								Cancel
+							</span>
+						</button>
+					</div>
+				</div>
+				<aside id="ac-gn-searchresults" class="ac-gn-searchresults" data-string-quicklinks="Quick Links" data-string-suggestions="Suggested Searches" data-string-noresults=""></aside>
+			</div>
+			<button id="ac-gn-searchview-close" class="ac-gn-searchview-close" aria-label="Cancel Search">
+				<span class="ac-gn-searchview-close-wrapper">
+					<span class="ac-gn-searchview-close-left"></span>
+					<span class="ac-gn-searchview-close-right"></span>
+				</span>
+			</button>
+		</aside>
+	</div>
+</nav>
+<div class="ac-gn-blur"></div>
+<div id="ac-gn-curtain" class="ac-gn-curtain"></div>
+<div id="ac-gn-placeholder" class="ac-nav-placeholder"></div>
+<script src="/assets/scripts/ac-globalnav.built.js"></script>
+
+	<!-- metrics -->
+<script>
+    /* RSID: */
+    var s_account="awdappledeveloper"
+</script>	
+<script src="/assets/metrics/scripts/analytics.js"></script>
+<script>
+    s.pageName= AC && AC.Tracking && AC.Tracking.pageName();
+    s.channel="www.en.developer"
+    s.channel="www.hig.developer";
+
+    
+    /************* DO NOT ALTER ANYTHING BELOW THIS LINE ! **************/
+    var s_code=s.t();if(s_code)document.write(s_code)
+</script>
+<!-- /metrics -->
+	<link rel="stylesheet" property="stylesheet" href="/assets/styles/localnav.css" type="text/css" />
+<input type="checkbox" id="localnav-menustate" class="localnav-menustate"/>
+<nav id="localnav" class="localnav localnav-scrim" data-sticky role="navigation">
+    <div class="localnav-wrapper">
+        <div class="localnav-background"></div>
+        <div class="localnav-content">
+            <h2 class="localnav-title">
+                <a class="ac-ln-title-logo" href="/design/human-interface-guidelines/" data-analytics-title="product index">Human Interface Guidelines</a>
+            </h2>
+
+            <div class="localnav-menu">
+                <a href="#localnav-menustate" class="localnav-menucta-anchor localnav-menucta-anchor-open" id="localnav-menustate-open">
+                    <span class="localnav-menucta-anchor-label">Open Menu</span>
+                </a>
+                <a href="#" class="localnav-menucta-anchor localnav-menucta-anchor-close" id="localnav-menustate-close">
+                    <span class="localnav-menucta-anchor-label">Close Menu</span>
+                </a>
+                <div class="localnav-menu-tray">
+
+						<div class="doc-nav-container">
+
+							<nav id="doc-nav" class="doc-nav localnav-menu-items" role="navigation" aria-label="Local Navigation" data-hires="true">
+								<ul class="side">
+																		<li class="nav-overview has-sublist">
+										<a href="/design/human-interface-guidelines/macos/overview/">macOS</a>
+										<ul class="sub-side-page-list">
+
+																																	<li class="nav-themes">
+												<a href="/design/human-interface-guidelines/macos/overview/themes/">Themes</a>
+											</li>
+																						<li class="nav-visual-index">
+												<a href="/design/human-interface-guidelines/macos/overview/visual-index/">Visual Index</a>
+											</li>
+																					</ul>
+									</li>
+																		<li class="nav-app-architecture has-sublist">
+										<a href="/design/human-interface-guidelines/macos/app-architecture/">App Architecture</a>
+										<ul class="sub-side-page-list">
+
+																																	<li class="nav-fullscreen-mode">
+												<a href="/design/human-interface-guidelines/macos/app-architecture/fullscreen-mode/">Full-Screen Mode</a>
+											</li>
+																						<li class="nav-loading">
+												<a href="/design/human-interface-guidelines/macos/app-architecture/loading/">Loading</a>
+											</li>
+																						<li class="nav-modality">
+												<a href="/design/human-interface-guidelines/macos/app-architecture/modality/">Modality</a>
+											</li>
+																						<li class="nav-onboarding">
+												<a href="/design/human-interface-guidelines/macos/app-architecture/onboarding/">Onboarding</a>
+											</li>
+																						<li class="nav-preferences">
+												<a href="/design/human-interface-guidelines/macos/app-architecture/preferences/">Preferences</a>
+											</li>
+																						<li class="nav-restoring-state">
+												<a href="/design/human-interface-guidelines/macos/app-architecture/restoring-state/">Restoring State</a>
+											</li>
+																						<li class="nav-security">
+												<a href="/design/human-interface-guidelines/macos/app-architecture/security/">Security</a>
+											</li>
+																					</ul>
+									</li>
+																		<li class="nav-user-interaction has-sublist">
+										<a href="/design/human-interface-guidelines/macos/user-interaction/">User Interaction</a>
+										<ul class="sub-side-page-list">
+
+																																	<li class="nav-authentication">
+												<a href="/design/human-interface-guidelines/macos/user-interaction/authentication/">Authentication</a>
+											</li>
+																						<li class="nav-data-entry">
+												<a href="/design/human-interface-guidelines/macos/user-interaction/data-entry/">Data Entry</a>
+											</li>
+																						<li class="nav-drag-and-drop">
+												<a href="/design/human-interface-guidelines/macos/user-interaction/drag-and-drop/">Drag and Drop</a>
+											</li>
+																						<li class="nav-file-handling">
+												<a href="/design/human-interface-guidelines/macos/user-interaction/file-handling/">File Handling</a>
+											</li>
+																						<li class="nav-help">
+												<a href="/design/human-interface-guidelines/macos/user-interaction/help/">Help</a>
+											</li>
+																						<li class="nav-keyboard">
+												<a href="/design/human-interface-guidelines/macos/user-interaction/keyboard/">Keyboard</a>
+											</li>
+																						<li class="nav-mouse-and-trackpad">
+												<a href="/design/human-interface-guidelines/macos/user-interaction/mouse-and-trackpad/">Mouse and Trackpad</a>
+											</li>
+																						<li class="nav-providing-user-feedback">
+												<a href="/design/human-interface-guidelines/macos/user-interaction/providing-user-feedback/">Providing User Feedback</a>
+											</li>
+																						<li class="nav-requesting-permission">
+												<a href="/design/human-interface-guidelines/macos/user-interaction/requesting-permission/">Requesting Permission</a>
+											</li>
+																					</ul>
+									</li>
+																		<li class="nav-system-capabilities has-sublist">
+										<a href="/design/human-interface-guidelines/macos/system-capabilities/">System Capabilities</a>
+										<ul class="sub-side-page-list">
+
+																																	<li class="nav-auto-save">
+												<a href="/design/human-interface-guidelines/macos/system-capabilities/auto-save/">Auto Save</a>
+											</li>
+																						<li class="nav-dock">
+												<a href="/design/human-interface-guidelines/macos/system-capabilities/dock/">Dock</a>
+											</li>
+																						<li class="nav-finder">
+												<a href="/design/human-interface-guidelines/macos/system-capabilities/finder/">Finder</a>
+											</li>
+																						<li class="nav-mission-control">
+												<a href="/design/human-interface-guidelines/macos/system-capabilities/mission-control/">Mission Control</a>
+											</li>
+																						<li class="nav-notifications">
+												<a href="/design/human-interface-guidelines/macos/system-capabilities/notifications/">Notifications</a>
+											</li>
+																						<li class="nav-printing">
+												<a href="/design/human-interface-guidelines/macos/system-capabilities/printing/">Printing</a>
+											</li>
+																						<li class="nav-quick-look">
+												<a href="/design/human-interface-guidelines/macos/system-capabilities/quick-look/">Quick Look</a>
+											</li>
+																						<li class="nav-ratings-and-reviews">
+												<a href="/design/human-interface-guidelines/macos/system-capabilities/ratings-and-reviews/">Ratings and Reviews</a>
+											</li>
+																						<li class="nav-search-and-spotlight">
+												<a href="/design/human-interface-guidelines/macos/system-capabilities/search-and-spotlight/">Search and Spotlight</a>
+											</li>
+																					</ul>
+									</li>
+																		<li class="nav-visual-design has-sublist">
+										<a href="/design/human-interface-guidelines/macos/visual-design/">Visual Design</a>
+										<ul class="sub-side-page-list">
+
+																																	<li class="nav-animation">
+												<a href="/design/human-interface-guidelines/macos/visual-design/animation/">Animation</a>
+											</li>
+																						<li class="nav-color">
+												<a href="/design/human-interface-guidelines/macos/visual-design/color/">Color</a>
+											</li>
+																						<li class="nav-dark-mode">
+												<a href="/design/human-interface-guidelines/macos/visual-design/dark-mode/">Dark Mode</a>
+											</li>
+																						<li class="nav-translucency">
+												<a href="/design/human-interface-guidelines/macos/visual-design/translucency/">Translucency</a>
+											</li>
+																						<li class="nav-typography">
+												<a href="/design/human-interface-guidelines/macos/visual-design/typography/">Typography</a>
+											</li>
+																					</ul>
+									</li>
+																		<li class="nav-icons-and-images has-sublist">
+										<a href="/design/human-interface-guidelines/macos/icons-and-images/">Icons and Images</a>
+										<ul class="sub-side-page-list">
+
+																																	<li class="nav-image-size-and-resolution">
+												<a href="/design/human-interface-guidelines/macos/icons-and-images/image-size-and-resolution/">Image Size and Resolution</a>
+											</li>
+																						<li class="nav-app-icon">
+												<a href="/design/human-interface-guidelines/macos/icons-and-images/app-icon/">App Icon</a>
+											</li>
+																						<li class="nav-custom-icons">
+												<a href="/design/human-interface-guidelines/macos/icons-and-images/custom-icons/">Custom Icons</a>
+											</li>
+																						<li class="nav-multi-item-drag-images">
+												<a href="/design/human-interface-guidelines/macos/icons-and-images/multi-item-drag-images/">Multi-Item Drag Images</a>
+											</li>
+																						<li class="nav-system-icons">
+												<a href="/design/human-interface-guidelines/macos/icons-and-images/system-icons/">System Icons</a>
+											</li>
+																					</ul>
+									</li>
+																		<li class="nav-windows-and-views has-sublist">
+										<a href="/design/human-interface-guidelines/macos/windows-and-views/">Windows and Views</a>
+										<ul class="sub-side-page-list">
+
+																																	<li class="nav-window-anatomy">
+												<a href="/design/human-interface-guidelines/macos/windows-and-views/window-anatomy/">Window Anatomy</a>
+											</li>
+																						<li class="nav-alerts">
+												<a href="/design/human-interface-guidelines/macos/windows-and-views/alerts/">Alerts</a>
+											</li>
+																						<li class="nav-boxes">
+												<a href="/design/human-interface-guidelines/macos/windows-and-views/boxes/">Boxes</a>
+											</li>
+																						<li class="nav-column-views">
+												<a href="/design/human-interface-guidelines/macos/windows-and-views/column-views/">Column Views</a>
+											</li>
+																						<li class="nav-dialogs">
+												<a href="/design/human-interface-guidelines/macos/windows-and-views/dialogs/">Dialogs</a>
+											</li>
+																						<li class="nav-image-views">
+												<a href="/design/human-interface-guidelines/macos/windows-and-views/image-views/">Image Views</a>
+											</li>
+																						<li class="nav-outline-views">
+												<a href="/design/human-interface-guidelines/macos/windows-and-views/outline-views/">Outline Views</a>
+											</li>
+																						<li class="nav-panels">
+												<a href="/design/human-interface-guidelines/macos/windows-and-views/panels/">Panels</a>
+											</li>
+																						<li class="nav-popovers">
+												<a href="/design/human-interface-guidelines/macos/windows-and-views/popovers/">Popovers</a>
+											</li>
+																						<li class="nav-scroll-views">
+												<a href="/design/human-interface-guidelines/macos/windows-and-views/scroll-views/">Scroll Views</a>
+											</li>
+																						<li class="nav-sheets">
+												<a href="/design/human-interface-guidelines/macos/windows-and-views/sheets/">Sheets</a>
+											</li>
+																						<li class="nav-sidebars">
+												<a href="/design/human-interface-guidelines/macos/windows-and-views/sidebars/">Sidebars</a>
+											</li>
+																						<li class="nav-split-views">
+												<a href="/design/human-interface-guidelines/macos/windows-and-views/split-views/">Split Views</a>
+											</li>
+																						<li class="nav-tab-views">
+												<a href="/design/human-interface-guidelines/macos/windows-and-views/tab-views/">Tab Views</a>
+											</li>
+																						<li class="nav-table-views">
+												<a href="/design/human-interface-guidelines/macos/windows-and-views/table-views/">Table Views</a>
+											</li>
+																						<li class="nav-toolbars">
+												<a href="/design/human-interface-guidelines/macos/windows-and-views/toolbars/">Toolbars</a>
+											</li>
+																						<li class="nav-web-views">
+												<a href="/design/human-interface-guidelines/macos/windows-and-views/web-views/">Web Views</a>
+											</li>
+																						<li class="nav-drawers">
+												<a href="/design/human-interface-guidelines/macos/windows-and-views/drawers/">Drawers*</a>
+											</li>
+																						<li class="nav-placards">
+												<a href="/design/human-interface-guidelines/macos/windows-and-views/placards/">Placards*</a>
+											</li>
+																					</ul>
+									</li>
+																		<li class="nav-menus has-sublist">
+										<a href="/design/human-interface-guidelines/macos/menus/">Menus</a>
+										<ul class="sub-side-page-list">
+
+																																	<li class="nav-menu-anatomy">
+												<a href="/design/human-interface-guidelines/macos/menus/menu-anatomy/">Menu Anatomy</a>
+											</li>
+																						<li class="nav-contextual-menus">
+												<a href="/design/human-interface-guidelines/macos/menus/contextual-menus/">Contextual Menus</a>
+											</li>
+																						<li class="nav-dock-menus">
+												<a href="/design/human-interface-guidelines/macos/menus/dock-menus/">Dock Menus</a>
+											</li>
+																						<li class="nav-menu-bar-menus">
+												<a href="/design/human-interface-guidelines/macos/menus/menu-bar-menus/">Menu Bar Menus</a>
+											</li>
+																					</ul>
+									</li>
+																		<li class="nav-buttons has-sublist">
+										<a href="/design/human-interface-guidelines/macos/buttons/">Buttons</a>
+										<ul class="sub-side-page-list">
+
+																																	<li class="nav-checkboxes">
+												<a href="/design/human-interface-guidelines/macos/buttons/checkboxes/">Checkboxes</a>
+											</li>
+																						<li class="nav-disclosure-controls">
+												<a href="/design/human-interface-guidelines/macos/buttons/disclosure-controls/">Disclosure Controls</a>
+											</li>
+																						<li class="nav-gradient-buttons">
+												<a href="/design/human-interface-guidelines/macos/buttons/gradient-buttons/">Gradient Buttons</a>
+											</li>
+																						<li class="nav-help-buttons">
+												<a href="/design/human-interface-guidelines/macos/buttons/help-buttons/">Help Buttons</a>
+											</li>
+																						<li class="nav-image-buttons">
+												<a href="/design/human-interface-guidelines/macos/buttons/image-buttons/">Image Buttons</a>
+											</li>
+																						<li class="nav-pop-up-buttons">
+												<a href="/design/human-interface-guidelines/macos/buttons/pop-up-buttons/">Pop-Up Buttons</a>
+											</li>
+																						<li class="nav-pull-down-buttons">
+												<a href="/design/human-interface-guidelines/macos/buttons/pull-down-buttons/">Pull-Down Buttons</a>
+											</li>
+																						<li class="nav-push-buttons">
+												<a href="/design/human-interface-guidelines/macos/buttons/push-buttons/">Push Buttons</a>
+											</li>
+																						<li class="nav-radio-buttons">
+												<a href="/design/human-interface-guidelines/macos/buttons/radio-buttons/">Radio Buttons</a>
+											</li>
+																						<li class="nav-scope-buttons">
+												<a href="/design/human-interface-guidelines/macos/buttons/scope-buttons/">Scope Buttons</a>
+											</li>
+																						<li class="nav-bevel-buttons">
+												<a href="/design/human-interface-guidelines/macos/buttons/bevel-buttons/">Bevel Buttons*</a>
+											</li>
+																						<li class="nav-round-buttons">
+												<a href="/design/human-interface-guidelines/macos/buttons/round-buttons/">Round Buttons*</a>
+											</li>
+																					</ul>
+									</li>
+																		<li class="nav-fields-and-labels has-sublist">
+										<a href="/design/human-interface-guidelines/macos/fields-and-labels/">Fields and Labels</a>
+										<ul class="sub-side-page-list">
+
+																																	<li class="nav-combo-boxes">
+												<a href="/design/human-interface-guidelines/macos/fields-and-labels/combo-boxes/">Combo Boxes</a>
+											</li>
+																						<li class="nav-labels">
+												<a href="/design/human-interface-guidelines/macos/fields-and-labels/labels/">Labels</a>
+											</li>
+																						<li class="nav-search-fields">
+												<a href="/design/human-interface-guidelines/macos/fields-and-labels/search-fields/">Search Fields</a>
+											</li>
+																						<li class="nav-text-fields">
+												<a href="/design/human-interface-guidelines/macos/fields-and-labels/text-fields/">Text Fields</a>
+											</li>
+																						<li class="nav-token-fields">
+												<a href="/design/human-interface-guidelines/macos/fields-and-labels/token-fields/">Token Fields</a>
+											</li>
+																					</ul>
+									</li>
+																		<li class="nav-selectors has-sublist">
+										<a href="/design/human-interface-guidelines/macos/selectors/">Selectors</a>
+										<ul class="sub-side-page-list">
+
+																																	<li class="nav-color-wells">
+												<a href="/design/human-interface-guidelines/macos/selectors/color-wells/">Color Wells</a>
+											</li>
+																						<li class="nav-date-pickers">
+												<a href="/design/human-interface-guidelines/macos/selectors/date-pickers/">Date Pickers</a>
+											</li>
+																						<li class="nav-image-wells">
+												<a href="/design/human-interface-guidelines/macos/selectors/image-wells/">Image Wells</a>
+											</li>
+																						<li class="nav-path-controls">
+												<a href="/design/human-interface-guidelines/macos/selectors/path-controls/">Path Controls</a>
+											</li>
+																						<li class="nav-segmented-controls">
+												<a href="/design/human-interface-guidelines/macos/selectors/segmented-controls/">Segmented Controls</a>
+											</li>
+																						<li class="nav-sliders">
+												<a href="/design/human-interface-guidelines/macos/selectors/sliders/">Sliders</a>
+											</li>
+																						<li class="nav-steppers">
+												<a href="/design/human-interface-guidelines/macos/selectors/steppers/">Steppers</a>
+											</li>
+																					</ul>
+									</li>
+																		<li class="nav-indicators has-sublist">
+										<a href="/design/human-interface-guidelines/macos/indicators/">Indicators</a>
+										<ul class="sub-side-page-list">
+
+																																	<li class="nav-level-indicators">
+												<a href="/design/human-interface-guidelines/macos/indicators/level-indicators/">Level Indicators</a>
+											</li>
+																						<li class="nav-progress-indicators">
+												<a href="/design/human-interface-guidelines/macos/indicators/progress-indicators/">Progress Indicators</a>
+											</li>
+																					</ul>
+									</li>
+																		<li class="nav-touch-bar has-sublist selected open">
+										<a href="/design/human-interface-guidelines/macos/touch-bar/">Touch Bar</a>
+										<ul class="sub-side-page-list">
+
+																																	<li class="nav-touch-bar-overview">
+												<a href="/design/human-interface-guidelines/macos/touch-bar/touch-bar-overview/">Touch Bar Overview</a>
+											</li>
+																						<li class="nav-touch-bar-architecture">
+												<a href="/design/human-interface-guidelines/macos/touch-bar/touch-bar-architecture/">Architecture</a>
+											</li>
+																						<li class="nav-touch-bar-visual-design">
+												<a href="/design/human-interface-guidelines/macos/touch-bar/touch-bar-visual-design/">Visual Design</a>
+											</li>
+																						<li class="nav-touch-bar-icons-and-images">
+												<a href="/design/human-interface-guidelines/macos/touch-bar/touch-bar-icons-and-images/">Icons and Images</a>
+											</li>
+																						<li class="nav-touch-bar-controls-and-views selected">
+												<a href="/design/human-interface-guidelines/macos/touch-bar/touch-bar-controls-and-views/">Controls and Views</a>
+											</li>
+																					</ul>
+									</li>
+																		<li class="nav-extensions has-sublist">
+										<a href="/design/human-interface-guidelines/macos/extensions/">Extensions</a>
+										<ul class="sub-side-page-list">
+
+																																	<li class="nav-action-extensions">
+												<a href="/design/human-interface-guidelines/macos/extensions/action-extensions/">Action Extensions</a>
+											</li>
+																						<li class="nav-automator-actions">
+												<a href="/design/human-interface-guidelines/macos/extensions/automator-actions/">Automator Actions</a>
+											</li>
+																						<li class="nav-dashboard-widgets">
+												<a href="/design/human-interface-guidelines/macos/extensions/dashboard-widgets/">Dashboard Widgets</a>
+											</li>
+																						<li class="nav-finder-sync-extensions">
+												<a href="/design/human-interface-guidelines/macos/extensions/finder-sync-extensions/">Finder Sync Extensions</a>
+											</li>
+																						<li class="nav-menu-bar-extras">
+												<a href="/design/human-interface-guidelines/macos/extensions/menu-bar-extras/">Menu Bar Extras</a>
+											</li>
+																						<li class="nav-notification-center-widgets">
+												<a href="/design/human-interface-guidelines/macos/extensions/notification-center-widgets/">Notification Center Widgets</a>
+											</li>
+																						<li class="nav-services">
+												<a href="/design/human-interface-guidelines/macos/extensions/services/">Services</a>
+											</li>
+																						<li class="nav-share-extensions">
+												<a href="/design/human-interface-guidelines/macos/extensions/share-extensions/">Share Extensions</a>
+											</li>
+																					</ul>
+									</li>
+																		<hr class="sidebar_nav_separator" />
+								</ul>
+								<ul class="side sub-side">
+																											<li class="side-platform">
+										<a href="/design/human-interface-guidelines/ios/">iOS</a>
+																			</li>
+																																																						<li class="side-platform">
+										<a href="/design/human-interface-guidelines/tvos/">tvOS</a>
+																			</li>
+																																				<li class="side-platform">
+										<a href="/design/human-interface-guidelines/watchos/">watchOS</a>
+																			</li>
+																																				<li class="side-platform has-sublist">
+										<a href="/design/human-interface-guidelines/#technologies">Technologies</a>
+																														<ul class="sub-side-page-list">
+																																	<li class="nav-airplay">
+												<a href="/design/human-interface-guidelines/airplay/">AirPlay</a>
+											</li>
+																																												<li class="nav-apple-pay">
+												<a href="/design/human-interface-guidelines/apple-pay/">Apple Pay</a>
+											</li>
+																																												<li class="nav-augmented-reality">
+												<a href="/design/human-interface-guidelines/ios/system-capabilities/augmented-reality/">Augmented Reality</a>
+											</li>
+																																												<li class="nav-business-chat">
+												<a href="/design/human-interface-guidelines/business-chat/">Business Chat</a>
+											</li>
+																																												<li class="nav-carekit">
+												<a href="/design/human-interface-guidelines/carekit/">CareKit</a>
+											</li>
+																																												<li class="nav-carplay">
+												<a href="/design/human-interface-guidelines/carplay/">CarPlay</a>
+											</li>
+																																												<li class="nav-gamekit">
+												<a href="/design/human-interface-guidelines/gamekit/">GameKit</a>
+											</li>
+																																												<li class="nav-healthkit">
+												<a href="/design/human-interface-guidelines/healthkit/">HealthKit</a>
+											</li>
+																																												<li class="nav-homekit">
+												<a href="/design/human-interface-guidelines/homekit/">HomeKit</a>
+											</li>
+																																												<li class="nav-icloud">
+												<a href="/design/human-interface-guidelines/icloud/">iCloud</a>
+											</li>
+																																												<li class="nav-in-app-purchase">
+												<a href="/design/human-interface-guidelines/in-app-purchase/">In-App Purchase</a>
+											</li>
+																																												<li class="nav-live-photos">
+												<a href="/design/human-interface-guidelines/live-photos/">Live Photos</a>
+											</li>
+																																												<li class="nav-researchkit">
+												<a href="/design/human-interface-guidelines/researchkit/">ResearchKit</a>
+											</li>
+																																												<li class="nav-sirikit">
+												<a href="/design/human-interface-guidelines/sirikit/">SiriKit</a>
+											</li>
+																																												<li class="nav-social-media">
+												<a href="/design/human-interface-guidelines/social-media/">Social Media</a>
+											</li>
+																																												<li class="nav-wallet">
+												<a href="/design/human-interface-guidelines/wallet/">Wallet</a>
+											</li>
+																																</ul>
+																			</li>
+																										</ul>
+							</nav>
+
+						</div>
+	                    <ul class="localnav-menu-items">
+                        <li class="localnav-menu-item">
+                            <a href="/design/human-interface-guidelines/" class="localnav-menu-link">Overview</a>
+                        </li>
+                        <li class="localnav-menu-item">
+                            <a href="/design/resources/" class="localnav-menu-link">Resources</a>
+                        </li>
+                        <li class="localnav-menu-item">
+                            <a href="/videos/design/" class="localnav-menu-link">Videos</a>
+                        </li>
+                        <li class="localnav-menu-item">
+                            <a href="/design/whats-new/" class="localnav-menu-link">What's New</a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="localnav-actions">
+                    <div class="localnav-action localnav-action-menucta" aria-hidden="true">
+                        <label for="localnav-menustate" class="localnav-menucta">
+                            <span class="localnav-menucta-chevron"></span>
+                        </label>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</nav>
+<label id="localnav-curtain" for="localnav-menustate"></label>
+<script src="/assets/scripts/ac-localnav.built.js"></script>
+
+
+	
+	<main id="main" class="main main-hig" role="main">
+
+		<!-- HIG content -->
+		<section class="section">
+	        <div class="section-content">
+	            <div class="row">
+
+				<!-- Side navigation -->
+				<div class="column large-3 doc-nav-container small-hide">
+					<nav id="doc-nav" class="doc-nav" role="navigation" aria-label="Local Navigation" data-hires="true">
+						<ul class="side">
+														<li class="nav-overview has-sublist">
+								<a href="/design/human-interface-guidelines/macos/overview/">macOS</a>
+								<ul class="sub-side-page-list">
+
+																											<li class="nav-themes">
+										<a href="/design/human-interface-guidelines/macos/overview/themes/">Themes</a>
+									</li>
+																		<li class="nav-visual-index">
+										<a href="/design/human-interface-guidelines/macos/overview/visual-index/">Visual Index</a>
+									</li>
+																	</ul>
+							</li>
+														<li class="nav-app-architecture has-sublist">
+								<a href="/design/human-interface-guidelines/macos/app-architecture/">App Architecture</a>
+								<ul class="sub-side-page-list">
+
+																											<li class="nav-fullscreen-mode">
+										<a href="/design/human-interface-guidelines/macos/app-architecture/fullscreen-mode/">Full-Screen Mode</a>
+									</li>
+																		<li class="nav-loading">
+										<a href="/design/human-interface-guidelines/macos/app-architecture/loading/">Loading</a>
+									</li>
+																		<li class="nav-modality">
+										<a href="/design/human-interface-guidelines/macos/app-architecture/modality/">Modality</a>
+									</li>
+																		<li class="nav-onboarding">
+										<a href="/design/human-interface-guidelines/macos/app-architecture/onboarding/">Onboarding</a>
+									</li>
+																		<li class="nav-preferences">
+										<a href="/design/human-interface-guidelines/macos/app-architecture/preferences/">Preferences</a>
+									</li>
+																		<li class="nav-restoring-state">
+										<a href="/design/human-interface-guidelines/macos/app-architecture/restoring-state/">Restoring State</a>
+									</li>
+																		<li class="nav-security">
+										<a href="/design/human-interface-guidelines/macos/app-architecture/security/">Security</a>
+									</li>
+																	</ul>
+							</li>
+														<li class="nav-user-interaction has-sublist">
+								<a href="/design/human-interface-guidelines/macos/user-interaction/">User Interaction</a>
+								<ul class="sub-side-page-list">
+
+																											<li class="nav-authentication">
+										<a href="/design/human-interface-guidelines/macos/user-interaction/authentication/">Authentication</a>
+									</li>
+																		<li class="nav-data-entry">
+										<a href="/design/human-interface-guidelines/macos/user-interaction/data-entry/">Data Entry</a>
+									</li>
+																		<li class="nav-drag-and-drop">
+										<a href="/design/human-interface-guidelines/macos/user-interaction/drag-and-drop/">Drag and Drop</a>
+									</li>
+																		<li class="nav-file-handling">
+										<a href="/design/human-interface-guidelines/macos/user-interaction/file-handling/">File Handling</a>
+									</li>
+																		<li class="nav-help">
+										<a href="/design/human-interface-guidelines/macos/user-interaction/help/">Help</a>
+									</li>
+																		<li class="nav-keyboard">
+										<a href="/design/human-interface-guidelines/macos/user-interaction/keyboard/">Keyboard</a>
+									</li>
+																		<li class="nav-mouse-and-trackpad">
+										<a href="/design/human-interface-guidelines/macos/user-interaction/mouse-and-trackpad/">Mouse and Trackpad</a>
+									</li>
+																		<li class="nav-providing-user-feedback">
+										<a href="/design/human-interface-guidelines/macos/user-interaction/providing-user-feedback/">Providing User Feedback</a>
+									</li>
+																		<li class="nav-requesting-permission">
+										<a href="/design/human-interface-guidelines/macos/user-interaction/requesting-permission/">Requesting Permission</a>
+									</li>
+																	</ul>
+							</li>
+														<li class="nav-system-capabilities has-sublist">
+								<a href="/design/human-interface-guidelines/macos/system-capabilities/">System Capabilities</a>
+								<ul class="sub-side-page-list">
+
+																											<li class="nav-auto-save">
+										<a href="/design/human-interface-guidelines/macos/system-capabilities/auto-save/">Auto Save</a>
+									</li>
+																		<li class="nav-dock">
+										<a href="/design/human-interface-guidelines/macos/system-capabilities/dock/">Dock</a>
+									</li>
+																		<li class="nav-finder">
+										<a href="/design/human-interface-guidelines/macos/system-capabilities/finder/">Finder</a>
+									</li>
+																		<li class="nav-mission-control">
+										<a href="/design/human-interface-guidelines/macos/system-capabilities/mission-control/">Mission Control</a>
+									</li>
+																		<li class="nav-notifications">
+										<a href="/design/human-interface-guidelines/macos/system-capabilities/notifications/">Notifications</a>
+									</li>
+																		<li class="nav-printing">
+										<a href="/design/human-interface-guidelines/macos/system-capabilities/printing/">Printing</a>
+									</li>
+																		<li class="nav-quick-look">
+										<a href="/design/human-interface-guidelines/macos/system-capabilities/quick-look/">Quick Look</a>
+									</li>
+																		<li class="nav-ratings-and-reviews">
+										<a href="/design/human-interface-guidelines/macos/system-capabilities/ratings-and-reviews/">Ratings and Reviews</a>
+									</li>
+																		<li class="nav-search-and-spotlight">
+										<a href="/design/human-interface-guidelines/macos/system-capabilities/search-and-spotlight/">Search and Spotlight</a>
+									</li>
+																	</ul>
+							</li>
+														<li class="nav-visual-design has-sublist">
+								<a href="/design/human-interface-guidelines/macos/visual-design/">Visual Design</a>
+								<ul class="sub-side-page-list">
+
+																											<li class="nav-animation">
+										<a href="/design/human-interface-guidelines/macos/visual-design/animation/">Animation</a>
+									</li>
+																		<li class="nav-color">
+										<a href="/design/human-interface-guidelines/macos/visual-design/color/">Color</a>
+									</li>
+																		<li class="nav-dark-mode">
+										<a href="/design/human-interface-guidelines/macos/visual-design/dark-mode/">Dark Mode</a>
+									</li>
+																		<li class="nav-translucency">
+										<a href="/design/human-interface-guidelines/macos/visual-design/translucency/">Translucency</a>
+									</li>
+																		<li class="nav-typography">
+										<a href="/design/human-interface-guidelines/macos/visual-design/typography/">Typography</a>
+									</li>
+																	</ul>
+							</li>
+														<li class="nav-icons-and-images has-sublist">
+								<a href="/design/human-interface-guidelines/macos/icons-and-images/">Icons and Images</a>
+								<ul class="sub-side-page-list">
+
+																											<li class="nav-image-size-and-resolution">
+										<a href="/design/human-interface-guidelines/macos/icons-and-images/image-size-and-resolution/">Image Size and Resolution</a>
+									</li>
+																		<li class="nav-app-icon">
+										<a href="/design/human-interface-guidelines/macos/icons-and-images/app-icon/">App Icon</a>
+									</li>
+																		<li class="nav-custom-icons">
+										<a href="/design/human-interface-guidelines/macos/icons-and-images/custom-icons/">Custom Icons</a>
+									</li>
+																		<li class="nav-multi-item-drag-images">
+										<a href="/design/human-interface-guidelines/macos/icons-and-images/multi-item-drag-images/">Multi-Item Drag Images</a>
+									</li>
+																		<li class="nav-system-icons">
+										<a href="/design/human-interface-guidelines/macos/icons-and-images/system-icons/">System Icons</a>
+									</li>
+																	</ul>
+							</li>
+														<li class="nav-windows-and-views has-sublist">
+								<a href="/design/human-interface-guidelines/macos/windows-and-views/">Windows and Views</a>
+								<ul class="sub-side-page-list">
+
+																											<li class="nav-window-anatomy">
+										<a href="/design/human-interface-guidelines/macos/windows-and-views/window-anatomy/">Window Anatomy</a>
+									</li>
+																		<li class="nav-alerts">
+										<a href="/design/human-interface-guidelines/macos/windows-and-views/alerts/">Alerts</a>
+									</li>
+																		<li class="nav-boxes">
+										<a href="/design/human-interface-guidelines/macos/windows-and-views/boxes/">Boxes</a>
+									</li>
+																		<li class="nav-column-views">
+										<a href="/design/human-interface-guidelines/macos/windows-and-views/column-views/">Column Views</a>
+									</li>
+																		<li class="nav-dialogs">
+										<a href="/design/human-interface-guidelines/macos/windows-and-views/dialogs/">Dialogs</a>
+									</li>
+																		<li class="nav-image-views">
+										<a href="/design/human-interface-guidelines/macos/windows-and-views/image-views/">Image Views</a>
+									</li>
+																		<li class="nav-outline-views">
+										<a href="/design/human-interface-guidelines/macos/windows-and-views/outline-views/">Outline Views</a>
+									</li>
+																		<li class="nav-panels">
+										<a href="/design/human-interface-guidelines/macos/windows-and-views/panels/">Panels</a>
+									</li>
+																		<li class="nav-popovers">
+										<a href="/design/human-interface-guidelines/macos/windows-and-views/popovers/">Popovers</a>
+									</li>
+																		<li class="nav-scroll-views">
+										<a href="/design/human-interface-guidelines/macos/windows-and-views/scroll-views/">Scroll Views</a>
+									</li>
+																		<li class="nav-sheets">
+										<a href="/design/human-interface-guidelines/macos/windows-and-views/sheets/">Sheets</a>
+									</li>
+																		<li class="nav-sidebars">
+										<a href="/design/human-interface-guidelines/macos/windows-and-views/sidebars/">Sidebars</a>
+									</li>
+																		<li class="nav-split-views">
+										<a href="/design/human-interface-guidelines/macos/windows-and-views/split-views/">Split Views</a>
+									</li>
+																		<li class="nav-tab-views">
+										<a href="/design/human-interface-guidelines/macos/windows-and-views/tab-views/">Tab Views</a>
+									</li>
+																		<li class="nav-table-views">
+										<a href="/design/human-interface-guidelines/macos/windows-and-views/table-views/">Table Views</a>
+									</li>
+																		<li class="nav-toolbars">
+										<a href="/design/human-interface-guidelines/macos/windows-and-views/toolbars/">Toolbars</a>
+									</li>
+																		<li class="nav-web-views">
+										<a href="/design/human-interface-guidelines/macos/windows-and-views/web-views/">Web Views</a>
+									</li>
+																		<li class="nav-drawers">
+										<a href="/design/human-interface-guidelines/macos/windows-and-views/drawers/">Drawers*</a>
+									</li>
+																		<li class="nav-placards">
+										<a href="/design/human-interface-guidelines/macos/windows-and-views/placards/">Placards*</a>
+									</li>
+																	</ul>
+							</li>
+														<li class="nav-menus has-sublist">
+								<a href="/design/human-interface-guidelines/macos/menus/">Menus</a>
+								<ul class="sub-side-page-list">
+
+																											<li class="nav-menu-anatomy">
+										<a href="/design/human-interface-guidelines/macos/menus/menu-anatomy/">Menu Anatomy</a>
+									</li>
+																		<li class="nav-contextual-menus">
+										<a href="/design/human-interface-guidelines/macos/menus/contextual-menus/">Contextual Menus</a>
+									</li>
+																		<li class="nav-dock-menus">
+										<a href="/design/human-interface-guidelines/macos/menus/dock-menus/">Dock Menus</a>
+									</li>
+																		<li class="nav-menu-bar-menus">
+										<a href="/design/human-interface-guidelines/macos/menus/menu-bar-menus/">Menu Bar Menus</a>
+									</li>
+																	</ul>
+							</li>
+														<li class="nav-buttons has-sublist">
+								<a href="/design/human-interface-guidelines/macos/buttons/">Buttons</a>
+								<ul class="sub-side-page-list">
+
+																											<li class="nav-checkboxes">
+										<a href="/design/human-interface-guidelines/macos/buttons/checkboxes/">Checkboxes</a>
+									</li>
+																		<li class="nav-disclosure-controls">
+										<a href="/design/human-interface-guidelines/macos/buttons/disclosure-controls/">Disclosure Controls</a>
+									</li>
+																		<li class="nav-gradient-buttons">
+										<a href="/design/human-interface-guidelines/macos/buttons/gradient-buttons/">Gradient Buttons</a>
+									</li>
+																		<li class="nav-help-buttons">
+										<a href="/design/human-interface-guidelines/macos/buttons/help-buttons/">Help Buttons</a>
+									</li>
+																		<li class="nav-image-buttons">
+										<a href="/design/human-interface-guidelines/macos/buttons/image-buttons/">Image Buttons</a>
+									</li>
+																		<li class="nav-pop-up-buttons">
+										<a href="/design/human-interface-guidelines/macos/buttons/pop-up-buttons/">Pop-Up Buttons</a>
+									</li>
+																		<li class="nav-pull-down-buttons">
+										<a href="/design/human-interface-guidelines/macos/buttons/pull-down-buttons/">Pull-Down Buttons</a>
+									</li>
+																		<li class="nav-push-buttons">
+										<a href="/design/human-interface-guidelines/macos/buttons/push-buttons/">Push Buttons</a>
+									</li>
+																		<li class="nav-radio-buttons">
+										<a href="/design/human-interface-guidelines/macos/buttons/radio-buttons/">Radio Buttons</a>
+									</li>
+																		<li class="nav-scope-buttons">
+										<a href="/design/human-interface-guidelines/macos/buttons/scope-buttons/">Scope Buttons</a>
+									</li>
+																		<li class="nav-bevel-buttons">
+										<a href="/design/human-interface-guidelines/macos/buttons/bevel-buttons/">Bevel Buttons*</a>
+									</li>
+																		<li class="nav-round-buttons">
+										<a href="/design/human-interface-guidelines/macos/buttons/round-buttons/">Round Buttons*</a>
+									</li>
+																	</ul>
+							</li>
+														<li class="nav-fields-and-labels has-sublist">
+								<a href="/design/human-interface-guidelines/macos/fields-and-labels/">Fields and Labels</a>
+								<ul class="sub-side-page-list">
+
+																											<li class="nav-combo-boxes">
+										<a href="/design/human-interface-guidelines/macos/fields-and-labels/combo-boxes/">Combo Boxes</a>
+									</li>
+																		<li class="nav-labels">
+										<a href="/design/human-interface-guidelines/macos/fields-and-labels/labels/">Labels</a>
+									</li>
+																		<li class="nav-search-fields">
+										<a href="/design/human-interface-guidelines/macos/fields-and-labels/search-fields/">Search Fields</a>
+									</li>
+																		<li class="nav-text-fields">
+										<a href="/design/human-interface-guidelines/macos/fields-and-labels/text-fields/">Text Fields</a>
+									</li>
+																		<li class="nav-token-fields">
+										<a href="/design/human-interface-guidelines/macos/fields-and-labels/token-fields/">Token Fields</a>
+									</li>
+																	</ul>
+							</li>
+														<li class="nav-selectors has-sublist">
+								<a href="/design/human-interface-guidelines/macos/selectors/">Selectors</a>
+								<ul class="sub-side-page-list">
+
+																											<li class="nav-color-wells">
+										<a href="/design/human-interface-guidelines/macos/selectors/color-wells/">Color Wells</a>
+									</li>
+																		<li class="nav-date-pickers">
+										<a href="/design/human-interface-guidelines/macos/selectors/date-pickers/">Date Pickers</a>
+									</li>
+																		<li class="nav-image-wells">
+										<a href="/design/human-interface-guidelines/macos/selectors/image-wells/">Image Wells</a>
+									</li>
+																		<li class="nav-path-controls">
+										<a href="/design/human-interface-guidelines/macos/selectors/path-controls/">Path Controls</a>
+									</li>
+																		<li class="nav-segmented-controls">
+										<a href="/design/human-interface-guidelines/macos/selectors/segmented-controls/">Segmented Controls</a>
+									</li>
+																		<li class="nav-sliders">
+										<a href="/design/human-interface-guidelines/macos/selectors/sliders/">Sliders</a>
+									</li>
+																		<li class="nav-steppers">
+										<a href="/design/human-interface-guidelines/macos/selectors/steppers/">Steppers</a>
+									</li>
+																	</ul>
+							</li>
+														<li class="nav-indicators has-sublist">
+								<a href="/design/human-interface-guidelines/macos/indicators/">Indicators</a>
+								<ul class="sub-side-page-list">
+
+																											<li class="nav-level-indicators">
+										<a href="/design/human-interface-guidelines/macos/indicators/level-indicators/">Level Indicators</a>
+									</li>
+																		<li class="nav-progress-indicators">
+										<a href="/design/human-interface-guidelines/macos/indicators/progress-indicators/">Progress Indicators</a>
+									</li>
+																	</ul>
+							</li>
+														<li class="nav-touch-bar has-sublist selected open">
+								<a href="/design/human-interface-guidelines/macos/touch-bar/">Touch Bar</a>
+								<ul class="sub-side-page-list">
+
+																											<li class="nav-touch-bar-overview">
+										<a href="/design/human-interface-guidelines/macos/touch-bar/touch-bar-overview/">Touch Bar Overview</a>
+									</li>
+																		<li class="nav-touch-bar-architecture">
+										<a href="/design/human-interface-guidelines/macos/touch-bar/touch-bar-architecture/">Architecture</a>
+									</li>
+																		<li class="nav-touch-bar-visual-design">
+										<a href="/design/human-interface-guidelines/macos/touch-bar/touch-bar-visual-design/">Visual Design</a>
+									</li>
+																		<li class="nav-touch-bar-icons-and-images">
+										<a href="/design/human-interface-guidelines/macos/touch-bar/touch-bar-icons-and-images/">Icons and Images</a>
+									</li>
+																		<li class="nav-touch-bar-controls-and-views selected">
+										<a href="/design/human-interface-guidelines/macos/touch-bar/touch-bar-controls-and-views/">Controls and Views</a>
+									</li>
+																	</ul>
+							</li>
+														<li class="nav-extensions has-sublist">
+								<a href="/design/human-interface-guidelines/macos/extensions/">Extensions</a>
+								<ul class="sub-side-page-list">
+
+																											<li class="nav-action-extensions">
+										<a href="/design/human-interface-guidelines/macos/extensions/action-extensions/">Action Extensions</a>
+									</li>
+																		<li class="nav-automator-actions">
+										<a href="/design/human-interface-guidelines/macos/extensions/automator-actions/">Automator Actions</a>
+									</li>
+																		<li class="nav-dashboard-widgets">
+										<a href="/design/human-interface-guidelines/macos/extensions/dashboard-widgets/">Dashboard Widgets</a>
+									</li>
+																		<li class="nav-finder-sync-extensions">
+										<a href="/design/human-interface-guidelines/macos/extensions/finder-sync-extensions/">Finder Sync Extensions</a>
+									</li>
+																		<li class="nav-menu-bar-extras">
+										<a href="/design/human-interface-guidelines/macos/extensions/menu-bar-extras/">Menu Bar Extras</a>
+									</li>
+																		<li class="nav-notification-center-widgets">
+										<a href="/design/human-interface-guidelines/macos/extensions/notification-center-widgets/">Notification Center Widgets</a>
+									</li>
+																		<li class="nav-services">
+										<a href="/design/human-interface-guidelines/macos/extensions/services/">Services</a>
+									</li>
+																		<li class="nav-share-extensions">
+										<a href="/design/human-interface-guidelines/macos/extensions/share-extensions/">Share Extensions</a>
+									</li>
+																	</ul>
+							</li>
+														<hr class="sidebar_nav_separator" />
+						</ul>
+						<ul class="side sub-side">
+																					<li class="side-platform">
+								<a href="/design/human-interface-guidelines/ios/">iOS</a>
+															</li>
+																																										<li class="side-platform">
+								<a href="/design/human-interface-guidelines/tvos/">tvOS</a>
+															</li>
+																												<li class="side-platform">
+								<a href="/design/human-interface-guidelines/watchos/">watchOS</a>
+															</li>
+																												<li class="side-platform has-sublist">
+								<a href="/design/human-interface-guidelines/#technologies">Technologies</a>
+																								<ul class="sub-side-page-list">
+																											<li class="nav-airplay">
+										<a href="/design/human-interface-guidelines/airplay/">AirPlay</a>
+									</li>
+																																				<li class="nav-apple-pay">
+										<a href="/design/human-interface-guidelines/apple-pay/">Apple Pay</a>
+									</li>
+																																				<li class="nav-augmented-reality">
+										<a href="/design/human-interface-guidelines/ios/system-capabilities/augmented-reality/">Augmented Reality</a>
+									</li>
+																																				<li class="nav-business-chat">
+										<a href="/design/human-interface-guidelines/business-chat/">Business Chat</a>
+									</li>
+																																				<li class="nav-carekit">
+										<a href="/design/human-interface-guidelines/carekit/">CareKit</a>
+									</li>
+																																				<li class="nav-carplay">
+										<a href="/design/human-interface-guidelines/carplay/">CarPlay</a>
+									</li>
+																																				<li class="nav-gamekit">
+										<a href="/design/human-interface-guidelines/gamekit/">GameKit</a>
+									</li>
+																																				<li class="nav-healthkit">
+										<a href="/design/human-interface-guidelines/healthkit/">HealthKit</a>
+									</li>
+																																				<li class="nav-homekit">
+										<a href="/design/human-interface-guidelines/homekit/">HomeKit</a>
+									</li>
+																																				<li class="nav-icloud">
+										<a href="/design/human-interface-guidelines/icloud/">iCloud</a>
+									</li>
+																																				<li class="nav-in-app-purchase">
+										<a href="/design/human-interface-guidelines/in-app-purchase/">In-App Purchase</a>
+									</li>
+																																				<li class="nav-live-photos">
+										<a href="/design/human-interface-guidelines/live-photos/">Live Photos</a>
+									</li>
+																																				<li class="nav-researchkit">
+										<a href="/design/human-interface-guidelines/researchkit/">ResearchKit</a>
+									</li>
+																																				<li class="nav-sirikit">
+										<a href="/design/human-interface-guidelines/sirikit/">SiriKit</a>
+									</li>
+																																				<li class="nav-social-media">
+										<a href="/design/human-interface-guidelines/social-media/">Social Media</a>
+									</li>
+																																				<li class="nav-wallet">
+										<a href="/design/human-interface-guidelines/wallet/">Wallet</a>
+									</li>
+																										</ul>
+															</li>
+																				</ul>
+					</nav>
+				</div>
+
+				<!-- Main content -->
+				<div class="column large-9 small-12 hig-content" data-hires="true">
+					<h2 id="touch-bar-controls-and-views">Controls and Views</h2>
+
+<p>The system offers a range of standard controls that are designed for use in the app region of the Touch Bar. Use these controls whenever possible for maximum consistency.</p>
+
+<h3 id="buttons">Buttons</h3>
+
+<p>Buttons initiate app-specific actions when tapped, and can include an icon and a title.</p>
+
+<div class="row scroll-image no-padding-top no-padding-bottom">
+  <div class="col-100 no-padding-top no-padding-bottom">
+
+<p><img src="/design/human-interface-guidelines/macos/images/TB_controlsButton.png" alt="" title="" class="center" width="768" height="27" /></p>
+
+</div>
+</div>
+
+<div class="row no-padding-top padding-bottom">
+  <div class="col-100">
+
+<p><strong>Prefer icons over titles.</strong> Strive to design clear icons that stand on their own without requiring supporting text.</p>
+
+<p><strong>Keep titles short.</strong> Overly long titles can crowd the Touch Bar.</p>
+
+<p><strong>Make tasteful bezel color changes.</strong> The system-provided bezel is designed to have an appearance similar to physical keyboard buttons. If your app requires a custom bezel color, darker colors are recommended.</p>
+
+<p>For related design guidance, see <a href="/design/human-interface-guidelines/macos/buttons/push-buttons/">Push Buttons</a>. For developer guidance, see <a href="https://developer.apple.com/documentation/appkit/nsbutton">NSButton</a>.</p>
+
+</div>
+</div>
+
+<h4 id="button-toggles">Toggles</h4>
+
+<p>When tapped, a toggle switches between on and off states.</p>
+
+<div class="video">
+    <video src="/design/human-interface-guidelines/macos/images/TB_ButtonToggle.mp4" data-poster-frame="/design/human-interface-guidelines/macos/images/TB_ButtonToggle.png" width="768" height="27"></video>
+</div>
+
+<p><strong>Let the background indicate the state.</strong> The system automatically changes the background appearance of buttons in an off state, so there’s no need to indicate the state using color, text, or a different icon.</p>
+
+<p><strong>Use toggles in place of checkboxes and radio buttons.</strong> If you need a control that lets people choose between two states, use a toggle button.</p>
+
+<p>For developer guidance, see the <a href="https://developer.apple.com/documentation/appkit/nsbutton/1528907-state">state</a> property of <a href="https://developer.apple.com/documentation/appkit/nsbutton">NSButton</a>.</p>
+
+<h3 id="candidate-lists">Candidate Lists</h3>
+
+<p>A candidate list offers autocompletion suggestions during text entry. The user can tap a suggestion to accept and insert it into the active text field or text view on the main screen. A candidate list can be expanded or collapsed by the user. An expanded candidate list replaces other controls that reside within the expansion area.</p>
+
+<div class="row scroll-image no-padding-top no-padding-bottom">
+  <div class="col-100 no-padding-top no-padding-bottom">
+
+<p><img src="/design/human-interface-guidelines/macos/images/TB_candidateList.png" alt="" title="" class="center" width="768" height="27" /></p>
+
+</div>
+</div>
+
+<div class="row no-padding-top no-padding-bottom">
+  <div class="col-100">
+
+<p>For developer guidance, see <a href="https://developer.apple.com/documentation/appkit/nscandidatelisttouchbaritem">NSCandidateListTouchBarItem</a>.</p>
+
+</div>
+</div>
+
+<h3 id="character-pickers">Character Pickers</h3>
+
+<p>When tapped, a character picker opens a popover that includes a list of special characters, such as emoji. The user can tap one to insert it into the active text field or text view on the main screen.</p>
+
+<div class="video">
+    <video src="/design/human-interface-guidelines/macos/images/TB_CharacterPicker.mp4" data-poster-frame="/design/human-interface-guidelines/macos/images/TB_CharacterPicker.png" width="768" height="27"></video>
+</div>
+
+<p>For developer guidance, see <a href="https://developer.apple.com/documentation/appkit/nscandidatelisttouchbaritem">NSCandidateListTouchBarItem</a>.</p>
+
+<h3 id="color-pickers">Color Pickers</h3>
+
+<p>When tapped, a color picker opens a popover that includes controls for selecting a color. A color picker can be configured to display a color picker icon, a stroke color picker icon, or a text color picker icon. Regardless of the icon used, all color pickers display the same popover.</p>
+
+<div class="video">
+    <video src="/design/human-interface-guidelines/macos/images/TB_colorPicker.mp4" data-poster-frame="/design/human-interface-guidelines/macos/images/TB_colorPicker.png" width="768" height="27"></video>
+</div>
+
+<p><strong>Use icons as intended.</strong> Use the stroke color picker icon for selecting a stroke color. Use the text color picker icon for selecting a text color. For other color selection scenarios, use the color picker icon.</p>
+
+<p>For developer guidance, see <a href="https://developer.apple.com/documentation/appkit/nscolorpickertouchbaritem">NSColorPickerTouchBarItem</a>.</p>
+
+<h3 id="labels">Labels</h3>
+
+<p>A label displays read-only text, usually to describe a control.</p>
+
+<p><strong>In general, avoid labels.</strong> Although the Touch Bar can display labels, they should generally be avoided because they’re not interactive. Instead, focus on designing meaningful icons for your controls. If you must include a label, keep it as short as possible.</p>
+
+<p><strong>Prefer titles over labels when supplementing complex icons.</strong> If the meaning of a control’s icon isn’t clear enough on its own, consider including a short title within the control to provide context.</p>
+
+<div class="row scroll-image no-padding-top no-padding-bottom">
+  <div class="col-100 no-padding-top no-padding-bottom">
+
+<p><img src="/design/human-interface-guidelines/macos/images/TB_buttonsWithTitles.png" alt="" title="" class="center" width="768" height="65" /></p>
+
+</div>
+</div>
+
+<div class="row no-padding-top no-padding-bottom">
+  <div class="col-100">
+
+<p>For related design guidance, see <a href="/design/human-interface-guidelines/macos/fields-and-labels/labels/">Human Interface Guidelines for macOS Apps > Labels</a>. For developer guidance, see <a href="https://developer.apple.com/documentation/appkit/nstextfield">NSTextField</a>.</p>
+
+</div>
+</div>
+
+<h3 id="popovers">Popovers</h3>
+
+<p>In a collapsed state, a popover appears as a single button in the Touch Bar.</p>
+
+<div class="video">
+    <video src="/design/human-interface-guidelines/macos/images/TB_popOver.mp4" data-poster-frame="/design/human-interface-guidelines/macos/images/TB_popOver.png" width="768" height="27"></video>
+</div>
+
+<p>When expanded, the popover replaces the current set of controls in the app region with a modal overlay containing a transient set of controls. In this modal overlay, the user must make a selection or tap an exit button to return to the collapsed state and the previous set of controls.</p>
+
+<p>Collapsed popovers are expanded by tapping them. Optionally, they can also expand in response to a touch-and-hold gesture. Popovers that support touch and hold include a trailing carat decoration.</p>
+
+<div class="video">
+    <video src="/design/human-interface-guidelines/macos/images/TB_PopOverTouchHold.mp4" data-poster-frame="/design/human-interface-guidelines/macos/images/TB_popOverTouchHold.png" width="768" height="27"></video>
+</div>
+
+<p>A popover expanded by touch-and-hold can present the same overlay it presents when tapped, or a completely different overlay. In a touch-and-hold overlay, the user can press and slide a finger to a control to make a selection and lift the finger to collapse the popover.</p>
+
+<p><strong>Use popovers sparingly.</strong> Most controls in the Touch Bar should be directly actionable with a single tap.</p>
+
+<p><strong>Avoid nesting popovers.</strong> In general, people should rarely need to navigate more than one level in the Touch Bar.</p>
+
+<p><strong>Reserve touch-and-hold for simple popovers.</strong> Touch and hold is intended primarily for displaying an overlay that includes a simple set of options, such as a single segmented control, from which the user can make a selection.</p>
+
+<p><strong>Indicate choice selection in a collapsed popover.</strong> When an expanded popover includes a list of options, the collapsed state should denote the currently selected option.</p>
+
+<p><strong>Provide an obvious exit path.</strong> Make sure people always know how to collapse a popover and return to the previous set of controls.</p>
+
+<p>For developer guidance, see <a href="https://developer.apple.com/documentation/appkit/nspopovertouchbaritem">NSPopoverTouchBarItem</a>.</p>
+
+<h3 id="scrubbers">Scrubbers</h3>
+
+<p>A scrubber lets the user swipe left and right to navigate through content like a list of dates or a group of photos. Scrubbers can be fixed or free, and are highly customizable—but should retain an appearance that doesn’t feel out of place in the Touch Bar.</p>
+
+<div class="row no-padding-top padding-bottom">
+  <div class="col-100">
+
+<p>For developer guidance, see <a href="https://developer.apple.com/documentation/appkit/nsscrubber">NSScrubber</a>.</p>
+
+</div>
+</div>
+
+<h4 id="fixed-scrubbers">Fixed Scrubbers</h4>
+
+<p>A fixed scrubber allows for fluid, continuous interaction with a set of arranged content, such as open Safari tabs. As the user swipes a finger across the scrubber, items beneath the finger become highlighted. Depending on the scrubber’s configuration, a selection is made as the user’s finger moves from item to item, or when the user lifts the finger. If the amount of content exceeds the size of a fixed scrubber, the scrubber automatically scrolls to reveal additional items as the user’s finger nears the edge of the control. In a fixed scrubber, the user’s finger directly moves the selection, rather than the content.</p>
+
+<div class="video">
+    <video src="/design/human-interface-guidelines/macos/images/TB_scrubber.mp4" data-poster-frame="/design/human-interface-guidelines/macos/images/TB_scrubber.png" width="768" height="27"></video>
+</div>
+
+<div class="row padding-top no-padding-bottom">
+  <div class="col-100">
+
+<h4 id="free-scrubbers">Free Scrubbers</h4>
+
+<p>A free scrubber presents content in a freely scrollable list, such as a list of Calendar dates, which the user directly scrolls by swiping. Depending on the scrubber’s configuration, a single item becomes selected when the item resides at a specific location such as in the center of the scrubber, or when the scrubber is stationary and the user taps the item.</p>
+
+</div>
+</div>
+
+<div class="video">
+    <video src="/design/human-interface-guidelines/macos/images/TB_scrubberFree.mp4" data-poster-frame="/design/human-interface-guidelines/macos/images/TB_scrubberFree.png" width="768" height="27"></video>
+</div>
+
+<p><strong>Use predictable and logically ordered values.</strong> Many values in a free scrubber may be hidden when the scrollable list is stationary. It's best when people can predict what these values are, such as with a list of alphabetized countries, so they can move through the list quickly.</p>
+
+<p><strong>Avoid displaying large value lists.</strong> Long lists can be tedious to navigate in the Touch Bar. If you have a large list of values, consider presenting it on the main screen instead of the Touch Bar, so the keyboard or trackpad can be used for navigation.</p>
+
+<h3 id="segmented-controls">Segmented Controls</h3>
+
+<p>A segmented control is a linear set of two or more segments, each of which functions as a button—usually configured as a toggle. Within the control, all segments are equal in width. Like buttons, segments can contain text and icons.</p>
+
+<div class="row scroll-image no-padding-top no-padding-bottom">
+  <div class="col-100 no-padding-top no-padding-bottom">
+
+<p><img src="/design/human-interface-guidelines/macos/images/TB_segmentedControl.png" alt="" title="" class="center" width="768" height="27" /></p>
+
+</div>
+</div>
+
+<div class="row no-padding-top no-padding-bottom">
+  <div class="col-100">
+
+<p><strong>Limit the number of segments to improve usability.</strong> Wider segments are easier to tap.</p>
+
+<p><strong>Prefer icons over titles.</strong> Strive to design clear icons that stand on their own without requiring supporting text.</p>
+
+<p><strong>Try to keep segment content size consistent.</strong> Because all segments have equal width, it doesn’t look great if content fills some segments but not others.</p>
+
+<p><strong>Keep titles short.</strong> Overly long titles can crowd the Touch Bar.</p>
+
+<p><strong>Prefer darker colors for bezel color changes.</strong> The system-provided bezel is designed to have an appearance similar to physical keyboard buttons. If your app requires a custom bezel color, darker colors are recommended.</p>
+
+<p>For developer guidance, see <a href="https://developer.apple.com/documentation/appkit/nssegmentedcontrol">NSSegmentedControl</a>.</p>
+
+</div>
+</div>
+
+<h3 id="sharing-service-pickers">Sharing Service Pickers</h3>
+
+<p>People use sharing service pickers to share text, images, and other content with apps, social media accounts, and other services. When tapped, a sharing service picker displays a popover that contains sharing buttons.</p>
+
+<div class="video">
+    <video src="/design/human-interface-guidelines/macos/images/TB_controlsSharing.mp4" data-poster-frame="/design/human-interface-guidelines/macos/images/TB_controlsSharing.png" width="768" height="27"></video>
+</div>
+
+<p><strong>Enable a sharing service picker only when there’s content to share.</strong> If the user has no text, images, or other sharable content selected, the sharing service picker should be disabled.</p>
+
+<p>For developer guidance, see <a href="https://developer.apple.com/documentation/appkit/nssharingservicepicker">NSSharingServicePicker</a>.</p>
+
+<h3 id="sliders">Sliders</h3>
+
+<p>A slider is a horizontal track with a control called a thumb, which you can slide with your finger to move between a minimum and maximum value, such as screen brightness level or position during media playback. As a slider’s value changes, the portion of track between the minimum value and the thumb fills with color.</p>
+
+<div class="row scroll-image no-padding-top no-padding-bottom">
+  <div class="col-100 no-padding-top no-padding-bottom">
+
+<p><img src="/design/human-interface-guidelines/macos/images/TB_sliders.png" alt="" title="" class="center" width="768" height="27" /></p>
+
+</div>
+</div>
+
+<div class="row no-padding-top no-padding-bottom">
+  <div class="col-100">
+
+<p><strong>Customize a slider’s appearance to match your app and add value.</strong> Consider coordinating a slider’s track color with your app’s color scheme.</p>
+
+<p><strong>Provide left and right icons that illustrate the meaning of the minimum and maximum values.</strong> A slider that adjusts image size, for example, could show a small image icon on the left and a large image icon on the right.</p>
+
+<p>For developer guidance, see <a href="https://developer.apple.com/documentation/appkit/nsslider">NSSlider</a>.</p>
+
+</div>
+</div>
+
+				</div>
+
+			</div>
+		</div>
+	</section>
+
+	</main>
+
+	<aside id="router" class="nextrouter no-padding-top no-padding-bottom router-hig">
+	    <div class="section-content">
+	        <div class="row">
+				<div class="column large-6 small-6 text-left">
+									<a href="/design/human-interface-guidelines/macos/touch-bar/touch-bar-icons-and-images/" class="nextrouter-content block">
+
+						<span class="nextrouter-copy no-padding-top no-padding-bottom">
+						<h4>
+							<span class="nextrouter-label">Previous</span>
+							<span class="icon icon-chevronleft"></span> Icons and Images
+						</h4>
+					</span>
+
+					</a>
+								</div>
+								<div class="column large-6 small-6 text-right right">
+					<a href="/design/human-interface-guidelines/macos/extensions/action-extensions/" class="nextrouter-content block">
+
+						<span class="nextrouter-copy no-padding-top no-padding-bottom">
+							<h4>
+								<span class="nextrouter-label">Next</span>
+								Action Extensions <span class="icon icon-chevronright"></span>
+							</h4>
+						</span>
+
+					</a>
+				</div>
+							</div>
+		</div>
+	</aside>
+
+	<section id="globalfooter-wrapper" class="backgroundfooter">
+		<footer id="globalfooter" role="contentinfo">
+			<nav class="footer-breadory">
+				<a href="/" class="home breadcrumbs-home">
+					<span aria-hidden="true"></span>
+					<span class="breadcrumbs-home-label">Developer</span>
+				</a>
+				<section class="breadcrumbs">
+					<ol class="breadcrumbs-list">
+						<li>
+							<a href="/design/">Design</a>
+						</li>
+						
+						<li>
+							<a href="/design/human-interface-guidelines/">Human Interface Guidelines</a>
+						</li>
+						
+						<li>
+							<a href="/design/human-interface-guidelines/macos/">macOS</a>						</li>
+						
+						<li>
+							<a href="/design/human-interface-guidelines/macos/touch-bar/">Touch Bar</a>
+						</li>						
+						<li>
+							Controls and Views
+						</li>					</ol>
+				</section>
+				<div id="directorynav" class="directorynav">
+	<div id="dn-cola" class="column">
+		<h3><a href="/discover/">Discover</a></h3>
+		<ul>
+			<li><a href="/macos/">macOS</a></li>
+			<li><a href="/ios/">iOS</a></li>
+			<li><a href="/watchos/">watchOS</a></li>
+			<li><a href="/tvos/">tvOS</a></li>
+			<li><a href="/safari/">Safari and Web</a></li>
+			<li><a href="/games/">Games</a></li>
+			<li><a href="/business/">Business</a></li>
+			<li><a href="/education/">Education</a></li>
+			<li><a href="/wwdc/">WWDC</a></li>
+		</ul>
+	</div>
+	<div id="dn-colb" class="column">
+		<h3><a href="/design/">Design</a></h3>
+		<ul>
+			<li><a href="/design/human-interface-guidelines/">Human Interface Guidelines</a></li>
+			<li><a href="/design/resources/">Resources</a></li>
+			<li><a href="/videos/design/">Videos</a></li>
+			<li><a href="/design/awards/">Apple Design Awards</a></li>
+			<li><a href="/accessibility/">Accessibility</a></li>
+			<li><a href="/internationalization/">Internationalization</a></li>
+			<li><a href="/accessories/">Accessories</a></li>
+		</ul>
+	</div>
+	<div id="dn-colc" class="column">
+		<h3><a href="/develop/">Develop</a></h3>
+		<ul>
+			<li><a href="/xcode/">Xcode</a></li>
+			<li><a href="/swift/">Swift</a></li>
+			<li><a href="/swift-playgrounds/">Swift Playgrounds</a></li>
+			<li><a href="/testflight/">TestFlight</a></li>
+			<li><a href="/documentation/">Documentation</a></li>
+			<li><a href="/videos/">Videos</a></li>
+			<li><a href="/download/">Downloads</a></li>
+		</ul>
+	</div>
+	<div id="dn-cold" class="column">
+		<h3><a href="/distribute/">Distribute</a></h3>
+		<ul>
+			<li><a href="/programs/">Developer Program</a></li>
+			<li><a href="/app-store/">App Store</a></li>
+			<li><a href="/app-store/review/">App Review</a></li>
+			<li><a href="/macos/distribution/">Mac Software</a></li>
+			<li><a href="/business/distribute/">Apps for Business</a></li>
+			<li><a href="/safari/extensions/">Safari Extensions</a></li>
+			<li><a href="/app-store/marketing/guidelines/">Marketing Resources</a></li>
+			<li><a href="/softwarelicensing/">Trademark Licensing</a></li>
+		</ul>
+	</div>
+	<div id="dn-cole" class="column">
+		<h3><a href="/support/">Support</a></h3>
+		<ul>
+			<li><a href="https://forums.developer.apple.com">Developer Forums</a></li>
+			<li><a href="/bug-reporting/">Bug Reporting</a></li>
+			<li><a href="/terms/">License Agreements</a></li>
+			<li><a href="/system-status/">System Status</a></li>
+			<li><a href="/contact/">Contact Us</a></li>
+		</ul>
+		<h3><a href="/account/">Account</a></h3>
+		<ul>
+			<li><a href="/account/ios/certificate/">Certificates, IDs &amp; Profiles</a></li>
+			<li><a href="https://appstoreconnect.apple.com/">App Store Connect</a></li>
+		</ul>
+	</div>
+</div>
+
+			</nav>
+			<div class="ac-gf-footer-legal">
+  <div class="ac-gf-footer-news"> To receive the latest developer news, visit and subscribe to our <a href="/news/">News and Updates</a>. </div>
+  <div class="ac-gf-footer-legal-copyright">Copyright ©  2018 Apple Inc. All rights reserved.</div>
+  <div class="ac-gf-footer-legal-links">
+    <a href="https://www.apple.com/legal/internet-services/terms/site.html" class="first">Terms of Use</a>
+    <a href="https://www.apple.com/privacy/privacy-policy/">Privacy Policy</a>
+    <a href="/bug-reporting/">Report Bugs</a>
+    <a href="/contact/submit/?subject=website-feedback">Feedback</a>
+  </div>
+  <div class="ac-gf-footer-language-links">
+    <a href="/cn/" lang="zh" class="first">简体中文</a>
+    <a href="/jp/" lang="ja">日本語</a>
+    <a href="/kr/" lang="ko">한국어</a>
+  </div>
+</div>
+
+		</footer>
+	</section>
+
+</body>
+</html>

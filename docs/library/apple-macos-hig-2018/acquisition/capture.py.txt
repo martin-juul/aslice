@@ -1,0 +1,250 @@
+"""Capture original Wayback responses with per-resource provenance."""
+
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from datetime import datetime, timezone
+from hashlib import sha256
+from html.parser import HTMLParser
+import json
+from pathlib import Path
+import re
+import ssl
+import sys
+import time
+from threading import Lock
+from urllib.parse import urljoin, urlsplit, urldefrag
+
+ROOT = Path(__file__).resolve().parent
+STORE = ROOT / "capture"
+STORE.mkdir(exist_ok=True)
+PREFIX = "https://developer.apple.com/design/human-interface-guidelines/macos/"
+START = PREFIX + "overview/themes/"
+STAMP = "20181119085424"
+MANIFEST = STORE / "manifest.json"
+sys.path.insert(0, str(ROOT.parents[1] / "verification/archive-tools"))
+import truststore
+import urllib3
+
+pool = urllib3.PoolManager(
+    maxsize=3, ssl_context=truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+)
+records = json.loads(MANIFEST.read_text(encoding="utf-8")) if MANIFEST.exists() else {}
+request_lock = Lock()
+last_request = 0.0
+retina_rows = json.loads((ROOT / "retina-index.json").read_text(encoding="utf-8"))[1:]
+indexed_captures = {
+    row[2].lower(): row[1] for row in retina_rows if row[1][:4] in ("2019", "2020")
+}
+
+
+class Resources(HTMLParser):
+    def __init__(self, url):
+        super().__init__()
+        self.url = url
+        self.pages = set()
+        self.assets = set()
+
+    def handle_starttag(self, tag, attributes):
+        attrs = dict(attributes)
+        if tag == "a":
+            url = urldefrag(urljoin(self.url, attrs.get("href", "")))[0]
+            if url.startswith(PREFIX) and url.endswith("/"):
+                self.pages.add(url)
+        for attribute in ("src", "poster"):
+            if attribute in attrs:
+                self.assets.add(urljoin(self.url, attrs[attribute]))
+        if tag == "link" and attrs.get("rel") in (
+            "stylesheet",
+            "icon",
+            "shortcut icon",
+        ):
+            self.assets.add(urljoin(self.url, attrs.get("href", "")))
+        if "srcset" in attrs:
+            for candidate in attrs["srcset"].split(","):
+                self.assets.add(urljoin(self.url, candidate.strip().split(" ")[0]))
+
+
+def request(url):
+    global last_request
+    for attempt in range(3):
+        with request_lock:
+            time.sleep(max(0, 1.0 - (time.monotonic() - last_request)))
+            last_request = time.monotonic()
+        try:
+            return pool.request(
+                "GET",
+                url,
+                redirect=False,
+                retries=False,
+                timeout=urllib3.Timeout(connect=15, read=30),
+            )
+        except urllib3.exceptions.HTTPError:
+            if attempt == 2:
+                raise
+            with request_lock:
+                last_request = time.monotonic() + 15
+
+
+def capture(url, kind):
+    name = sha256(url.encode()).hexdigest()
+    body = STORE / (name + ".body")
+    headers = STORE / (name + ".headers")
+    timestamp = indexed_captures.get(url.lower(), STAMP)
+    archive = f"https://web.archive.org/web/{timestamp}id_/{url}"
+    effective = archive
+    blocks = []
+    error = ""
+    status = 0
+    mime = None
+    date = None
+    payload = None
+    try:
+        for redirect in range(12):
+            response = request(effective)
+            status = response.status
+            blocks.append(
+                "HTTP/1.1 "
+                + str(status)
+                + "\r\n"
+                + "".join(
+                    key + ": " + value + "\r\n"
+                    for key, value in response.headers.items()
+                )
+                + "\r\n"
+            )
+            if status in (301, 302, 303, 307, 308) and response.headers.get("location"):
+                effective = urljoin(effective, response.headers["location"])
+                continue
+            payload = response.data
+            mime = response.headers.get("content-type")
+            date = response.headers.get("memento-datetime")
+            break
+        else:
+            error = "Redirect limit exceeded"
+    except urllib3.exceptions.HTTPError as exception:
+        error = str(exception)
+    headers.write_bytes("".join(blocks).encode("utf-8"))
+    if payload is not None:
+        body.write_bytes(payload)
+    stamp = re.search(r"/web/(\d{14})", effective)
+    ok = status == 200 and bool(date) and not error
+    if kind == "page" and stamp and not stamp[1].startswith("2018"):
+        ok = False
+    return url, {
+        "url": url,
+        "requested_archive": archive,
+        "effective_url": effective,
+        "retrieved_utc": datetime.now(timezone.utc).isoformat(),
+        "kind": kind,
+        "method": "urllib3 2.8.0, truststore 0.10.4, Windows system TLS validation",
+        "status": "captured" if ok else "unavailable",
+        "http_status": status,
+        "memento_datetime": date,
+        "content_type": mime,
+        "error": error,
+        "body": body.name if payload is not None else None,
+        "headers": headers.name,
+        "sha256": sha256(payload).hexdigest() if payload is not None else None,
+    }
+
+
+def needs_capture(url):
+    if url not in records:
+        return True
+    entry = records[url]
+    return entry['status'] != 'captured' and entry['http_status'] in (0, 408, 425, 429, 500, 502, 503, 504)
+
+
+def batch(urls, kind):
+    pending = sorted(
+        url
+        for url in urls
+        if needs_capture(url)
+    )
+    pending.sort(
+        key=lambda url: (
+            (
+                0
+                if ".css" in url or ".js" in url or "/wss/fonts" in url
+                else 1 if "macOSHIG_Hero" in url or "DarkMode_" in url else 2
+            ),
+            url,
+        )
+    )
+    with ThreadPoolExecutor(max_workers=3) as pool:
+        jobs = [pool.submit(capture, url, kind) for url in pending]
+        for future in as_completed(jobs):
+            url, entry = future.result()
+            records[url] = entry
+            temporary = MANIFEST.with_suffix(".tmp")
+            temporary.write_text(json.dumps(records, indent=2) + "\n", encoding="utf-8")
+            temporary.replace(MANIFEST)
+            print(entry["status"], kind, url, flush=True)
+
+
+batch([START], "page")
+batch(
+    [
+        url
+        for url, entry in records.items()
+        if entry["kind"] == "page" and entry["status"] != "captured"
+    ],
+    "page",
+)
+pages = {START}
+assets = set()
+while True:
+    for url, entry in list(records.items()):
+        if entry["kind"] != "page" or entry["status"] != "captured":
+            continue
+        parser = Resources(url)
+        parser.feed((STORE / entry["body"]).read_text(encoding="utf-8"))
+        pages.update(parser.pages)
+        assets.update(parser.assets)
+    pending = pages - records.keys()
+    if not pending:
+        break
+    batch(pending, "page")
+
+assets.update(
+    url
+    for url, entry in records.items()
+    if entry["kind"] == "asset" and entry["status"] != "captured"
+)
+for url in list(assets):
+    path = urlsplit(url).path
+    if path.endswith((".png", ".jpg", ".gif")) and not Path(path).stem.endswith("_2x"):
+        high_resolution = url[: url.rfind(".")] + "_2x" + url[url.rfind(".") :]
+        assets.add(high_resolution)
+
+# Discover font and decorative-image dependencies already present in saved CSS
+# before scheduling the remaining illustrations.
+for url, entry in list(records.items()):
+    if entry["status"] == "captured" and "css" in (entry["content_type"] or ""):
+        css = (STORE / entry["body"]).read_text(encoding="utf-8", errors="replace")
+        for match in re.findall(r"url\(\s*[\"\']?([^\)\"\']+)", css):
+            assets.add(urljoin(url, match.strip()))
+
+for depth in range(4):
+    assets = {url for url in assets if urlsplit(url).scheme in ("http", "https")}
+    pending = {
+        url
+        for url in assets
+        if needs_capture(url)
+    }
+    if not pending:
+        break
+    batch(pending, "asset")
+    for url, entry in list(records.items()):
+        if entry["status"] != "captured" or "css" not in (entry["content_type"] or ""):
+            continue
+        css = (STORE / entry["body"]).read_text(encoding="utf-8", errors="replace")
+        for match in re.findall(r"url\(\s*[\"\']?([^\)\"\']+)", css):
+            assets.add(urljoin(url, match.strip()))
+
+print(
+    "TOTAL",
+    len(records),
+    "UNAVAILABLE",
+    sum(item["status"] != "captured" for item in records.values()),
+    flush=True,
+)

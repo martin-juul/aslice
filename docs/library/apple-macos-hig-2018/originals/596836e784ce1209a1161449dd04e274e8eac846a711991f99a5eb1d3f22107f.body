@@ -1,0 +1,15 @@
+table {
+	margin-bottom: 0em;
+	display: table;
+} 
+
+
+@media all and (max-width: 1068px) {
+	.system-color-gallery li {
+		width: 555px !important;
+	}
+	.bx-viewport {
+		overflow-y: hidden;
+		overflow-x: auto !important;
+	}
+}

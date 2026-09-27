@@ -1,0 +1,73 @@
+HTTP/1.1 302
+Server: nginx
+Date: Sun, 27 Sep 2026 14:24:03 GMT
+Content-Type: text/plain; charset=utf-8
+Content-Length: 0
+Connection: keep-alive
+x-archive-redirect-reason: found capture at 20181118215833
+location: https://web.archive.org/web/20181118215833id_/https://developer.apple.com/assets/elements/hardware/ipad_pro_12_9_space_gray/medium.png?156454
+server-timing: captures_list;dur=0.537830, exclusion.robots;dur=0.067930, exclusion.robots.policy;dur=0.060489, esindex;dur=0.005865, cdx.remote;dur=15.580525, LoadShardBlock;dur=136.828180, PetaboxLoader3.datanode;dur=121.116587
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=1
+server-timing: MISS
+x-app-server: wwwb-app221-dc8
+x-ts: 302
+x-tr: 181
+set-cookie: wb-p-SERVER=wwwb-app221; path=/
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+
+HTTP/1.1 200
+Server: nginx
+Date: Sun, 27 Sep 2026 14:24:07 GMT
+Content-Type: image/png
+Content-Length: 18676
+Connection: keep-alive
+x-archive-orig-date: Sun, 18 Nov 2018 21:58:33 GMT
+x-archive-orig-content-length: 18676
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-strict-transport-security: max-age=31536000; includeSubDomains
+x-archive-orig-last-modified: Tue, 30 Oct 2018 15:11:43 GMT
+x-archive-orig-etag: "48f4-579739a7349c0"
+x-archive-orig-accept-ranges: bytes
+x-archive-orig-x-xss-protection: 1; mode=block
+x-archive-orig-access-control-allow-origin: https://developer2.apple.com
+x-archive-orig-cache-control: max-age=600, public
+x-archive-orig-server: Apple
+x-archive-orig-host: developer.apple.com
+x-archive-orig-age: 0
+x-archive-orig-connection: keep-alive
+x-archive-orig-via: https/1.1 usewr1-edge-bx-026.ts.apple.com (ApacheTrafficServer/7.1.4)
+x-archive-orig-cdnuuid: 54b0962d-ede9-42ae-9450-a4003e595ed0-258369201
+x-archive-orig-x-cache: miss
+cache-control: max-age=1800
+cache-control: private
+accept-ranges: bytes
+memento-datetime: Sun, 18 Nov 2018 21:58:33 GMT
+link: <https://developer.apple.com/assets/elements/hardware/ipad_pro_12_9_space_gray/medium.png?156454>; rel="original", <https://web.archive.org/web/timemap/link/https://developer.apple.com/assets/elements/hardware/ipad_pro_12_9_space_gray/medium.png?156454>; rel="timemap"; type="application/link-format", <https://web.archive.org/web/https://developer.apple.com/assets/elements/hardware/ipad_pro_12_9_space_gray/medium.png?156454>; rel="timegate", <https://web.archive.org/web/20181031101124/https://developer.apple.com/assets/elements/hardware/ipad_pro_12_9_space_gray/medium.png?156454>; rel="first memento"; datetime="Wed, 31 Oct 2018 10:11:24 GMT", <https://web.archive.org/web/20181118054145/https://developer.apple.com/assets/elements/hardware/ipad_pro_12_9_space_gray/medium.png?156454>; rel="prev memento"; datetime="Sun, 18 Nov 2018 05:41:45 GMT", <https://web.archive.org/web/20181118215833/https://developer.apple.com/assets/elements/hardware/ipad_pro_12_9_space_gray/medium.png?156454>; rel="memento"; datetime="Sun, 18 Nov 2018 21:58:33 GMT", <https://web.archive.org/web/20181119212652/https://developer.apple.com/assets/elements/hardware/ipad_pro_12_9_space_gray/medium.png?156454>; rel="next memento"; datetime="Mon, 19 Nov 2018 21:26:52 GMT", <https://web.archive.org/web/20240709064958/https://developer.apple.com/assets/elements/hardware/ipad_pro_12_9_space_gray/medium.png?156454>; rel="last memento"; datetime="Tue, 09 Jul 2024 06:49:58 GMT"
+content-security-policy: default-src 'self' 'unsafe-eval' 'unsafe-inline' data: blob: archive.org web.archive.org web-static.archive.org wayback-api.archive.org athena.archive.org analytics.archive.org pragma.archivelab.org wwwb-events.archive.org
+x-archive-src: archiveteam_archivebot_go_20181119150001/wiki.gnucash.org-inf-20181119-033024-8w5ti-00001.warc.gz
+server-timing: captures_list;dur=2.858181, exclusion.robots;dur=0.390997, exclusion.robots.policy;dur=0.346478, esindex;dur=0.034664, cdx.remote;dur=37.766865, LoadShardBlock;dur=552.314133, PetaboxLoader3.datanode;dur=540.389157, load_resource;dur=53.657768, PetaboxLoader3.resolve;dur=50.566590
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=0
+server-timing: MISS
+x-app-server: wwwb-app220-dc8
+x-ts: 200
+x-tr: 745
+set-cookie: wb-p-SERVER=wwwb-app220; path=/
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+

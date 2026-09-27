@@ -10,7 +10,7 @@ aslice-db — inspect, maintain, compact, back up, and restore an aslice databas
 
 `aslice db list` [`--role` *role*] [`--json`]
 
-`aslice db` [`--role` *role*] [`--prefix` *path* | `--instance` *id*] `schema` [`--live`]
+`aslice db schema` [`--role` *role*] [`--prefix` *path* | `--instance` *id*] [`--live`]
 
 `aslice db` [*selectors*] `query` *SQL* [`--json`]
 
@@ -28,9 +28,11 @@ aslice-db — inspect, maintain, compact, back up, and restore an aslice databas
 
 # DESCRIPTION
 
-This is a specified interface; the commands are not implemented yet. Database
-maintenance follows [DATABASE](../docs/DATABASE.md), which owns the schemas and
-recovery procedures.
+The prototype implements only `aslice db schema [--role role]`, which prints the
+shipped DDL without opening a database. It rejects selectors, `--live`, JSON
+output, and all other database commands as unimplemented. The remaining interface
+below is specified for future implementation. Database maintenance follows
+[DATABASE](../docs/DATABASE.md), which owns the schemas and recovery procedures.
 
 Select one of `client-state`, `client-cache`, `system-state`, `coordinator`,
 `publisher`, or `release-signer`. The default is `client-state` in the selected

@@ -1,0 +1,10 @@
+{
+  "retrieved_utc_date": "2026-09-27",
+  "entry_snapshot": "https://web.archive.org/web/20181119085424/https://developer.apple.com/design/human-interface-guidelines/macos/overview/themes/",
+  "image-index.json": "https://web.archive.org/cdx/search/cdx?url=developer.apple.com/design/human-interface-guidelines/macos/images/*&from=20180901&to=20181231&output=json&filter=statuscode:200&collapse=urlkey",
+  "retina-index.json": "https://web.archive.org/cdx/search/cdx?url=developer.apple.com/design/human-interface-guidelines/macos/images/*&from=2017&to=2020&output=json&filter=statuscode:200&filter=original:.*_2x[.].*&collapse=urlkey",
+  "capture.py.txt": "Acquisition script retained as executed in staging. Requires Python, urllib3 2.8.0 and truststore 0.10.4; staging paths are not a portable installation interface.",
+  "policy": "Original-response id_ retrievals. Only 2018 page captures accepted. Supporting resources may resolve to other years; actual dates and redirect destinations are in manifest.json. Supplemental _2x candidates include inferred URLs, some of which were not archived. Failed responses are retained but not served as source content.",
+  "capture_dynamic.py.txt": "Supplemental capture of image URLs observed during original-script replay in Chromium at device pixel ratios 1 and 2. Reads the ignored browser check report and reuses the staging capture script.",
+  "browser-discovered-resources.json": "Original URLs derived from missing image requests during the full-page replay check; includes already-recorded unavailable retina candidates."
+}

@@ -19,6 +19,7 @@ to be done.
 | Document | Purpose |
 |---|---|
 | [Manual](MANUAL.md) | User workflows for installing, running, and managing software. |
+| [Developing](DEVELOPING.md) | Development entrypoint, code boundaries, simulator application, packaging, and tests. |
 | [Authoring](AUTHORING.md) | Writing, testing, and shipping packages. |
 | [Nomenclature](NOMENCLATURE.md) | Project terms, acronyms, and their Homebrew equivalents. |
 
@@ -55,6 +56,7 @@ See the [runbooks index](runbooks/README.md) for reading guidance and procedure 
 
 ## Supporting resources
 
+- [GitHub Pages portal tooling](../tools/pages/README.md) — static documentation, archive reader, local preview, and publishing checks.
 - [Command manuals](../man/) — command syntax, options, examples, and exit statuses.
 - [Machine-readable schematics](../schematics/README.md) — schemas and examples for data contracts.
 - [Reference archive](refs/README.MD) — locally preserved sources and their catalog.

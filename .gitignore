@@ -10,6 +10,9 @@ CMakeFiles/
 CMakeCache.txt
 compile_commands.json
 
+# JavaScript dependencies
+node_modules/
+
 # Common C++ artifacts
 *.o
 *.obj
@@ -34,3 +37,9 @@ Thumbs.db
 # vcpkg / Conan if you vendor them
 vcpkg_installed/
 .conan/
+
+# Documentation viewer output
+docs/library/.harness/dist/
+docs/library/.harness/test-results/
+docs/library/.harness/playwright-report/
+docs/library/.harness/.vite/

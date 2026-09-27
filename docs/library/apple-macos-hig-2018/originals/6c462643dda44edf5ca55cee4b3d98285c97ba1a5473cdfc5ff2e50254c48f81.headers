@@ -1,0 +1,64 @@
+HTTP/1.1 302
+Server: nginx
+Date: Sun, 27 Sep 2026 14:22:24 GMT
+Content-Type: text/plain; charset=utf-8
+Content-Length: 0
+Connection: keep-alive
+x-archive-redirect-reason: found capture at 20181119084649
+location: https://web.archive.org/web/20181119084649id_/https://www.apple.com/wss/fonts/SF-Pro-Text/v2/sf-pro-text_semibold.woff2
+server-timing: captures_list;dur=0.430223, exclusion.robots;dur=0.047378, exclusion.robots.policy;dur=0.040038, esindex;dur=0.004995, cdx.remote;dur=8.684741, LoadShardBlock;dur=174.948883, PetaboxLoader3.datanode;dur=167.044552
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=0
+server-timing: MISS
+x-app-server: wwwb-app265-dc8
+x-ts: 302
+x-tr: 254
+set-cookie: wb-p-SERVER=wwwb-app265; path=/
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+
+HTTP/1.1 200
+Server: nginx
+Date: Sun, 27 Sep 2026 14:22:25 GMT
+Content-Type: font/woff2
+Content-Length: 109728
+Connection: keep-alive
+x-archive-orig-server: Apache
+x-archive-orig-x-powered-by: PHP/5.3.3
+x-archive-orig-access-control-allow-origin: *
+x-archive-orig-x-content-type-options: nosniff
+x-archive-orig-content-length: 109728
+x-archive-orig-cache-control: max-age=29580555
+x-archive-orig-expires: Sun, 27 Oct 2019 17:36:04 GMT
+x-archive-orig-date: Mon, 19 Nov 2018 08:46:49 GMT
+x-archive-orig-connection: keep-alive
+cache-control: max-age=1800
+cache-control: private
+accept-ranges: bytes
+memento-datetime: Mon, 19 Nov 2018 08:46:49 GMT
+link: <https://www.apple.com/wss/fonts/SF-Pro-Text/v2/sf-pro-text_semibold.woff2>; rel="original", <https://web.archive.org/web/timemap/link/https://www.apple.com/wss/fonts/SF-Pro-Text/v2/sf-pro-text_semibold.woff2>; rel="timemap"; type="application/link-format", <https://web.archive.org/web/https://www.apple.com/wss/fonts/SF-Pro-Text/v2/sf-pro-text_semibold.woff2>; rel="timegate", <https://web.archive.org/web/20180802205948/https://www.apple.com/wss/fonts/SF-Pro-Text/v2/sf-pro-text_semibold.woff2>; rel="first memento"; datetime="Thu, 02 Aug 2018 20:59:48 GMT", <https://web.archive.org/web/20181119082644/https://www.apple.com/wss/fonts/SF-Pro-Text/v2/sf-pro-text_semibold.woff2>; rel="prev memento"; datetime="Mon, 19 Nov 2018 08:26:44 GMT", <https://web.archive.org/web/20181119084649/https://www.apple.com/wss/fonts/SF-Pro-Text/v2/sf-pro-text_semibold.woff2>; rel="memento"; datetime="Mon, 19 Nov 2018 08:46:49 GMT", <https://web.archive.org/web/20181119102446/https://www.apple.com/wss/fonts/SF-Pro-Text/v2/sf-pro-text_semibold.woff2>; rel="next memento"; datetime="Mon, 19 Nov 2018 10:24:46 GMT", <https://web.archive.org/web/20260926151421/https://www.apple.com/wss/fonts/SF-Pro-Text/v2/sf-pro-text_semibold.woff2>; rel="last memento"; datetime="Sat, 26 Sep 2026 15:14:21 GMT"
+content-security-policy: default-src 'self' 'unsafe-eval' 'unsafe-inline' data: blob: archive.org web.archive.org web-static.archive.org wayback-api.archive.org athena.archive.org analytics.archive.org pragma.archivelab.org wwwb-events.archive.org
+x-archive-src: archiveteam_archivebot_go_20181119120002/mazarmy.com-inf-20181119-075601-e068g-00000.warc.gz
+server-timing: captures_list;dur=2.367122, exclusion.robots;dur=0.264098, exclusion.robots.policy;dur=0.223801, esindex;dur=0.037961, cdx.remote;dur=123.464384, LoadShardBlock;dur=451.679585, PetaboxLoader3.datanode;dur=374.039767, load_resource;dur=47.915813, PetaboxLoader3.resolve;dur=40.289128
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=0
+server-timing: MISS
+x-app-server: wwwb-app253-dc8
+x-ts: 200
+x-tr: 814
+set-cookie: wb-p-SERVER=wwwb-app253; path=/
+X-location: All
+X-AS: 4750
+X-RL: 0
+X-NA: 0
+X-Page-Cache: MISS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+

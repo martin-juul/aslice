@@ -1,0 +1,96 @@
+name: Darwin controller and image infrastructure
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  style:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: tools/simulator/web/package-lock.json
+      - run: python -m pip install black==26.5.1 clang-format==22.1.8
+      - name: Check Python formatting
+        run: >-
+          python -m black --check
+          tools/simulator/__main__.py
+          tools/simulator/controller.py
+          tools/simulator/corpus.py
+          tools/simulator/corpus_fetch.py
+          tools/simulator/darwin.py
+          tools/simulator/guest_agent.py
+          tools/simulator/machine_cli.py
+          tools/simulator/provision.py
+          tools/simulator/vm.py
+          tools/simulator/vm_child.py
+          tests/simulator/test_darwin.py
+          tests/simulator/test_guest_agent.py
+          tests/simulator/test_runtime.py
+          tests/simulator/test_web_demo.py
+          tests/simulator/vnc_fixture.py
+          tests/simulator/corpus/build.py
+      - name: Check native corpus formatting
+        run: >-
+          clang-format --dry-run --Werror
+          tests/simulator/corpus/cli.c
+          tests/simulator/corpus/cocoa.m
+          tests/simulator/corpus/execve_empty_environment.c
+      - run: npm ci --ignore-scripts
+        working-directory: tools/simulator/web
+      - run: npm run check
+        working-directory: tools/simulator/web
+      - run: npm run build
+        working-directory: tools/simulator/web
+      - run: npm run build:demo
+        working-directory: tools/simulator/web
+      - run: npm run check:browser
+        working-directory: tools/simulator/web
+      - run: python -m pip install -r tools/simulator/runtime-requirements.txt playwright==1.63.0
+      - run: python -m playwright install --with-deps chromium
+      - name: Check offline console loading and panel input boundaries
+        run: >-
+          python tests/simulator/test_runtime.py
+          ControllerTests.test_built_console_loads_offline_and_keeps_display_input_clear
+          ControllerTests.test_console_terminal_addons
+          ControllerTests.test_legacy_browser_vnc_rendering_and_input
+      - name: Check standalone demo terminal workflows without a controller
+        run: python tests/simulator/test_web_demo.py
+  host-preparation:
+    strategy:
+      matrix:
+        os: [ubuntu-26.04, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Linux image test utilities
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y qemu-utils
+      - name: Image ownership, interruption, restore and corpus refusal tests
+        run: python tests/simulator/test_darwin.py
+      - run: python -m pip install -r tools/simulator/runtime-requirements.txt
+      - name: Controller authentication, concurrency and supervisor crash tests
+        run: python tests/simulator/test_runtime.py
+      - name: Guest PTY, argument and transfer contracts in disposable Linux runner
+        if: runner.os == 'Linux'
+        run: sudo "$(command -v python)" tests/simulator/test_guest_agent.py
+      - name: Record prerequisites and explicitly pending VM acceptance
+        shell: bash
+        run: |
+          python -m tools.simulator machine doctor --output build/darwin-preflight.json || code=$?
+          if [ "${code:-0}" -gt 1 ]; then exit "$code"; fi
+          echo 'VM boot, unchanged Mach-O, Cocoa, LLDB, guest isolation and live lifecycle acceptance remain pending.' >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: darwin-preflight-${{ matrix.os }}
+          path: build/darwin-preflight.json

@@ -1,0 +1,10 @@
+$(document).ready(function() {
+
+	$('.scrollview-gallery').bxSlider({
+		adaptiveHeight: false,
+		mode: 'fade',
+		pagerCustom: '#bxlabels-scrollview-examples',
+		controls: false
+	});
+
+});

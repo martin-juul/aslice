@@ -1,0 +1,1275 @@
+/* HIGHLIGHT CURRENT PAGE IN SIDE NAVIGATION */
+#doc-nav .side .selected > a {
+  font-weight: 600;
+  color: black;
+}
+
+/* DISPLAY MENU AND CHEVRON FOR SELECTED PAGE */
+#doc-nav .side .open a:after,
+#doc-nav .side .open .sub-side,
+#doc-nav .side .open .sub-side-page-list {
+  transform: rotate(0);
+  opacity: 1;
+  display: block;
+}
+
+@media only screen and (max-width: 735px) {
+  .ac-gf-footer-legal {
+    padding-top: 0;
+  }
+
+  #directorynav-footer {
+    display: none;
+  }
+}
+
+/* Product and Headline Logos for Overview and Sub pages */
+.human-interface-guideline-product-logo {
+  margin: 0 auto 0.5em;
+  padding: 0;
+  height: 44px;
+}
+
+.main h1.human-interface-guideline-product-logo {
+  color: #333;
+  font-size: 64px;
+  font-weight: 300;
+  letter-spacing: -0.02em;
+}
+
+.human-interface-guideline-product-headline {
+  display: block;
+  height: 26px;
+  margin:30px auto 70px;
+  font-size:24px;
+  font-weight:300;
+  color:#333;
+}
+
+.human-interface-guideline-product-headline:hover {
+  text-decoration: none;
+  color:#333;
+}
+
+.human-interface-guideline-product-headline .platform-title {
+  font-weight:700;
+}
+
+.apple-tv-logo {
+    margin: 0 auto 0.5em;
+    padding: 0;
+    width: 90px;
+    height: 44px;
+    background: url('/templates/human-interface-guidelines/ios/images/apple-tv-logo.png');
+    background-repeat: no-repeat;
+    background-size: 90px 44px;
+}
+
+.tv-headline {
+    margin-top: 26px;
+    margin-bottom: 70px;
+}
+
+p.headline-continue {
+    font-size: 22px;
+    font-weight: 200;
+}
+
+.doc-nav-container {
+  /*padding-left:0;*/
+}
+
+.stick-nav {
+  position: relative;
+  position: -webkit-sticky;
+  position: -moz-sticky;
+  position: -ms-sticky;
+  position: -o-sticky;
+  position: sticky;
+  top: -2em;
+  z-index: 9;
+}
+
+
+/* Images */
+
+.scroll-image {
+  overflow-x:auto;
+  -webkit-overflow-scrolling: touch;
+  -ms-overflow-style: none;
+/*   margin-left: -1.5em; */
+/*   padding-left: 1.5em; */
+/*   margin-right: -1.5em; */
+}
+
+img.pad-image {
+  margin-top:2em;
+  margin-bottom:2em;
+}
+
+.device-frame {
+  display:block;
+  position: relative;
+  margin: 0 auto 2em;
+  padding: 92px 26px 92px 25px;
+  width: 363px;
+  height: 739px;
+  background-image: url('/design/human-interface-guidelines/images/iPhone6s_iOSHIG_Frame.png');
+  background-repeat: no-repeat;
+  background-size: 363px 739px;
+  background-position: 0 top;
+}
+
+.device-frame-top {
+  margin-top:3em;
+  margin-bottom:1.5em;
+  padding: 92px 25px 0 26px;
+  width: 365px;
+  height: 371px;
+  border-bottom: 1px solid #e6e6e6;
+  background-position: 1px top;
+  background-size: cover;
+}
+
+.hig-content [class*='col-'] .device-frame-top {
+  margin-top: 0;
+}
+
+.device-frame-bottom {
+  margin-bottom:3em;
+  padding: 0 27px 92px 26px;
+  width: 365px;
+  height: 371px;
+  border-top: 1px solid #e6e6e6;
+  background-position: 1px bottom;
+}
+
+.hig-content [class*='col-'] .device-frame-bottom {
+  margin-bottom: 0;
+}
+
+.screenshot-ipad {
+  -webkit-box-sizing: content-box;
+  -moz-box-sizing: content-box;
+  box-sizing: content-box;
+  display:block;
+  border: 1px solid #e6e6e6;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 2em;
+  margin-bottom: 2em;
+}
+
+.screenshot-border {
+  border: 1px solid #e6e6e6;
+  -webkit-box-sizing:content-box;
+  -moz-box-sizing:content-box;
+  box-sizing:content-box;
+}
+
+.hig-content .device-frame-ipad-landscape {
+  display: block;
+  position: relative;
+  margin: 0 auto 2em;
+  padding: 31px 61px 31px 63px;
+  width: 695px;
+  height: 491px;
+  background-image: url(/design/human-interface-guidelines/images/iPad-Frame.png);
+  background-repeat: no-repeat;
+  background-size: 695px 491px;
+  background-position: 0 top;
+}
+
+@media all and (max-width: 1068px) {
+  .hig-content .device-frame-ipad-landscape {
+    padding: 23px 46px 23px 47px;
+    background-size: 510px 359px;
+    width: 525px;
+    height: 359px;
+  }
+
+  .hig-content .device-frame-top {
+    margin-top: 3em;
+    margin-bottom: 1.5em;
+    padding: 60px 16px 0 17px;
+    width: 241px;
+    height: 240px;
+    border-bottom: 1px solid #e6e6e6;
+    background-position: 1px top;
+    background-size: cover;
+}
+}
+@media all and (max-width: 735px) {
+  .screenshot-ipad {
+    width: 100%;
+    height: auto;
+  }
+
+  .device-frame-ipad-landscape {
+    margin-left: -71px;
+  }
+}
+
+@media all and (max-width: 735px) {
+  .hig-content .device-frame-ipad-landscape {
+    margin: 0 auto 2em;
+    padding: 15px 39px 18px 30px;
+    width: 326px;
+    height: auto;
+    background-size: 316px;
+  }
+
+  .hig-content .device-frame-top {
+    position: relative;
+    margin: 0 auto;
+    padding: 61px 16px 0 17px;
+    width: 242px;
+    height: 243px;
+    border-bottom: 1px solid #e6e6e6;
+    background-position: 1px top;
+    background-size: cover;
+  }
+}
+@media all and (max-width: 320px) {
+  .hig-content .device-frame-ipad-landscape {
+    padding: 13px 27px 18px 25px;
+    width: 270px;
+    height: auto;
+    background-size: 268px;
+  }
+}
+
+@media all and (max-width: 413px) {
+  .device-frame {
+    margin: 0 auto 0;
+    width: 275px;
+    height: auto;
+    padding: 81px 23px 90px 22px;
+    background-size: 320px;
+    -webkit-box-sizing: content-box;
+    -moz-box-sizing: content-box;
+    box-sizing: content-box;
+  }
+
+  .device-frame-top {
+    padding: 0 6px 0 6px;
+    width: 328px;
+    height: 282px;
+    border-top: none;
+    border-right: none;
+    border-left: none;
+    border-bottom: 1px solid #e6e6e6;
+    -webkit-box-sizing: content-box;
+    -moz-box-sizing: content-box;
+    box-sizing: content-box;
+  }
+
+  .hig-content .device-frame-top {
+    position: relative;
+    margin: 0 auto;
+    padding: 61px 16px 0 17px;
+    width: 208px;
+    height: 207px;
+    border-bottom: 1px solid #e6e6e6;
+    background-image: url(/design/human-interface-guidelines/images/iPhone6s_iOSHIG_Frame.png) !important;
+    background-position: 1px top;
+    background-size: cover;
+}
+
+  .device-frame-bottom {
+    padding: 0px 18px 80px 23px;
+    width: 276px;
+    height: 282px;
+    border-bottom: none;
+    border-right: none;
+    border-left: none;
+    border-top: 1px solid #e6e6e6;
+    -webkit-box-sizing: content-box;
+    -moz-box-sizing: content-box;
+    box-sizing: content-box;
+  }
+}
+
+@media all and (max-width: 320px) {
+  .device-frame {
+    margin-left: 0;
+    width: 248px;
+    background-size: 288px;
+    padding: 73px 23px 90px 20px;
+  }
+
+  .device-frame-top {
+    padding: 0 1px 0 1px;
+    width: 320px;
+    margin-left: -24px;
+  }
+
+  .device-frame-bottom {
+    padding: 0px 18px 73px 21px;
+    width: 248px;
+    margin-left: -14px;
+  }
+
+   .hig-content .device-frame-top {
+    position: relative;
+    margin: 0 auto;
+    padding: 59px 16px 0 17px;
+    width: 200px;
+    height: 196px;
+    border-bottom: 1px solid #e6e6e6;
+    background-image: url(/design/human-interface-guidelines/images/iPhone6s_iOSHIG_Frame.png) !important;
+    background-position: 1px top;
+    background-size: cover;
+  }
+}
+
+/* iPhone X device frame */
+
+.device-iphonex-container {
+  position: relative;
+  width: 330px;
+  height: 672px;
+  margin: 0 auto;
+  margin-bottom: 1em;
+}
+
+.device-iphonex-container::before {
+  content: '';
+}
+
+.hig-content .device-iphonex-container.device-iphonex-half::before {
+  height: 344px;
+}
+
+.device-iphonex-image-full {
+  width: 287px;
+  height: 633px;
+  top: -13px !important;
+  left: 0px !important;
+}
+
+.hig-content .device-iphonex-image-half {
+  width: 292px;
+  height: 312px;
+}
+
+.device-iphonex-top {
+    border-bottom: 1px solid #e6e6e6;
+}
+
+.device-iphonex-bottom {
+    border-top: 1px solid #e6e6e6;
+}
+
+.hig-content .device-iphonex-half {
+  height: 332px;
+}
+
+.device-iphonex-image-full,
+.device-iphonex-image-half,
+.device-iphonex-frame{
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left:0;
+  right:0;
+  margin: auto;
+}
+
+.device-iphonex-image-top,
+.device-iphonex-container.device-iphonex-top::before {
+  top: unset;
+}
+
+.device-iphonex-image-bottom,
+.device-iphonex-container.device-iphonex-bottom::before {
+  bottom: unset;
+}
+
+.device-iphonex-frame {
+  background-image: url('/design/human-interface-guidelines/images/iPhoneX_DeviceFrame.png');
+  background-repeat: no-repeat;
+  background-size: 100%;
+  width: 328px;
+}
+
+.device-iphonex-frame::before {
+  content: ' ';
+}
+
+.device-iphonex-bottom .device-iphonex-frame {
+  background-position: bottom;
+}
+
+@media only screen and (max-width: 1068px) {
+  .col-50 .device-iphonex-container {
+    width: 236px;
+    height: 474px;
+  }
+  .col-50 .device-iphonex-image-full {
+    width: 206px;
+    height: 448px;
+  }
+}
+
+
+@media only screen and (max-width: 1068px) {
+  
+	.device-iphonex-container {
+	  width: 236px;
+	  height: 474px;
+	}
+
+	.hig-content .device-iphonex-container.device-iphonex-half::before {
+	  height: 344px;
+	}
+
+	.device-iphonex-image-full {
+	  width: 206px;
+	  height: 445px !important;
+	  top: -2px !important;
+	  left: 0px !important;
+	}	
+	
+	.hig-content .device-iphonex-image-half {
+	  width: 206px;
+	  height: 226px;
+	}
+
+	.device-iphonex-image-top {
+	  top: -2px !important;
+	}
+
+	.hig-content .device-iphonex-half {
+	  height: 332px;
+	}
+	
+	.device-iphonex-image-top,
+	.device-iphonex-container.device-iphonex-top::before {
+	  top: unset !important;
+	}
+
+	.device-iphonex-image-bottom,
+	.device-iphonex-container.device-iphonex-bottom::before {
+	  bottom: unset;
+	}
+
+	.device-iphonex-frame {
+	  width: 236px;
+	}
+	
+  
+  .hig-content .device-iphonex-container.device-iphonex-half {
+    height: 241px;
+    width: 240px;
+  }
+  
+  .video-container-device-iphonex.device-iphonex-half.device-iphonex-top {
+		height: 240px;
+	}
+
+
+
+}
+
+@media all and (max-width: 735px) {
+  .device-iphonex-image-full {
+    width: 206px;
+  }
+}
+@media all and (max-width: 320px) {
+  .device-iphonex-container,
+  .col-50 .device-iphonex-container {
+    height: 564px;
+  }
+  .device-iphonex-frame {
+    width: 280px;
+    left: -22px;
+  }
+  .device-iphonex-image-full,
+  img.device-iphonex-image-full,
+  .col-50 .device-iphonex-image-full {
+    max-width: initial;
+    width: 244px;
+    height: auto !important;
+    top: -3px !important;
+    left: -4px !important;
+  }
+
+  .hig-content .device-iphonex-container.device-iphonex-half {
+    height: 282px;
+    width: 240px;
+  }
+  .hig-content .device-iphonex-image-half {
+    height: auto;
+    width: 245px;
+    max-width: initial;
+    top: 17px !important;
+    left: -5px;
+  }
+  .hig-content .device-iphonex-bottom .device-iphonex-image-half {
+    top: 0px !important;
+  }
+  
+  .bx-viewport {
+    overflow: visible !important;
+  }
+}  
+
+/* iPad device frame */
+
+.device-ipad-container {
+  position: relative;
+  width: 708px;
+  height: 510px;
+  margin: 0 auto 1em;
+}
+
+.device-ipad-container:before,
+.device-ipad-frame:before {
+  content: '';
+}
+
+.hig-content img.device-ipad-image {
+  position: absolute;
+  display: block;
+  width: 655px;
+  height: 457px;
+  top: 27px;
+  left: 27px;
+  max-width: initial;
+}
+
+.device-ipad-frame {
+  background-image: url('/design/human-interface-guidelines/images/ipad-deviceframe.png');
+  background-size: 100%;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left:0;
+  right:0;
+}
+
+@media only screen and (max-width: 1068px) {
+  .hig-content img.device-ipad-image {
+    width: 471px;
+    height: 330px;
+    top: 19px;
+    left: 20px;
+  }
+  .device-ipad-container {
+    width: 510px;
+    height: 367px;
+  }
+}
+
+@media only screen and (max-width: 735px) {
+  .hig-content img.device-ipad-image {
+    width: 295px;
+    height: 206px;
+    top: 12px;
+    left: 12px;
+  }
+  .device-ipad-container {
+    width: 319px;
+    height: 230px;
+  }
+}
+
+/* Videos */
+
+.video-play {
+  top:94px;
+  font-size:14px;
+}
+.video-replay {
+  top:62px;
+  font-size:14px;
+}
+
+.video-play-top-half {
+  top:0px;
+}
+
+.video-container-device-iphonex .video-replay-top-half {
+  top:0px;
+}
+
+#ui-controls.progress-indicators .video-replay-top-half {
+  top:0px;
+}
+
+.video-frame-iphone6s {
+  position: relative;
+  margin: 0 auto 3em;
+  padding: 92px 26px 92px 25px;
+  width: 363px;
+  height: 739px;
+  background-image: url('/design/human-interface-guidelines/images/iPhone6s_iOSHIG_Frame.png');
+  background-repeat: no-repeat;
+  background-size: 363px 739px;
+  background-position: left top
+}
+
+.video-frame-iphone6s-top {
+  display:block;
+  position: relative;
+  margin: 3em auto 3em;
+  padding: 92px 27px 0 26px;
+  width: 365px;
+  height: 371px;
+  border-bottom: 1px solid #e6e6e6;
+  background-position: 1px top;
+  background-image: url('/design/human-interface-guidelines/images/iPhone6s_iOSHIG_Frame.png');
+  background-repeat: no-repeat;
+  background-size: 363px 739px;
+  background-position: 1px top;
+}
+
+.hig-content .video-frame-ipad-landscape {
+  position: relative;
+  margin: 0 auto 3em;
+  padding: 32px 64px 34px 64px;
+  width: 695px;
+  height: 491px;
+  background-image: url('/design/human-interface-guidelines/images/iPad-Frame.png');
+  background-repeat: no-repeat;
+  background-size: 695px 491px;
+  background-position: left top;
+}
+.hig-content .video.video-frame-ipad-landscape video {
+  width: 569px;
+  height: 428px;
+}
+
+@media all and (max-width: 735px) {
+  .hig-content .video.video-frame-ipad-landscape video {
+    width: 318px !important;
+    height: 240px !important;
+  }
+}
+
+@media all and (max-width: 320px) {
+  .hig-content .video.video-frame-ipad-landscape video {
+    width: 294px !important;
+    height: 208px !important;
+  }
+}
+
+.hig-content [class*='col-'] .video-frame-iphone6s-top {
+  margin-top: 0;
+}
+
+.video-frame-iphone6s-poster {
+  position: absolute;
+  width: 312px;
+  height: 555px;
+  top: 92px;
+  left: 25px;
+  opacity: 1;
+}
+
+.video-frame-iphone6s-top-poster {
+  position: absolute;
+  width: 312px;
+  height: 278px;
+  top: 92px;
+  left: 26px;
+  opacity: 1;
+}
+
+.hig-content .video-frame-ipad-landscape-poster {
+  position: absolute;
+  width: 569px;
+  height: 428px;
+  top: 32px;
+  left: 64px;
+  opacity: 1;
+}
+
+.video-frame-ipad-landscape .video-play {
+  top: 36px;
+}
+
+.video-frame-ipad-landscape .video-replay {
+  top: 4px;
+}
+
+#features.multitasking .video-frame-ipad-landscape .video-replay {
+  top: 3px;
+}
+
+/* Videos for iPhone X device frame */
+
+.video-container-device-iphonex {
+  margin-bottom: 3em;
+}
+
+.video-container-device-iphonex.device-iphonex-top {
+  border-bottom: none;
+}
+
+.video-container-device-iphonex .device-iphonex-container {
+  margin-bottom: 0;
+}
+
+.video-container-device-iphonex {
+    margin-bottom: 3em;
+  }
+
+/*------------*/
+
+@media all and (max-width: 1068px) {
+ /* .video-frame-ipad-landscape {
+    margin-left: -71px;
+  }*/
+
+  .hig-content .video-frame-ipad-landscape {
+    width: 517px;
+    height: 365px;
+    background-size: 517px 365px;
+    padding: 22px 47px 22px 47px;
+  }
+  .hig-content .video.video-frame-ipad-landscape video {
+    width: 424px;
+    height: 321px;
+  }
+  .hig-content .video .video-frame-ipad-landscape-poster {
+    width: 424px;
+    height: 318px;
+    top: 24px;
+    left: 47px;
+    opacity: 1;
+  }
+
+  .hig-content .video-frame-iphone6s-top {
+    display: block;
+    position: relative;
+    margin: 3em auto 3em;
+    padding: 60px 17px 0 16px;
+    width: 240px;
+    height: 246px;
+    border-bottom: 1px solid #e6e6e6;
+    background-position: 1px top;
+    background-image: url(/design/human-interface-guidelines/images/iPhone6s_iOSHIG_Frame.png);
+    background-repeat: no-repeat;
+    background-size: 240px 487px;
+    background-position: 1px top;
+  }
+
+  .hig-content .video-frame-iphone6s-top  video {
+    width: 209px;
+    height: 184px;
+  }
+
+  .hig-content .video-frame-iphone6s-top-poster  {
+    position: absolute;
+    width: 208px;
+    height: 185px;
+    top: 60px;
+    left: 16px;
+    opacity: 1;
+  }
+
+}
+
+@media all and (max-width: 735px) {
+  div.video.video-frame-ipad-landscape {
+    display: block;
+    margin: 0 auto 3em;
+    padding: 0;
+    max-width: 628px;
+    width: 100%;
+    height: auto;
+    background-image: none !important;
+  }
+
+  .hig-content .video .video-frame-ipad-landscape-poster {
+    width: 100%;
+    height: auto;
+    top: 0;
+    left: 0;
+    opacity: 1;
+    max-width: 100%;
+  }
+
+  .video-frame-ipad-landscape .video-play,
+  .video-frame-ipad-landscape .video-replay {
+    top: 10px;
+  }
+
+  .video-play,
+  .video-replay {
+    top:6px;
+  }
+
+  .device-iphonex-container .video-replay {
+    top:-30px;
+  }
+
+  .video-frame-iphone6s {
+    padding: 0;
+    width: 314px;
+    height: 557px;
+    border:1px solid #e6e6e6;
+    background-image: none;
+  }
+
+  .video-frame-iphone6s-top {
+    margin: 0 auto 3em;
+    padding: 0 4px 0px 4px;
+    width: 320px;
+    height: 279px;
+    background-image: none !important;
+    border-top: none;
+    border-right: none;
+    border-left: none;
+    border-bottom: 1px solid #e6e6e6;
+  }
+
+  .video-frame-iphone6s-poster  {
+    top: 0;
+    left: 0;
+    max-width: 282px;
+    max-height: 100%;
+    opacity: 1;
+  }
+
+  .video-frame-iphone6s video {
+    display: block;
+    min-width: 282px;
+    max-height: 100%;
+    opacity: 1;
+  }
+
+  .video-frame-iphone6s-top-poster  {
+    position: absolute;
+    width: 208px;
+    height: 278px;
+    top: 60px;
+    left: 16px;
+    opacity: 1;
+  }
+
+   .hig-content .video-frame-iphone6s-top {
+    display: block;
+    position: relative;
+    margin: 3em auto 3em;
+    padding: 60px 17px 0 16px;
+    width: 240px;
+    height: 246px;
+    border-bottom: 1px solid #e6e6e6;
+    background-position: 1px top;
+    background-image: url(/design/human-interface-guidelines/images/iPhone6s_iOSHIG_Frame.png) !important;
+    background-repeat: no-repeat;
+    background-size: 240px 487px;
+    background-position: 1px top;
+  }
+
+  .hig-content .video-frame-iphone6s-top  video {
+    width: 209px;
+    height: 184px;
+  }
+
+  .hig-content .video-frame-iphone6s-top-poster  {
+    position: absolute;
+    width: 208px;
+    height: 185px;
+    top: 60px;
+    left: 16px;
+    opacity: 1;
+  }
+}
+
+@media all and (max-width: 320px) {
+  .video-frame-iphone6s {
+    margin-left: 0;
+  }
+
+  .video-frame-iphone6s-top {
+    margin-left: 0;
+  }
+}
+
+/* COLOR PALLETTES */
+
+
+.color-palette {
+  margin-top: 2em;
+  margin-bottom: 2em
+}
+
+.swatch {
+  display: inline-block;
+  width: 11%;
+  font-family: -apple-system, "Myriad Set Pro", "Lucida Grande", "Helvetica Neue", "Helvetica", "Arial", "Verdana", "sans-serif";
+}
+
+@media all and (max-width: 1068px) {
+  .swatch {
+    width: 24%;
+  }
+}
+
+@media all and (max-width: 735px) {
+  .swatch {
+    width: 49%;
+  }
+}
+
+.swatch .swatch-color {
+  margin-left: 6px;
+  margin-right: 6px;
+  height: 75px;
+  border-radius: 10px;
+  padding: 0.8em;
+}
+
+.swatch .swatch-color span {
+  display:block;
+  color: #FFF;
+  line-height: 1.2;
+  font-size:14px;
+}
+
+.swatch .swatch-color.color-red { background-color: rgb(255,59,48);}
+.swatch .swatch-color.color-orange { background-color: rgb(255,149,0);}
+.swatch .swatch-color.color-yellow { background-color: rgb(255,204,0);}
+.swatch .swatch-color.color-green { background-color: rgb(76,217,100);}
+.swatch .swatch-color.color-teal-blue { background-color: rgb(90,200,250);}
+.swatch .swatch-color.color-blue { background-color: rgb(0,122,255);}
+.swatch .swatch-color.color-purple { background-color: rgb(88,86,214);}
+.swatch .swatch-color.color-pink { background-color: rgb(255,45,85);}
+
+.swatch .swatch-label {
+  display:block;
+  text-align: center;
+  color:#666;
+  padding-top:0.7em;
+  font-size:14px;
+  margin-bottom:1em;
+}
+
+
+/* Tables */
+
+.table-head { border-color: #333; }
+
+
+/* Slideshows */
+.bx-wrapper {
+  margin-bottom:2em;
+}
+
+.bx-wrapper ul {
+    margin: 0;
+    position: relative;
+}
+
+.bx-labels a {
+    font-size: 18px;
+    font-weight: 400;
+    text-decoration: none;
+    color: #0088cc;
+}
+
+.bx-labels a .smaller {
+    font-size:16px;
+}
+
+.bx-labels a.active {
+    font-weight: 700;
+    color: black;
+}
+
+.bx-labels.inline-controls {
+  text-align: center;
+  margin-top: 2em;
+  margin-left: 0;
+}
+
+.bx-labels.inline-controls a {
+  margin-left: -1px;
+  padding: 10px 15px 9px;
+  font-size: 1em;
+  line-height: 1;
+  color: #333333;
+  text-decoration: none;
+  display: block;
+  position: relative;
+  z-index: 0;
+}
+
+.bx-labels.inline-controls a:after {
+  left: 15px;
+  content: '•';
+  font-size: 10px;
+  vertical-align: middle;
+  position: relative;
+  color: #333333;
+}
+
+.bx-labels.inline-controls a.active {
+    color: #999;
+    font-weight:400;
+}
+
+.bx-labels.inline-controls li {
+  display: inline-block;
+}
+
+.bx-labels.inline-controls li:last-of-type a:after {
+  content:'';
+}
+
+/* Download links */
+
+
+
+
+      .tabnav {
+        margin: 3em auto 2em;
+        padding: 0;
+        width: 100%;
+        text-align: center;
+        position: relative;
+        white-space: nowrap;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        -ms-overflow-style: none; }
+        .tabnav .tabnav-items {
+          display: inline-block;
+          margin: 0; }
+        .tabnav .tabnav-item {
+          float: none;
+          padding-left: 60px;
+          border-bottom: 1px solid #d6d6d6;
+          display: inline-block;
+          list-style: none;
+          outline: none; }
+          @media only screen and (max-width: 1068px) {
+            .tabnav .tabnav-item {
+              padding-left: 30px; } }
+          @media only screen and (max-width: 735px) {
+            .tabnav .tabnav-item {
+              padding-left: 30px; } }
+          .tabnav .tabnav-item:first-child {
+            padding-left: 0; }
+
+
+
+      .tabnav-wrapper {
+        height: 2.5625em;
+        font-size: 16px;
+        overflow: hidden;
+        width: 100%; }
+        .tabnav-wrapper .tabnav-items {
+          padding-bottom: 2.5625em; }
+
+      .tabnav-link {
+        font-size: 14px;
+        line-height: 1;
+        font-weight: 400;
+        letter-spacing: 0em;
+        padding: 10px 0 9px 0;
+        color: #666666;
+        text-align: left;
+        text-decoration: none;
+        display: block;
+        margin-bottom: 4px;
+        position: relative;
+        z-index: 0; }
+        .tabnav-link:hover {
+          color: #0070c9;
+          text-decoration: none; }
+        .tabnav-link:focus {
+          outline-offset: 6px; }
+        .tabnav-link.active {
+          pointer-events: none;
+          color: #333333;
+          text-decoration: none;
+          cursor: default;
+          z-index: 10; }
+          .tabnav-link.current:after,
+          .tabnav-link.active:after {
+            left: 0;
+            position: absolute;
+            bottom: -5px;
+            width: 100%;
+            border-bottom: 1px solid #666666;
+            content: ''; }
+
+.tabnav-button {
+  margin-left: -1px;
+  padding: 10px 15px 9px;
+  font-size: 1em;
+  line-height: 1;
+  color: #666666;
+  text-decoration: none;
+  display: block;
+  position: relative;
+  z-index: 0; }
+  .tabnav-button:hover {
+    color: #0070c9;
+    text-decoration: none; }
+  .tabnav-button:focus {
+    outline-offset: -6px; }
+  .tabnav-button.active {
+    pointer-events: none;
+    color: #333333;
+    text-decoration: none;
+    cursor: default;
+    z-index: 10; }
+  .tabnav-button:after {
+    left: 15px;
+    content: '•';
+    alt: '';
+    font-size: 10px;
+    vertical-align: middle;
+    position: relative;
+    color: #333333; }
+    li:last-child .tabnav-button:after {
+      content: ''; }
+
+[class*='col-'] > .tabnav:first-child {
+  margin-top: 0;
+}
+
+.tabnav-grid-stepper + .bx-wrapper {
+  background-image: none;
+}
+
+.tabnav-stacked {
+  width: 33%;
+  margin-top: 0;
+}
+
+.tabnav-stacked .tabnav-item {
+  display: block;
+  float: none;
+  padding-left: 0;
+}
+
+.tabnav-stacked .tabnav-link{
+  padding: 3px 0 2px 0;
+}
+
+.tabnav-item a {
+  font-size:14px;
+}
+
+/* ROUTER LINKS */
+.router {
+  padding: 0;
+}
+
+.router .router-copy {
+  padding-top: 28px;
+  padding-bottom: 18px;
+}
+
+.router .text-left .router-copy {
+  padding-left: 10px;
+}
+
+.router .text-right .router-copy {
+  padding-right: 10px;
+}
+
+.router h4 {
+  font-size: 26px;
+  font-weight: 400;
+  margin-top: 0;
+}
+
+.router a:hover h4 {
+  color: #0070c9;
+}
+
+.router h4 small {
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.router .icon-chevronleft {
+  margin-left:-19px;
+}
+
+.router .icon-chevronright {
+  margin-right:-19px;
+}
+
+@media only screen and (max-width: 1023px) {
+
+.router .text-left .router-copy {
+  padding-left: 38px;
+}
+.router .text-right .router-copy {
+  padding-right: 38px;
+}
+
+}
+
+@media only screen and (max-width: 735px) {
+
+.router .col-50 {
+  border-top: 1px solid #f2f2f2;
+}
+
+.router h4 {
+  font-size: 22px;
+}
+
+.router h4 small {
+  font-size: 16px;
+  line-height: 1;
+}
+
+
+.router .text-left .router-copy {
+  padding-left: 38px;
+}
+.router .text-right .router-copy {
+  padding-right: 38px;
+}
+
+.router .icon-chevronleft {
+  margin-left:-14px;
+}
+
+.router .icon-chevronright {
+  margin-right:-14px;
+}
+
+}
+
+
+/* CSS that was removed from global.dist.css */
+.row {
+  position: relative;
+  z-index: 1;
+  *zoom: 1;
+  margin: 0 -1em;
+}
+
+.row:before, .row:after {
+  content: " ";
+  display: table;
+}
+
+.row:after {
+  clear: both;
+}
+
+.devices-container-top {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.devices-container-top .device-frame,
+.devices-container-top .device-iphonex-container {
+  margin-bottom: 0;
+}

@@ -1,0 +1,92 @@
+HTTP/1.1 302
+Server: nginx
+Date: Sun, 27 Sep 2026 14:12:20 GMT
+Content-Type: text/plain; charset=utf-8
+Content-Length: 0
+Connection: keep-alive
+x-archive-redirect-reason: found capture at 20191019120628
+location: https://web.archive.org/web/20191019120628id_/https://developer.apple.com/design/human-interface-guidelines/macos/images/ScrollView_pageBypage.mp4
+server-timing: captures_list;dur=0.595483, exclusion.robots;dur=0.078222, exclusion.robots.policy;dur=0.067613, esindex;dur=0.008438, cdx.remote;dur=12.391242, LoadShardBlock;dur=211.869922, PetaboxLoader3.datanode;dur=186.793536
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=0
+server-timing: BYPASS
+x-app-server: wwwb-app222-dc8
+x-ts: 302
+x-tr: 258
+set-cookie: wb-p-SERVER=wwwb-app222; path=/
+X-RL: 0
+X-NA: 0
+X-Page-Cache: BYPASS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+X-location: mp4
+
+HTTP/1.1 302
+Server: nginx
+Date: Sun, 27 Sep 2026 14:12:25 GMT
+Content-Type: text/plain; charset=utf-8
+Content-Length: 0
+Connection: keep-alive
+x-archive-redirect-reason: found capture at 20191019120631
+location: https://web.archive.org/web/20191019120631id_/https://developer.apple.com/design/human-interface-guidelines/macos/images/ScrollView_pageByPage.mp4
+server-timing: captures_list;dur=0.569936, exclusion.robots;dur=0.076342, exclusion.robots.policy;dur=0.067824, esindex;dur=0.007534, cdx.remote;dur=14.692680, LoadShardBlock;dur=96.364371, PetaboxLoader3.datanode;dur=214.509333, load_resource;dur=852.949094, PetaboxLoader3.resolve;dur=30.023022
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=1
+server-timing: BYPASS
+x-app-server: wwwb-app233-dc8
+x-ts: 302
+x-tr: 997
+set-cookie: wb-p-SERVER=wwwb-app233; path=/
+X-RL: 0
+X-NA: 0
+X-Page-Cache: BYPASS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+X-location: mp4
+
+HTTP/1.1 200
+Server: nginx
+Date: Sun, 27 Sep 2026 14:12:29 GMT
+Content-Type: video/mp4
+Content-Length: 683188
+Connection: keep-alive
+x-archive-orig-server: Apple
+x-archive-orig-date: Sat, 19 Oct 2019 12:06:32 GMT
+x-archive-orig-content-length: 683188
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-x-frame-options: SAMEORIGIN
+x-archive-orig-strict-transport-security: max-age=31536000; includeSubDomains
+x-archive-orig-last-modified: Mon, 03 Jun 2019 18:09:01 GMT
+x-archive-orig-accept-ranges: bytes
+x-archive-orig-x-xss-protection: 1; mode=block
+x-archive-orig-access-control-allow-origin: https://developer2.apple.com
+x-archive-orig-host: developer.apple.com
+x-archive-orig-age: 0
+x-archive-orig-via: https/1.1 ussjc2-edge-bx-031.ts.apple.com (ApacheTrafficServer/8.0.5)
+x-archive-orig-cdnuuid: 1ece6214-26a3-4261-aeb0-c74db4a9768d-2573379158
+x-archive-orig-x-cache: miss
+cache-control: max-age=1800
+cache-control: private
+accept-ranges: bytes
+memento-datetime: Sat, 19 Oct 2019 12:06:31 GMT
+link: <https://developer.apple.com/design/human-interface-guidelines/macos/images/ScrollView_pageByPage.mp4>; rel="original", <https://web.archive.org/web/timemap/link/https://developer.apple.com/design/human-interface-guidelines/macos/images/ScrollView_pageByPage.mp4>; rel="timemap"; type="application/link-format", <https://web.archive.org/web/https://developer.apple.com/design/human-interface-guidelines/macos/images/ScrollView_pageByPage.mp4>; rel="timegate", <https://web.archive.org/web/20191019120628/https://developer.apple.com/design/human-interface-guidelines/macos/images/ScrollView_pageBypage.mp4>; rel="first memento"; datetime="Sat, 19 Oct 2019 12:06:28 GMT", <https://web.archive.org/web/20191019120628/https://developer.apple.com/design/human-interface-guidelines/macos/images/ScrollView_pageBypage.mp4>; rel="prev memento"; datetime="Sat, 19 Oct 2019 12:06:28 GMT", <https://web.archive.org/web/20191019120631/https://developer.apple.com/design/human-interface-guidelines/macos/images/ScrollView_pageByPage.mp4>; rel="memento"; datetime="Sat, 19 Oct 2019 12:06:31 GMT", <https://web.archive.org/web/20200517070359/https://developer.apple.com/design/human-interface-guidelines/macos/images/ScrollView_pageBypage.mp4>; rel="next memento"; datetime="Sun, 17 May 2020 07:03:59 GMT", <https://web.archive.org/web/20220128212446/https://developer.apple.com/design/human-interface-guidelines/macos/images/ScrollView_pageByPage.mp4>; rel="last memento"; datetime="Fri, 28 Jan 2022 21:24:46 GMT"
+content-security-policy: default-src 'self' 'unsafe-eval' 'unsafe-inline' data: blob: archive.org web.archive.org web-static.archive.org wayback-api.archive.org athena.archive.org analytics.archive.org pragma.archivelab.org wwwb-events.archive.org
+x-archive-src: NO404-GDELT-20191019115951-crawl853/NO404-GDELT-20191019115951-04489.warc.gz
+server-timing: captures_list;dur=3.150851, exclusion.robots;dur=0.465707, exclusion.robots.policy;dur=0.412205, esindex;dur=0.041722, cdx.remote;dur=47.689062, LoadShardBlock;dur=387.609852, PetaboxLoader3.datanode;dur=355.731530, load_resource;dur=101.978138, PetaboxLoader3.resolve;dur=83.637916
+server-timing: TR;dur=0,Tw;dur=0,Tc;dur=0
+server-timing: BYPASS
+x-app-server: wwwb-app204-dc6
+x-ts: 200
+x-tr: 645
+set-cookie: wb-p-SERVER=wwwb-app204; path=/
+X-RL: 0
+X-NA: 0
+X-Page-Cache: BYPASS
+X-NID: CS LOXINFO PUBLIC COMPANY LIMITED
+Referrer-Policy: no-referrer-when-downgrade
+Permissions-Policy: interest-cohort=()
+X-sd: 0
+X-location: mp4
+
