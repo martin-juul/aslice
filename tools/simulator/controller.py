@@ -597,7 +597,10 @@ async def serve(root):
     finally:
         await runner.cleanup()
         endpoint = control / "endpoint.json"
-        if endpoint.exists() and json.loads(endpoint.read_text()).get("token") == controller.token:
+        if (
+            endpoint.exists()
+            and json.loads(endpoint.read_text()).get("token") == controller.token
+        ):
             endpoint.unlink()
 
 
