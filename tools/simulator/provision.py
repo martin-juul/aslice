@@ -68,6 +68,7 @@ def machine_seed(directory, build=False):
         )
 
     add("/opt/aslice/guest_agent.py", (HERE / "guest_agent.py").read_text())
+    add("/opt/aslice/guest_logs.py", (HERE / "guest_logs.py").read_text())
     add("/etc/aslice-agent.token", token_file.read_text(), "0600")
     add("/etc/ssh/ssh_host_ed25519_key", (control / "ssh-host").read_text(), "0600")
     add("/etc/ssh/ssh_host_ed25519_key.pub", (control / "ssh-host.pub").read_text())

@@ -327,6 +327,12 @@ def inspect():
 
 def handle(body):
     action = body["action"]
+    if action == "logs":
+        if __package__:
+            from .guest_logs import read
+        else:
+            from guest_logs import read
+        return read(body.get("source", "asl"), pwd.getpwnam("aslice"), HOME)
     if action == "health":
         return {
             "version": 1,

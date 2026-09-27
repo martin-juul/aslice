@@ -19,6 +19,7 @@ to be done.
 | Document | Purpose |
 |---|---|
 | [Manual](MANUAL.md) | User workflows for installing, running, and managing software. |
+| [Developing](DEVELOPING.md) | Development entrypoint, code boundaries, simulator application, packaging, and tests. |
 | [Authoring](AUTHORING.md) | Writing, testing, and shipping packages. |
 | [Nomenclature](NOMENCLATURE.md) | Project terms, acronyms, and their Homebrew equivalents. |
 

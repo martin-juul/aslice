@@ -12,6 +12,7 @@ import secrets
 import subprocess
 import sys
 import time
+import threading
 import urllib.request
 import uuid
 import zipfile
@@ -24,7 +25,7 @@ ROOT = Path(__file__).resolve().parents[2]
 WEB = ROOT / "build/simulator-web"
 
 
-def request(root, action, **values):
+def request(root, action, *, _timeout=180, **values):
     config = json.loads((Path(root) / ".controller/endpoint.json").read_text())
     req = urllib.request.Request(
         f'http://127.0.0.1:{config["port"]}/v1/action',
@@ -35,7 +36,7 @@ def request(root, action, **values):
         },
     )
     try:
-        with urllib.request.urlopen(req, timeout=180) as response:
+        with urllib.request.urlopen(req, timeout=_timeout) as response:
             result = json.load(response)
     except urllib.error.HTTPError as error:
         try:
@@ -49,7 +50,7 @@ def request(root, action, **values):
 def ensure(root):
     root = no_links(root)
     try:
-        request(root, "ping")
+        request(root, "ping", _timeout=2)
         return root
     except (OSError, ValueError):
         pass
@@ -60,17 +61,29 @@ def ensure(root):
     # The controller's OS lease resolves simultaneous starts without duplicate
     # authority. A contender exits before binding/listening or spawning VMs.
     with (directory / "startup.log").open("ab") as log:
-        vm.detached(
+        child = vm.detached(
             [sys.executable, "-m", "tools.simulator.controller", str(root)], log
         )
     deadline = time.monotonic() + 15
-    while time.monotonic() < deadline:
-        try:
-            request(root, "ping")
-            return root
-        except (OSError, ValueError):
-            time.sleep(0.1)
-    raise ValueError("controller failed to start; inspect .controller/startup.log")
+    try:
+        while time.monotonic() < deadline:
+            try:
+                request(root, "ping", _timeout=2)
+                threading.Thread(target=child.wait, daemon=True).start()
+                return root
+            except (OSError, ValueError):
+                time.sleep(0.1)
+        raise ValueError("controller failed to start; inspect .controller/startup.log")
+    except BaseException:
+        # Only reap the process created by this attempt, never a saved PID.
+        if child.poll() is None:
+            child.terminate()
+            try:
+                child.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                child.kill()
+                child.wait()
+        raise
 
 
 class Controller:
@@ -82,6 +95,7 @@ class Controller:
         self.timeline = deque(maxlen=2000)
         self.baselines = {}
         self.builders = {}
+        self.stopping = asyncio.Event()
 
     def directory(self, machine):
         return self.root / "machines" / name(machine)
@@ -183,6 +197,10 @@ class Controller:
         action, machine = body["action"], body.get("name")
         if action == "ping":
             return {"version": 1, "backend": BACKEND}
+        if action == "controller-stop":
+            # Supervisors own machines and sessions independently of this API.
+            asyncio.get_running_loop().call_later(0.1, self.stopping.set)
+            return {"stopping": True, "machines": "preserved"}
         if action.startswith("provision"):
             from . import provision
 
@@ -395,6 +413,7 @@ class Controller:
             atomic_json(path, record)
             return record
         allowed = {
+            "logs",
             "health",
             "exec",
             "shell",
@@ -414,6 +433,7 @@ class Controller:
             raise ValueError("unknown API action")
         result = await self.guest(machine, body)
         if action not in (
+            "logs",
             "session-read",
             "session-write",
             "session-resize",
@@ -485,6 +505,7 @@ async def serve(root):
     async def action(request):
         body = await request.json()
         quiet = body.get("action") in (
+            "logs",
             "ping",
             "status",
             "timeline",
@@ -572,9 +593,12 @@ async def serve(root):
     )
     vm.private(control / "endpoint.json")
     try:
-        await asyncio.Event().wait()
+        await controller.stopping.wait()
     finally:
         await runner.cleanup()
+        endpoint = control / "endpoint.json"
+        if endpoint.exists() and json.loads(endpoint.read_text()).get("token") == controller.token:
+            endpoint.unlink()
 
 
 if __name__ == "__main__":

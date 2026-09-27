@@ -180,6 +180,10 @@ endforeach()
 
 include(CTest)
 if(BUILD_TESTING)
+  add_test(NAME developer-harness COMMAND "${Python3_EXECUTABLE}" -m unittest discover
+    -s "${CMAKE_CURRENT_SOURCE_DIR}/tests/dev")
+  set_tests_properties(developer-harness PROPERTIES
+    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}" TIMEOUT 30 LABELS "developer")
   find_package(Python3 REQUIRED COMPONENTS Interpreter)
   add_test(NAME requirements COMMAND "${Python3_EXECUTABLE}" -m unittest discover
     -s "${CMAKE_CURRENT_SOURCE_DIR}/tests" -p test_requirements.py)
@@ -312,5 +316,17 @@ if(BUILD_TESTING)
     add_test(NAME lifecycle COMMAND "${Python3_EXECUTABLE}"
       "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_lifecycle.py" "$<TARGET_FILE:aslice>")
     set_tests_properties(lifecycle PROPERTIES TIMEOUT 60)
+    set_tests_properties(platform-directory lifecycle PROPERTIES LABELS "core")
   endif()
+  set_tests_properties(lock-wait helper-protocol helper-process helper-channel
+    platform-read models help cli package solver-oracle manifest slice query
+    PROPERTIES LABELS "core")
+  set_tests_properties(simulator-helper simulator-helper-replay simulator-lock-wait
+    simulator simulator-process simulator-credentials simulator-lifecycle simulator-inspection
+    PROPERTIES LABELS "modeled")
+  set_tests_properties(simulator-darwin-preparation simulator-darwin-runtime
+    simulator-darwin-guest PROPERTIES LABELS "runtime")
+  set_tests_properties(requirements requirement-inventory PROPERTIES LABELS "requirements")
+  set_tests_properties(documentation-library documentation-library-integrity
+    PROPERTIES LABELS "library")
 endif()

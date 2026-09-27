@@ -10,16 +10,16 @@
       "lines": 230
     },
     "README.md": {
-      "sha256": "518ac8b1f2ad42750c98b70872c9eb0ee9e3593371044eb60ba6525ed811ce77",
-      "lines": 109
+      "sha256": "74406bc358230cdd5c9a39f29b4e5ed2ce654a6e916ff14456605a9cc11d0c80",
+      "lines": 110
     },
     "SECURITY.md": {
       "sha256": "21d21762ff4299797fc385827de5d738f276ee97052e8ba53f994bffa2e8be0c",
       "lines": 85
     },
     "STRUCTURE.md": {
-      "sha256": "b8b0863459f9b7126f4f840c71266156c2b1412fdf67559443d454ebf0321f3a",
-      "lines": 83
+      "sha256": "692f2209b44083c2d2cae915761dd21f217750f04946969444f89f0bdf80e7c3",
+      "lines": 93
     },
     "docs/AUTHORING.md": {
       "sha256": "54767236ef3ab718b43a060bec68240b5aa940627d4a2ee4d641df132fa8ea35",
@@ -36,6 +36,10 @@
     "docs/DESIGN.md": {
       "sha256": "bd5323ab279bfa7f2e05413cb367f5f6e2c2a5229918d96a7e18d5d6688ded10",
       "lines": 1392
+    },
+    "docs/DEVELOPING.md": {
+      "sha256": "75ca175210c56acdcf1f1f0cf584cee7caef2f16f0e0a77b4e76b157fdfc7539",
+      "lines": 263
     },
     "docs/HELPERS.md": {
       "sha256": "85bb03d14bd9575afd7dc3fe7347b7f9df7c0adf74165c5b978cc62100ab685a",
@@ -58,8 +62,8 @@
       "lines": 873
     },
     "docs/README.md": {
-      "sha256": "4a3f61ca8c73b22bb6e020526657f0845abd31f58155700ab1afe2302d87148a",
-      "lines": 63
+      "sha256": "c448c4ba5ee0c99f80ce49eb5bac7c87177b47b3f6f505a994a6c0072e127507",
+      "lines": 64
     },
     "docs/REPOSITORIES.md": {
       "sha256": "65783996f84198ce4c7503a98aa80616440356eed34de7a3106a7c21fd34b05d",

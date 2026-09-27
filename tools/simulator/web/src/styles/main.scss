@@ -3,11 +3,15 @@
 @use 'controls';
 @use '../features/workspace/workspace';
 @use '../features/machines/machines';
+@use '../features/display/display';
+@use '../features/console/console';
 
 @include base.layout;
 @include controls.layout;
 @include workspace.layout;
 @include machines.layout;
+@include display.layout;
+@include console.layout;
 
 :root {
   color-scheme: light;
@@ -15,6 +19,7 @@
   @include controls.appearance(palette.$light);
   @include workspace.appearance(palette.$light);
   @include machines.appearance(palette.$light);
+  @include console.appearance(palette.$light);
 }
 
 :root[data-appearance='dark'] {
@@ -23,4 +28,5 @@
   @include controls.appearance(palette.$dark);
   @include workspace.appearance(palette.$dark);
   @include machines.appearance(palette.$dark);
+  @include console.appearance(palette.$dark);
 }

@@ -156,6 +156,10 @@
   .demo-window {
     background: #f6f6f6;
     color: #242424;
+    h3,
+    output {
+      color: #242424;
+    }
     border-color: #a6a6a6;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.13);
     input {

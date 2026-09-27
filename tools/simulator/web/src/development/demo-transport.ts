@@ -65,7 +65,9 @@ export class DemoTransport implements Transport {
     if (!machine) {
       throw new Error('Unknown demo machine.');
     }
-    if (!['health', 'session-read', 'timeline'].includes(command.action)) {
+    if (
+      !['health', 'session-read', 'timeline', 'logs'].includes(command.action)
+    ) {
       this.events.push({
         action: command.action,
         machine: machine.name,
@@ -74,6 +76,37 @@ export class DemoTransport implements Transport {
       });
     }
     switch (command.action) {
+      case 'logs':
+        return {
+          source: command.source,
+          available: true,
+          truncated: false,
+          note: 'Sample Console messages only; no guest logging store is connected.',
+          records: [
+            {
+              id: 'demo-info',
+              time: '12:00:00',
+              process: 'SampleApp',
+              pid: '42',
+              type: 'info',
+              subsystem: 'org.aslice.sample',
+              category: 'document',
+              message: 'Opened sample document',
+              raw: 'Demo record: document opened',
+            },
+            {
+              id: 'demo-error',
+              time: '12:00:01',
+              process: 'SampleApp',
+              pid: '42',
+              type: 'error',
+              subsystem: 'org.aslice.sample',
+              category: 'document',
+              message: 'Sample permission denied',
+              raw: 'Demo record: permission denied',
+            },
+          ],
+        };
       case 'start':
         machine.state = 'running';
         return { accelerator: 'demo (no VM)' };
