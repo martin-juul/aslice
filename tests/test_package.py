@@ -76,6 +76,67 @@ class PackageTests(unittest.TestCase):
             self.call('dev', 'fixture', 'resolve', '--catalog', str(path), 'missing', code=2)
             self.assertEqual(list(Path(directory).iterdir()), [path])
 
+    def test_variant_requirements_revision_order_and_collision_backtracking(self):
+        def pkg(name, version='1.0.0', **extra):
+            return dict(name=name, version=version, dependencies={}, files={},
+                        min_os='10.11', flavor='v1', **extra)
+
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'catalog.json'
+
+            def solve(packages, *roots, code=0):
+                path.write_text(json.dumps(dict(format='aslice-prototype-1', packages=packages)))
+                return self.call('dev', 'fixture', 'resolve', '--catalog', str(path), *roots, code=code)
+
+            consumer = pkg('consumer')
+            consumer['dependencies'] = {'dep': '^1.0 +metal'}
+            providers = [pkg('dep', revision=9, variants={'metal': False}),
+                         pkg('dep', revision=2, variants={'metal': True}),
+                         pkg('dep', revision=1, variants={'metal': True})]
+            for catalog in (providers, list(reversed(providers))):
+                result = solve([consumer, *catalog], 'consumer')['packages']
+                self.assertEqual(result[1]['revision'], 2)
+                self.assertEqual(result[1]['variants'], {'metal': True})
+            solve([consumer, providers[0]], 'consumer', code=2)
+            solve([consumer, pkg('dep')], 'consumer', code=2)
+
+            other = pkg('other')
+            other['dependencies'] = {'dep': '+debug ^1.0'}
+            combined = pkg('dep', variants={'metal': True, 'debug': True})
+            solve([consumer, other, *providers], 'consumer', 'other', code=2)
+            result = solve([consumer, other, *providers, combined], 'consumer', 'other')['packages']
+            self.assertEqual(result[1]['variants'], combined['variants'])
+
+            # Upstream version (including epoch) precedes recipe revision.
+            ranked = [pkg('dep', '1.0.0', revision=99), pkg('dep', '2.0.0', revision=0)]
+            self.assertEqual(solve(ranked, 'dep')['packages'][0]['version'], '2.0.0')
+            ranked.append(pkg('dep', '1!0.1.0'))
+            self.assertEqual(solve(ranked, 'dep')['packages'][0]['version'], '1!0.1.0')
+
+            # A colliding preferred build must not hide an eligible alternative.
+            app = pkg('app')
+            app['dependencies'] = {'dep': '* +metal'}
+            app['files'] = {'bin/shared': {'text': 'app', 'executable': False}}
+            newest = pkg('dep', revision=2, variants={'metal': True})
+            newest['files'] = {'bin/SHARED': {'text': 'dep', 'executable': False}}
+            older = pkg('dep', revision=1, variants={'metal': True})
+            self.assertEqual(solve([app, newest, older], 'app')['packages'][1]['revision'], 1)
+            solve([app, newest], 'app', code=2)
+
+    def test_variant_and_revision_input_refusals(self):
+        base = dict(name='app', version='1.0.0', min_os='10.11', flavor='v1',
+                    dependencies={}, files={})
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'catalog.json'
+            malformed = [dict(base, revision=value) for value in (-1, 1.5, True, '1', 2**64)]
+            malformed += [dict(base, variants=value) for value in ([], {'metal': 1}, {'': True}, {'bad.name': True})]
+            malformed += [dict(base, dependencies={'dep': value}) for value in
+                          ('+', '+metal +metal', '+bad.name', '^1.0+metal', '?variant.metal', '')]
+            for package in malformed:
+                with self.subTest(package=package):
+                    path.write_text(json.dumps(dict(format='aslice-prototype-1', packages=[package])))
+                    self.call('dev', 'fixture', 'resolve', '--catalog', str(path), 'app', code=2)
+
 
 if __name__ == '__main__':
     unittest.main()

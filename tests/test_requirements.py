@@ -6,6 +6,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -15,6 +16,28 @@ from tools.simulator.requirements import (
 
 
 class RegistryTests(unittest.TestCase):
+    def test_library_inventory_prunes_dependencies_and_preserves_collection_binding(self):
+        library = self.root / 'docs/library'
+        for name in ('sample/SHA256SUMS', 'sample/body.html', 'node_modules/pkg/README.md', '.harness/README.md', 'README.md'):
+            path = library / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text('example')
+        import os
+        walk = os.walk
+        visited = []
+
+        def observe(*args, **kwargs):
+            for item in walk(*args, **kwargs):
+                visited.append(Path(item[0]))
+                yield item
+
+        with patch('tools.simulator.requirements.os.walk', side_effect=observe):
+            result = inventory(self.root)
+        self.assertEqual(sorted(name for name in result if name.startswith('docs/library/')),
+                         ['docs/library/README.md', 'docs/library/sample/SHA256SUMS'])
+        self.assertNotIn(library / 'node_modules', visited)
+        self.assertNotIn(library / 'sample', visited)
+
     def setUp(self):
         temporary = tempfile.TemporaryDirectory()
         self.addCleanup(temporary.cleanup)

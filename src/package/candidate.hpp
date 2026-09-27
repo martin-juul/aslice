@@ -2,6 +2,7 @@
 #define ASLICE_PACKAGE_CANDIDATE_HPP
 #include "core/result.hpp"
 #include "package/version.hpp"
+#include <cstdint>
 #include <map>
 #include <set>
 #include <string>
@@ -29,7 +30,22 @@ class Target {
     std::string os_;
     std::string flavor_;
 };
-using Dependencies = std::map<std::string, Constraint>;
+using Variants = std::map<std::string, bool>;
+class Dependency {
+  public:
+    static core::Result<Dependency> parse(const std::string& text);
+    const Constraint& constraint() const {
+        return constraint_;
+    }
+    bool accepts(const Variants& variants) const;
+
+  private:
+    Dependency(Constraint constraint, std::set<std::string> required)
+        : constraint_(std::move(constraint)), required_(std::move(required)) {}
+    Constraint constraint_;
+    std::set<std::string> required_;
+};
+using Dependencies = std::map<std::string, Dependency>;
 class Identity {
   public:
     static core::Result<Identity> parse(std::string name);
@@ -45,7 +61,8 @@ class Candidate {
   public:
     static core::Result<Candidate> create(std::string name, std::string release, Target target,
                                           Dependencies dependencies, std::set<std::string> paths,
-                                          std::string artifact);
+                                          std::string artifact, Variants variants = {},
+                                          std::uint64_t revision = 0);
     const std::string& name() const {
         return identity_.string();
     }
@@ -64,19 +81,29 @@ class Candidate {
     const std::set<std::string>& paths() const {
         return paths_;
     }
+    const Variants& variants() const {
+        return variants_;
+    }
+    std::uint64_t revision() const {
+        return revision_;
+    }
 
   private:
     Candidate(Identity identity, std::string release, Target target, Dependencies dependencies,
-              std::set<std::string> paths, std::string artifact)
+              std::set<std::string> paths, std::string artifact, Variants variants,
+              std::uint64_t revision)
         : identity_(std::move(identity)), release_(std::move(release)),
           artifact_(std::move(artifact)), target_(std::move(target)),
-          dependencies_(std::move(dependencies)), paths_(std::move(paths)) {}
+          dependencies_(std::move(dependencies)), paths_(std::move(paths)),
+          variants_(std::move(variants)), revision_(revision) {}
     Identity identity_;
     std::string release_;
     std::string artifact_;
     Target target_;
     Dependencies dependencies_;
     std::set<std::string> paths_;
+    Variants variants_;
+    std::uint64_t revision_;
 };
 using Selection = std::map<std::string, Candidate>;
 } // namespace aslice::package

@@ -1,9 +1,11 @@
 """Small solver cases checked by exhaustive assignments, independent of C++ search.
 
 The oracle covers exact constraints and wildcard dependencies, target filtering,
-missing names and cycles. It is intentionally not a second package client.
+missing names, cycles, variant requirements and path collisions. It is intentionally
+not a second package client.
 """
 import itertools
+import hashlib
 import json
 from pathlib import Path
 import random
@@ -24,8 +26,24 @@ def feasible_assignments(packages, roots):
         chosen = {name: package for name, package in zip(names, assignment) if package is not None}
         if not set(roots) <= chosen.keys():
             continue
-        if any(dependency not in chosen or (constraint != "*" and chosen[dependency]["version"] != constraint[1:])
+        def matches(dependency, requirement):
+            if dependency not in chosen:
+                return False
+            provider = chosen[dependency]
+            for token in requirement.split():
+                if token.startswith('+'):
+                    if not provider.get('variants', {}).get(token[1:], False):
+                        return False
+                elif token != '*' and provider['version'] != token[1:]:
+                    return False
+            return True
+
+        if any(not matches(dependency, constraint)
                for package in chosen.values() for dependency, constraint in package["dependencies"].items()):
+            continue
+        paths = [path.lower() for package in chosen.values() for path in package['files']]
+        if len(set(paths)) != len(paths) or any(
+                other.startswith(path + '/') for path in paths for other in paths):
             continue
         # Compute transitive closure as a Boolean matrix. A diagonal edge is a
         # cycle; this uses no candidate ordering or recursive backtracking.
@@ -38,7 +56,9 @@ def feasible_assignments(packages, roots):
         required = set(roots) | {right for left, right in reachable if left in roots}
         if required != chosen.keys():
             continue
-        feasible.add(tuple(sorted((name, package["version"]) for name, package in chosen.items())))
+        feasible.add(tuple(sorted((name, hashlib.sha256(json.dumps(
+            package, sort_keys=True, separators=(',', ':')).encode()).hexdigest())
+            for name, package in chosen.items())))
     return feasible
 
 
@@ -68,6 +88,19 @@ class SolverOracleTests(unittest.TestCase):
                         flavor=randomizer.choice(("v1", "v1", "v2"))))
             roots = randomizer.choice((["core:a"], ["core:a", "core:b"], ["core:a", "core:b", "core:c"]))
             cases.append((packages, roots))
+        for _ in range(64):
+            packages = []
+            for name in ('a', 'b', 'c'):
+                for revision in (0, 1):
+                    dependencies = {
+                        'core:' + other: randomizer.choice(('*', '=1.0.0 +metal', '+debug', '+metal +debug'))
+                        for other in ('a', 'b', 'c') if randomizer.randrange(4) == 0
+                    }
+                    packages.append(package(name, 1, dependencies, revision=revision,
+                        variants={'metal': bool(randomizer.randrange(2)), 'debug': bool(randomizer.randrange(2))},
+                        files={randomizer.choice(('bin/' + name, 'bin/shared')):
+                               {'text': name, 'executable': False}}))
+            cases.append((packages, ['core:a', 'core:b']))
         with tempfile.TemporaryDirectory(prefix="aslice-solver-oracle-") as directory:
             catalog = Path(directory) / "catalog.json"
             satisfiable = unsatisfiable = 0
@@ -80,7 +113,7 @@ class SolverOracleTests(unittest.TestCase):
                     if expected:
                         satisfiable += 1
                         self.assertEqual(actual.returncode, 0, actual.stderr)
-                        selected = tuple(sorted((item["name"], item["version"]) for item in json.loads(actual.stdout)["packages"]))
+                        selected = tuple(sorted((item["name"], item["artifact"]) for item in json.loads(actual.stdout)["packages"]))
                         self.assertIn(selected, expected)
                     else:
                         unsatisfiable += 1

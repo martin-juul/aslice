@@ -35,7 +35,19 @@ accepts the upstream forms in PACKAGE-FORMAT, including lettered patches.
 Constraints support equality, comparisons, caret, tilde, comma intersections, and
 `||` unions. Prereleases require explicit admission; a prerelease bound admits
 prereleases of that same numeric version. Numeric core components are bounded by
-unsigned 64-bit integers. Resolver package revisions, provider variants, and
+unsigned 64-bit integers. Fixture candidates may carry an unsigned 64-bit
+`revision` and a `variants` object whose values are booleans. Missing fields retain
+revision zero and an empty assignment without changing existing fixture identities.
+Version ordering, including epoch, precedes revision; revision precedes flavor.
+Install retains an eligible installed artifact, while upgrade prefers newer candidates.
+
+A dependency such as `"dep": "^1.0 +metal"` requires a candidate with `metal`
+enabled. Variant tokens may precede or follow the version constraint, and multiple
+requirements must hold on the same selected artifact. `"dep": "+metal"` accepts
+any normally admitted version with that variant. Missing or disabled variants
+do not match. Candidate assignments describe existing fixture builds; the resolver
+does not infer defaults, generate assignments, or plan source builds. Formula-level
+variant prerequisites/conflicts, virtual providers, root variant requests, and
 conditional dependencies remain pending.
 
 Manifest inspection validates the artifact-manifest fields and semantic checks:
@@ -127,7 +139,8 @@ The bounded backtracking solver is an experiment, not the specified PubGrub
 implementation. Fixture identities hash normalized fixture JSON, not production
 RFC 8785 artifact manifests. Files are imported into separate read-only store
 trees and generations link to exact fixture identities. Case-insensitive ASCII
-path collisions refuse. Install prefers existing selections; upgrade selects the
+path collisions exclude that candidate combination and allow backtracking; a solve
+refuses if no collision-free combination exists. Install prefers existing selections; upgrade selects the
 newest compatible requested closure. Uninstall retains orphaned dependencies until
 autoremove. All complete generations are retained; garbage collection is absent.
 
@@ -136,7 +149,7 @@ Generation activation uses a flushed symlink rename under a prefix lock.
 activation boundaries. Prepared generations may remain after a failed activation;
 history lists available generations, not a proven committed operation log.
 These checks do not establish power-loss recovery. Signed repositories, archive
-extraction, TOML/Starlark builds, variants, relocation, ABI checks, privilege
+extraction, TOML/Starlark builds, full variant planning, relocation, ABI checks, privilege
 separation, production journals, services, machine setup, and self-update remain
 unimplemented. The fixture lifecycle currently uses generation JSON rather than
 the production state database. Same-user filesystem races and hostile-prefix

@@ -6,6 +6,7 @@
 #include "resolver/solver.hpp"
 #include "tl/expected.hpp"
 #include <algorithm>
+#include <cstdint>
 #include <exception>
 #include <filesystem>
 #include <iterator>
@@ -20,7 +21,6 @@ using core::digest;
 using core::fields;
 using core::Json;
 using core::require;
-using package::Constraint;
 using package::flavor_rank;
 using package::key;
 using package::os_rank;
@@ -46,8 +46,8 @@ void payload_path(const std::string& path) {
 }
 core::Result<Package> Package::parse(Json data) {
     try {
-        aslice::core::take(
-            fields(data, {"name", "version", "flavor", "min_os", "dependencies", "files"}));
+        aslice::core::take(fields(data, {"name", "version", "flavor", "min_os", "dependencies",
+                                         "files", "variants", "revision"}));
         const auto name = core::take(key(data.at("name").get<std::string>()));
         data["name"] = name;
         const auto release = data.at("version").get<std::string>();
@@ -60,7 +60,7 @@ core::Result<Package> Package::parse(Json data) {
         for (const auto& [dependency, constraint] : data["dependencies"].items()) {
             const auto normalized = core::take(key(dependency));
             require(!dependencies.contains(normalized), "duplicate dependency name");
-            aslice::core::take(Constraint::parse(constraint.get<std::string>()));
+            aslice::core::take(package::Dependency::parse(constraint.get<std::string>()));
             dependencies[normalized] = constraint;
         }
         data["dependencies"] = dependencies;
@@ -77,7 +77,21 @@ core::Result<Package> Package::parse(Json data) {
         package::Dependencies typed_dependencies;
         for (const auto& [name, constraint] : data["dependencies"].items()) {
             typed_dependencies.emplace(
-                name, core::take(Constraint::parse(constraint.get<std::string>())));
+                name, core::take(package::Dependency::parse(constraint.get<std::string>())));
+        }
+        package::Variants variants;
+        if (data.contains("variants")) {
+            require(data.at("variants").is_object(), "invalid variant assignment");
+            for (const auto& [variant, enabled] : data.at("variants").items()) {
+                require(enabled.is_boolean(), "variant assignment must be boolean");
+                variants.emplace(variant, enabled.get<bool>());
+            }
+        }
+        std::uint64_t revision = 0;
+        if (data.contains("revision")) {
+            require(data.at("revision").is_number_unsigned(),
+                    "revision must be an unsigned integer");
+            revision = data.at("revision").get<std::uint64_t>();
         }
         InlineFiles files;
         std::set<std::string> paths;
@@ -89,9 +103,9 @@ core::Result<Package> Package::parse(Json data) {
         if (!target) {
             return tl::unexpected(target.error());
         }
-        auto candidate =
-            package::Candidate::create(name, release, *target, std::move(typed_dependencies),
-                                       std::move(paths), aslice::core::take(digest(data.dump())));
+        auto candidate = package::Candidate::create(
+            name, release, *target, std::move(typed_dependencies), std::move(paths),
+            aslice::core::take(digest(data.dump())), std::move(variants), revision);
         if (!candidate) {
             return tl::unexpected(candidate.error());
         }
@@ -130,6 +144,8 @@ Json summary(const Selection& selected, const std::set<std::string>& roots) {
     for (const auto& [name, package] : selected) {
         result.push_back({{"name", name},
                           {"version", package.candidate().release()},
+                          {"revision", package.candidate().revision()},
+                          {"variants", package.candidate().variants()},
                           {"artifact", package.candidate().artifact()},
                           {"requested", roots.contains(name)}});
     }

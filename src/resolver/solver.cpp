@@ -18,7 +18,6 @@ constexpr std::size_t closure_limit = 128;
 namespace fs = std::filesystem;
 using core::require;
 using package::Candidate;
-using package::Constraint;
 using package::flavor_rank;
 using package::os_rank;
 using package::Selection;
@@ -37,8 +36,10 @@ bool consistent(const Selection& selected) {
         active.insert(name);
         for (const auto& [dependency, constraint] : selected.at(name).dependencies()) {
             if (!selected.contains(dependency) ||
-                !constraint.matches(core::take(version(selected.at(dependency).release())),
-                                    package::PrereleasePolicy::allow) ||
+                !constraint.accepts(selected.at(dependency).variants()) ||
+                !constraint.constraint().matches(
+                    core::take(version(selected.at(dependency).release())),
+                    package::PrereleasePolicy::allow) ||
                 !visit(dependency)) {
                 return false;
             }
@@ -98,6 +99,9 @@ Selection solve_impl(const std::vector<Candidate>& packages, const std::set<std:
             if (core::take(version(a.release())) != core::take(version(b.release()))) {
                 return core::take(version(a.release())) > core::take(version(b.release()));
             }
+            if (a.revision() != b.revision()) {
+                return a.revision() > b.revision();
+            }
             if (a.target().flavor() != b.target().flavor()) {
                 return a.target().flavor() > b.target().flavor();
             }
@@ -106,22 +110,23 @@ Selection solve_impl(const std::vector<Candidate>& packages, const std::set<std:
     }
     std::size_t attempts = 0;
     std::string conflict;
-    const auto matches = [&](const std::string& release,
-                             const std::vector<Constraint>& constraints) {
-        const auto value = core::take(version(release));
+    const auto matches = [&](const Candidate& candidate,
+                             const std::vector<package::Dependency>& constraints) {
+        const auto value = core::take(version(candidate.release()));
         bool admitted = !value.prerelease() || prereleases == package::PrereleasePolicy::allow;
         bool matched = true;
         for (const auto& constraint : constraints) {
-            admitted |= constraint.matches(value);
-            matched &= constraint.matches(value, package::PrereleasePolicy::allow);
+            admitted |= constraint.constraint().matches(value);
+            matched &= constraint.constraint().matches(value, package::PrereleasePolicy::allow) &&
+                       constraint.accepts(candidate.variants());
         }
         return admitted && matched;
     };
     std::function<bool(Selection&)> search = [&](Selection& chosen) {
         require(++attempts <= search_step_limit, "prototype solver exceeded 10,000 search steps");
-        std::map<std::string, std::vector<Constraint>> requirements;
+        std::map<std::string, std::vector<package::Dependency>> requirements;
         for (const auto& root : roots) {
-            requirements[root].push_back(core::take(Constraint::parse("*")));
+            requirements[root].push_back(core::take(package::Dependency::parse("*")));
         }
         for (const auto& [name, package] : chosen) {
             (void)name;
@@ -134,7 +139,7 @@ Selection solve_impl(const std::vector<Candidate>& packages, const std::set<std:
             if (!chosen.contains(name)) {
                 continue;
             }
-            if (!matches(chosen.at(name).release(), constraints)) {
+            if (!matches(chosen.at(name), constraints)) {
                 conflict = "incompatible constraints for " + name;
                 return false;
             }
@@ -145,7 +150,7 @@ Selection solve_impl(const std::vector<Candidate>& packages, const std::set<std:
             }
             conflict = "no compatible candidate for " + name;
             for (const auto& candidate : candidates[name]) {
-                if (!matches(candidate.release(), constraints)) {
+                if (!matches(candidate, constraints)) {
                     continue;
                 }
                 auto next = chosen;
@@ -159,6 +164,10 @@ Selection solve_impl(const std::vector<Candidate>& packages, const std::set<std:
         }
         if (!consistent(chosen)) {
             conflict = "dependency cycle";
+            return false;
+        }
+        if (const auto checked = collisions(chosen); !checked) {
+            conflict = checked.error().message;
             return false;
         }
         return true;
