@@ -9045,6 +9045,1281 @@
         }
       },
       "evidence": []
+    },
+    {
+      "id": "ASLICE-DB-001",
+      "statement": "Select exactly six database roles, defaulting to client-state in the selected prefix. List visible configured instances, optionally filtering by role; prefix and configured instance selectors must match the role and grant no permissions.",
+      "owner": "docs/DATABASE.md#13-command-and-output-contracts",
+      "review": "Reviewed the complete manual passage against the named owning contract. Database restore uses its own preview consent and exit contract; guided recovery uses STATE-AND-RECOVERY. These records describe required behavior, not portable prototype acceptance.",
+      "reviewed_sources": {
+        "docs/DATABASE.md": "cb75d65afc74286673ab54e0de60e72692e235a8a0447d7ff670c3ad49b9f231",
+        "man/aslice-db.1.md": "0c1e7026137cd9103a4c8f81fd05307abe6a7d0e62548fb9d583f1145f443137"
+      },
+      "clauses": [
+        {
+          "path": "man/aslice-db.1.md",
+          "start": 37,
+          "end": 42
+        }
+      ],
+      "implementation": [],
+      "implemented": false,
+      "platform_dependencies": [
+        "credentials",
+        "owner-configuration",
+        "filesystem"
+      ],
+      "environments": [
+        "windows-native",
+        "linux-native",
+        "simulated-macos",
+        "qualified-intel-macos-10.11-through-12"
+      ],
+      "tests": {
+        "positive": {
+          "scenario": "List visible present and absent instances and resolve each valid role/selector combination.",
+          "links": []
+        },
+        "refusal": {
+          "scenario": "Refuse conflicting selectors and attempts to select another owner through an untrusted path.",
+          "links": []
+        },
+        "concurrency": {
+          "scenario": "Change configured ownership during selection and require identity revalidation before opening.",
+          "links": []
+        },
+        "recovery": {
+          "scenario": "Inspect an absent or damaged instance without creating files or inventing a new identity.",
+          "links": []
+        }
+      },
+      "evidence": []
+    },
+    {
+      "id": "ASLICE-DB-002",
+      "statement": "Schema emits shipped DDL without opening a database; live schema uses fixed validated inspection. Query uses one bounded read-only statement on a consistent snapshot. Check validates identity, schema, integrity, foreign keys, references, stream continuity and domain invariants without repairing.",
+      "owner": "docs/DATABASE.md#13-command-and-output-contracts",
+      "review": "Reviewed the complete manual passage against the named owning contract. Database restore uses its own preview consent and exit contract; guided recovery uses STATE-AND-RECOVERY. These records describe required behavior, not portable prototype acceptance.",
+      "reviewed_sources": {
+        "docs/DATABASE.md": "cb75d65afc74286673ab54e0de60e72692e235a8a0447d7ff670c3ad49b9f231",
+        "man/aslice-db.1.md": "0c1e7026137cd9103a4c8f81fd05307abe6a7d0e62548fb9d583f1145f443137"
+      },
+      "clauses": [
+        {
+          "path": "man/aslice-db.1.md",
+          "start": 44,
+          "end": 47
+        }
+      ],
+      "implementation": [],
+      "implemented": false,
+      "platform_dependencies": [
+        "sqlite",
+        "inspection-snapshot",
+        "owner-export"
+      ],
+      "environments": [
+        "windows-native",
+        "linux-native",
+        "simulated-macos",
+        "qualified-intel-macos-10.11-through-12"
+      ],
+      "tests": {
+        "positive": {
+          "scenario": "Inspect all six roles and verify independent integrity, reference and continuity diagnostics.",
+          "links": []
+        },
+        "refusal": {
+          "scenario": "Reject wrong role/schema and broken references before domain use; check must not repair damage.",
+          "links": []
+        },
+        "concurrency": {
+          "scenario": "Mutate the owner database while inspection observes one consistent exported boundary.",
+          "links": []
+        },
+        "recovery": {
+          "scenario": "Read shipped DDL when the active database is damaged; preserve all damaged files.",
+          "links": []
+        }
+      },
+      "evidence": []
+    },
+    {
+      "id": "ASLICE-DB-003",
+      "statement": "Manual maintenance runs eligible cleanup in batches of at most 100 rows, bounded optimization, lightweight checks and checkpoints; report deferred work and never use age to authorize deleting protected references or retained history.",
+      "owner": "docs/DATABASE.md#103-manual-maintenance-compaction-and-schema-2",
+      "review": "Reviewed the complete manual passage against the named owning contract. Database restore uses its own preview consent and exit contract; guided recovery uses STATE-AND-RECOVERY. These records describe required behavior, not portable prototype acceptance.",
+      "reviewed_sources": {
+        "docs/DATABASE.md": "cb75d65afc74286673ab54e0de60e72692e235a8a0447d7ff670c3ad49b9f231",
+        "man/aslice-db.1.md": "0c1e7026137cd9103a4c8f81fd05307abe6a7d0e62548fb9d583f1145f443137"
+      },
+      "clauses": [
+        {
+          "path": "man/aslice-db.1.md",
+          "start": 49,
+          "end": 51
+        }
+      ],
+      "implementation": [],
+      "implemented": false,
+      "platform_dependencies": [
+        "sqlite",
+        "owner-locks",
+        "reference-validation"
+      ],
+      "environments": [
+        "windows-native",
+        "linux-native",
+        "simulated-macos",
+        "qualified-intel-macos-10.11-through-12"
+      ],
+      "tests": {
+        "positive": {
+          "scenario": "Clean eligible rows across bounded batches and report unfinished cleanup and checkpoints.",
+          "links": []
+        },
+        "refusal": {
+          "scenario": "Retain old protected rows, signing reservations and externally referenced objects.",
+          "links": []
+        },
+        "concurrency": {
+          "scenario": "Hold a reader pin while cleanup revalidates eligibility under exclusive ownership.",
+          "links": []
+        },
+        "recovery": {
+          "scenario": "Interrupt a batch, roll it back and retain earlier completed batches and all authoritative records.",
+          "links": []
+        }
+      },
+      "evidence": []
+    },
+    {
+      "id": "ASLICE-DB-004",
+      "statement": "Compaction uses a coordinated snapshot and vacuum staging, validates equivalence and references, then journals activation while retaining the original and recovery entry point. Maintain/compact dry-runs write nothing. Report snapshot, workspace, retained-original and free-space estimates and refuse insufficient space.",
+      "owner": "docs/DATABASE.md#103-manual-maintenance-compaction-and-schema-2",
+      "review": "Reviewed the complete manual passage against the named owning contract. Database restore uses its own preview consent and exit contract; guided recovery uses STATE-AND-RECOVERY. These records describe required behavior, not portable prototype acceptance.",
+      "reviewed_sources": {
+        "docs/DATABASE.md": "cb75d65afc74286673ab54e0de60e72692e235a8a0447d7ff670c3ad49b9f231",
+        "man/aslice-db.1.md": "0c1e7026137cd9103a4c8f81fd05307abe6a7d0e62548fb9d583f1145f443137"
+      },
+      "clauses": [
+        {
+          "path": "man/aslice-db.1.md",
+          "start": 51,
+          "end": 56
+        }
+      ],
+      "implementation": [],
+      "implemented": false,
+      "platform_dependencies": [
+        "sqlite-backup",
+        "free-space",
+        "owner-locks",
+        "activation-journal"
+      ],
+      "environments": [
+        "windows-native",
+        "linux-native",
+        "simulated-macos",
+        "qualified-intel-macos-10.11-through-12"
+      ],
+      "tests": {
+        "positive": {
+          "scenario": "Compact fragmented state with logical equivalence and reclaimable space; compare dry-run filesystem snapshots.",
+          "links": []
+        },
+        "refusal": {
+          "scenario": "Refuse insufficient per-filesystem space, changed references and invalid staging before activation.",
+          "links": []
+        },
+        "concurrency": {
+          "scenario": "Drain readers and prevent another writer from changing the captured boundary through activation.",
+          "links": []
+        },
+        "recovery": {
+          "scenario": "Interrupt before and during activation; retain the original and resume using journal decisions.",
+          "links": []
+        }
+      },
+      "evidence": []
+    },
+    {
+      "id": "ASLICE-DB-005",
+      "statement": "Check reports maintenance attempts, successes, outcomes and deferred reasons, freelist pages and estimated reclaimable bytes without promising savings.",
+      "owner": "docs/DATABASE.md#13-command-and-output-contracts",
+      "review": "Reviewed the complete manual passage against the named owning contract. Database restore uses its own preview consent and exit contract; guided recovery uses STATE-AND-RECOVERY. These records describe required behavior, not portable prototype acceptance.",
+      "reviewed_sources": {
+        "docs/DATABASE.md": "cb75d65afc74286673ab54e0de60e72692e235a8a0447d7ff670c3ad49b9f231",
+        "man/aslice-db.1.md": "0c1e7026137cd9103a4c8f81fd05307abe6a7d0e62548fb9d583f1145f443137"
+      },
+      "clauses": [
+        {
+          "path": "man/aslice-db.1.md",
+          "start": 57,
+          "end": 58
+        }
+      ],
+      "implementation": [],
+      "implemented": false,
+      "platform_dependencies": [
+        "sqlite",
+        "maintenance-bookkeeping"
+      ],
+      "environments": [
+        "windows-native",
+        "linux-native",
+        "simulated-macos",
+        "qualified-intel-macos-10.11-through-12"
+      ],
+      "tests": {
+        "positive": {
+          "scenario": "Report completed, partial and deferred maintenance and derive reclaimable estimates from page counts.",
+          "links": []
+        },
+        "refusal": {
+          "scenario": "Do not label partial checkpoints successful or estimates guaranteed reclaimed bytes.",
+          "links": []
+        },
+        "concurrency": {
+          "scenario": "Read maintenance diagnostics from a consistent inspection boundary during maintenance.",
+          "links": []
+        },
+        "recovery": {
+          "scenario": "Reconstruct disposable bookkeeping with tasks due instead of fabricating successful history.",
+          "links": []
+        }
+      },
+      "evidence": []
+    },
+    {
+      "id": "ASLICE-DB-006",
+      "statement": "After successful mutations and in existing service idle loops, automatic maintenance uses a shared interruptible 100 ms budget, no lock waits or elevation, hourly cleanup, daily optimization, weekly lightweight checks and deferred incomplete PASSIVE checkpoints. It introduces no daemon or automatic vacuum; auto_vacuum remains NONE. Synchronization is not bounded by the scheduling deadline.",
+      "owner": "docs/DATABASE.md#102-automatic-maintenance-and-cleanup",
+      "review": "Reviewed the complete manual passage against the named owning contract. Database restore uses its own preview consent and exit contract; guided recovery uses STATE-AND-RECOVERY. These records describe required behavior, not portable prototype acceptance.",
+      "reviewed_sources": {
+        "docs/DATABASE.md": "cb75d65afc74286673ab54e0de60e72692e235a8a0447d7ff670c3ad49b9f231",
+        "man/aslice-db.1.md": "0c1e7026137cd9103a4c8f81fd05307abe6a7d0e62548fb9d583f1145f443137"
+      },
+      "clauses": [
+        {
+          "path": "man/aslice-db.1.md",
+          "start": 60,
+          "end": 65
+        }
+      ],
+      "implementation": [],
+      "implemented": false,
+      "platform_dependencies": [
+        "sqlite",
+        "monotonic-clock",
+        "owner-locks",
+        "service-idle"
+      ],
+      "environments": [
+        "windows-native",
+        "linux-native",
+        "simulated-macos",
+        "qualified-intel-macos-10.11-through-12"
+      ],
+      "tests": {
+        "positive": {
+          "scenario": "Advance deterministic time through task schedules and interrupt SQL at the shared budget.",
+          "links": []
+        },
+        "refusal": {
+          "scenario": "Never elevate, wait, start a daemon or vacuum solely for automatic housekeeping.",
+          "links": []
+        },
+        "concurrency": {
+          "scenario": "Defer busy tasks while preserving foreground success and avoiding starvation.",
+          "links": []
+        },
+        "recovery": {
+          "scenario": "Power loss or interruption retains finished batches; reconstruction marks maintenance due.",
+          "links": []
+        }
+      },
+      "evidence": []
+    },
+    {
+      "id": "ASLICE-DB-007",
+      "statement": "Backup runs under the selected owner into a new set, capturing a consistent SQLite snapshot with durable records and evidence. Protected components remain separately protected. Missing participants make disaster-recovery backup incomplete; independently verify copies on separate storage at another location.",
+      "owner": "docs/DATABASE.md#111-coordinated-boundaries",
+      "review": "Reviewed the complete manual passage against the named owning contract. Database restore uses its own preview consent and exit contract; guided recovery uses STATE-AND-RECOVERY. These records describe required behavior, not portable prototype acceptance.",
+      "reviewed_sources": {
+        "docs/DATABASE.md": "cb75d65afc74286673ab54e0de60e72692e235a8a0447d7ff670c3ad49b9f231",
+        "man/aslice-db.1.md": "0c1e7026137cd9103a4c8f81fd05307abe6a7d0e62548fb9d583f1145f443137"
+      },
+      "clauses": [
+        {
+          "path": "man/aslice-db.1.md",
+          "start": 67,
+          "end": 71
+        }
+      ],
+      "implementation": [],
+      "implemented": false,
+      "platform_dependencies": [
+        "sqlite-backup",
+        "coordinated-owner-locks",
+        "protected-storage"
+      ],
+      "environments": [
+        "windows-native",
+        "linux-native",
+        "simulated-macos",
+        "qualified-intel-macos-10.11-through-12"
+      ],
+      "tests": {
+        "positive": {
+          "scenario": "Capture complete multi-owner sets and verify manifests, objects and independent copies.",
+          "links": []
+        },
+        "refusal": {
+          "scenario": "Refuse successful complete-backup status with a disconnected signer or missing protected participant.",
+          "links": []
+        },
+        "concurrency": {
+          "scenario": "Quiesce writers in canonical lock order and capture participants at a shared boundary.",
+          "links": []
+        },
+        "recovery": {
+          "scenario": "Interrupt every copy/finalization boundary; incomplete copies cannot become restorable finalized sets.",
+          "links": []
+        }
+      },
+      "evidence": []
+    },
+    {
+      "id": "ASLICE-DB-008",
+      "statement": "Restore stages and validates, preserves damaged originals and old manager/database pair, previews changes and invokes recovery before activation. Dry-run emits the preview digest; confirm authorizes that exact preview and is mandatory unattended. Changed bases invalidate consent; no flag bypasses evidence, retained-history, trust or external-edit checks.",
+      "owner": "docs/DATABASE.md#112-ordered-restore-procedure",
+      "review": "Reviewed the complete manual passage against the named owning contract. Database restore uses its own preview consent and exit contract; guided recovery uses STATE-AND-RECOVERY. These records describe required behavior, not portable prototype acceptance.",
+      "reviewed_sources": {
+        "docs/DATABASE.md": "cb75d65afc74286673ab54e0de60e72692e235a8a0447d7ff670c3ad49b9f231",
+        "man/aslice-db.1.md": "0c1e7026137cd9103a4c8f81fd05307abe6a7d0e62548fb9d583f1145f443137"
+      },
+      "clauses": [
+        {
+          "path": "man/aslice-db.1.md",
+          "start": 73,
+          "end": 79
+        }
+      ],
+      "implementation": [],
+      "implemented": false,
+      "platform_dependencies": [
+        "owner-locks",
+        "restore-journal",
+        "consent",
+        "filesystem-fingerprints"
+      ],
+      "environments": [
+        "windows-native",
+        "linux-native",
+        "simulated-macos",
+        "qualified-intel-macos-10.11-through-12"
+      ],
+      "tests": {
+        "positive": {
+          "scenario": "Preview and explicitly authorize the same validated restore in interactive and unattended modes.",
+          "links": []
+        },
+        "refusal": {
+          "scenario": "Reject missing confirmation, stale backup suffix, missing before-images and external edits.",
+          "links": []
+        },
+        "concurrency": {
+          "scenario": "Change a boundary head after preview and refuse activation under reacquired ownership.",
+          "links": []
+        },
+        "recovery": {
+          "scenario": "Interrupt staging and pair activation, preserve originals and recover from recorded pointers.",
+          "links": []
+        }
+      },
+      "evidence": []
+    },
+    {
+      "id": "ASLICE-DB-009",
+      "statement": "Recovery reconstructs projections and resolves interrupted operations using intact durable records; discover and independently authorize protected participants. Cache rebuilding cannot reset retained trust; missing trust requires explicit trust recovery rather than fresh TOFU.",
+      "owner": "docs/STATE-AND-RECOVERY.md#1025-command-requests-and-outcomes",
+      "review": "Reviewed the complete manual passage against the named owning contract. Database restore uses its own preview consent and exit contract; guided recovery uses STATE-AND-RECOVERY. These records describe required behavior, not portable prototype acceptance.",
+      "reviewed_sources": {
+        "docs/STATE-AND-RECOVERY.md": "3a1c45d4c1c666f065f71b4831f9bd0b85f999cea7d36f5f2cbb494f8f437d18",
+        "man/aslice-db.1.md": "0c1e7026137cd9103a4c8f81fd05307abe6a7d0e62548fb9d583f1145f443137"
+      },
+      "clauses": [
+        {
+          "path": "man/aslice-db.1.md",
+          "start": 81,
+          "end": 84
+        }
+      ],
+      "implementation": [],
+      "implemented": false,
+      "platform_dependencies": [
+        "recovery-journal",
+        "trust-records",
+        "protected-authorization"
+      ],
+      "environments": [
+        "windows-native",
+        "linux-native",
+        "simulated-macos",
+        "qualified-intel-macos-10.11-through-12"
+      ],
+      "tests": {
+        "positive": {
+          "scenario": "Rebuild a missing projection from complete records and protected participant receipts.",
+          "links": []
+        },
+        "refusal": {
+          "scenario": "Refuse missing trust and unauthorized protected effects even if a cache can be recreated.",
+          "links": []
+        },
+        "concurrency": {
+          "scenario": "Require participant ownership while reconstruction and another mutation compete.",
+          "links": []
+        },
+        "recovery": {
+          "scenario": "Resume interrupted reconstruction without resetting trust floors or repeating external effects.",
+          "links": []
+        }
+      },
+      "evidence": []
+    },
+    {
+      "id": "ASLICE-DB-010",
+      "statement": "Query allows SELECT, read-only CTEs, views and approved side-effect-free builtins only; deny multiple statements, writes, DDL, ATTACH/DETACH, PRAGMAs, transactions, extension loading and file/network functions. Enforce 5 seconds, 10000 rows and 16 MiB; discard partial rows on any exceeded limit.",
+      "owner": "docs/DATABASE.md#10-sqlite-connection-and-migration-policy",
+      "review": "Reviewed the complete manual passage against the named owning contract. Database restore uses its own preview consent and exit contract; guided recovery uses STATE-AND-RECOVERY. These records describe required behavior, not portable prototype acceptance.",
+      "reviewed_sources": {
+        "docs/DATABASE.md": "cb75d65afc74286673ab54e0de60e72692e235a8a0447d7ff670c3ad49b9f231",
+        "man/aslice-db.1.md": "0c1e7026137cd9103a4c8f81fd05307abe6a7d0e62548fb9d583f1145f443137"
+      },
+      "clauses": [
+        {
+          "path": "man/aslice-db.1.md",
+          "start": 88,
+          "end": 92
+        }
+      ],
+      "implementation": [],
+      "implemented": false,
+      "platform_dependencies": [
+        "sqlite-authorizer",
+        "monotonic-clock",
+        "resource-limits",
+        "inspection-snapshot"
+      ],
+      "environments": [
+        "windows-native",
+        "linux-native",
+        "simulated-macos",
+        "qualified-intel-macos-10.11-through-12"
+      ],
+      "tests": {
+        "positive": {
+          "scenario": "Query allowed CTEs/views/functions and verify exact deadline, row and byte boundaries.",
+          "links": []
+        },
+        "refusal": {
+          "scenario": "Exercise each forbidden SQL class and each output/execution limit without effects or partial results.",
+          "links": []
+        },
+        "concurrency": {
+          "scenario": "Run bounded readers alongside a writer and ensure they do not pin the live database indefinitely.",
+          "links": []
+        },
+        "recovery": {
+          "scenario": "Terminate inspection and remove its private export without touching owner state.",
+          "links": []
+        }
+      },
+      "evidence": []
+    },
+    {
+      "id": "ASLICE-DB-011",
+      "statement": "Interactive contention shows owner and offers wait/exit; unattended waits require --wait, independent of timeout configuration. Parse nonnegative integer ms/s/m durations, default 30s and 0s single attempt. Count cumulative owner and SQL waits excluding useful work, report progress at 1s then every 5s. Cancellation has one separate 30s recovery allowance; preserve commit, journals, roots and gates, and revalidate/reconfirm changed plans after waiting or recovery.",
+      "owner": "docs/DATABASE.md#101-contention-and-safe-stopping",
+      "review": "Reviewed the complete manual passage against the named owning contract. Database restore uses its own preview consent and exit contract; guided recovery uses STATE-AND-RECOVERY. These records describe required behavior, not portable prototype acceptance.",
+      "reviewed_sources": {
+        "docs/DATABASE.md": "cb75d65afc74286673ab54e0de60e72692e235a8a0447d7ff670c3ad49b9f231",
+        "man/aslice-db.1.md": "0c1e7026137cd9103a4c8f81fd05307abe6a7d0e62548fb9d583f1145f443137"
+      },
+      "clauses": [
+        {
+          "path": "man/aslice-db.1.md",
+          "start": 94,
+          "end": 106
+        }
+      ],
+      "implementation": [],
+      "implemented": false,
+      "platform_dependencies": [
+        "monotonic-clock",
+        "cancellable-locks",
+        "process-ownership",
+        "recovery-journal"
+      ],
+      "environments": [
+        "windows-native",
+        "linux-native",
+        "simulated-macos",
+        "qualified-intel-macos-10.11-through-12"
+      ],
+      "tests": {
+        "positive": {
+          "scenario": "Accumulate waits across owner/SQL locks, verify progress fields and revalidation after acquisition.",
+          "links": []
+        },
+        "refusal": {
+          "scenario": "Refuse unattended implicit waits, invalid durations, overflow and attempts to reset allowances.",
+          "links": []
+        },
+        "concurrency": {
+          "scenario": "Exercise surviving helpers, mixed owner locks and SQLite BUSY without repeating external effects.",
+          "links": []
+        },
+        "recovery": {
+          "scenario": "Cancel each durable phase including recovery itself; reconcile committed work forward or retain an explicit gate.",
+          "links": []
+        }
+      },
+      "evidence": []
+    },
+    {
+      "id": "ASLICE-DB-012",
+      "statement": "Ordinary commands may bypass a busy cache only using complete authenticated inputs in memory and skipping cache writes; explicit cache inspection/maintenance reports contention. Inspection never creates a missing database.",
+      "owner": "docs/DATABASE.md#101-contention-and-safe-stopping",
+      "review": "Reviewed the complete manual passage against the named owning contract. Database restore uses its own preview consent and exit contract; guided recovery uses STATE-AND-RECOVERY. These records describe required behavior, not portable prototype acceptance.",
+      "reviewed_sources": {
+        "docs/DATABASE.md": "cb75d65afc74286673ab54e0de60e72692e235a8a0447d7ff670c3ad49b9f231",
+        "man/aslice-db.1.md": "0c1e7026137cd9103a4c8f81fd05307abe6a7d0e62548fb9d583f1145f443137"
+      },
+      "clauses": [
+        {
+          "path": "man/aslice-db.1.md",
+          "start": 107,
+          "end": 109
+        }
+      ],
+      "implementation": [],
+      "implemented": false,
+      "platform_dependencies": [
+        "authenticated-inputs",
+        "cache-locks",
+        "filesystem"
+      ],
+      "environments": [
+        "windows-native",
+        "linux-native",
+        "simulated-macos",
+        "qualified-intel-macos-10.11-through-12"
+      ],
+      "tests": {
+        "positive": {
+          "scenario": "Complete an ordinary solve with authenticated inputs while cache ownership is busy.",
+          "links": []
+        },
+        "refusal": {
+          "scenario": "Reject stale or incomplete in-memory inputs and never synthesize an absent inspected database.",
+          "links": []
+        },
+        "concurrency": {
+          "scenario": "Hold cache ownership and verify explicit query/maintenance report contention rather than substitute data.",
+          "links": []
+        },
+        "recovery": {
+          "scenario": "Restart with a missing cache while retained trust and choices remain unchanged.",
+          "links": []
+        }
+      },
+      "evidence": []
+    },
+    {
+      "id": "ASLICE-DB-013",
+      "statement": "Refuse unsupported schemas, role/instance or ownership mismatch, incomplete records, stale backups lacking a continuous suffix, missing before-images and external-edit conflicts with a concrete remedy. Signing restore cannot establish uncertain version high-water; SQLite salvage is evidence only.",
+      "owner": "docs/DATABASE.md#112-ordered-restore-procedure",
+      "review": "Reviewed the complete manual passage against the named owning contract. Database restore uses its own preview consent and exit contract; guided recovery uses STATE-AND-RECOVERY. These records describe required behavior, not portable prototype acceptance.",
+      "reviewed_sources": {
+        "docs/DATABASE.md": "cb75d65afc74286673ab54e0de60e72692e235a8a0447d7ff670c3ad49b9f231",
+        "man/aslice-db.1.md": "0c1e7026137cd9103a4c8f81fd05307abe6a7d0e62548fb9d583f1145f443137"
+      },
+      "clauses": [
+        {
+          "path": "man/aslice-db.1.md",
+          "start": 111,
+          "end": 115
+        }
+      ],
+      "implementation": [],
+      "implemented": false,
+      "platform_dependencies": [
+        "identity-validation",
+        "trust-records",
+        "restore-journal"
+      ],
+      "environments": [
+        "windows-native",
+        "linux-native",
+        "simulated-macos",
+        "qualified-intel-macos-10.11-through-12"
+      ],
+      "tests": {
+        "positive": {
+          "scenario": "Restore a verified continuous suffix with independently established latest signing reservations.",
+          "links": []
+        },
+        "refusal": {
+          "scenario": "Exercise each identity/evidence refusal and never promote salvage rows into trusted state.",
+          "links": []
+        },
+        "concurrency": {
+          "scenario": "Detect a counterpart reservation advanced during restore and require a new validated boundary.",
+          "links": []
+        },
+        "recovery": {
+          "scenario": "Reconstruct after projection loss while retaining unpublished reservations and conflicting evidence.",
+          "links": []
+        }
+      },
+      "evidence": []
+    },
+    {
+      "id": "ASLICE-DB-014",
+      "statement": "Human database output uses tables and stderr diagnostics; JSON is one format-1 envelope with command, role, instance_id, status, data and stable code/message/remedy errors with optional path. Timeout/cancellation data exposes phase, committed, recovery_required and retry_safe; committed pending recovery is never unchanged or safely retryable.",
+      "owner": "docs/DATABASE.md#13-command-and-output-contracts",
+      "review": "Reviewed the complete manual passage against the named owning contract. Database restore uses its own preview consent and exit contract; guided recovery uses STATE-AND-RECOVERY. These records describe required behavior, not portable prototype acceptance.",
+      "reviewed_sources": {
+        "docs/DATABASE.md": "cb75d65afc74286673ab54e0de60e72692e235a8a0447d7ff670c3ad49b9f231",
+        "man/aslice-db.1.md": "0c1e7026137cd9103a4c8f81fd05307abe6a7d0e62548fb9d583f1145f443137"
+      },
+      "clauses": [
+        {
+          "path": "man/aslice-db.1.md",
+          "start": 136,
+          "end": 143
+        }
+      ],
+      "implementation": [],
+      "implemented": false,
+      "platform_dependencies": [
+        "output-serialization",
+        "durable-phase"
+      ],
+      "environments": [
+        "windows-native",
+        "linux-native",
+        "simulated-macos",
+        "qualified-intel-macos-10.11-through-12"
+      ],
+      "tests": {
+        "positive": {
+          "scenario": "Validate each envelope and status including null list role/instance and phase diagnostics.",
+          "links": []
+        },
+        "refusal": {
+          "scenario": "Never claim safe retry or unchanged state for a committed unresolved operation.",
+          "links": []
+        },
+        "concurrency": {
+          "scenario": "Keep lock-wait progress on stderr and stdout exactly one JSON object.",
+          "links": []
+        },
+        "recovery": {
+          "scenario": "Preserve committed and recovery-required reporting after restart and failed reconciliation.",
+          "links": []
+        }
+      },
+      "evidence": []
+    },
+    {
+      "id": "ASLICE-DB-015",
+      "statement": "Query output preserves ordered column names and positional rows, nulls, base64 bytes objects and decimal strings for integers outside JSON safe range; mark exceeded limits truncated. Backup reports digest, heads, byte counts, completeness and missing participants. Restore preview binds set digest, current heads, identities, ownership mapping, paths and effects.",
+      "owner": "docs/DATABASE.md#13-command-and-output-contracts",
+      "review": "Reviewed the complete manual passage against the named owning contract. Database restore uses its own preview consent and exit contract; guided recovery uses STATE-AND-RECOVERY. These records describe required behavior, not portable prototype acceptance.",
+      "reviewed_sources": {
+        "docs/DATABASE.md": "cb75d65afc74286673ab54e0de60e72692e235a8a0447d7ff670c3ad49b9f231",
+        "man/aslice-db.1.md": "0c1e7026137cd9103a4c8f81fd05307abe6a7d0e62548fb9d583f1145f443137"
+      },
+      "clauses": [
+        {
+          "path": "man/aslice-db.1.md",
+          "start": 145,
+          "end": 150
+        }
+      ],
+      "implementation": [],
+      "implemented": false,
+      "platform_dependencies": [
+        "output-serialization",
+        "snapshot-identities"
+      ],
+      "environments": [
+        "windows-native",
+        "linux-native",
+        "simulated-macos",
+        "qualified-intel-macos-10.11-through-12"
+      ],
+      "tests": {
+        "positive": {
+          "scenario": "Round-trip duplicate columns, null/BLOB and large signed integers; verify backup and restore bindings.",
+          "links": []
+        },
+        "refusal": {
+          "scenario": "Discard partial rows on limits and refuse preview authorization after any bound value changes.",
+          "links": []
+        },
+        "concurrency": {
+          "scenario": "Capture query data and backup heads consistently while unrelated owners progress.",
+          "links": []
+        },
+        "recovery": {
+          "scenario": "Retain the same exact preview bindings through interrupted staging or invalidate consent.",
+          "links": []
+        }
+      },
+      "evidence": []
+    },
+    {
+      "id": "ASLICE-DB-016",
+      "statement": "Database commands return 0 success, 1 failed check/I/O/needs-attention, 2 usage/unsafe SQL/unsupported schema, 3 authorization/confirmation refusal, 4 busy/changed base without unresolved recovery, and 130 safely completed cancellation. Recovery-required returns 1 and optional busy maintenance preserves foreground success; partial backup/check failure never succeeds.",
+      "owner": "docs/DATABASE.md#13-command-and-output-contracts",
+      "review": "Reviewed the complete manual passage against the named owning contract. Database restore uses its own preview consent and exit contract; guided recovery uses STATE-AND-RECOVERY. These records describe required behavior, not portable prototype acceptance.",
+      "reviewed_sources": {
+        "docs/DATABASE.md": "cb75d65afc74286673ab54e0de60e72692e235a8a0447d7ff670c3ad49b9f231",
+        "man/aslice-db.1.md": "0c1e7026137cd9103a4c8f81fd05307abe6a7d0e62548fb9d583f1145f443137"
+      },
+      "clauses": [
+        {
+          "path": "man/aslice-db.1.md",
+          "start": 154,
+          "end": 158
+        }
+      ],
+      "implementation": [],
+      "implemented": false,
+      "platform_dependencies": [
+        "exit-status",
+        "durable-phase"
+      ],
+      "environments": [
+        "windows-native",
+        "linux-native",
+        "simulated-macos",
+        "qualified-intel-macos-10.11-through-12"
+      ],
+      "tests": {
+        "positive": {
+          "scenario": "Assert exit/output pairs for each command outcome and successful foreground work with deferred maintenance.",
+          "links": []
+        },
+        "refusal": {
+          "scenario": "Return 3 for db restore confirmation refusal, preserving its distinction from guided recover exit 2.",
+          "links": []
+        },
+        "concurrency": {
+          "scenario": "Return 4 only when busy or changed base has no unresolved recovery.",
+          "links": []
+        },
+        "recovery": {
+          "scenario": "Return 130 only after safe resolution and 1 for unresolved cancellation or recovery.",
+          "links": []
+        }
+      },
+      "evidence": []
+    },
+    {
+      "id": "ASLICE-DB-017",
+      "statement": "Use prefix state/cache paths, the fixed protected system-state path and service-local databases rooted in protected provisioning configuration. SQLite owns WAL/SHM; separate records, trust, journals and immutable objects are required backup/reconstruction material, not replaceable by a database file alone.",
+      "owner": "docs/DATABASE.md#11-files-owners-and-creation",
+      "review": "Reviewed the complete manual passage against the named owning contract. Database restore uses its own preview consent and exit contract; guided recovery uses STATE-AND-RECOVERY. These records describe required behavior, not portable prototype acceptance.",
+      "reviewed_sources": {
+        "docs/DATABASE.md": "cb75d65afc74286673ab54e0de60e72692e235a8a0447d7ff670c3ad49b9f231",
+        "man/aslice-db.1.md": "0c1e7026137cd9103a4c8f81fd05307abe6a7d0e62548fb9d583f1145f443137"
+      },
+      "clauses": [
+        {
+          "path": "man/aslice-db.1.md",
+          "start": 162,
+          "end": 173
+        }
+      ],
+      "implementation": [],
+      "implemented": false,
+      "platform_dependencies": [
+        "filesystem-authority",
+        "owner-configuration",
+        "sqlite-vfs"
+      ],
+      "environments": [
+        "windows-native",
+        "linux-native",
+        "simulated-macos",
+        "qualified-intel-macos-10.11-through-12"
+      ],
+      "tests": {
+        "positive": {
+          "scenario": "Resolve each role to its configured slot and include all required external material in backup.",
+          "links": []
+        },
+        "refusal": {
+          "scenario": "Reject user-controlled protected roots, network shares and a database-only restore set.",
+          "links": []
+        },
+        "concurrency": {
+          "scenario": "Maintain distinct service roots and owner isolation on a shared host.",
+          "links": []
+        },
+        "recovery": {
+          "scenario": "Preserve sidecars, authoritative records and old pairs during damaged projection recovery.",
+          "links": []
+        }
+      },
+      "evidence": []
+    },
+    {
+      "id": "ASLICE-DB-018",
+      "statement": "Guided continuation, manual repair, salvage, activation and operation status/stop follow the recovery manual action/exit contract. Database restore retains its separate --confirm preview-digest authorization.",
+      "owner": "man/aslice-recover.1.md#recovery-actions-and-consent",
+      "review": "Reviewed the complete manual passage against the named owning contract. Database restore uses its own preview consent and exit contract; guided recovery uses STATE-AND-RECOVERY. These records describe required behavior, not portable prototype acceptance.",
+      "reviewed_sources": {
+        "man/aslice-db.1.md": "0c1e7026137cd9103a4c8f81fd05307abe6a7d0e62548fb9d583f1145f443137",
+        "man/aslice-recover.1.md": "cfd0645c18eb01590b11b62f1300322fe4f16fa7f9acefc29b722ceafd8a8856"
+      },
+      "clauses": [
+        {
+          "path": "man/aslice-db.1.md",
+          "start": 177,
+          "end": 180
+        }
+      ],
+      "implementation": [],
+      "implemented": false,
+      "platform_dependencies": [
+        "command-dispatch",
+        "consent"
+      ],
+      "environments": [
+        "windows-native",
+        "linux-native",
+        "simulated-macos",
+        "qualified-intel-macos-10.11-through-12"
+      ],
+      "tests": {
+        "positive": {
+          "scenario": "Dispatch db restore and guided recovery to their independently reviewed consent contracts.",
+          "links": []
+        },
+        "refusal": {
+          "scenario": "Reject substitution of --confirm for --confirm-plan or generic yes for a recovery action.",
+          "links": []
+        },
+        "concurrency": {
+          "scenario": "Bind confirmation to the owning operation and reject a changed current operation.",
+          "links": []
+        },
+        "recovery": {
+          "scenario": "Resume using the retained action-specific authorization without inferring new activation consent.",
+          "links": []
+        }
+      },
+      "evidence": []
+    },
+    {
+      "id": "ASLICE-RECOVER-001",
+      "statement": "Operation status is read-only and reports owner, identity, phase, helpers, verification and recovery; absent operation identity is null, and successful status never clears a gate.",
+      "owner": "docs/STATE-AND-RECOVERY.md#1025-command-requests-and-outcomes",
+      "review": "Reviewed the complete manual passage against the named owning contract. Database restore uses its own preview consent and exit contract; guided recovery uses STATE-AND-RECOVERY. These records describe required behavior, not portable prototype acceptance.",
+      "reviewed_sources": {
+        "docs/STATE-AND-RECOVERY.md": "3a1c45d4c1c666f065f71b4831f9bd0b85f999cea7d36f5f2cbb494f8f437d18",
+        "man/aslice-recover.1.md": "cfd0645c18eb01590b11b62f1300322fe4f16fa7f9acefc29b722ceafd8a8856"
+      },
+      "clauses": [
+        {
+          "path": "man/aslice-recover.1.md",
+          "start": 24,
+          "end": 26
+        }
+      ],
+      "implementation": [],
+      "implemented": false,
+      "platform_dependencies": [
+        "process-ownership",
+        "execution-catalog",
+        "output-serialization"
+      ],
+      "environments": [
+        "windows-native",
+        "linux-native",
+        "simulated-macos",
+        "qualified-intel-macos-10.11-through-12"
+      ],
+      "tests": {
+        "positive": {
+          "scenario": "Inspect active, complete and absent operations with all required status fields.",
+          "links": []
+        },
+        "refusal": {
+          "scenario": "Prevent status access from repairing state or clearing a persisted mutation gate.",
+          "links": []
+        },
+        "concurrency": {
+          "scenario": "Inspect a changing owner/helper set without conflating identities across operations.",
+          "links": []
+        },
+        "recovery": {
+          "scenario": "Report durable operation state after manager death, including surviving helpers.",
+          "links": []
+        }
+      },
+      "evidence": []
+    },
+    {
+      "id": "ASLICE-RECOVER-002",
+      "statement": "Operation stop authenticates initiating user or administrator and binds to an exact operation ID, mandatory unattended or interactively confirmed. Changed IDs refuse and unknown IDs are input errors. Before commit attempt rollback; after commit safely stop checks and report incomplete verification. Stopping grants no recovery authority.",
+      "owner": "docs/STATE-AND-RECOVERY.md#1025-command-requests-and-outcomes",
+      "review": "Reviewed the complete manual passage against the named owning contract. Database restore uses its own preview consent and exit contract; guided recovery uses STATE-AND-RECOVERY. These records describe required behavior, not portable prototype acceptance.",
+      "reviewed_sources": {
+        "docs/STATE-AND-RECOVERY.md": "3a1c45d4c1c666f065f71b4831f9bd0b85f999cea7d36f5f2cbb494f8f437d18",
+        "man/aslice-recover.1.md": "cfd0645c18eb01590b11b62f1300322fe4f16fa7f9acefc29b722ceafd8a8856"
+      },
+      "clauses": [
+        {
+          "path": "man/aslice-recover.1.md",
+          "start": 28,
+          "end": 33
+        }
+      ],
+      "implementation": [],
+      "implemented": false,
+      "platform_dependencies": [
+        "caller-authentication",
+        "process-cancellation",
+        "operation-identity"
+      ],
+      "environments": [
+        "windows-native",
+        "linux-native",
+        "simulated-macos",
+        "qualified-intel-macos-10.11-through-12"
+      ],
+      "tests": {
+        "positive": {
+          "scenario": "Stop before/after commit as the initiator and authenticated administrator.",
+          "links": []
+        },
+        "refusal": {
+          "scenario": "Reject unrelated callers, unknown IDs and unattended missing IDs without granting recovery.",
+          "links": []
+        },
+        "concurrency": {
+          "scenario": "Replace the active operation after display and refuse the stale stop request.",
+          "links": []
+        },
+        "recovery": {
+          "scenario": "Stop surviving helpers safely and retain committed installation and incomplete verification.",
+          "links": []
+        }
+      },
+      "evidence": []
+    },
+    {
+      "id": "ASLICE-RECOVER-003",
+      "statement": "Recover uses intact durable records to resolve interrupted operations and rebuild projections, offers guided continuation and resumes saved progress only when evidence agrees. Trust loss requires explicit recovery, protected participants independent authorization; db role/instance selectors grant no authority and default to selected prefix client-state.",
+      "owner": "docs/STATE-AND-RECOVERY.md#51-guided-recovery-and-trusted-prefix-rebuilding",
+      "review": "Reviewed the complete manual passage against the named owning contract. Database restore uses its own preview consent and exit contract; guided recovery uses STATE-AND-RECOVERY. These records describe required behavior, not portable prototype acceptance.",
+      "reviewed_sources": {
+        "docs/STATE-AND-RECOVERY.md": "3a1c45d4c1c666f065f71b4831f9bd0b85f999cea7d36f5f2cbb494f8f437d18",
+        "man/aslice-recover.1.md": "cfd0645c18eb01590b11b62f1300322fe4f16fa7f9acefc29b722ceafd8a8856"
+      },
+      "clauses": [
+        {
+          "path": "man/aslice-recover.1.md",
+          "start": 35,
+          "end": 40
+        }
+      ],
+      "implementation": [],
+      "implemented": false,
+      "platform_dependencies": [
+        "durable-records",
+        "protected-authorization",
+        "owner-configuration"
+      ],
+      "environments": [
+        "windows-native",
+        "linux-native",
+        "simulated-macos",
+        "qualified-intel-macos-10.11-through-12"
+      ],
+      "tests": {
+        "positive": {
+          "scenario": "Reconstruct a projection and resume retained progress with matching evidence.",
+          "links": []
+        },
+        "refusal": {
+          "scenario": "Refuse trust reset, wrong instance or unauthorized protected participant recovery.",
+          "links": []
+        },
+        "concurrency": {
+          "scenario": "Serialize conflicting recovery while unaffected verified closures remain accessible.",
+          "links": []
+        },
+        "recovery": {
+          "scenario": "Interrupt recovery repeatedly and resume only validated saved decisions.",
+          "links": []
+        }
+      },
+      "evidence": []
+    },
+    {
+      "id": "ASLICE-RECOVER-004",
+      "statement": "Continue requires an established interrupted operation and authorizes its retained request, with fresh confirmation for material changes. Manual repair quiesces helpers and persists the mutation gate across exit/reboot until repairs validate.",
+      "owner": "docs/STATE-AND-RECOVERY.md#1025-command-requests-and-outcomes",
+      "review": "Reviewed the complete manual passage against the named owning contract. Database restore uses its own preview consent and exit contract; guided recovery uses STATE-AND-RECOVERY. These records describe required behavior, not portable prototype acceptance.",
+      "reviewed_sources": {
+        "docs/STATE-AND-RECOVERY.md": "3a1c45d4c1c666f065f71b4831f9bd0b85f999cea7d36f5f2cbb494f8f437d18",
+        "man/aslice-recover.1.md": "cfd0645c18eb01590b11b62f1300322fe4f16fa7f9acefc29b722ceafd8a8856"
+      },
+      "clauses": [
+        {
+          "path": "man/aslice-recover.1.md",
+          "start": 44,
+          "end": 50
+        }
+      ],
+      "implementation": [],
+      "implemented": false,
+      "platform_dependencies": [
+        "helper-quiescence",
+        "mutation-gates",
+        "consent"
+      ],
+      "environments": [
+        "windows-native",
+        "linux-native",
+        "simulated-macos",
+        "qualified-intel-macos-10.11-through-12"
+      ],
+      "tests": {
+        "positive": {
+          "scenario": "Continue an interrupted request and enter manual mode only after helpers stop writing.",
+          "links": []
+        },
+        "refusal": {
+          "scenario": "Refuse continuation without an interrupted operation or with materially stale confirmation.",
+          "links": []
+        },
+        "concurrency": {
+          "scenario": "Hold conflicting mutations while manual repairs coexist with unaffected runtime use.",
+          "links": []
+        },
+        "recovery": {
+          "scenario": "Reboot in manual mode and validate repairs before explicitly clearing the durable gate.",
+          "links": []
+        }
+      },
+      "evidence": []
+    },
+    {
+      "id": "ASLICE-RECOVER-005",
+      "statement": "Salvage prepares a verified replacement beside the preserved original and reports missing bytes, verified replacements, omissions and unresolved repairs. Activation is separately reviewed and revalidated at the recorded replacement path; preparation grants no activation authority and no positional path argument is specified.",
+      "owner": "docs/STATE-AND-RECOVERY.md#51-guided-recovery-and-trusted-prefix-rebuilding",
+      "review": "Reviewed the complete manual passage against the named owning contract. Database restore uses its own preview consent and exit contract; guided recovery uses STATE-AND-RECOVERY. These records describe required behavior, not portable prototype acceptance.",
+      "reviewed_sources": {
+        "docs/STATE-AND-RECOVERY.md": "3a1c45d4c1c666f065f71b4831f9bd0b85f999cea7d36f5f2cbb494f8f437d18",
+        "man/aslice-recover.1.md": "cfd0645c18eb01590b11b62f1300322fe4f16fa7f9acefc29b722ceafd8a8856"
+      },
+      "clauses": [
+        {
+          "path": "man/aslice-recover.1.md",
+          "start": 52,
+          "end": 59
+        }
+      ],
+      "implementation": [],
+      "implemented": false,
+      "platform_dependencies": [
+        "filesystem-fingerprints",
+        "artifact-verification",
+        "activation-journal"
+      ],
+      "environments": [
+        "windows-native",
+        "linux-native",
+        "simulated-macos",
+        "qualified-intel-macos-10.11-through-12"
+      ],
+      "tests": {
+        "positive": {
+          "scenario": "Prepare a replacement with complete omissions/repair diagnostics then separately authorize activation.",
+          "links": []
+        },
+        "refusal": {
+          "scenario": "Reject automatic activation after salvage and unrecorded positional replacement paths.",
+          "links": []
+        },
+        "concurrency": {
+          "scenario": "Detect changes to original or replacement after review before activation.",
+          "links": []
+        },
+        "recovery": {
+          "scenario": "Interrupt preparation/activation and retain both trees and restartable verified progress.",
+          "links": []
+        }
+      },
+      "evidence": []
+    },
+    {
+      "id": "ASLICE-RECOVER-006",
+      "statement": "Dry-run JSON returns full proposed recovery plan and digest with requirements/conflicts without mutation. Unattended execution requires exactly one action plus --confirm-plan sha256:HEX; recompute under ownership before writes. Interactive execution reviews/confirms the action. Generic yes or a digest cannot replace required system/graft consents, authentication or repository capabilities.",
+      "owner": "docs/STATE-AND-RECOVERY.md#1025-command-requests-and-outcomes",
+      "review": "Reviewed the complete manual passage against the named owning contract. Database restore uses its own preview consent and exit contract; guided recovery uses STATE-AND-RECOVERY. These records describe required behavior, not portable prototype acceptance.",
+      "reviewed_sources": {
+        "docs/STATE-AND-RECOVERY.md": "3a1c45d4c1c666f065f71b4831f9bd0b85f999cea7d36f5f2cbb494f8f437d18",
+        "man/aslice-recover.1.md": "cfd0645c18eb01590b11b62f1300322fe4f16fa7f9acefc29b722ceafd8a8856"
+      },
+      "clauses": [
+        {
+          "path": "man/aslice-recover.1.md",
+          "start": 61,
+          "end": 73
+        }
+      ],
+      "implementation": [],
+      "implemented": false,
+      "platform_dependencies": [
+        "canonical-plan-digest",
+        "mutation-ownership",
+        "consent",
+        "capabilities"
+      ],
+      "environments": [
+        "windows-native",
+        "linux-native",
+        "simulated-macos",
+        "qualified-intel-macos-10.11-through-12"
+      ],
+      "tests": {
+        "positive": {
+          "scenario": "Preview each action without writes and authorize its unchanged canonical plan with all required consents.",
+          "links": []
+        },
+        "refusal": {
+          "scenario": "Reject conflicting actions, digest-only requests, generic yes, absent consents or insufficient capabilities.",
+          "links": []
+        },
+        "concurrency": {
+          "scenario": "Change metadata or evidence after preview and reject the digest under acquired ownership before writes.",
+          "links": []
+        },
+        "recovery": {
+          "scenario": "Resume interrupted actions without inventing consent for additional protected effects.",
+          "links": []
+        }
+      },
+      "evidence": []
+    },
+    {
+      "id": "ASLICE-RECOVER-007",
+      "statement": "Recovery blocks conflicting mutations while unaffected verified packages and external repair tools remain usable. Distinguish repaired, usable with unresolved repairs and replacement prepared with activation blocked. Isolated replacement execution follows profile rules; recovery requests are not package plans accepted by apply.",
+      "owner": "docs/STATE-AND-RECOVERY.md#52-working-package-access-and-shims",
+      "review": "Reviewed the complete manual passage against the named owning contract. Database restore uses its own preview consent and exit contract; guided recovery uses STATE-AND-RECOVERY. These records describe required behavior, not portable prototype acceptance.",
+      "reviewed_sources": {
+        "docs/STATE-AND-RECOVERY.md": "3a1c45d4c1c666f065f71b4831f9bd0b85f999cea7d36f5f2cbb494f8f437d18",
+        "man/aslice-recover.1.md": "cfd0645c18eb01590b11b62f1300322fe4f16fa7f9acefc29b722ceafd8a8856"
+      },
+      "clauses": [
+        {
+          "path": "man/aslice-recover.1.md",
+          "start": 75,
+          "end": 79
+        }
+      ],
+      "implementation": [],
+      "implemented": false,
+      "platform_dependencies": [
+        "execution-catalog",
+        "mutation-gates",
+        "runtime-leases"
+      ],
+      "environments": [
+        "windows-native",
+        "linux-native",
+        "simulated-macos",
+        "qualified-intel-macos-10.11-through-12"
+      ],
+      "tests": {
+        "positive": {
+          "scenario": "Execute unaffected verified closures and report partial usability independently of repair completion.",
+          "links": []
+        },
+        "refusal": {
+          "scenario": "Refuse gated affected closures, unauthorized activation and recovery envelopes submitted to apply.",
+          "links": []
+        },
+        "concurrency": {
+          "scenario": "Run unaffected leases while recovery holds ownership of conflicting mutations.",
+          "links": []
+        },
+        "recovery": {
+          "scenario": "Preserve availability decisions and unresolved repairs across interruption without blanket denial.",
+          "links": []
+        }
+      },
+      "evidence": []
+    },
+    {
+      "id": "ASLICE-RECOVER-008",
+      "statement": "Recovery/status/stop return 0 completed action or successful preview/status; 1 failure, unresolved recovery/activation, pending reboot or incomplete postcommit verification; 2 invalid input, stale confirmation or missing consent/authority; 4 contention without unresolved recovery or mutation; 130 safely completed cancellation. Unresolved cancellation returns 1. Successful salvage may have activation_allowed false; committed work cannot be retried as a fresh mutation.",
+      "owner": "docs/STATE-AND-RECOVERY.md#1025-command-requests-and-outcomes",
+      "review": "Reviewed the complete manual passage against the named owning contract. Database restore uses its own preview consent and exit contract; guided recovery uses STATE-AND-RECOVERY. These records describe required behavior, not portable prototype acceptance.",
+      "reviewed_sources": {
+        "docs/STATE-AND-RECOVERY.md": "3a1c45d4c1c666f065f71b4831f9bd0b85f999cea7d36f5f2cbb494f8f437d18",
+        "man/aslice-recover.1.md": "cfd0645c18eb01590b11b62f1300322fe4f16fa7f9acefc29b722ceafd8a8856"
+      },
+      "clauses": [
+        {
+          "path": "man/aslice-recover.1.md",
+          "start": 94,
+          "end": 100
+        }
+      ],
+      "implementation": [],
+      "implemented": false,
+      "platform_dependencies": [
+        "exit-status",
+        "durable-phase",
+        "verification-status"
+      ],
+      "environments": [
+        "windows-native",
+        "linux-native",
+        "simulated-macos",
+        "qualified-intel-macos-10.11-through-12"
+      ],
+      "tests": {
+        "positive": {
+          "scenario": "Check all action/exit pairs including successful salvage with activation blocked and read-only status.",
+          "links": []
+        },
+        "refusal": {
+          "scenario": "Return 2 for guided recovery missing authority or stale confirmation; do not substitute db restore exit 3.",
+          "links": []
+        },
+        "concurrency": {
+          "scenario": "Return 4 only for contention without started mutation or unresolved recovery.",
+          "links": []
+        },
+        "recovery": {
+          "scenario": "Report 1 for incomplete postcommit verification and unresolved cancellation; preserve commit reporting.",
+          "links": []
+        }
+      },
+      "evidence": []
     }
   ],
   "classifications": [
@@ -9279,6 +10554,126 @@
       "kind": "context",
       "reason": "Related-manual navigation; behavioral obligations are mapped above.",
       "sha256": "959697e7bc2c23f43dc18ff85e108a67ac267301584c06adadd054bcb7125609"
+    },
+    {
+      "path": "man/aslice-db.1.md",
+      "start": 1,
+      "end": 9,
+      "kind": "context",
+      "reason": "Manual identification and synopsis heading.",
+      "sha256": "0c1e7026137cd9103a4c8f81fd05307abe6a7d0e62548fb9d583f1145f443137"
+    },
+    {
+      "path": "man/aslice-db.1.md",
+      "start": 29,
+      "end": 35,
+      "kind": "context",
+      "reason": "Description heading, explicit prototype limitation and ownership navigation; this does not exempt the future interfaces from current requirements.",
+      "sha256": "0c1e7026137cd9103a4c8f81fd05307abe6a7d0e62548fb9d583f1145f443137"
+    },
+    {
+      "path": "man/aslice-db.1.md",
+      "start": 86,
+      "end": 86,
+      "kind": "context",
+      "reason": "Section heading.",
+      "sha256": "0c1e7026137cd9103a4c8f81fd05307abe6a7d0e62548fb9d583f1145f443137"
+    },
+    {
+      "path": "man/aslice-db.1.md",
+      "start": 117,
+      "end": 132,
+      "kind": "context",
+      "reason": "Examples repeat reviewed commands and preview-digest binding; illustrative SQL and instance paths add no obligations.",
+      "sha256": "0c1e7026137cd9103a4c8f81fd05307abe6a7d0e62548fb9d583f1145f443137"
+    },
+    {
+      "path": "man/aslice-db.1.md",
+      "start": 134,
+      "end": 134,
+      "kind": "context",
+      "reason": "Section heading.",
+      "sha256": "0c1e7026137cd9103a4c8f81fd05307abe6a7d0e62548fb9d583f1145f443137"
+    },
+    {
+      "path": "man/aslice-db.1.md",
+      "start": 152,
+      "end": 152,
+      "kind": "context",
+      "reason": "Section heading.",
+      "sha256": "0c1e7026137cd9103a4c8f81fd05307abe6a7d0e62548fb9d583f1145f443137"
+    },
+    {
+      "path": "man/aslice-db.1.md",
+      "start": 160,
+      "end": 160,
+      "kind": "context",
+      "reason": "Section heading.",
+      "sha256": "0c1e7026137cd9103a4c8f81fd05307abe6a7d0e62548fb9d583f1145f443137"
+    },
+    {
+      "path": "man/aslice-db.1.md",
+      "start": 175,
+      "end": 175,
+      "kind": "context",
+      "reason": "Section heading.",
+      "sha256": "0c1e7026137cd9103a4c8f81fd05307abe6a7d0e62548fb9d583f1145f443137"
+    },
+    {
+      "path": "man/aslice-db.1.md",
+      "start": 182,
+      "end": 185,
+      "kind": "context",
+      "reason": "Related-contract navigation.",
+      "sha256": "0c1e7026137cd9103a4c8f81fd05307abe6a7d0e62548fb9d583f1145f443137"
+    },
+    {
+      "path": "man/aslice-recover.1.md",
+      "start": 1,
+      "end": 9,
+      "kind": "context",
+      "reason": "Manual identification and synopsis heading.",
+      "sha256": "cfd0645c18eb01590b11b62f1300322fe4f16fa7f9acefc29b722ceafd8a8856"
+    },
+    {
+      "path": "man/aslice-recover.1.md",
+      "start": 20,
+      "end": 22,
+      "kind": "context",
+      "reason": "Description heading and explicit statement that a specified interface is not evidence of implementation.",
+      "sha256": "cfd0645c18eb01590b11b62f1300322fe4f16fa7f9acefc29b722ceafd8a8856"
+    },
+    {
+      "path": "man/aslice-recover.1.md",
+      "start": 42,
+      "end": 42,
+      "kind": "context",
+      "reason": "Section heading.",
+      "sha256": "cfd0645c18eb01590b11b62f1300322fe4f16fa7f9acefc29b722ceafd8a8856"
+    },
+    {
+      "path": "man/aslice-recover.1.md",
+      "start": 81,
+      "end": 90,
+      "kind": "context",
+      "reason": "Examples repeat reviewed stop identity, salvage preview and digest confirmation obligations.",
+      "sha256": "cfd0645c18eb01590b11b62f1300322fe4f16fa7f9acefc29b722ceafd8a8856"
+    },
+    {
+      "path": "man/aslice-recover.1.md",
+      "start": 92,
+      "end": 92,
+      "kind": "context",
+      "reason": "Section heading.",
+      "sha256": "cfd0645c18eb01590b11b62f1300322fe4f16fa7f9acefc29b722ceafd8a8856"
+    },
+    {
+      "path": "man/aslice-recover.1.md",
+      "start": 102,
+      "end": 105,
+      "kind": "context",
+      "reason": "Related-contract navigation.",
+      "sha256": "cfd0645c18eb01590b11b62f1300322fe4f16fa7f9acefc29b722ceafd8a8856"
     }
   ],
   "commands": {
@@ -9567,7 +10962,14 @@
       "implementation": "missing",
       "scope": "Specified command; production contract implementation and acceptance evidence are missing.",
       "requirements": [
-        "ASLICE-SYNTAX-024"
+        "ASLICE-SYNTAX-024",
+        "ASLICE-DB-001",
+        "ASLICE-DB-007",
+        "ASLICE-DB-011",
+        "ASLICE-DB-014",
+        "ASLICE-DB-015",
+        "ASLICE-DB-016",
+        "ASLICE-DB-017"
       ],
       "synopses": [
         {
@@ -9584,7 +10986,17 @@
       "implementation": "missing",
       "scope": "Specified command; production contract implementation and acceptance evidence are missing.",
       "requirements": [
-        "ASLICE-SYNTAX-021"
+        "ASLICE-SYNTAX-021",
+        "ASLICE-DB-001",
+        "ASLICE-DB-002",
+        "ASLICE-DB-005",
+        "ASLICE-DB-006",
+        "ASLICE-DB-011",
+        "ASLICE-DB-012",
+        "ASLICE-DB-013",
+        "ASLICE-DB-014",
+        "ASLICE-DB-016",
+        "ASLICE-DB-017"
       ],
       "synopses": [
         {
@@ -9601,7 +11013,13 @@
       "implementation": "missing",
       "scope": "Specified command; production contract implementation and acceptance evidence are missing.",
       "requirements": [
-        "ASLICE-SYNTAX-023"
+        "ASLICE-SYNTAX-023",
+        "ASLICE-DB-001",
+        "ASLICE-DB-004",
+        "ASLICE-DB-011",
+        "ASLICE-DB-014",
+        "ASLICE-DB-016",
+        "ASLICE-DB-017"
       ],
       "synopses": [
         {
@@ -9618,7 +11036,13 @@
       "implementation": "missing",
       "scope": "Specified command; production contract implementation and acceptance evidence are missing.",
       "requirements": [
-        "ASLICE-SYNTAX-018"
+        "ASLICE-SYNTAX-018",
+        "ASLICE-DB-001",
+        "ASLICE-DB-011",
+        "ASLICE-DB-012",
+        "ASLICE-DB-014",
+        "ASLICE-DB-016",
+        "ASLICE-DB-017"
       ],
       "synopses": [
         {
@@ -9635,7 +11059,16 @@
       "implementation": "missing",
       "scope": "Specified command; production contract implementation and acceptance evidence are missing.",
       "requirements": [
-        "ASLICE-SYNTAX-022"
+        "ASLICE-SYNTAX-022",
+        "ASLICE-DB-001",
+        "ASLICE-DB-003",
+        "ASLICE-DB-004",
+        "ASLICE-DB-006",
+        "ASLICE-DB-011",
+        "ASLICE-DB-012",
+        "ASLICE-DB-014",
+        "ASLICE-DB-016",
+        "ASLICE-DB-017"
       ],
       "synopses": [
         {
@@ -9652,7 +11085,16 @@
       "implementation": "missing",
       "scope": "Specified command; production contract implementation and acceptance evidence are missing.",
       "requirements": [
-        "ASLICE-SYNTAX-020"
+        "ASLICE-SYNTAX-020",
+        "ASLICE-DB-001",
+        "ASLICE-DB-002",
+        "ASLICE-DB-010",
+        "ASLICE-DB-011",
+        "ASLICE-DB-012",
+        "ASLICE-DB-014",
+        "ASLICE-DB-015",
+        "ASLICE-DB-016",
+        "ASLICE-DB-017"
       ],
       "synopses": [
         {
@@ -9669,7 +11111,16 @@
       "implementation": "missing",
       "scope": "Specified command; production contract implementation and acceptance evidence are missing.",
       "requirements": [
-        "ASLICE-SYNTAX-025"
+        "ASLICE-SYNTAX-025",
+        "ASLICE-DB-001",
+        "ASLICE-DB-008",
+        "ASLICE-DB-011",
+        "ASLICE-DB-013",
+        "ASLICE-DB-014",
+        "ASLICE-DB-015",
+        "ASLICE-DB-016",
+        "ASLICE-DB-017",
+        "ASLICE-DB-018"
       ],
       "synopses": [
         {
@@ -9687,7 +11138,13 @@
       "scope": "Shipped DDL output exists; live schema inspection, selectors and the complete documented contract remain missing.",
       "requirements": [
         "ASLICE-DATABASE-001",
-        "ASLICE-SYNTAX-019"
+        "ASLICE-SYNTAX-019",
+        "ASLICE-DB-001",
+        "ASLICE-DB-002",
+        "ASLICE-DB-011",
+        "ASLICE-DB-014",
+        "ASLICE-DB-016",
+        "ASLICE-DB-017"
       ],
       "synopses": [
         {
@@ -10198,7 +11655,10 @@
       "implementation": "missing",
       "scope": "Specified command; production contract implementation and acceptance evidence are missing.",
       "requirements": [
-        "ASLICE-SYNTAX-071"
+        "ASLICE-SYNTAX-071",
+        "ASLICE-DB-018",
+        "ASLICE-RECOVER-001",
+        "ASLICE-RECOVER-008"
       ],
       "synopses": [
         {
@@ -10215,7 +11675,10 @@
       "implementation": "missing",
       "scope": "Specified command; production contract implementation and acceptance evidence are missing.",
       "requirements": [
-        "ASLICE-SYNTAX-072"
+        "ASLICE-SYNTAX-072",
+        "ASLICE-DB-018",
+        "ASLICE-RECOVER-002",
+        "ASLICE-RECOVER-008"
       ],
       "synopses": [
         {
@@ -10546,7 +12009,15 @@
       "scope": "Specified command; production contract implementation and acceptance evidence are missing.",
       "requirements": [
         "ASLICE-SYNTAX-073",
-        "ASLICE-SYNTAX-113"
+        "ASLICE-SYNTAX-113",
+        "ASLICE-DB-009",
+        "ASLICE-DB-018",
+        "ASLICE-RECOVER-003",
+        "ASLICE-RECOVER-004",
+        "ASLICE-RECOVER-005",
+        "ASLICE-RECOVER-006",
+        "ASLICE-RECOVER-007",
+        "ASLICE-RECOVER-008"
       ],
       "synopses": [
         {

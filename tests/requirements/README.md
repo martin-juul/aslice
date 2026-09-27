@@ -12,7 +12,7 @@ reference archive. It uses no normative keywords. Every nonblank source line
 without a reviewed requirement or a reasoned context/history classification
 remains unreviewed. Genesis's current procedures remain in scope; only its
 explicit history section has been excluded.
-The helper contract, Genesis, and service manual have complete line classification. Their
+The helper contract, Genesis, and service, database and recovery manuals have complete line classification. Their
 requirements remain unimplemented and lack acceptance evidence. The helper
 document's explicitly deferred multi-user daemon is classified as future context;
 current per-operation helpers and persistent package services remain requirements.
@@ -28,6 +28,11 @@ There is deliberately no automatic command to approve changed source hashes.
 New records must follow documented contract ownership. Record contradictions
 under `specification_defects` with an ID, contract links, and a description;
 unresolved defects block release acceptance.
+Defect IDs must be unique (for example, `CONFLICT-1`), descriptions nonempty, and
+contract links must resolve to inventoried files and existing section anchors.
+Unknown fields, including a self-declared resolution flag, invalidate metadata.
+Resolve a defect by reviewing the corrected contracts and removing the blocking
+record; a status flag cannot override contradictory requirements.
 
 Run the metadata validator during development:
 
