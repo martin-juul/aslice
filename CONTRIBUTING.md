@@ -75,7 +75,7 @@ ctest --test-dir build/check --output-on-failure
 ```
 
 Use `cmake --build build/check --target format` when you want to rewrite formatting.
-The checking targets never rewrite files. Docker supplies the LLVM 20 compiler,
+The checking targets never rewrite files. Docker supplies the LLVM 22 compiler,
 formatter, and analyzer baseline; `docker build -t aslice-check .` runs the gates.
 For ASan and UBSan, add `--build-arg ASLICE_SANITIZERS=ON`. That matrix uses
 libstdc++ because the Ubuntu libc++abi exception-message path triggers an

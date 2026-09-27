@@ -6,26 +6,34 @@ permissions:
   contents: read
 jobs:
   linux:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     strategy:
       matrix:
         sanitizers: ['OFF', 'ON']
     steps:
       - uses: actions/checkout@v4
-      - name: LLVM 20 format, analysis, build, and tests
+      - name: LLVM 22 format, analysis, build, and tests
         run: docker build --build-arg ASLICE_SANITIZERS=${{ matrix.sanitizers }} -t aslice-check .
       - name: Demonstrations
         run: |
           docker run --rm --network none --entrypoint sh aslice-check /src/tools/demo-prototype.sh
           docker run --rm --network none --entrypoint python3 aslice-check /src/tools/demo-slice.py /build/aslice
-      - name: Rehearsal fixture evidence
+      - name: Simulator fixture evidence
         run: |
-          mkdir -p build/rehearsal-evidence
-          docker run --rm --network none -v "$PWD/build/rehearsal-evidence:/evidence" --entrypoint python3 aslice-check -m tools.rehearsal run --suite fixture --workspace /evidence --seed 17 --aslice /build/aslice-rehearsal
+          mkdir -p build/simulator-evidence
+          docker run --rm --network none -v "$PWD/build/simulator-evidence:/evidence" --entrypoint python3 aslice-check -m tools.simulator run --suite fixture --workspace /evidence --seed 17 --aslice /build/aslice-simulator
       - uses: actions/upload-artifact@v4
         with:
-          name: rehearsal-linux-sanitizers-${{ matrix.sanitizers }}
-          path: build/rehearsal-evidence/evidence
+          name: simulator-linux-sanitizers-${{ matrix.sanitizers }}
+          path: build/simulator-evidence/evidence
+      - name: Simulator helper evidence
+        run: |
+          mkdir -p build/helper-simulator-evidence
+          docker run --rm --network none -v "$PWD/build/helper-simulator-evidence:/evidence" --entrypoint python3 aslice-check -m tools.simulator run --suite helper --workspace /evidence --aslice /build/aslice-simulator --helper-driver /build/simulator_helper_driver
+      - uses: actions/upload-artifact@v4
+        with:
+          name: simulator-helper-linux-sanitizers-${{ matrix.sanitizers }}
+          path: build/helper-simulator-evidence/evidence
   windows:
     runs-on: windows-latest
     defaults:
@@ -51,14 +59,20 @@ jobs:
         run: cmake --build build/native --target tidy
       - name: Portable demonstration
         run: python tools/demo-slice.py build/native/aslice.exe
-      - name: Rehearsal fixture evidence
-        run: python -m tools.rehearsal run --suite fixture --workspace build/rehearsal-evidence --seed 17 --aslice build/native/aslice-rehearsal.exe
+      - name: Simulator fixture evidence
+        run: python -m tools.simulator run --suite fixture --workspace build/simulator-evidence --seed 17 --aslice build/native/aslice-simulator.exe
       - uses: actions/upload-artifact@v4
         with:
-          name: rehearsal-windows
-          path: build/rehearsal-evidence/evidence
+          name: simulator-windows
+          path: build/simulator-evidence/evidence
+      - name: Simulator helper evidence
+        run: python -m tools.simulator run --suite helper --workspace build/helper-simulator-evidence --aslice build/native/aslice-simulator.exe --helper-driver build/native/simulator_helper_driver.exe
+      - uses: actions/upload-artifact@v4
+        with:
+          name: simulator-helper-windows
+          path: build/helper-simulator-evidence/evidence
   documentation:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -67,6 +81,6 @@ jobs:
       - run: python -m pip install -r tests/requirements.txt
       - run: python tests/check_docs.py
       - run: python tests/check_contracts.py
-      - run: python -m tools.rehearsal coverage --gate development --output build/requirement-coverage.json
+      - run: python -m tools.simulator coverage --gate development --output build/requirement-coverage.json
       - run: python -m unittest discover -s tests -p test_requirements.py
       - run: python -m unittest discover -s tests -p test_docs.py

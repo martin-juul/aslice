@@ -1,4 +1,4 @@
-# C++ platform rehearsal
+# macOS platform simulator
 
 The harness exercises the real C++ fixture lifecycle through a persistent
 filesystem model, fault injection, evidence capture, and replay. It does **not**
@@ -8,29 +8,31 @@ inventory uses explicit reviewed requirement records in `tests/requirements`.
 Unreviewed source ranges remain blocking; discovery gives no coverage credit.
 
 Build with the repository's existing CMake configuration. The build produces
-`aslice`, `aslice-rehearsal`, and, when testing is enabled, `rehearsal_driver`.
-`aslice-rehearsal` links the same CLI library as `aslice`. The normal executable
+`aslice`, `aslice-simulator`, and, when testing is enabled, `simulator_driver`.
+`aslice-simulator` links the same CLI library as `aslice`. The normal executable
 does not link the simulator transport and cannot select it through an
-environment variable. Rehearsal uses the shared command registry, including fixture resolution,
+environment variable. Simulator uses the shared command registry, including fixture resolution,
 manifest inspection and payload verification, and slice packing and inspection.
 Their filesystem operations use the selected C++ platform interface.
 
 The CLI, store and generation code use an explicitly supplied `FileSystem`.
-Native POSIX builds and rehearsal use the same C++ package selection, validation,
+Native POSIX builds and simulator use the same C++ package selection, validation,
 store import, activation, upgrade, rollback and removal code. Target paths have
 POSIX syntax on every host; only the native adapter converts them to host paths.
 Native Windows inspection maps drive paths to target paths inside the adapter;
-UNC paths are refused. Native Windows prefix operations remain unavailable. Their rehearsal counterpart
+UNC paths are refused. Native Windows prefix operations remain unavailable. Their simulator counterpart
 does not require Windows symlink privileges.
 
 Run from the repository root, using a new, empty workspace:
 
 ```sh
-python -m tools.rehearsal run --suite fixture --workspace build/rehearsal --seed 17 --aslice build/native/aslice-rehearsal
-python -m tools.rehearsal client --workspace build/rehearsal --aslice build/native/aslice-rehearsal -- dev fixture history --prefix /work/prefix
-python -m tools.rehearsal replay --workspace build/replayed --trace build/rehearsal/evidence/process-1.json --aslice build/native/aslice-rehearsal
-python -m tools.rehearsal coverage --json
-python -m tools.rehearsal coverage --gate development --output build/requirement-coverage.json
+python -m tools.simulator run --suite fixture --workspace build/simulator --seed 17 --aslice build/native/aslice-simulator
+python -m tools.simulator run --suite helper --workspace build/helper-simulator --aslice build/native/aslice-simulator --helper-driver build/native/simulator_helper_driver
+python -m tools.simulator replay --workspace build/helper-replayed --trace build/helper-simulator/evidence/inspection-manager-2.json --aslice build/native/aslice-simulator --helper-driver build/native/simulator_helper_driver
+python -m tools.simulator client --workspace build/simulator --aslice build/native/aslice-simulator -- dev fixture history --prefix /work/prefix
+python -m tools.simulator replay --workspace build/replayed --trace build/simulator/evidence/process-1.json --aslice build/native/aslice-simulator
+python -m tools.simulator coverage --json
+python -m tools.simulator coverage --gate development --output build/requirement-coverage.json
 ```
 
 On Windows, use the executable in `build/windows-clion` with its `.exe` suffix.
@@ -41,12 +43,25 @@ checks a power-loss restart. Fixture/full runs require a fresh `/work/prefix`.
 `run --suite full` runs the foundation and fixture checks, emits the coverage
 inventory, and returns 1. It cannot report
 completion by ignoring unavailable scenarios.
+`run --suite helper` adds read-only inspection through two actual C++ peers and
+requires the test-built `--helper-driver`. It records channel provisioning,
+scheduled actions, OS transfers, both process outputs, and executable/source
+identities. Use the trace filename from `suite.json` when replaying; the identity
+suffix depends on the initial OS tick. Replay requires an explicit helper driver,
+recreates the channel configuration, and executes the recorded actions. It
+compares OS effects and application outputs rather than returning recorded
+answers. Output stream comparison normalizes line endings; channel bytes remain
+exact. Failures after transfer and lost acknowledgements can also be replayed.
+Both peers are reaped and temporary session credentials removed on failure.
+The helper suite has a 60-second deadline and bounded steps and output. The full
+suite includes this scenario when a helper driver is supplied and otherwise
+records it as missing; full acceptance still fails.
 It accepts `--native-evidence PATH` for receipt ingestion, but currently grants no
 physical qualification credit because authority verification is not implemented.
 The development coverage gate checks inventory consistency while the default
 release gate also reports all missing implementation, tests, and qualification.
 
-`ctest --test-dir BUILD --output-on-failure` includes independent rehearsal
+`ctest --test-dir BUILD --output-on-failure` includes independent simulator
 tests. They run the actual C++ driver against the service, checking content and
 namespace durability independently, refusal before and after effects, lost
 acknowledgements, persistent outcome lookup, power loss, normalization
@@ -58,11 +73,11 @@ activation. They inspect payload bytes and links without claiming to execute
 installed Mach-O programs. The native Linux fixture tests still execute portable
 shell payloads.
 
-The `rehearsal-inspection` CTest verifies canonical manifest identities, payload
+The `simulator-inspection` CTest verifies canonical manifest identities, payload
 hashes, sizes, permissions, hard-link refusal, relocation bytes across read
 boundaries, archive packing/inspection, malformed archives, and replay. It also
 checks simulated catalog resolution and read failures. File verification hashes
-streamed chunks and checks relocations in the same pass. Rehearsal checks POSIX
+streamed chunks and checks relocations in the same pass. Simulator checks POSIX
 modes even when the harness host is Windows. Native Windows inspection reports
 that POSIX modes were not verified.
 
@@ -72,6 +87,64 @@ closure. It covers exact/wildcard constraints, missing dependencies, target
 filtering and cycles. It does not qualify provider, revision or variant semantics.
 The coverage report maps these bounded scenarios to their C++ components;
 declared mappings are separate from execution evidence.
+
+The `lock-wait` and `simulator-lock-wait` tests exercise the shared C++ cumulative
+wait controller. Native waits use a cancellable monotonic clock; simulated waits
+advance modeled milliseconds. The controller parses bounded durations, requires
+explicit foreground waiting permission, shares the budget across lock attempts,
+caps exponential backoff at 250 ms, reports progress, and retains one separate
+30-second recovery allowance. It refuses reuse after an uncertain clock outcome.
+The filesystem adapter retries only nonblocking lock contention. Production
+command wiring, SQLite BUSY classification, plan revalidation, durable-phase
+recovery and safe-cancellation exit reporting remain implementation work.
+
+The `helper-protocol` CTest exercises a separate C++ version-2 helper protocol,
+using bounded frames and injected grants. Admission binds caller, ordinary role,
+instance, operation, session, plan digest and capabilities. Concurrent duplicate
+requests cannot invoke a handler twice in the same session. Outcomes preserve
+observations, effects, receipts and failures; an admitted operation whose reply
+cannot be encoded reports `helper_outcome_unknown`. These tests also pass a real
+manifest through the existing C++ inspector. Session counters are not application
+journals or restart protection by themselves.
+
+The separate `helper-process` and `helper-channel` CTests exercise native manager
+re-execution on Windows and Linux. This development adapter accepts one bounded
+`manifest.inspect` request through an inherited channel. Windows checks the pipe
+server process and its token SID; Linux checks socket peer credentials against
+the parent process and effective user. The helper derives its caller identity
+from the OS, fixes its own role and capability, and recomputes the input digest.
+The launcher creates fresh session identifiers, limits inherited handles, and
+kills and reaps the read-only child on cancellation or timeout. Tests cover
+concurrent launches, application failures, unresponsive children and private-mode
+refusals. Linux additionally tests independently constructed fragmented frames,
+forged bindings, truncation and oversized frames.
+
+This adapter does not establish executable/dependency identity or sandbox the
+child; it inherits the development host's environment. It grants no mutation
+operations, and public inspection commands retain their existing input limits
+and execution path. Native macOS helper launch remains disabled. Production
+grant issuance, role containment, surviving mutating
+helpers and durable outcome lookup remain required work.
+
+The `simulator-helper` CTest schedules two real C++ processes over modeled
+inherited byte channels. Both native and simulated inspection use
+`src/helper/inspection.cpp`; Python handles only byte transfer and OS faults.
+The harness provisions endpoints before either process launches. Endpoints are
+bound to process identities, with at most 128 pairs, 64 KiB per receive buffer,
+and 16 KiB per transfer. Full and empty buffers report `would-block`; writes
+can be short. Process exit closes that process's endpoints while already sent
+bytes remain readable by the peer before EOF. Transport loss alone leaves them
+open. Power loss discards every endpoint and buffered byte.
+
+These tests independently schedule transfer steps, compare the C++ result with
+native inspection, and exercise foreign handles, bounds, lost acknowledgements,
+failures before and after transfer, and surviving peers. Uncertain sends are not
+automatically repeated. Channel configuration is volatile harness state and is
+retained separately in helper scenario traces for replay. The runner currently
+schedules only the read-only inspection test driver; application-driven helper
+launch and other helper roles remain unimplemented. The audit retains OS transfer observations, not application journals
+or durable helper outcomes. Channels retain the process-registration limits
+described below; they do not establish hostile-host containment.
 
 ## State and protocol
 
@@ -93,6 +166,35 @@ depth. Protocol version 1 requests contain `id`, `capability`, `operation`,
 `arguments`, and `preconditions`. Unimplemented preconditions are refused.
 Responses separately record `result`, `effects`, `receipt`, and `failure`.
 The C++ caller retains effects even when an operation fails.
+
+Each issued identity is registered to a harness-launched process before its
+session is admitted. An identity cannot be reissued or rebound within the same
+server. A dropped connection does not release that process's locks, handles or
+umask or credentials; the process-exit watcher releases them after actual exit. Other live
+participants retain their resources when one process terminates. Server teardown
+stops all registered processes before releasing the workspace. These lifecycle
+checks do not turn bearer-token authentication into host PID attestation or
+provide the production helper's inherited-channel authorization boundary.
+
+The harness assigns immutable effective UID, primary GID and supplementary
+groups when issuing a process identity. Defaults are UID 501 and GID 20 with
+no supplementary groups. Requests cannot change these credentials. Ordinary
+process evidence records them, and replay issues the same credentials. Exit
+and power loss revoke them; a revoked identity cannot regain the default user.
+The model applies owner, group and other mode classes in that order without
+falling through to a more permissive class. Directory traversal requires search
+permission; namespace changes require parent write and search permissions.
+New files inherit the caller's UID and containing directory's GID, with the
+process umask applied. Existing descriptors retain their granted access after
+mode changes. Modeled UID 0 bypasses basic mode checks but remains subject to
+capabilities and the protected-path boundary. These are simulated credentials,
+not host credential changes. The 32 supplementary-group limit is a harness
+bound, not qualified Darwin behavior.
+
+Access that depends on nonempty ACLs, nonzero file flags or special mode bits
+is refused. ACL evaluation, sticky/set-ID behavior and Apple authorization
+remain unimplemented. The C++ adapter independently checks private-prefix
+ownership and rejects ACLs, flags and unsafe modes.
 
 The initial model provides file creation, positional writes, reads, directory
 creation/listing, symlinks without traversal, rename, mode changes, removal, exclusive locks,
@@ -146,7 +248,7 @@ termination is compared by recorded cause, since kill exit codes differ between
 Windows and POSIX. Evidence files are never overwritten by later runs of the
 same process identity.
 
-The source digest covers owned C++ and rehearsal code, tests and fixtures, embedded SQL schemas,
+The source digest covers owned C++ and simulator code, tests and fixtures, embedded SQL schemas,
 CMake configuration, and the dependency manifest. It does not cover the entire
 toolchain or downloaded dependency closure. Revision and dirty status are null in source exports
 without Git metadata; such evidence cannot establish source revision provenance.
@@ -156,7 +258,7 @@ selected workspace's `evidence` directory.
 
 Next work is to finish requirement review and owning-specification mappings,
 introduce the remaining native/target platform adapters, including complete
-filesystem metadata/authority enforcement and bounded platform clocks.
+filesystem metadata/authority enforcement and operation-wide deadline integration.
 The simulator SQLite VFS, production package transactions and recovery,
 services, builds, signing, publication, Homebrew corpus, disaster operations,
 and OS matrix all remain mandatory gaps. `coverage.py` lists these explicitly.

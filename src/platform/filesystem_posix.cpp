@@ -250,7 +250,10 @@ struct Lock::Impl {
     Fd fd;
     explicit Impl(const fs::path& root) : fd(open_lock(root)) {
         if (flock(fd.value, LOCK_EX | LOCK_NB) != 0) {
-            throw Error("prototype prefix is busy; retry after its owner finishes", "busy");
+            if (errno == EWOULDBLOCK || errno == EAGAIN) {
+                throw Error("prototype prefix is busy; retry after its owner finishes", "busy");
+            }
+            throw Error("prefix lock acquisition failed", "io");
         }
     }
 };

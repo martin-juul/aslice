@@ -16,8 +16,8 @@ def main():
     parser = argparse.ArgumentParser(__doc__)
     parser.add_argument('mode', choices=('format', 'format-check', 'tidy'))
     parser.add_argument('--build', type=Path, required=True)
-    parser.add_argument('--format-tool', default='clang-format-20')
-    parser.add_argument('--tidy-tool', default='clang-tidy-20')
+    parser.add_argument('--format-tool', default='clang-format-22')
+    parser.add_argument('--tidy-tool', default='clang-tidy-22')
     parser.add_argument('--resource-dir', default=os.environ.get('ASLICE_CLANG_RESOURCE_DIR'))
     args = parser.parse_args()
     sources = sorted([*ROOT.joinpath('src').rglob('*.cpp'),
@@ -26,6 +26,8 @@ def main():
     if args.mode != 'tidy':
         flags = ['-i'] if args.mode == 'format' else ['--dry-run', '--Werror']
         return subprocess.call([args.format_tool, *flags, *map(str, sources)])
+    print('Static analysis tool:', args.tidy_tool, flush=True)
+    subprocess.run([args.tidy_tool, '--version'], cwd=ROOT, check=True)
     subprocess.run([args.tidy_tool, '--verify-config'], cwd=ROOT, check=True)
     database = json.loads((args.build / 'compile_commands.json').read_text())
     extra = []
@@ -55,6 +57,7 @@ def main():
                     if Path(entry['file']).resolve() in owned})
     if not files:
         raise RuntimeError('Compilation database contains no owned C++ files')
+    print(f'Analyzing all {len(files)} owned translation units in {args.build}', flush=True)
     def analyze(path):
         result = subprocess.run([args.tidy_tool, '-p', str(args.build), *extra, str(path)],
                                 cwd=ROOT, capture_output=True, text=True)

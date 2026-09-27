@@ -9,9 +9,9 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
-from tools.rehearsal.fixtures import seed_catalogs, seed_input
-from tools.rehearsal.harness import Workspace, launch, replay
-from tools.rehearsal.model import Model, Refusal
+from tools.simulator.fixtures import seed_catalogs, seed_input
+from tools.simulator.harness import Workspace, launch, replay
+from tools.simulator.model import Model, Refusal
 
 BINARY = Path(sys.argv.pop(1)).resolve() if __name__ == "__main__" else None
 
@@ -137,7 +137,7 @@ class InspectionTests(unittest.TestCase):
         model.filesystem("setup", "unlink", dict(path="/work/moved"))
         read, _ = model.filesystem("reader", "read_handle", dict(handle=handle, length=1))
         self.assertEqual(read, {"hex": "78"})
-        model.disconnect("reader")
+        model.process_exited("reader")
         with self.assertRaises(Refusal):
             model.filesystem("reader", "read_handle", dict(handle=handle))
 

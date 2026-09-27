@@ -1,8 +1,8 @@
-#ifndef ASLICE_PLATFORM_TARGET_FILESYSTEM_REHEARSAL_HPP
-#define ASLICE_PLATFORM_TARGET_FILESYSTEM_REHEARSAL_HPP
+#ifndef ASLICE_PLATFORM_TARGET_FILESYSTEM_SIMULATOR_HPP
+#define ASLICE_PLATFORM_TARGET_FILESYSTEM_SIMULATOR_HPP
 #include "core/support.hpp"
 #include "platform/paths.hpp"
-#include "platform/rehearsal.hpp"
+#include "platform/simulator.hpp"
 #include "platform/target_filesystem.hpp"
 #include <cstddef>
 #include <functional>
@@ -12,9 +12,9 @@
 #include <vector>
 
 namespace aslice::platform {
-class RehearsalFileSystem final : public FileSystem {
+class SimulatorFileSystem final : public FileSystem {
   public:
-    explicit RehearsalFileSystem(Rehearsal& connection) : connection_(connection) {}
+    explicit SimulatorFileSystem(Simulator& connection) : connection_(connection) {}
     bool supports_prefix_operations() const override;
     TargetPath absolute(const std::string& path) const override;
     NodeStatus status(const TargetPath& path) override;
@@ -38,7 +38,7 @@ class RehearsalFileSystem final : public FileSystem {
   private:
     core::Json operation(const std::string& name, const TargetPath& path,
                          const core::Json& arguments = core::Json::object());
-    Rehearsal& connection_;
+    Simulator& connection_;
 };
 } // namespace aslice::platform
 #endif

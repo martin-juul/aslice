@@ -1,7 +1,7 @@
-#include "platform/target_filesystem_rehearsal.hpp"
+#include "platform/target_filesystem_simulator.hpp"
 #include "core/support.hpp"
 #include "platform/paths.hpp"
-#include "platform/rehearsal.hpp"
+#include "platform/simulator.hpp"
 #include "platform/target_filesystem.hpp"
 #include <algorithm>
 #include <cstddef>
@@ -57,12 +57,12 @@ std::string decode(const std::string& hex) {
 }
 class RemoteLock final : public FileLock {
   public:
-    RemoteLock(Rehearsal& connection, TargetPath path)
+    RemoteLock(Simulator& connection, TargetPath path)
         : connection_(connection), path_(std::move(path)) {
         checked(core::take(connection_.filesystem("lock", path_)));
     }
     ~RemoteLock() override {
-        // Connection teardown releases all OS locks, including an unknown unlock outcome.
+        // Process exit releases retained OS locks, including an unknown unlock outcome.
         try {
             (void)connection_.filesystem("unlock", path_);
         } catch (const std::exception&) {
@@ -70,12 +70,12 @@ class RemoteLock final : public FileLock {
     }
 
   private:
-    Rehearsal& connection_;
+    Simulator& connection_;
     TargetPath path_;
 };
 class RemoteFile {
   public:
-    RemoteFile(Rehearsal& connection, core::Json handle)
+    RemoteFile(Simulator& connection, core::Json handle)
         : connection_(connection), handle_(std::move(handle)) {}
     ~RemoteFile() {
         try {
@@ -87,21 +87,21 @@ class RemoteFile {
     RemoteFile& operator=(const RemoteFile&) = delete;
 
   private:
-    Rehearsal& connection_;
+    Simulator& connection_;
     core::Json handle_;
 };
 } // namespace
-core::Json RehearsalFileSystem::operation(const std::string& name, const TargetPath& path,
+core::Json SimulatorFileSystem::operation(const std::string& name, const TargetPath& path,
                                           const core::Json& arguments) {
     return checked(core::take(connection_.filesystem(name, path, arguments)));
 }
-bool RehearsalFileSystem::supports_prefix_operations() const {
+bool SimulatorFileSystem::supports_prefix_operations() const {
     return true;
 }
-TargetPath RehearsalFileSystem::absolute(const std::string& path) const {
+TargetPath SimulatorFileSystem::absolute(const std::string& path) const {
     return TargetPath{path};
 }
-NodeStatus RehearsalFileSystem::status(const TargetPath& path) {
+NodeStatus SimulatorFileSystem::status(const TargetPath& path) {
     const auto response = core::take(connection_.filesystem("stat", path));
     if (!response.at("failure").is_null() && response.at("failure").at("code") == "not-found") {
         return {};
@@ -114,7 +114,7 @@ NodeStatus RehearsalFileSystem::status(const TargetPath& path) {
                                   : NodeKind::other,
             node.at("mode").get<unsigned>(), node.at("links").get<std::uint64_t>()};
 }
-std::vector<TargetPath> RehearsalFileSystem::list(const TargetPath& path) {
+std::vector<TargetPath> SimulatorFileSystem::list(const TargetPath& path) {
     std::vector<TargetPath> result;
     for (const auto& name : operation("list", path)) {
         result.push_back(path / name.get<std::string>());
@@ -124,10 +124,10 @@ std::vector<TargetPath> RehearsalFileSystem::list(const TargetPath& path) {
     });
     return result;
 }
-bool RehearsalFileSystem::supports_posix_modes() const {
+bool SimulatorFileSystem::supports_posix_modes() const {
     return true;
 }
-void RehearsalFileSystem::stream(const TargetPath& path, std::size_t maximum,
+void SimulatorFileSystem::stream(const TargetPath& path, std::size_t maximum,
                                  const Consumer& consume, const Inspector& inspect) {
     const auto node = operation("open_read", path);
     const auto& handle = node.at("handle");
@@ -155,25 +155,25 @@ void RehearsalFileSystem::stream(const TargetPath& path, std::size_t maximum,
         }
     }
 }
-void RehearsalFileSystem::mkdir(const TargetPath& path) {
+void SimulatorFileSystem::mkdir(const TargetPath& path) {
     operation("mkdir", path, {{"mode", 0777}});
 }
-void RehearsalFileSystem::permissions(const TargetPath& path, unsigned mode) {
+void SimulatorFileSystem::permissions(const TargetPath& path, unsigned mode) {
     operation("chmod", path, {{"mode", mode}});
 }
-void RehearsalFileSystem::create_symlink(const std::string& target, const TargetPath& path) {
+void SimulatorFileSystem::create_symlink(const std::string& target, const TargetPath& path) {
     operation("symlink", path, {{"target", target}});
 }
-std::string RehearsalFileSystem::read_symlink(const TargetPath& path) {
+std::string SimulatorFileSystem::read_symlink(const TargetPath& path) {
     return operation("readlink", path).at("target").get<std::string>();
 }
-void RehearsalFileSystem::rename(const TargetPath& source, const TargetPath& destination) {
+void SimulatorFileSystem::rename(const TargetPath& source, const TargetPath& destination) {
     operation("rename", source, {{"destination", destination.string()}});
 }
-void RehearsalFileSystem::remove(const TargetPath& path) {
+void SimulatorFileSystem::remove(const TargetPath& path) {
     operation("unlink", path);
 }
-void RehearsalFileSystem::write_new(const TargetPath& path, const std::string& bytes,
+void SimulatorFileSystem::write_new(const TargetPath& path, const std::string& bytes,
                                     unsigned mode) {
     const auto handle = operation("open_new", path, {{"mode", mode}}).at("handle");
     const RemoteFile file{connection_, handle};
@@ -190,23 +190,24 @@ void RehearsalFileSystem::write_new(const TargetPath& path, const std::string& b
     }
     checked(core::take(connection_.request("filesystem", "flush_handle", {{"handle", handle}})));
 }
-void RehearsalFileSystem::sync_directory(const TargetPath& path) {
+void SimulatorFileSystem::sync_directory(const TargetPath& path) {
     operation("flush_directory", path);
 }
-void RehearsalFileSystem::private_umask() {
+void SimulatorFileSystem::private_umask() {
     checked(core::take(connection_.request("process", "umask", {{"mask", 0077}})));
 }
-void RehearsalFileSystem::check_private_directory(const TargetPath& path) {
+void SimulatorFileSystem::check_private_directory(const TargetPath& path) {
     const auto process = checked(core::take(connection_.request("process", "observe")));
     const auto node = operation("stat", path);
     core::require(node.at("kind") == "directory" && node.at("uid") == process.at("uid") &&
-                      (node.at("mode").get<unsigned>() & 077U) == 0,
+                      (node.at("mode").get<unsigned>() & 07077U) == 0 && node.at("acl").empty() &&
+                      node.value("flags", 0U) == 0,
                   "prefix must be a private directory owned by the current user");
 }
-std::unique_ptr<FileLock> RehearsalFileSystem::lock(const TargetPath& root) {
+std::unique_ptr<FileLock> SimulatorFileSystem::lock(const TargetPath& root) {
     return std::make_unique<RemoteLock>(connection_, root / ".lock");
 }
-void RehearsalFileSystem::checkpoint(const std::string& name) {
+void SimulatorFileSystem::checkpoint(const std::string& name) {
     checked(core::take(connection_.request("process", "checkpoint", {{"name", name}})));
 }
 } // namespace aslice::platform

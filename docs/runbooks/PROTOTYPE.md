@@ -192,7 +192,7 @@ docker run --rm aslice-prototype db schema --role publisher
 docker run --rm --entrypoint ctest aslice-prototype --test-dir /build --output-on-failure
 ```
 
-The build downloads Ubuntu packages for LLVM 20 (compiler, formatter, and analyzer),
+The build downloads Ubuntu packages for LLVM 22 (compiler, formatter, and analyzer),
 libc++, CMake, Ninja, and Python.
 CMake downloads SQLite 3.51.3 and checks both the pinned archive SHA-256 and the
 published source SHA3-256 before compiling it as a static library. Extension

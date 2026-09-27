@@ -50,7 +50,7 @@ docker run --rm --network none --entrypoint sh aslice-prototype /src/tools/demo-
 docker run --rm --entrypoint ctest aslice-prototype --test-dir /build --output-on-failure
 ```
 
-The image uses LLVM 20 and libc++, checks formatting and analysis, and runs tests, including loading each
+The image uses LLVM 22 and libc++, checks formatting and analysis, and runs tests, including loading each
 emitted schema into SQLite. Linux is a development host for this portable code;
 these tests do not establish macOS compatibility. See the
 [prototype build guide](docs/runbooks/PROTOTYPE.md) for local builds and limits.

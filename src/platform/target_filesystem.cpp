@@ -1,12 +1,36 @@
 #include "platform/target_filesystem.hpp"
+#include "core/lock_wait.hpp"
 #include "core/support.hpp"
 #include "platform/paths.hpp"
 #include <cstddef>
+#include <memory>
 #include <string>
 #include <string_view>
 #include <vector>
 
 namespace aslice::platform {
+std::unique_ptr<FileLock> FileSystem::wait_lock(const TargetPath& root, core::LockWait& waiting,
+                                                const core::WaitContext& context) {
+    for (;;) {
+        if (waiting.cancelled()) {
+            throw core::Error("lock acquisition cancelled; resolve durable phase", "cancelled");
+        }
+        try {
+            return lock(root);
+        } catch (const core::Error& error) {
+            if (error.code != "busy") {
+                throw;
+            }
+        }
+        const auto outcome = waiting.after_contention(context);
+        if (outcome == core::WaitResult::cancelled) {
+            throw core::Error("lock acquisition cancelled; resolve durable phase", "cancelled");
+        }
+        if (outcome == core::WaitResult::exhausted) {
+            throw core::Error("lock-wait allowance exhausted; resolve durable phase", "busy");
+        }
+    }
+}
 std::string FileSystem::read(const TargetPath& path, std::size_t maximum) {
     std::string result;
     stream(path, maximum, [&](std::string_view bytes) {

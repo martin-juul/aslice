@@ -7,6 +7,7 @@
 #include "package/version.hpp"
 #include "platform/target_filesystem.hpp"
 #include "resolver/solver.hpp"
+#include <compare>
 #include <iostream>
 #include <set>
 #include <zstd.h>
@@ -66,7 +67,7 @@ int inspect(const Invocation& invocation) {
         } else if (operation == "compare") {
             const auto order = aslice::core::take(Version::parse(args[0])) <=>
                                aslice::core::take(Version::parse(args[1]));
-            output = {{"order", order < 0 ? -1 : order > 0 ? 1 : 0}};
+            output = {{"order", std::is_lt(order) ? -1 : std::is_gt(order) ? 1 : 0}};
         } else {
             output = {{"matches", aslice::core::take(Constraint::parse(args[1]))
                                       .matches(aslice::core::take(Version::parse(args[0])))}};

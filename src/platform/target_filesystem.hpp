@@ -1,5 +1,6 @@
 #ifndef ASLICE_PLATFORM_TARGET_FILESYSTEM_HPP
 #define ASLICE_PLATFORM_TARGET_FILESYSTEM_HPP
+#include "core/lock_wait.hpp"
 #include "core/support.hpp"
 #include "platform/paths.hpp"
 #include <cstddef>
@@ -52,6 +53,11 @@ class FileSystem {
     virtual void check_private_directory(const TargetPath& path) = 0;
     virtual std::unique_ptr<FileLock> lock(const TargetPath& root) = 0;
     virtual void checkpoint(const std::string& name) = 0;
+
+    // Retry only a nonblocking lock attempt. The caller retains this controller
+    // across owner/SQL layers and revalidates its plan after acquiring ownership.
+    std::unique_ptr<FileLock> wait_lock(const TargetPath& root, core::LockWait& waiting,
+                                        const core::WaitContext& context);
 
     bool exists(const TargetPath& path);
     void no_symlinks(const TargetPath& path);
