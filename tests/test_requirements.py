@@ -343,6 +343,48 @@ class RegistryTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.result()
 
+    def test_defect_links_must_resolve_to_inventoried_contracts(self):
+        for contract in ('docs/missing.md', 'docs/contract.md#missing', 'docs/contract.md#'):
+            with self.subTest(contract=contract):
+                self.registry['specification_defects'] = [{'id': 'CONFLICT-1',
+                    'contracts': [contract], 'description': 'Contradictory requirements.'}]
+                self.assertFalse(self.result()['development_valid'])
+        self.registry['specification_defects'][0]['contracts'] = ['docs/contract.md#contract']
+        self.assertTrue(self.result()['development_valid'])
+
+    def test_defect_cannot_escape_repository(self):
+        self.registry['specification_defects'] = [{'id': 'CONFLICT-1',
+            'contracts': ['../elsewhere.md'], 'description': 'Contradictory requirements.'}]
+        with self.assertRaises(ValueError):
+            self.result()
+
+    def test_defects_reject_malformed_fields_without_crashing(self):
+        valid = {'id': 'CONFLICT-1', 'contracts': ['docs/contract.md'], 'description': 'Conflict.'}
+        for field, values in {
+            'id': [None, [], {}, True, ' ', 'unstable'],
+            'description': [None, [], True, ' '],
+            'contracts': [None, 'docs/contract.md', [], [None], [{}], ['']],
+        }.items():
+            for value in values:
+                with self.subTest(field=field, value=value):
+                    self.registry['specification_defects'] = [{**valid, field: value}]
+                    self.assertFalse(self.result()['development_valid'])
+
+    def test_defects_reject_duplicate_ids_and_links(self):
+        defect = {'id': 'CONFLICT-1', 'contracts': ['docs/contract.md'], 'description': 'Conflict.'}
+        self.registry['specification_defects'] = [defect, copy.deepcopy(defect)]
+        self.assertFalse(self.result()['development_valid'])
+        self.registry['specification_defects'] = [defect]
+        defect['contracts'].append('docs/contract.md')
+        self.assertFalse(self.result()['development_valid'])
+
+    def test_defect_cannot_silently_claim_resolution(self):
+        self.registry['specification_defects'] = [{'id': 'CONFLICT-1',
+            'contracts': ['docs/contract.md'], 'description': 'Conflict.', 'resolved': True}]
+        result = self.result()
+        self.assertFalse(result['development_valid'])
+        self.assertIn('specification defect: CONFLICT-1', result['mandatory_gaps'])
+
     def test_duplicate_json_keys_are_rejected(self):
         path = self.root / 'duplicate.json'
         path.write_text('{"version": 1, "version": 2}')
@@ -370,6 +412,10 @@ class RepositoryTests(unittest.TestCase):
         self.assertEqual(helpers['unreviewed_lines'], [])
         services = next(item for item in result['inventory'] if item['path'] == 'man/aslice-service.1.md')
         self.assertEqual(services['classification'], 'reviewed')
+        for name in ('man/aslice-db.1.md', 'man/aslice-recover.1.md'):
+            source = next(item for item in result['inventory'] if item['path'] == name)
+            self.assertEqual(source['classification'], 'reviewed')
+            self.assertEqual(source['unreviewed_lines'], [])
         self.assertTrue(all(item['reviewed'] for item in result['synopses']))
         self.assertTrue(all(command.get('synopses') for command in result['commands']))
         pin = next(command for command in result['commands'] if command['command'] == 'pin')

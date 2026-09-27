@@ -395,10 +395,40 @@ def evaluate(root=ROOT, registry=None):
     defects = registry.get("specification_defects", [])
     if not isinstance(defects, list) or any(not isinstance(item, dict) for item in defects):
         raise ValueError("specification defects must be an array of objects")
+    defect_ids = set()
     for defect in defects:
-        if not defect.get("id") or not defect.get("contracts") or not defect.get("description"):
-            errors.append("invalid specification defect")
-        gaps.append(f"specification defect: {defect.get('id', 'unknown')}")
+        ident = defect.get("id")
+        if set(defect) != {"id", "contracts", "description"}:
+            errors.append("specification defect has missing or unknown fields")
+        if (not isinstance(ident, str) or not re.fullmatch(r"[A-Z][A-Z0-9-]*-[0-9]+", ident)
+                or ident in defect_ids):
+            errors.append("invalid or duplicate specification defect ID")
+        else:
+            defect_ids.add(ident)
+        description = defect.get("description")
+        if not isinstance(description, str) or not description.strip():
+            errors.append(f"{ident}: specification defect needs a description")
+        contracts = defect.get("contracts")
+        if not isinstance(contracts, list) or not contracts:
+            errors.append(f"{ident}: specification defect needs contract links")
+            contracts = []
+        seen_contracts = set()
+        for contract in contracts:
+            if not isinstance(contract, str) or not contract or contract in seen_contracts:
+                errors.append(f"{ident}: invalid or duplicate defect contract")
+                continue
+            seen_contracts.add(contract)
+            name, separator, fragment = contract.partition("#")
+            repository_path(root, name)
+            if name not in sources or name not in current:
+                errors.append(f"{ident}: defect contract is not inventoried: {name}")
+                continue
+            if separator:
+                if name not in anchor_cache:
+                    anchor_cache[name] = contract_anchors((root / name).read_text(encoding="utf-8"))
+                if not fragment or fragment not in anchor_cache[name]:
+                    errors.append(f"{ident}: unknown defect contract section: {fragment}")
+        gaps.append(f"specification defect: {ident}")
     if not records:
         gaps.append("no reviewed requirements")
     if not documented:
