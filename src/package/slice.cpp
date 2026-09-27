@@ -2,13 +2,14 @@
 #include "core/result.hpp"
 #include "core/support.hpp"
 #include "package/manifest.hpp"
+#include "platform/paths.hpp"
+#include "platform/target_filesystem.hpp"
 #include <algorithm>
 #include <array>
 #include <charconv>
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
-#include <filesystem>
 #include <memory>
 #include <string>
 #include <string_view>
@@ -17,12 +18,10 @@
 
 namespace aslice::package {
 namespace {
-namespace fs = std::filesystem;
 using core::digest;
 using core::fields;
 using core::Json;
 using core::parse_json;
-using core::read_bytes;
 using core::require;
 constexpr std::size_t compressed_limit = 16 * 1024 * 1024;
 constexpr std::size_t expanded_limit = 64 * 1024 * 1024;
@@ -206,15 +205,13 @@ Json descriptor(const Manifest& manifest) {
 }
 } // namespace
 
-core::Json inspect_slice_impl(const core::fs::path& file) {
-    namespace fs = std::filesystem;
+core::Json inspect_slice_impl(platform::FileSystem& filesystem, const platform::TargetPath& file) {
     using core::digest;
     using core::fields;
     using core::Json;
     using core::parse_json;
-    using core::read_bytes;
     using core::require;
-    const auto blob = aslice::core::take(read_bytes(file, compressed_limit));
+    const auto blob = filesystem.read(file, compressed_limit);
     const auto decoded = decompress(blob);
     Tar tar(decoded);
     const auto first = tar.next();
@@ -274,18 +271,17 @@ core::Json inspect_slice_impl(const core::fs::path& file) {
     return result;
 }
 
-std::string pack_slice_impl(const Manifest& manifest, const core::fs::path& payload) {
-    namespace fs = std::filesystem;
+std::string pack_slice_impl(platform::FileSystem& filesystem, const Manifest& manifest,
+                            const platform::TargetPath& payload) {
     using core::digest;
     using core::fields;
     using core::Json;
     using core::parse_json;
-    using core::read_bytes;
     using core::require;
     require(manifest.canonical().size() <= metadata_limit &&
                 manifest.payload_bytes() <= expanded_limit - 1024,
             "manifest/payload exceeds local packing limits");
-    aslice::core::take(manifest.verify_payload(payload));
+    aslice::core::take(manifest.verify_payload(filesystem, payload));
     std::string tar;
     append(tar, "slice.json", '0', 0644, descriptor(manifest).dump());
     append(tar, "manifest.json", '0', 0644, manifest.canonical());
@@ -298,8 +294,7 @@ std::string pack_slice_impl(const Manifest& manifest, const core::fs::path& payl
         const auto name = file.path;
         const auto kind = file.kind;
         const auto mode = static_cast<unsigned>(file.mode);
-        const auto contents =
-            kind == "file" ? aslice::core::take(read_bytes(payload / name, expanded_limit)) : "";
+        const auto contents = kind == "file" ? filesystem.read(payload / name, expanded_limit) : "";
         if (kind == "file") {
             require(contents.size() == file.size &&
                         aslice::core::take(digest(contents)) == file.sha256,
@@ -320,15 +315,17 @@ std::string pack_slice_impl(const Manifest& manifest, const core::fs::path& payl
     return blob;
 }
 
-core::Result<core::Json> inspect_slice(const core::fs::path& file) {
+core::Result<core::Json> inspect_slice(platform::FileSystem& filesystem,
+                                       const platform::TargetPath& file) {
     return core::capture([&] {
-        return inspect_slice_impl(file);
+        return inspect_slice_impl(filesystem, file);
     });
 }
 
-core::Result<std::string> pack_slice(const Manifest& manifest, const core::fs::path& payload) {
+core::Result<std::string> pack_slice(platform::FileSystem& filesystem, const Manifest& manifest,
+                                     const platform::TargetPath& payload) {
     return core::capture([&] {
-        return pack_slice_impl(manifest, payload);
+        return pack_slice_impl(filesystem, manifest, payload);
     });
 }
 } // namespace aslice::package

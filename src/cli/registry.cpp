@@ -1,5 +1,6 @@
 #include "cli/registry.hpp"
 #include "core/support.hpp"
+#include "platform/target_filesystem.hpp"
 #include "schemas.hpp"
 #include <cstddef>
 #include <cstdint>
@@ -202,13 +203,9 @@ const std::vector<Command>& registry() {
     }();
     return commands;
 }
-bool available(const Command& command) {
-#ifdef _WIN32
-    return command.availability == Availability::portable;
-#else
-    (void)command;
-    return true;
-#endif
+bool available(const Command& command, const platform::FileSystem& filesystem) {
+    return command.availability == Availability::portable ||
+           filesystem.supports_prefix_operations();
 }
 const Command* find_command(const std::string& path) {
     for (const auto& command : registry()) {
@@ -224,7 +221,7 @@ bool group(const std::string& path) {
                return command.path.starts_with(path + ' ');
            });
 }
-void help(const std::string& path) {
+void help(const std::string& path, const platform::FileSystem& filesystem) {
     if (const auto* command = find_command(path)) {
         std::cout << command->description << "\n\nUsage: aslice " << path;
         if (!command->arguments.empty()) {
@@ -271,7 +268,8 @@ void help(const std::string& path) {
             if (command.path.starts_with(path + ' ')) {
                 std::cout << "  " << command.path.substr(path.size() + 1) << "  "
                           << command.description
-                          << (available(command) ? "" : " [unavailable on Windows]") << '\n';
+                          << (available(command, filesystem) ? "" : " [unavailable on Windows]")
+                          << '\n';
             }
         }
         std::cout << "\nUse 'aslice help " << path << " <command>' for options and examples.\n";
@@ -279,8 +277,8 @@ void help(const std::string& path) {
 }
 enum class ParsePurpose : std::uint8_t { execution, help };
 Invocation parse(const Command& command, const std::vector<std::string>& arguments,
-                 ParsePurpose purpose = ParsePurpose::execution) {
-    Invocation invocation{command.path, {}, {}};
+                 platform::FileSystem& filesystem, ParsePurpose purpose = ParsePurpose::execution) {
+    Invocation invocation{command.path, {}, {}, filesystem};
     for (std::size_t i = 0; i < arguments.size(); ++i) {
         const auto& arg = arguments[i];
         if (!arg.starts_with("--")) {
@@ -319,7 +317,7 @@ std::string Invocation::option(const std::string& name, const std::string& fallb
     const auto found = options.find(name);
     return found == options.end() ? fallback : found->second;
 }
-int dispatch(int argc, char** argv) {
+int dispatch(int argc, char** argv, platform::FileSystem& filesystem) {
     std::string path;
     try {
         std::vector<std::string> words;
@@ -377,15 +375,15 @@ int dispatch(int argc, char** argv) {
                              words.end());
             if (wants_help || group(path)) {
                 if (const auto* command = find_command(path)) {
-                    parse(*command, arguments, ParsePurpose::help);
+                    parse(*command, arguments, filesystem, ParsePurpose::help);
                 }
-                help(path);
+                help(path, filesystem);
             } else {
                 const auto* command = find_command(path);
                 core::require(command != nullptr, "unknown command");
-                const auto invocation = parse(*command, arguments);
+                const auto invocation = parse(*command, arguments, filesystem);
                 core::require(
-                    available(*command),
+                    available(*command, filesystem),
                     "unavailable on Windows; use Docker or WSL for POSIX fixture operations");
                 const auto status = command->handler(invocation);
                 std::cout.flush();
@@ -403,7 +401,7 @@ int dispatch(int argc, char** argv) {
     } catch (const core::Error& error) {
         std::cerr << "aslice: " << error.what() << "; run 'aslice"
                   << (path.empty() ? "" : " " + path) << " --help' for usage.\n";
-        return error.code == "io" ? 1 : error.code == "busy" ? 4 : 2;
+        return error.code == "io" || error.code == "transport" ? 1 : error.code == "busy" ? 4 : 2;
     } catch (const std::exception& error) {
         std::cerr << "aslice: " << error.what() << '\n';
         return 2;
